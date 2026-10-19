@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World models de manejo</title>
+<style>
+  :root {
+    --bg: #f7f6f2; --ink: #1d1d1b; --muted: #6b6a64; --line: #dcdad2;
+    --accent: #c2410c; --accent-soft: #fde7d9; --ok: #166534; --ok-soft: #dcfce7; --card: #ffffff;
+  }
+  * { box-sizing: border-box; margin: 0; }
+  html, body { height: 100%; background: var(--bg); color: var(--ink);
+    font: 18px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; }
+  .deck { height: 100%; display: grid; place-items: center; }
+  .slide { display: none; width: min(100vw, 177.78vh); aspect-ratio: 16 / 9; padding: 4.2% 5.5%;
+    background: var(--bg); position: relative; overflow: hidden; font-size: min(1.65vw, 2.93vh); }
+  .slide.active { display: flex; flex-direction: column; }
+  .kicker { font-size: .78em; letter-spacing: .12em; text-transform: uppercase; color: var(--accent); font-weight: 650; }
+  h1 { font-size: 2.7em; line-height: 1.1; letter-spacing: -.02em; margin: .35em 0 .4em; max-width: 22ch; }
+  h2 { font-size: 1.75em; letter-spacing: -.01em; margin: .2em 0 .7em; }
+  ul { padding-left: 1.1em; } li { margin: .28em 0; }
+  .muted { color: var(--muted); }
+  .small { font-size: .78em; }
+  .grid { display: grid; gap: 1.6em; flex: 1; min-height: 0; }
+  .g-2 { grid-template-columns: 1fr 1fr; }
+  .g-37 { grid-template-columns: 1fr 1.25fr; }
+  img { max-width: 100%; display: block; }
+  .card { background: var(--card); border: 1px solid var(--line); border-radius: .6em; padding: .9em 1.1em; }
+  .stat { display: flex; gap: 1.2em; margin: .6em 0 .2em; }
+  .stat div { flex: 1; }
+  .stat b { display: block; font-size: 1.9em; line-height: 1.1; color: var(--accent); font-variant-numeric: tabular-nums; }
+  .stat span { font-size: .78em; color: var(--muted); }
+  .why { margin-top: auto; border-left: .25em solid var(--accent); padding: .2em 0 .2em 1em; max-width: 54em; }
+  .why p + p { margin-top: .45em; }
+  .authors { font-size: 1.05em; }
+  .foot { position: absolute; left: 5.5%; right: 5.5%; bottom: 2.2%; display: flex; justify-content: space-between;
+    font-size: .62em; color: var(--muted); }
+  /* pipeline */
+  .pipe { display: flex; align-items: stretch; gap: .5em; margin: .2em 0 1em; }
+  .pipe .box { flex: 1; background: var(--card); border: 1px solid var(--line); border-radius: .5em; padding: .55em .6em;
+    font-size: .82em; text-align: center; display: flex; flex-direction: column; justify-content: center; }
+  .pipe .box b { display: block; font-size: 1.05em; }
+  .pipe .box.hl { border-color: var(--accent); background: var(--accent-soft); }
+  .pipe .arrow { align-self: center; color: var(--muted); font-size: 1.2em; }
+  /* barras */
+  .bars { display: grid; grid-template-columns: auto 1fr auto; gap: .45em .7em; align-items: center; font-size: .85em; }
+  .bar { height: 1.05em; background: var(--line); border-radius: .2em; }
+  .bar i { display: block; height: 100%; border-radius: .2em; background: #a8a29e; }
+  .bar.hl i { background: var(--accent); }
+  .bar.ref i { background: #44403c; }
+  .num { font-variant-numeric: tabular-nums; text-align: right; }
+  /* roadmap */
+  .road { display: grid; grid-template-columns: repeat(4, 1fr); gap: .6em; margin-top: .2em; }
+  .step { background: var(--card); border: 1px solid var(--line); border-radius: .5em; padding: .65em .75em; font-size: .78em; }
+  .step b { display: block; font-size: 1.08em; margin: .25em 0 .2em; }
+  .step.done { border-color: var(--ok); }
+  .step.now { border-color: var(--accent); background: var(--accent-soft); }
+  .chip { display: inline-block; font-size: .82em; font-weight: 650; border-radius: 1em; padding: .05em .6em; background: var(--line); color: var(--muted); }
+  .done .chip { background: var(--ok-soft); color: var(--ok); }
+  .now .chip { background: var(--accent); color: #fff; }
+  .kpi { display: flex; gap: 1.4em; margin-top: .5em; }
+  .kpi div { flex: 1; }
+  .kpi b { display: block; font-size: 1.6em; line-height: 1.1; font-variant-numeric: tabular-nums; }
+  .kpi span { font-size: .72em; color: var(--muted); }
+  @media print { .slide { display: flex !important; page-break-after: always; } }
+</style>
+</head>
+<body>
+<div class="deck">
+
+<!-- 0. PORTADA -->
+<section class="slide">
+  <div class="kicker">Aprendizaje Automático II · MIA UdeSA · 2026</div>
+  <h1>Más chico, más rápido: world models de manejo en tiempo real</h1>
+  <p class="authors">Bautista Peco · Tomás Morales · Kevin Soulier</p>
+  <div class="why">
+    <p><b>Por qué importa.</b> Un world model predice los próximos frames de video a partir de los anteriores. Sirve como simulador aprendido: comma.ai ya entrena el software de manejo de openpilot dentro de uno (2025).</p>
+    <p><b>El problema:</b> generar es caro. El modelo de comma tarda más de 1 s por frame en una laptop, y el video corre a 20 FPS (50 ms por frame).</p>
+    <p><b>Nuestra pregunta:</b> ¿cuánto se puede achicar y acelerar un world model sin perder calidad?</p>
+  </div>
+</section>
+
+<!-- 1. DATOS -->
+<section class="slide">
+  <div class="kicker">1 · Datos</div>
+  <h2>commaVQ: video de manejo real, comprimido en tokens</h2>
+  <div class="grid g-37">
+    <div>
+      <ul>
+        <li><b>100.000 minutos</b> de manejo real (comma.ai, licencia MIT). Segmentos de 1 min a 20 FPS.</li>
+        <li>Cada frame pasa por un <b>VQ-VAE</b>: un autoencoder con espacio latente discreto (codebook de 1.024 vectores).</li>
+        <li>Resultado: una grilla 8x16 = <b>128 tokens</b> por frame. El decoder vuelve de tokens a imagen.</li>
+        <li>Incluye el GPT de comma (~300M parámetros, entrenado con 3M minutos): nuestra referencia.</li>
+      </ul>
+      <div class="stat">
+        <div><b>40%</b><span>de los tokens repiten el del frame anterior en la misma celda</span></div>
+        <div><b>2.500</b><span>segmentos de train (1 de 40 shards). Val: 100 segmentos oficiales</span></div>
+      </div>
+    </div>
+    <div>
+      <img src="img/fig_frame_tokens.png" alt="Frame decodificado y su grilla de 8x16 tokens">
+      <img src="img/fig_segment_strip.png" alt="Cuatro frames de un mismo segmento" style="margin-top:.8em;border-radius:.3em">
+      <p class="small muted" style="margin-top:.3em">Frames reales de val, decodificados con el decoder de commaVQ.</p>
+    </div>
+  </div>
+</section>
+
+<!-- 2. METODOS -->
+<section class="slide">
+  <div class="kicker">2 · Métodos</div>
+  <h2>Predecir el próximo token, y hacerlo rápido</h2>
+  <div class="pipe">
+    <div class="box"><b>Video</b>cámara del auto</div><div class="arrow">→</div>
+    <div class="box"><b>Encoder</b>VQ-VAE de commaVQ</div><div class="arrow">→</div>
+    <div class="box"><b>Tokens</b>128 por frame</div><div class="arrow">→</div>
+    <div class="box hl"><b>Transformer</b>predice el próximo token, contexto 1 s</div><div class="arrow">→</div>
+    <div class="box"><b>Decoder</b>tokens → imagen</div><div class="arrow">→</div>
+    <div class="box"><b>Video generado</b>próximos segundos</div>
+  </div>
+  <div class="grid g-2" style="align-items:start">
+    <div class="card">
+      <b>Cómo achicar y acelerar</b>
+      <ul class="small">
+        <li><b>Destilación:</b> un modelo chico aprende a imitar las probabilidades del GPT de comma.</li>
+        <li><b>Generación en paralelo</b> (estilo MaskGIT): un frame en ~8 pasadas en vez de 128.</li>
+        <li><b>KV cache y menor precisión</b> (fp16 / int8).</li>
+        <li>Baselines: conteo de tokens y una ConvLSTM sobre la grilla 8x16.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <b>Cómo medimos</b>
+      <ul class="small">
+        <li><b>Calidad:</b> cross-entropy en val, con el mismo protocolo que comma. Video generado vs real a distintos horizontes (FVD, LPIPS).</li>
+        <li><b>Velocidad:</b> milisegundos por frame generado.</li>
+        <li><b>Resultado buscado:</b> la curva calidad vs velocidad, y qué configuración llega a 50 ms por frame.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- 3. AVANCES -->
+<section class="slide">
+  <div class="kicker">3 · Avances y próximos pasos</div>
+  <h2>Dónde estamos y hacia dónde vamos</h2>
+  <div class="grid g-2" style="flex:none;min-height:auto;gap:2em">
+    <div>
+      <p class="small"><b>Mini prueba: cross-entropy en val</b> <span class="muted">(nats/token, menor es mejor)</span></p>
+      <div class="bars" style="margin-top:.5em">
+        <span>Unigrama (sin contexto)</span><div class="bar"><i style="width:97.8%"></i></div><span class="num">6,85</span>
+        <span>Mismo token del frame anterior</span><div class="bar"><i style="width:49.7%"></i></div><span class="num">3,48</span>
+        <span><b>GPT chico propio</b> (11M, 30 min)</span><div class="bar hl"><i style="width:45.6%"></i></div><span class="num"><b>3,19</b></span>
+        <span>GPT de comma (300M)</span><div class="bar ref"><i style="width:28.9%"></i></div><span class="num">2,03</span>
+      </div>
+      <p class="small muted" style="margin-top:.6em">Comma reporta 2,02 para su GPT: el benchmark reproduce su número.</p>
+    </div>
+    <div>
+      <p class="small"><b>Velocidad hoy</b> <span class="muted">(GPT de comma, laptop Apple M5 Pro)</span></p>
+      <div class="kpi">
+        <div><b>1,25 s</b><span>por frame generado</span></div>
+        <div><b style="color:var(--accent)">50 ms</b><span>objetivo: tiempo real a 20 FPS</span></div>
+        <div><b>25x</b><span>más rápido es lo que falta</span></div>
+      </div>
+    </div>
+  </div>
+  <p class="small" style="margin:1.4em 0 .4em"><b>Roadmap</b></p>
+  <div class="road">
+    <div class="step done"><span class="chip">Hecho · oct</span><b>Datos y referencia</b>Carga de commaVQ, decoder, benchmark y GPT de comma evaluado.</div>
+    <div class="step now"><span class="chip">En curso · nov</span><b>Modelos chicos</b>GPT chico entrenado de cero vs destilado del GPT de comma. Baseline ConvLSTM.</div>
+    <div class="step"><span class="chip">Próximo · nov</span><b>Más rápido</b>KV cache, generación en paralelo y fp16 / int8. Medir ms por frame.</div>
+    <div class="step"><span class="chip">Cierre · dic</span><b>Calidad vs velocidad</b>Curva final, cuántos segundos aguanta el video y demo.</div>
+  </div>
+</section>
+
+</div>
+<script>
+  const slides = [...document.querySelectorAll('.slide')];
+  let i = Math.max(0, Math.min(slides.length - 1, parseInt(location.hash.slice(1)) || 0));
+  function show(n) {
+    i = Math.max(0, Math.min(slides.length - 1, n));
+    slides.forEach((s, k) => s.classList.toggle('active', k === i));
+    history.replaceState(null, '', '#' + i);
+  }
+  slides.forEach((s, k) => {
+    const f = document.createElement('div');
+    f.className = 'foot';
+    f.innerHTML = '<span>World models de manejo · commaVQ</span><span>' + k + ' / ' + (slides.length - 1) + '</span>';
+    s.appendChild(f);
+  });
+  document.addEventListener('keydown', e => {
+    if (['ArrowRight', 'PageDown', ' '].includes(e.key)) show(i + 1);
+    if (['ArrowLeft', 'PageUp'].includes(e.key)) show(i - 1);
+  });
+  document.addEventListener('click', e => show(e.clientX > innerWidth / 2 ? i + 1 : i - 1));
+  show(i);
+</script>
+</body>
+</html>

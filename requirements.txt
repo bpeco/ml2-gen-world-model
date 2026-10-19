@@ -1,0 +1,7 @@
+torch>=2.5
+numpy
+huggingface_hub
+einops
+opencv-python-headless
+matplotlib
+tqdm
