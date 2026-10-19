@@ -40,4 +40,4 @@ Resultado: `ce_all = 2,026` sobre los 100 segmentos.
 
 ## Slides
 
-`slides/index.html`: presentación de avance. Se navega con las flechas.
+`pre-entrega/index.html`: presentación de avance. Se navega con las flechas.
