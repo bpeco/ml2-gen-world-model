@@ -41,3 +41,5 @@ Resultado: `ce_all = 2,026` sobre los 100 segmentos.
 ## Slides
 
 `pre-entrega/index.html`: presentación de avance. Se navega con las flechas.
+
+`pre-entrega/generar_imagenes.py` regenera las imágenes de las animaciones (`pre-entrega/img/anim_*.jpg`, `race_real.jpg`) e imprime los tokens y probabilidades que usa el HTML. Necesita `data/` y `third_party/commavq`.
