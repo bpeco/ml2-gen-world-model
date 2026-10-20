@@ -271,13 +271,13 @@
     <div>
       <div class="head"><b>Calidad: qué tan bien predice el próximo token</b><span class="muted">val, 100 segmentos</span></div>
       <div class="bars" id="bars">
-        <span></span><span></span><span class="th">CE</span><span class="th">duda entre</span>
+        <span></span><span></span><span class="th">CE</span><span class="th">Perplexity</span>
         <span class="lab">Unigrama<small>frecuencia de cada token, sin contexto</small></span><div class="bar"><i data-w="97.8"></i></div><span class="num">6,85</span><span class="num ppl">~940</span>
         <span class="lab">Mismo token del frame anterior<small>mira la misma celda en el frame anterior</small></span><div class="bar"><i data-w="49.7"></i></div><span class="num">3,48</span><span class="num ppl">~32</span>
         <span class="lab"><b>GPT chico propio</b><small>11M parámetros, 30 min de entrenamiento</small></span><div class="bar hl"><i data-w="45.6"></i></div><span class="num"><b>3,19</b></span><span class="num ppl"><b>~24</b></span>
         <span class="lab">GPT de comma<small>300M parámetros</small></span><div class="bar ref"><i data-w="28.9"></i></div><span class="num">2,03</span><span class="num ppl">~8</span>
       </div>
-      <p class="note"><b>CE</b> (cross-entropy, nats por token): menor es mejor. <b>Duda entre</b>: es como si el modelo eligiera al azar entre esa cantidad de los 1.024 tokens. Comma reporta 2,02 para su GPT: nuestro benchmark reproduce su número.</p>
+      <p class="note"><b>CE</b> (cross-entropy): cuánta probabilidad le dio el modelo, en promedio, al token <b>real</b>. Menor CE, más probabilidad. Importa que toda la distribución esté bien. <b>Perplexity</b>: cantidad de tokens entre los que el modelo "duda".</p>
     </div>
     <div>
       <div class="head"><b>Velocidad: el GPT de comma contra el reloj</b><button class="replay" id="replayRace" title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
