@@ -161,8 +161,8 @@
   <h1>Más chico, más rápido: world models de manejo en tiempo real</h1>
   <p class="authors">Bautista Peco · Tomás Morales · Kevin Soulier</p>
   <div class="why">
-    <p><b>Por qué importa.</b> Un world model predice los próximos frames de video a partir de los anteriores. Sirve como simulador aprendido: comma.ai ya entrena el software de manejo de openpilot dentro de uno (2025).</p>
-    <p><b>El problema:</b> generar es caro. El modelo de comma tarda más de 1 s por frame en una laptop, y el video corre a 20 FPS (50 ms por frame).</p>
+    <p><b>Por qué importa.</b> Un world model predice cómo sigue un video de manejo. Así funciona como simulador: el software de manejo puede practicar adentro, equivocarse y aprender sin riesgo en la calle. comma.ai ya entrena así a openpilot.</p>
+    <p><b>El problema:</b> para entrenar, el simulador tiene que generar muchísimos frames, uno tras otro. El modelo público de comma tarda 1,25 s por frame, y la cámara saca uno cada 50 ms: es 25 veces más lento que el tiempo real. Simular 1 minuto de manejo le lleva 25 minutos.</p>
     <p><b>Nuestra pregunta:</b> ¿cuánto se puede achicar y acelerar un world model sin perder calidad?</p>
   </div>
 </section>
