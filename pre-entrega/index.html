@@ -113,31 +113,20 @@
   .num { font-variant-numeric: tabular-nums; text-align: right; }
   .ppl { color: var(--muted); }
   .note { font-size: .68em; color: var(--muted); margin-top: .7em; line-height: 1.4; }
-  /* carrera: tiempo real vs GPT de comma */
-  .race { display: grid; grid-template-columns: 5.2em 1fr; gap: .55em .8em; font-size: .8em; }
-  .race .rtile { aspect-ratio: 2 / 1; border-radius: .35em; overflow: hidden; position: relative; background: #2a2926; }
-  .race .rtile .idle { font-size: .75em; }
+  /* qué genera cada modelo: real vs GPT de comma vs GPT chico, mismo tramo */
+  .race { display: grid; grid-template-columns: 6.4em 1fr; gap: .5em .8em; font-size: .8em; align-items: center; }
+  .race .rtile { aspect-ratio: 256 / 115; border-radius: .35em; overflow: hidden; position: relative; background: #2a2926; }
+  .race .rtile .film img { transition: opacity .3s; }
+  .race .rtile.wait .film img { opacity: .45; }
   .rtrack { display: flex; flex-direction: column; justify-content: center; gap: .3em; min-width: 0; }
   .rlab { display: flex; justify-content: space-between; gap: .6em; font-size: .9em; line-height: 1.2; }
   .rlab span { color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
   .rlab span b { color: var(--ink); }
-  .rlab span i { font-style: normal; }
-  .ticks { display: grid; grid-template-columns: repeat(50, 1fr); gap: 1px; height: .9em; }
+  .rlab small { color: var(--muted); font-size: .85em; }
+  .ticks { display: grid; grid-template-columns: repeat(60, 1fr); gap: 1px; height: .7em; }
   .ticks i { background: #ebe9e2; border-radius: 1px; }
   .ticks i.c { background: #44403c; }
-  .blocks { display: grid; grid-template-columns: 1fr 1fr; gap: 1px; height: .9em; }
-  .blocks i { background: #ebe9e2; border-radius: 1px; overflow: hidden; }
-  .blocks u { display: block; height: 100%; width: 0; background: var(--accent); }
-  .raxis { grid-row: 3; position: relative; display: flex; justify-content: space-between; font-size: .75em; color: var(--muted); font-variant-numeric: tabular-nums; }
-  .raxis span:nth-child(2) { position: absolute; left: 50%; transform: translateX(-50%); }
-  .race > * { grid-column: 2; }
-  .race > .rtile { grid-column: 1; }
-  .race .r1 { grid-row: 1; } .race .r2 { grid-row: 2; }
-  .rlanes { grid-row: 1 / span 2; position: relative; pointer-events: none; }
-  .cursor { position: absolute; top: -.2em; bottom: -.2em; width: 2px; left: 0; background: var(--accent); opacity: 0; }
-  .race .verdict { grid-column: 1 / -1; grid-row: 4; font-size: .92em; margin-top: .2em; opacity: 0; transition: opacity .4s; }
-  .race .verdict.show { opacity: 1; }
-  .race .verdict b { color: var(--accent); }
+  .ticks.gen i.c { background: var(--accent); }
   /* roadmap: línea de tiempo */
   .tl { position: relative; display: grid; grid-template-columns: repeat(4, 1fr); margin-top: .3em; }
   .tl .rail, .tl .done-rail { position: absolute; top: .62em; left: 12.5%; height: 3px; border-radius: 2px; }
@@ -280,23 +269,25 @@
       <p class="note"><b>CE</b> (cross-entropy): cuánta probabilidad le dio el modelo, en promedio, al token <b>real</b>.<br><b>Perplexity</b>: cantidad de tokens entre los que el modelo "duda".</p>
     </div>
     <div>
-      <div class="head"><b>Velocidad: el GPT de comma contra el reloj</b><button class="replay" id="replayRace" title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
+      <div class="head"><b>Qué genera cada modelo</b><span class="muted">val, 1 s de contexto, 3 s generados</span><button class="replay" id="replayRace" title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
       <div class="race" id="race">
-        <div class="rtile r1"><div class="film"><img src="img/race_real.jpg" alt="Video real a 20 FPS" id="raceReal"></div></div>
-        <div class="rtrack r1">
-          <div class="rlab"><b>Tiempo real: 20 FPS</b><span><b id="cntReal">0</b> <i id="unitReal">frames</i></span></div>
+        <div class="rtile" id="tileReal"><div class="film"><img src="img/demo_real.jpg" alt="Video real" id="raceReal"></div></div>
+        <div class="rtrack">
+          <div class="rlab"><b>Video real <small>20 FPS</small></b><span id="lblReal">&nbsp;</span></div>
           <div class="ticks" id="ticksReal"></div>
         </div>
-        <div class="rtile r2"><div class="film"><img src="img/anim_gen.jpg" alt="Frames generados por el GPT de comma" id="raceGen"><div class="idle" id="raceIdle">generando</div></div></div>
-        <div class="rtrack r2">
-          <div class="rlab"><b>GPT de comma: 1,25 s por frame</b><span><b id="cntGen">0</b> <i id="unitGen">frames</i></span></div>
-          <div class="blocks" id="blocksGen"><i><u></u></i><i><u></u></i></div>
+        <div class="rtile" id="tileGen"><div class="film"><img src="img/demo_gpt2m.jpg" alt="Frames generados por el GPT de comma" id="raceGen"></div></div>
+        <div class="rtrack">
+          <div class="rlab"><b>GPT de comma <small>300M · 1,25 s por frame</small></b><span id="lblGen">&nbsp;</span></div>
+          <div class="ticks gen" id="ticksGen"></div>
         </div>
-        <div class="rlanes"><i class="cursor" id="raceCursor"></i></div>
-        <div class="raxis"><span>0 s</span><span>1,25 s</span><span>2,5 s</span></div>
-        <p class="verdict" id="raceVerdict">En 2,5 s: <b>50 frames contra 2</b>. Para llegar a tiempo real hay que ir <b>25x</b> más rápido.</p>
+        <div class="rtile" id="tileMini"><div class="film"><img src="img/demo_gpt_mini.jpg" alt="Frames generados por el GPT chico propio" id="raceMini"></div></div>
+        <div class="rtrack">
+          <div class="rlab"><b>GPT chico propio <small>11M</small></b><span id="lblMini">&nbsp;</span></div>
+          <div class="ticks gen" id="ticksMini"></div>
+        </div>
       </div>
-      <p class="note">Medido en una laptop Apple M5 Pro, fp32, con KV cache: 60 frames en 75 s. Frames reales de val y frames generados de verdad.</p>
+      <p class="note">Mismo segundo real de partida: arriba sigue la cámara, abajo lo que imagina cada modelo, a 20 FPS. Generar estos 3 s le lleva 75 s al GPT de comma (Apple M5 Pro, fp32, KV cache): 25x más lento que la cámara.</p>
     </div>
   </div>
   <div class="head" style="margin:1.5em 0 .5em"><b>Roadmap</b></div>
@@ -416,39 +407,49 @@
   function pipeStop() { pipeReset(); }
   addEventListener('resize', () => { if (slides[i].querySelector('#pipe')) layoutLinks(); });
 
-  // ---- última slide: barras, carrera contra el reloj y roadmap ----
-  // Carrera en tiempo real: arriba, frames reales de val a 20 FPS (img/race_real.jpg, frames 600-649 del segmento 0).
-  // Abajo, un frame del GPT de comma cada 1,25 s (medido) con los frames que generó (img/anim_gen.jpg).
-  const RACE_MS = 2500, REAL_MS = 50, GEN_MS = 1250, N_RACE = 50;
-  $('ticksReal').innerHTML = '<i></i>'.repeat(N_RACE);
+  // ---- última slide: barras, qué genera cada modelo y roadmap ----
+  // Tres sprites de 79 frames (img/demo_*.jpg): 19 frames reales de contexto (581-599 del segmento 0 de val)
+  // y 60 frames más (3 s). En el real son los frames 600-659; en los otros, lo que generó cada modelo (seed 0).
+  // Primero corren las tres filas juntas el contexto, después sigue sola la cámara y al final los dos modelos.
+  const N_CTX = 19, N_DEMO = 60, N_SPR = N_CTX + N_DEMO, FRAME_MS = 50, PAUSE_MS = 700;
+  const ROWS = [['raceReal', 'tileReal', 'ticksReal', 'lblReal'], ['raceGen', 'tileGen', 'ticksGen', 'lblGen'], ['raceMini', 'tileMini', 'ticksMini', 'lblMini']];
+  for (const r of ROWS) $(r[2]).innerHTML = '<i></i>'.repeat(N_DEMO);
   let raceRaf = null, raceDelay = null;
+  function rowAt(r, k) {  // fila r en el frame k del sprite: imagen, ticks y rótulo
+    const [img, tile, ticks, lbl] = ROWS[r];
+    film($(img), N_SPR, k);
+    [...$(ticks).children].forEach((c, j) => c.classList.toggle('c', j < k - N_CTX + 1));
+    $(lbl).innerHTML = k < N_CTX ? 'contexto real' : `+${((k - N_CTX + 1) / 20).toFixed(2).replace('.', ',')} s`;
+    $(tile).classList.toggle('wait', false);
+  }
   function raceReset() {
     cancelAnimationFrame(raceRaf); clearTimeout(raceDelay); raceRaf = raceDelay = null;
-    [...$('ticksReal').children].forEach(c => c.classList.remove('c'));
-    $('blocksGen').querySelectorAll('u').forEach(u => u.style.width = '0');
-    film($('raceReal'), N_RACE, 0); film($('raceGen'), N_GEN, 0);
-    $('raceIdle').style.display = 'grid';
-    $('cntReal').textContent = $('cntGen').textContent = '0';
-    $('raceCursor').style.opacity = 0; $('raceCursor').style.left = '0';
-    $('raceVerdict').classList.remove('show'); $('replayRace').classList.remove('show');
+    ROWS.forEach((_, r) => rowAt(r, 0));
+    ROWS.forEach(r => { $(r[3]).innerHTML = '&nbsp;'; });
+    $('replayRace').classList.remove('show');
   }
   function raceRun() {
     raceReset();
+    // fases: contexto en las tres filas, real solo (las otras esperan), modelos juntos
+    const T1 = N_CTX * FRAME_MS, T2 = T1 + PAUSE_MS + N_DEMO * FRAME_MS, T3 = T2 + PAUSE_MS + N_DEMO * FRAME_MS;
     let t0 = null;
-    const ticks = $('ticksReal').children, blocks = $('blocksGen').querySelectorAll('u');
     const frame = now => {
       if (t0 === null) t0 = now;
-      const ms = Math.min(now - t0, RACE_MS);
-      const nReal = Math.min(N_RACE, Math.floor(ms / REAL_MS) + 1), nGen = Math.floor(ms / GEN_MS);
-      film($('raceReal'), N_RACE, nReal - 1);
-      for (let k = 0; k < nReal; k++) ticks[k].classList.add('c');
-      blocks.forEach((u, k) => u.style.width = Math.max(0, Math.min(1, (ms - k * GEN_MS) / GEN_MS)) * 100 + '%');
-      if (nGen > 0) { $('raceIdle').style.display = 'none'; film($('raceGen'), N_GEN, nGen - 1); }
-      $('cntReal').textContent = nReal; $('cntGen').textContent = nGen;
-      $('unitReal').textContent = nReal === 1 ? 'frame' : 'frames'; $('unitGen').textContent = nGen === 1 ? 'frame' : 'frames';
-      $('raceCursor').style.opacity = 1; $('raceCursor').style.left = `calc(${ms / RACE_MS * 100}% - 1px)`;
-      if (ms < RACE_MS) raceRaf = requestAnimationFrame(frame);
-      else { $('raceVerdict').classList.add('show'); $('replayRace').classList.add('show'); }
+      const ms = now - t0;
+      if (ms < T1) {
+        const k = Math.floor(ms / FRAME_MS);
+        ROWS.forEach((_, r) => rowAt(r, k));
+      } else if (ms < T2) {
+        const k = Math.min(N_SPR - 1, N_CTX + Math.floor((ms - T1 - PAUSE_MS) / FRAME_MS));
+        rowAt(0, Math.max(N_CTX - 1, k));
+        [1, 2].forEach(r => { rowAt(r, N_CTX - 1); $(ROWS[r][1]).classList.add('wait'); $(ROWS[r][3]).textContent = 'generando…'; });
+      } else {
+        rowAt(0, N_SPR - 1);
+        const k = Math.min(N_SPR - 1, N_CTX + Math.floor((ms - T2 - PAUSE_MS) / FRAME_MS));
+        [1, 2].forEach(r => rowAt(r, Math.max(N_CTX - 1, k)));
+      }
+      if (ms < T3) raceRaf = requestAnimationFrame(frame);
+      else $('replayRace').classList.add('show');
     };
     raceDelay = setTimeout(() => raceRaf = requestAnimationFrame(frame), 900);
   }
