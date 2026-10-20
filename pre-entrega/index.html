@@ -113,6 +113,8 @@
   .num { font-variant-numeric: tabular-nums; text-align: right; }
   .ppl { color: var(--muted); }
   .note { font-size: .68em; color: var(--muted); margin-top: .7em; line-height: 1.4; }
+  .note ol { padding-left: 1.5em; margin-top: .2em; }
+  .note li { margin: .1em 0; }
   /* qué genera cada modelo: real vs GPT de comma vs GPT chico, mismo tramo */
   .race { display: grid; grid-template-columns: 6.4em 1fr; gap: .5em .8em; font-size: .8em; align-items: center; }
   .race .rtile { aspect-ratio: 256 / 115; border-radius: .35em; overflow: hidden; position: relative; background: #2a2926; }
@@ -287,7 +289,13 @@
           <div class="ticks gen" id="ticksMini"></div>
         </div>
       </div>
-      <p class="note">Mismo segundo real de partida: arriba sigue la cámara, abajo lo que imagina cada modelo, a 20 FPS. Generar estos 3 s le lleva 75 s al GPT de comma (Apple M5 Pro, fp32, KV cache): 25x más lento que la cámara.</p>
+      <div class="note">Mismo segundo real de partida:
+        <ol>
+          <li>Video real: sigue la cámara real.</li>
+          <li>GPT de comma: predicción de los siguientes frames por 3 s.</li>
+          <li>GPT chico propio: predicción de los siguientes frames por 3 s.</li>
+        </ol>
+      </div>
     </div>
   </div>
   <div class="head" style="margin:1.5em 0 .5em"><b>Roadmap</b></div>
