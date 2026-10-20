@@ -245,12 +245,13 @@
     <div class="card">
       <b>Cómo medimos</b>
       <ul class="small">
-        <li><b>Calidad:</b> cross-entropy en val, con el mismo protocolo que comma. Video generado vs real a distintos horizontes (FVD, LPIPS).</li>
+        <li><b>Calidad:</b> cross-entropy en val, con el mismo protocolo que comma. Video generado vs real a distintos horizontes (FVD, LPIPS)*.</li>
         <li><b>Velocidad:</b> milisegundos por frame generado.</li>
         <li><b>Referencias:</b> baselines de conteo, una ConvLSTM sobre la grilla 8x16 y el GPT de comma.</li>
         <li><b>Resultado buscado:</b> la curva calidad vs velocidad, y qué configuración llega a 50 ms por frame.</li>
       </ul>
     </div>
+    <p class="muted" style="grid-column:2;margin-top:-1.2em;font-size:.62em;font-style:italic">* FVD: Fréchet Video Distance. LPIPS: Learned Perceptual Image Patch Similarity.</p>
   </div>
 </section>
 
