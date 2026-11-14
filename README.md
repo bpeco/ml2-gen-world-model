@@ -6,13 +6,27 @@ Pregunta del proyecto: ¿cuánto se puede achicar y acelerar un world model de v
 
 ## Setup
 
-En Mac conviene un Python arm64 nativo: con uno x86_64 (Rosetta) solo se consigue torch 2.2.2.
+### Mac
+
+Conviene un Python arm64 nativo: con uno x86_64 (Rosetta) solo se consigue torch 2.2.2.
 
 ```bash
 uv venv --python cpython-3.12-macos-aarch64-none .venv
 uv pip install --python .venv/bin/python -r requirements.txt
 git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq   # código del VQ-VAE y del GPT de comma
 ```
+
+### Windows
+
+En PowerShell, desde la raíz del repo. El torch de PyPI para Windows es solo CPU y `device()` (`src/common.py`) elige MPS o CPU, así que todo corre en CPU.
+
+```powershell
+py -m venv .venv
+.venv\Scripts\python -m pip install -r requirements.txt
+git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq   # código del VQ-VAE y del GPT de comma
+```
+
+En el resto del README, `.venv/bin/python` es `.venv\Scripts\python`.
 
 ## Datos
 
