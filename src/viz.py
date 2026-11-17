@@ -1,8 +1,6 @@
 """Decoder del VQ-VAE de comma (tokens -> imagen) y figuras de datos para las slides."""
 import sys
 
-import matplotlib
-matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 import torch
@@ -43,6 +41,7 @@ def fig_frame_tokens(seg, decoder, path, frame=600):
 
 
 if __name__ == "__main__":
+  plt.switch_backend("Agg")
   val = np.load("data/val_tokens.npy")
   dec = load_decoder()
   fig_frame_tokens(val[0], dec, "results/fig_frame_tokens.png")

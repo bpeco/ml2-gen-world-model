@@ -1,0 +1,39 @@
+{
+ "model": "gpt_s",
+ "name": "gpt_s",
+ "segments": 46,
+ "windows": 874,
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "probes": {
+  "pred": {
+   "lineal": {
+    "velocidad": {
+     "mse": 1.394768409387805,
+     "pearson": 0.27068420970225815
+    },
+    "giro": {
+     "mse": 2.0165102791221976,
+     "pearson": 0.36996696774244253
+    }
+   },
+   "mlp": {
+    "velocidad": {
+     "mse": 1.2215039730072021,
+     "pearson": 0.3410494327545166
+    },
+    "giro": {
+     "mse": 2.4589743614196777,
+     "pearson": 0.2815614938735962
+    }
+   }
+  }
+ }
+}

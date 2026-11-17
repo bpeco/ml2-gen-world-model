@@ -1,0 +1,107 @@
+{
+ "run": "gpt_s_abs",
+ "kind": "gpt",
+ "size": "s",
+ "config": {
+  "n_layer": 6,
+  "n_head": 6,
+  "dim": 384,
+  "dropout": 0.0,
+  "block_size": 2580
+ },
+ "params": 12425472,
+ "tokens": 100021440,
+ "steps": 2423,
+ "seconds": 729.8091387748718,
+ "tokens_per_s": 137051.5038601814,
+ "final_monitor_ce": 3.0654749870300293,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 10320000,
+   "monitor_ce": 6.618101596832275
+  },
+  {
+   "step": 500,
+   "tokens": 20640000,
+   "monitor_ce": 3.9034764766693115
+  },
+  {
+   "step": 750,
+   "tokens": 30960000,
+   "monitor_ce": 3.514209032058716
+  },
+  {
+   "step": 1000,
+   "tokens": 41280000,
+   "monitor_ce": 3.347261905670166
+  },
+  {
+   "step": 1250,
+   "tokens": 51600000,
+   "monitor_ce": 3.255697727203369
+  },
+  {
+   "step": 1500,
+   "tokens": 61920000,
+   "monitor_ce": 3.1914669275283813
+  },
+  {
+   "step": 1750,
+   "tokens": 72240000,
+   "monitor_ce": 3.1378196477890015
+  },
+  {
+   "step": 2000,
+   "tokens": 82560000,
+   "monitor_ce": 3.100072503089905
+  },
+  {
+   "step": 2250,
+   "tokens": 92880000,
+   "monitor_ce": 3.077154040336609
+  },
+  {
+   "step": 2423,
+   "tokens": 100021440,
+   "monitor_ce": 3.0654749870300293
+  }
+ ],
+ "args": {
+  "kind": "gpt",
+  "size": "s",
+  "config": "{}",
+  "run": "gpt_s",
+  "tokens": 100000000.0,
+  "bs": 16,
+  "accum": 1,
+  "lr": 0.001,
+  "min_lr_frac": 0.1,
+  "warmup": 200,
+  "wd": 0.1,
+  "clip": 1.0,
+  "amp": null,
+  "seed": 0,
+  "frames": 20,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results"
+ },
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ }
+}

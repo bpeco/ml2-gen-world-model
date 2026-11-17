@@ -1,0 +1,9 @@
+# Laptop Ryzen AI 7 350 (Radeon 860M, gfx1152) con Python 3.14: torch de AMD para ROCm.
+# Instalar ANTES que requirements.txt:
+#   pip install -r requirements-rocm.txt
+#   pip install -r requirements.txt
+# Y prender AOTriton (en gfx1152 viene apagado; sin él SDPA cae al backend math):
+#   set TORCH_ROCM_AOTRITON_ENABLE_EXPERIMENTAL=1
+# device() elige "cuda": los builds ROCm usan la misma API torch.cuda (torch.version.hip dice cuál es).
+--index-url https://stable.repo.amd.com/rocm/whl-next/
+torch[device-gfx1152]==2.14.0+rocm10.1.0

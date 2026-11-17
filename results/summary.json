@@ -1,0 +1,801 @@
+{
+ "configs": [
+  {
+   "label": "Unigrama",
+   "family": "baseline",
+   "params_M": null,
+   "ce_all": 6.846,
+   "ce_last": 6.854,
+   "lpips_1s": 0.571,
+   "fvd_1s": 1470.9,
+   "fvd_1s_ci": [
+    1375.9,
+    1565.9
+   ],
+   "fvd_3s": 1523.9,
+   "ms_frame": null,
+   "fps": null,
+   "realtime": null,
+   "group": "principal",
+   "pareto": null
+  },
+  {
+   "label": "Copia (tabla por celda)",
+   "family": "baseline",
+   "params_M": null,
+   "ce_all": 3.48,
+   "ce_last": 3.331,
+   "lpips_1s": 0.522,
+   "fvd_1s": 729.4,
+   "fvd_1s_ci": [
+    674.4,
+    784.4
+   ],
+   "fvd_3s": 1241.4,
+   "ms_frame": 0.47,
+   "fps": 2132.2,
+   "realtime": true,
+   "group": "principal",
+   "pareto": true
+  },
+  {
+   "label": "Frame congelado",
+   "family": "baseline",
+   "params_M": null,
+   "ce_all": null,
+   "ce_last": null,
+   "lpips_1s": 0.235,
+   "fvd_1s": 928.6,
+   "fvd_1s_ci": [
+    870.7,
+    986.4
+   ],
+   "fvd_3s": 978.2,
+   "ms_frame": null,
+   "fps": null,
+   "realtime": null,
+   "group": "principal",
+   "pareto": null
+  },
+  {
+   "label": "gpt2m (comma)",
+   "family": "gpt2m",
+   "params_M": 307.0,
+   "ce_all": 2.026,
+   "ce_last": 1.751,
+   "lpips_1s": 0.171,
+   "fvd_1s": 67.1,
+   "fvd_1s_ci": [
+    55.6,
+    78.5
+   ],
+   "fvd_3s": 105.2,
+   "ms_frame": 735.17,
+   "fps": 1.4,
+   "realtime": false,
+   "group": "principal",
+   "pareto": true
+  },
+  {
+   "label": "ConvLSTM",
+   "family": "convlstm",
+   "params_M": 8.0,
+   "ce_all": 2.879,
+   "ce_last": 2.618,
+   "lpips_1s": 0.287,
+   "fvd_1s": 162.8,
+   "fvd_1s_ci": [
+    140.1,
+    185.5
+   ],
+   "fvd_3s": 293.3,
+   "ms_frame": 1.1,
+   "fps": 907.6,
+   "realtime": true,
+   "group": "principal",
+   "pareto": true
+  },
+  {
+   "label": "GPT-S",
+   "family": "gpt",
+   "params_M": 11.5,
+   "ce_all": 2.957,
+   "ce_last": 2.763,
+   "lpips_1s": 0.354,
+   "fvd_1s": 229.6,
+   "fvd_1s_ci": [
+    198.9,
+    260.3
+   ],
+   "fvd_3s": 734.6,
+   "ms_frame": 156.08,
+   "fps": 6.4,
+   "realtime": false,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "GPT-S destilado",
+   "family": "gpt_kd",
+   "params_M": 11.5,
+   "ce_all": 2.949,
+   "ce_last": 2.749,
+   "lpips_1s": 0.356,
+   "fvd_1s": 229.2,
+   "fvd_1s_ci": [
+    195.6,
+    262.7
+   ],
+   "fvd_3s": 616.9,
+   "ms_frame": 156.08,
+   "fps": 6.4,
+   "realtime": false,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "GPT-M",
+   "family": "gpt",
+   "params_M": 26.3,
+   "ce_all": 2.963,
+   "ce_last": 2.77,
+   "lpips_1s": 0.343,
+   "fvd_1s": 237.5,
+   "fvd_1s_ci": [
+    206.7,
+    268.2
+   ],
+   "fvd_3s": 629.6,
+   "ms_frame": 210.96,
+   "fps": 4.7,
+   "realtime": false,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "GPT-M destilado",
+   "family": "gpt_kd",
+   "params_M": 26.3,
+   "ce_all": 2.931,
+   "ce_last": 2.726,
+   "lpips_1s": 0.331,
+   "fvd_1s": 213.1,
+   "fvd_1s_ci": [
+    184.5,
+    241.7
+   ],
+   "fvd_3s": 516.7,
+   "ms_frame": 210.96,
+   "fps": 4.7,
+   "realtime": false,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "MaskGIT-S 1 pasos",
+   "family": "maskgit",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": 3.022,
+   "lpips_1s": 0.352,
+   "fvd_1s": 234.9,
+   "fvd_1s_ci": [
+    206.5,
+    263.3
+   ],
+   "fvd_3s": 489.4,
+   "ms_frame": 5.31,
+   "fps": 188.4,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "MaskGIT-S 2 pasos",
+   "family": "maskgit",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": 3.022,
+   "lpips_1s": 0.32,
+   "fvd_1s": 203.5,
+   "fvd_1s_ci": [
+    175.6,
+    231.5
+   ],
+   "fvd_3s": 445.7,
+   "ms_frame": 7.02,
+   "fps": 142.4,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "MaskGIT-S 4 pasos",
+   "family": "maskgit",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": 3.022,
+   "lpips_1s": 0.286,
+   "fvd_1s": 220.2,
+   "fvd_1s_ci": [
+    190.1,
+    250.3
+   ],
+   "fvd_3s": 375.9,
+   "ms_frame": 10.14,
+   "fps": 98.6,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "MaskGIT-S 8 pasos",
+   "family": "maskgit",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": 3.022,
+   "lpips_1s": 0.264,
+   "fvd_1s": 307.3,
+   "fvd_1s_ci": [
+    274.0,
+    340.7
+   ],
+   "fvd_3s": 366.0,
+   "ms_frame": 16.07,
+   "fps": 62.2,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "MaskGIT-M 1 pasos",
+   "family": "maskgit",
+   "params_M": 26.3,
+   "ce_all": null,
+   "ce_last": 3.134,
+   "lpips_1s": 0.378,
+   "fvd_1s": 291.3,
+   "fvd_1s_ci": [
+    260.6,
+    321.9
+   ],
+   "fvd_3s": 475.9,
+   "ms_frame": 8.42,
+   "fps": 118.8,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "MaskGIT-M 2 pasos",
+   "family": "maskgit",
+   "params_M": 26.3,
+   "ce_all": null,
+   "ce_last": 3.134,
+   "lpips_1s": 0.34,
+   "fvd_1s": 239.8,
+   "fvd_1s_ci": [
+    209.6,
+    270.1
+   ],
+   "fvd_3s": 473.9,
+   "ms_frame": 10.42,
+   "fps": 96.0,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "MaskGIT-M 4 pasos",
+   "family": "maskgit",
+   "params_M": 26.3,
+   "ce_all": null,
+   "ce_last": 3.134,
+   "lpips_1s": 0.298,
+   "fvd_1s": 213.8,
+   "fvd_1s_ci": [
+    183.5,
+    244.1
+   ],
+   "fvd_3s": 379.5,
+   "ms_frame": 14.43,
+   "fps": 69.3,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "MaskGIT-M 8 pasos",
+   "family": "maskgit",
+   "params_M": 26.3,
+   "ce_all": null,
+   "ce_last": 3.134,
+   "lpips_1s": 0.269,
+   "fvd_1s": 266.0,
+   "fvd_1s_ci": [
+    237.6,
+    294.4
+   ],
+   "fvd_3s": 341.4,
+   "ms_frame": 22.58,
+   "fps": 44.3,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "GPT-S, posición absoluta",
+   "family": "ablación",
+   "params_M": 12.4,
+   "ce_all": 3.158,
+   "ce_last": 3.416,
+   "lpips_1s": 0.36,
+   "fvd_1s": 284.8,
+   "fvd_1s_ci": [
+    252.7,
+    316.9
+   ],
+   "fvd_3s": 726.8,
+   "ms_frame": 156.08,
+   "fps": 6.4,
+   "realtime": false,
+   "group": "ablación",
+   "pareto": null
+  },
+  {
+   "label": "MaskGIT-S 8 pasos, posición absoluta",
+   "family": "ablación",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 3.183,
+   "lpips_1s": 0.274,
+   "fvd_1s": 252.7,
+   "fvd_1s_ci": [
+    224.0,
+    281.4
+   ],
+   "fvd_3s": 432.6,
+   "ms_frame": 16.07,
+   "fps": 62.2,
+   "realtime": true,
+   "group": "ablación",
+   "pareto": null
+  },
+  {
+   "label": "MaskGIT-S 8 pasos, máscara Genie",
+   "family": "ablación",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": 3.26,
+   "lpips_1s": 0.325,
+   "fvd_1s": 337.5,
+   "fvd_1s_ci": [
+    296.1,
+    379.0
+   ],
+   "fvd_3s": 725.8,
+   "ms_frame": 16.07,
+   "fps": 62.2,
+   "realtime": true,
+   "group": "ablación",
+   "pareto": null
+  },
+  {
+   "label": "MaskGIT-S 8 pasos, sin p_clean",
+   "family": "ablación",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": 5.07,
+   "lpips_1s": 0.849,
+   "fvd_1s": 3294.7,
+   "fvd_1s_ci": [
+    3133.5,
+    3455.8
+   ],
+   "fvd_3s": 4006.9,
+   "ms_frame": 16.07,
+   "fps": 62.2,
+   "realtime": true,
+   "group": "ablación",
+   "pareto": null
+  },
+  {
+   "label": "ConvLSTM, 1B tokens",
+   "family": "convlstm",
+   "params_M": 8.0,
+   "ce_all": 2.685,
+   "ce_last": 2.398,
+   "lpips_1s": 0.259,
+   "fvd_1s": 117.3,
+   "fvd_1s_ci": [
+    100.6,
+    134.0
+   ],
+   "fvd_3s": 249.6,
+   "ms_frame": 1.1,
+   "fps": 907.6,
+   "realtime": true,
+   "group": "extra",
+   "pareto": null
+  },
+  {
+   "label": "GPT-S, contexto 4",
+   "family": "contexto",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": null,
+   "lpips_1s": 0.345,
+   "fvd_1s": 236.0,
+   "fvd_1s_ci": [
+    202.9,
+    269.1
+   ],
+   "fvd_3s": 691.1,
+   "ms_frame": 155.18,
+   "fps": 6.4,
+   "realtime": false,
+   "group": "extra",
+   "pareto": null
+  },
+  {
+   "label": "MaskGIT-S 2 pasos, contexto 4",
+   "family": "contexto",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": null,
+   "lpips_1s": 0.322,
+   "fvd_1s": 207.0,
+   "fvd_1s_ci": [
+    177.8,
+    236.1
+   ],
+   "fvd_3s": 446.9,
+   "ms_frame": 6.75,
+   "fps": 148.1,
+   "realtime": true,
+   "group": "extra",
+   "pareto": null
+  },
+  {
+   "label": "MaskGIT-S 4 pasos, contexto 4",
+   "family": "contexto",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": null,
+   "lpips_1s": 0.284,
+   "fvd_1s": 229.7,
+   "fvd_1s_ci": [
+    197.4,
+    261.9
+   ],
+   "fvd_3s": 352.4,
+   "ms_frame": 9.99,
+   "fps": 100.1,
+   "realtime": true,
+   "group": "extra",
+   "pareto": null
+  },
+  {
+   "label": "GPT-S, contexto 8",
+   "family": "contexto",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": null,
+   "lpips_1s": 0.345,
+   "fvd_1s": 220.6,
+   "fvd_1s_ci": [
+    192.5,
+    248.6
+   ],
+   "fvd_3s": 661.5,
+   "ms_frame": 155.98,
+   "fps": 6.4,
+   "realtime": false,
+   "group": "extra",
+   "pareto": null
+  },
+  {
+   "label": "MaskGIT-S 2 pasos, contexto 8",
+   "family": "contexto",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": null,
+   "lpips_1s": 0.318,
+   "fvd_1s": 204.9,
+   "fvd_1s_ci": [
+    175.2,
+    234.6
+   ],
+   "fvd_3s": 420.6,
+   "ms_frame": 6.87,
+   "fps": 145.6,
+   "realtime": true,
+   "group": "extra",
+   "pareto": null
+  },
+  {
+   "label": "MaskGIT-S 4 pasos, contexto 8",
+   "family": "contexto",
+   "params_M": 11.5,
+   "ce_all": null,
+   "ce_last": null,
+   "lpips_1s": 0.284,
+   "fvd_1s": 237.1,
+   "fvd_1s_ci": [
+    207.2,
+    266.9
+   ],
+   "fvd_3s": 373.2,
+   "ms_frame": 10.06,
+   "fps": 99.4,
+   "realtime": true,
+   "group": "extra",
+   "pareto": null
+  },
+  {
+   "label": "JEPA-S (V-JEPA, latente por celda)",
+   "family": "jepa",
+   "params_M": 11.6,
+   "ce_all": 3.708,
+   "ce_last": 3.525,
+   "lpips_1s": 0.441,
+   "fvd_1s": 460.0,
+   "fvd_1s_ci": [
+    411.8,
+    508.3
+   ],
+   "fvd_3s": 1187.7,
+   "ms_frame": 2.92,
+   "fps": 342.9,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "LeWM (LeWorldModel, un vector por frame)",
+   "family": "lewm",
+   "params_M": 21.7,
+   "ce_all": 6.637,
+   "ce_last": 6.683,
+   "lpips_1s": 0.501,
+   "fvd_1s": 1016.3,
+   "fvd_1s_ci": [
+    961.5,
+    1071.2
+   ],
+   "fvd_3s": 1080.0,
+   "ms_frame": 1.36,
+   "fps": 732.6,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "JEPA-XS (4 capas, D 256)",
+   "family": "jepa",
+   "params_M": 3.7,
+   "ce_all": 3.858,
+   "ce_last": 3.676,
+   "lpips_1s": 0.463,
+   "fvd_1s": 510.1,
+   "fvd_1s_ci": [
+    457.0,
+    563.2
+   ],
+   "fvd_3s": 1120.5,
+   "ms_frame": 1.89,
+   "fps": 529.9,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "JEPA-XXS (3 capas, D 192)",
+   "family": "jepa",
+   "params_M": 1.7,
+   "ce_all": 3.924,
+   "ce_last": 3.724,
+   "lpips_1s": 0.463,
+   "fvd_1s": 545.7,
+   "fvd_1s_ci": [
+    496.2,
+    595.2
+   ],
+   "fvd_3s": 1264.2,
+   "ms_frame": 1.2,
+   "fps": 834.7,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "LeWM-XS (ViT de 6 capas, predictor de 4)",
+   "family": "lewm",
+   "params_M": 10.9,
+   "ce_all": 6.637,
+   "ce_last": 6.683,
+   "lpips_1s": 0.508,
+   "fvd_1s": 996.9,
+   "fvd_1s_ci": [
+    937.7,
+    1056.1
+   ],
+   "fvd_3s": 1024.8,
+   "ms_frame": 0.81,
+   "fps": 1231.5,
+   "realtime": true,
+   "group": "principal",
+   "pareto": false
+  },
+  {
+   "label": "JEPA-S, control CE",
+   "family": "jepa",
+   "params_M": 11.6,
+   "ce_all": 2.959,
+   "ce_last": 2.739,
+   "lpips_1s": 0.358,
+   "fvd_1s": 265.3,
+   "fvd_1s_ci": [
+    234.5,
+    296.2
+   ],
+   "fvd_3s": 826.3,
+   "ms_frame": 2.92,
+   "fps": 342.9,
+   "realtime": true,
+   "group": "latente",
+   "pareto": null
+  },
+  {
+   "label": "JEPA-S con SIGReg",
+   "family": "jepa",
+   "params_M": 11.6,
+   "ce_all": 4.256,
+   "ce_last": 4.033,
+   "lpips_1s": 0.541,
+   "fvd_1s": 806.2,
+   "fvd_1s_ci": [
+    754.9,
+    857.4
+   ],
+   "fvd_3s": 849.5,
+   "ms_frame": 2.92,
+   "fps": 342.9,
+   "realtime": true,
+   "group": "latente",
+   "pareto": null
+  },
+  {
+   "label": "JEPA-S, target codebook",
+   "family": "jepa",
+   "params_M": 11.4,
+   "ce_all": 4.336,
+   "ce_last": 3.863,
+   "lpips_1s": 0.488,
+   "fvd_1s": 582.3,
+   "fvd_1s_ci": [
+    534.9,
+    629.6
+   ],
+   "fvd_3s": 970.8,
+   "ms_frame": 2.92,
+   "fps": 342.9,
+   "realtime": true,
+   "group": "latente",
+   "pareto": null
+  },
+  {
+   "label": "LeWM, control CE",
+   "family": "lewm",
+   "params_M": 21.7,
+   "ce_all": 6.574,
+   "ce_last": 6.615,
+   "lpips_1s": 0.597,
+   "fvd_1s": 1379.2,
+   "fvd_1s_ci": [
+    1294.7,
+    1463.8
+   ],
+   "fvd_3s": 1944.8,
+   "ms_frame": 1.36,
+   "fps": 732.6,
+   "realtime": true,
+   "group": "latente",
+   "pareto": null
+  },
+  {
+   "label": "LeWM con EMA",
+   "family": "lewm",
+   "params_M": 21.7,
+   "ce_all": 6.628,
+   "ce_last": 6.673,
+   "lpips_1s": 0.519,
+   "fvd_1s": 1020.6,
+   "fvd_1s_ci": [
+    961.4,
+    1079.7
+   ],
+   "fvd_3s": 1043.2,
+   "ms_frame": 1.36,
+   "fps": 732.6,
+   "realtime": true,
+   "group": "latente",
+   "pareto": null
+  },
+  {
+   "label": "LeWM, λ = 0,03",
+   "family": "lewm",
+   "params_M": 21.7,
+   "ce_all": 6.634,
+   "ce_last": 6.679,
+   "lpips_1s": null,
+   "fvd_1s": null,
+   "fvd_1s_ci": null,
+   "fvd_3s": null,
+   "ms_frame": 1.36,
+   "fps": 732.6,
+   "realtime": true,
+   "group": "latente",
+   "pareto": null
+  },
+  {
+   "label": "LeWM, λ = 0,3",
+   "family": "lewm",
+   "params_M": 21.7,
+   "ce_all": 6.624,
+   "ce_last": 6.667,
+   "lpips_1s": null,
+   "fvd_1s": null,
+   "fvd_1s_ci": null,
+   "fvd_3s": null,
+   "ms_frame": 1.36,
+   "fps": 732.6,
+   "realtime": true,
+   "group": "latente",
+   "pareto": null
+  },
+  {
+   "label": "JEPA-S, rollout latente",
+   "family": "jepa",
+   "params_M": 11.6,
+   "ce_all": null,
+   "ce_last": null,
+   "lpips_1s": 0.438,
+   "fvd_1s": 553.4,
+   "fvd_1s_ci": [
+    503.8,
+    602.9
+   ],
+   "fvd_3s": 2989.6,
+   "ms_frame": 3.06,
+   "fps": 326.7,
+   "realtime": true,
+   "group": "latente",
+   "pareto": null
+  },
+  {
+   "label": "LeWM, rollout latente",
+   "family": "lewm",
+   "params_M": 21.7,
+   "ce_all": null,
+   "ce_last": null,
+   "lpips_1s": 0.481,
+   "fvd_1s": 990.9,
+   "fvd_1s_ci": [
+    934.4,
+    1047.4
+   ],
+   "fvd_3s": 1029.2,
+   "ms_frame": 1.03,
+   "fps": 966.9,
+   "realtime": true,
+   "group": "latente",
+   "pareto": null
+  }
+ ],
+ "ce_vs_fvd1": {
+  "spearman_rho": 1.0,
+  "p": 0.0,
+  "n": 9
+ }
+}

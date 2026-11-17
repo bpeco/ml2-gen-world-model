@@ -9,7 +9,7 @@ Recorrido por 14 papers (2015–2025), en el orden aproximado en que aparecieron
 - [Cómo usar este documento](#cómo-usar-este-documento)
 - [Parte 1 · Fundamentos](#parte-1--fundamentos): ConvLSTM, VQ-VAE, World Models, VQGAN
 - [Parte 2 · Generadores sobre tokens y latentes](#parte-2--generadores-sobre-tokens-y-latentes): MaskGIT, DiT, IRIS
-- [Parte 3 · World models de conducción y de video](#parte-3--world-models-de-conducción-y-de-video): GAIA-1, DriveDreamer, V-JEPA, GenAD/Vista, DIAMOND, comma, V-JEPA 2
+- [Parte 3 · World models de conducción y de video](#parte-3--world-models-de-conducción-y-de-video): GAIA-1, DriveDreamer, V-JEPA, GenAD/Vista, DIAMOND, comma, V-JEPA 2, LeWorldModel
 - [Parte 4 · Métricas de evaluación](#parte-4--métricas-de-evaluación)
 - [Propuesta de proyecto](#propuesta-de-proyecto)
 - [Camino sugerido para el proyecto](#camino-sugerido-para-el-proyecto)
@@ -462,6 +462,22 @@ Sobre las dos arquitecturas que mencionaste, las dos entran:
 
 **Utilidad para el proyecto: el paralelo es directo.** commaVQ tiene mucho video y poses, igual que la receta de V-JEPA 2. Si eligen la línea JEPA, la versión alcanzable es un predictor latente condicionado por pose sobre los embeddings del codebook. Una prueba linda: dados el frame actual y uno objetivo, buscar la secuencia de poses que lleva de uno a otro.
 
+### 15. LeWorldModel (2026): JEPA de punta a punta sin heurísticas
+
+**Paper:** [LeWorldModel: Stable End-to-End Joint-Embedding Predictive Architecture from Pixels](https://arxiv.org/abs/2603.19312) · Maes, Le Lidec, Scieur, LeCun y Balestriero · 2026 · [código](https://github.com/lucas-maes/le-wm)
+
+**Resumen.** Entrena un world model JEPA desde píxeles, de punta a punta, con solo dos términos de pérdida: predecir el embedding del próximo paso y un regularizador que mantiene los embeddings gaussianos. No usa EMA, ni stop-gradient, ni encoders preentrenados. Son ~15M de parámetros, entrenan en una GPU en pocas horas y planifican hasta 48× más rápido que los world models basados en modelos fundacionales.
+
+**Conceptos clave**
+
+- **SIGReg (Sketched Isotropic Gaussian Regularizer):** proyecta los embeddings sobre ~1024 direcciones al azar y en cada una mide, con el test de Epps-Pulley, cuánto se aleja la distribución de una N(0, 1). Evita el colapso sin la EMA de V-JEPA. Queda un solo hiperparámetro, λ.
+- **Un embedding por frame:** el CLS de un ViT-Tiny (192 dimensiones) pasa por un projector con BatchNorm.
+- **Predictor con AdaLN-zero:** transformer causal en el tiempo condicionado en la acción, como los DiT.
+- **Planificación con CEM:** busca la secuencia de acciones cuyo embedding final queda más cerca del de una imagen objetivo.
+- **Evaluación física:** probes de magnitudes físicas y "sorpresa" ante eventos imposibles (teletransporte de objetos).
+
+**Utilidad para el proyecto: es la versión más barata de la línea JEPA.** Las poses de commaVQ hacen de acciones. El proyecto la implementó junto a una JEPA estilo V-JEPA, en el experimento E5: ver [`plan-jepa.md`](plan-jepa.md).
+
 ---
 
 ## Parte 4 · Métricas de evaluación
@@ -630,6 +646,7 @@ Dos cuidados:
 15. [Vista](https://arxiv.org/abs/2405.17398): Gao et al., 2024
 16. [Learning to Drive from a World Model](https://arxiv.org/abs/2504.19077): Goff et al. (comma.ai), 2025
 17. [V-JEPA 2](https://arxiv.org/abs/2506.09985): Assran et al., 2025
+18. [LeWorldModel](https://arxiv.org/abs/2603.19312): Maes et al., 2026 (agregado con E5)
 
 **Surveys para el estado del arte del informe**
 

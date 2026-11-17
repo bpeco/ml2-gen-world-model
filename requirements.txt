@@ -5,3 +5,5 @@ einops
 opencv-python-headless
 matplotlib
 tqdm
+scipy
+pytest

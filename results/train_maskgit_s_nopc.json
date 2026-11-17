@@ -1,0 +1,113 @@
+{
+ "run": "maskgit_s_nopc",
+ "kind": "maskgit",
+ "size": "s",
+ "config": {
+  "n_layer": 6,
+  "n_head": 6,
+  "dim": 384,
+  "dropout": 0.0,
+  "block_size": 2580,
+  "mask_schedule": "cosine",
+  "mask_min": 0.5,
+  "mask_max": 1.0,
+  "default_steps": 8,
+  "choice_temp": 1.0,
+  "pos": "frame"
+ },
+ "params": 11491968,
+ "tokens": 100021440,
+ "steps": 2423,
+ "seconds": 1147.9664759635925,
+ "tokens_per_s": 87129.2342540255,
+ "final_monitor_ce": 4.314422369003296,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 10320000,
+   "monitor_ce": 6.734299898147583
+  },
+  {
+   "step": 500,
+   "tokens": 20640000,
+   "monitor_ce": 5.278586149215698
+  },
+  {
+   "step": 750,
+   "tokens": 30960000,
+   "monitor_ce": 4.690532922744751
+  },
+  {
+   "step": 1000,
+   "tokens": 41280000,
+   "monitor_ce": 4.51171612739563
+  },
+  {
+   "step": 1250,
+   "tokens": 51600000,
+   "monitor_ce": 4.457081079483032
+  },
+  {
+   "step": 1500,
+   "tokens": 61920000,
+   "monitor_ce": 4.380993127822876
+  },
+  {
+   "step": 1750,
+   "tokens": 72240000,
+   "monitor_ce": 4.372260332107544
+  },
+  {
+   "step": 2000,
+   "tokens": 82560000,
+   "monitor_ce": 4.3380796909332275
+  },
+  {
+   "step": 2250,
+   "tokens": 92880000,
+   "monitor_ce": 4.319028377532959
+  },
+  {
+   "step": 2423,
+   "tokens": 100021440,
+   "monitor_ce": 4.314422369003296
+  }
+ ],
+ "args": {
+  "kind": "maskgit",
+  "size": "s",
+  "config": "{\"pos\": \"frame\"}",
+  "run": "maskgit_s_nopc",
+  "tokens": 100000000.0,
+  "bs": 16,
+  "accum": 1,
+  "lr": 0.001,
+  "min_lr_frac": 0.1,
+  "warmup": 200,
+  "wd": 0.1,
+  "clip": 1.0,
+  "amp": null,
+  "seed": 0,
+  "frames": 20,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results"
+ },
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ }
+}

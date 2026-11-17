@@ -1,5 +1,7 @@
 # Plan de implementación: world models de manejo más chicos y más rápidos
 
+> **Estado (15/11/2026): ejecutado.** Resultados y conclusiones en [`resultados.md`](resultados.md); cómo se implementó y validó en [`plan-implementacion.md`](plan-implementacion.md).
+>
 > Propuesta para discutir en el grupo. Parte de la pre-entrega ([`pre-entrega/index.html`](../pre-entrega/index.html)), del documento de papers ([`world-models-conduccion-papers.md`](world-models-conduccion-papers.md)) y del estado actual del repo. Las decisiones abiertas están en la [sección 4](#4-decisiones-para-tomar-en-grupo).
 
 **Pregunta:** ¿cuánto se puede achicar y acelerar un world model de video de manejo sin perder calidad?
@@ -18,6 +20,8 @@ La pre-entrega fija un alcance más chico que el documento de papers. Esto es lo
 | Velocidad | Milisegundos por frame generado. | Throughput con batch grande (opcional). |
 | Referencias | Baselines de conteo (unigrama, copia), ConvLSTM sobre la grilla 8×16 y GPT de comma (gpt2m). | |
 | Roadmap | 1) Modelos chicos: de cero vs. destilado, y ConvLSTM. 2) Más rápido: MaskGIT, KV cache, fp16/int8 y ms/frame. 3) Cierre: curva calidad vs. velocidad. | E4 (poses) y E5 (JEPA/DiT) del documento de papers. |
+
+**Ampliación posterior a la pre-entrega:** E5 entró al alcance, sin DiT. Se sumaron dos world models latentes: JEPA estilo V-JEPA y LeWorldModel. Usan las poses como acciones, lo que cubre en parte a E4. El diseño está en [`plan-jepa.md`](plan-jepa.md) y los resultados en la sección E5 de [`resultados.md`](resultados.md).
 
 ### Estado actual vs. alcance
 

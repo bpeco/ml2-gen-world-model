@@ -1,0 +1,32 @@
+{
+ "name": "gpt_s",
+ "model": "gpt_s",
+ "variant": "fp32_int8_cpu",
+ "decoder": false,
+ "median_ms": 1048.36025001714,
+ "p10_ms": 1044.6572399756406,
+ "p90_ms": 1054.6312399965245,
+ "mean_ms": 1049.5712799893226,
+ "fps": 0.9538705802548796,
+ "realtime": false,
+ "params": 460800,
+ "peak_mem_mb": null,
+ "dtype": "fp32",
+ "graphs": false,
+ "int8": true,
+ "int8_method": "torch.ao quantize_dynamic",
+ "steps": null,
+ "ctx_frames": null,
+ "warmup": 3,
+ "frames": 20,
+ "tf32_matmul": false,
+ "tf32_cudnn": true,
+ "device": {
+  "device": "cpu",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD"
+ },
+ "torch": "2.11.0+cu128",
+ "timestamp": "2026-11-15T01:05:26"
+}

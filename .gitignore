@@ -6,3 +6,10 @@ __pycache__/
 data/
 checkpoints/
 third_party/
+results/rollouts/
+results/cache/
+.pytest_cache/
+*.onnx
+results/logs/
+
+results/ejemplos/*.gif

@@ -1,0 +1,5 @@
+# Métricas de video (src/metrics_video.py): LPIPS y FVD con I3D.
+# Necesitan torchvision compatible con el torch instalado (en Colab ya viene; en Windows con
+# NVIDIA: pip install torchvision --index-url https://download.pytorch.org/whl/cu128).
+lpips
+cd-fvd
