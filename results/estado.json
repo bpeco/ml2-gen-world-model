@@ -114,6 +114,26 @@
   "motivo": "bitácora 20261118-095802-d31b: python -m src.cli lewm entrenar",
   "fecha": "2026-11-18"
  },
+ "results/train_lewm_humo_fuente.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-125920-0cb9: python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
+  "fecha": "2026-11-18"
+ },
+ "results/train_lewm_humo_x10.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-125920-0cb9: python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
+  "fecha": "2026-11-18"
+ },
+ "results/train_lewm_humo_x3.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-125920-0cb9: python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
+  "fecha": "2026-11-18"
+ },
+ "results/train_lewm_humo_x30.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-125920-0cb9: python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
+  "fecha": "2026-11-18"
+ },
  "results/train_vjepa2_humo_fuente.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-021806-8c0d: python -m src.cli vjepa2 entrenar --humo --humo-candidatos fuente,raiz,x3",

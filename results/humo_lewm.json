@@ -1,0 +1,68 @@
+{
+ "kind": "lewm",
+ "pasos": 300,
+ "batch_efectivo": 128,
+ "batch_fuente": 128,
+ "candidatos": [
+  {
+   "nombre": "fuente",
+   "run": "lewm_humo_fuente",
+   "lr": 5e-05,
+   "monitor_ce": 0.2606561481952667,
+   "dispersion": {
+    "z_std": 0.9457460021972657
+   },
+   "colapsado": false
+  },
+  {
+   "nombre": "x3",
+   "run": "lewm_humo_x3",
+   "lr": 0.00015,
+   "monitor_ce": 0.2220289707183838,
+   "dispersion": {
+    "z_std": 0.9626109313964843
+   },
+   "colapsado": false
+  },
+  {
+   "nombre": "x10",
+   "run": "lewm_humo_x10",
+   "lr": 0.0005,
+   "monitor_ce": 0.25018632411956787,
+   "dispersion": {
+    "z_std": 0.9799716186523437
+   },
+   "colapsado": false
+  },
+  {
+   "nombre": "x30",
+   "run": "lewm_humo_x30",
+   "lr": 0.0015,
+   "monitor_ce": 0.2663566470146179,
+   "dispersion": {
+    "z_std": 1.0425527954101563
+   },
+   "colapsado": false
+  }
+ ],
+ "alias": {},
+ "elegido": "x3",
+ "lr_elegido": 0.00015,
+ "es_la_fuente": false,
+ "forzado": {
+  "campo": "lr",
+  "receta": 5e-05,
+  "elegido": 0.00015,
+  "candidato": "x3",
+  "categoria": "presupuesto",
+  "motivo": "el humo de 300 pasos elige lr 0.00015 (x3) y no el de la fuente (5e-05): declararlo como forzado por presupuesto en la receta"
+ },
+ "chequeo_colapso": true,
+ "nota": "",
+ "fecha": "2026-11-18T13:45:39",
+ "_bitacora": {
+  "id": "20261118-125920-0cb9",
+  "comando": "python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
+  "commit": "d5a1dc49ef4b0d0dbca88886dcba0d5e3d03e3e2"
+ }
+}
