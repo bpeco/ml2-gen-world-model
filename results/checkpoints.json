@@ -356,5 +356,115 @@
   "step": 1524,
   "tokens": 100657152,
   "train_json": "results/train_lewm.json"
+ },
+ "vjepa2_s": {
+  "bytes": 261599942,
+  "config": {
+   "bank": 16,
+   "crop_ratio": [
+    0.75,
+    1.35
+   ],
+   "crop_scale": [
+    0.3,
+    1.0
+   ],
+   "depth": 0,
+   "ema_momentum": 0.99925,
+   "embed_dim": 0,
+   "encoder": "small",
+   "flip": true,
+   "frames": 16,
+   "grad_ckpt": true,
+   "height": 128,
+   "mask_seed": 0,
+   "num_heads": 0,
+   "oficial_rope": true,
+   "patch": 16,
+   "pred_depth": 12,
+   "pred_dim": 384,
+   "pred_heads": 12,
+   "tubelet": 2,
+   "width": 256
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "vjepa2",
+  "params": 43474944,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 32,
+   "batch_fuente": 3072,
+   "betas": [
+    0.9,
+    0.999
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 clips por paso en vez de 3072: con el presupuesto com\u00fan de 780k frames da ~1.5k pasos (con 3072 ser\u00edan ~16). El lr queda el del paper: el humo eligi\u00f3 x3 por menor L1 (0,255 contra 0,291), pero con menos dispersi\u00f3n del target entre parches (0,47 contra 0,51); en un JEPA un L1 menor no implica una representaci\u00f3n mejor (results/humo_vjepa2.json)",
+     "presupuesto"
+    ],
+    [
+     "presupuesto",
+     "~1.5k pasos en vez de 252k; el warmup y el enfriamiento conservan sus fracciones",
+     "presupuesto"
+    ],
+    [
+     "frames/frameskip",
+     "16 frames a 4 fps = 1 de cada 5 de los 20 FPS",
+     "datos"
+    ],
+    [
+     "encoder",
+     "ViT small (384, 12 capas) en vez de ViT-L",
+     "presupuesto"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 5,
+   "fuente": "V-JEPA 2 (arXiv 2506.09985) Tab. 9; configs/train/vitl16/pretrain-256px-16f.yaml",
+   "grad_clip": null,
+   "lr_segs": [
+    {
+     "fin": 0.000525,
+     "forma": "linear",
+     "frac": 0.047619047619047616,
+     "ini": 0.0001,
+     "nombre": "warmup"
+    },
+    {
+     "fin": 0.000525,
+     "forma": "constant",
+     "ini": 0.000525,
+     "nombre": "constante"
+    },
+    {
+     "fin": 1e-06,
+     "forma": "linear",
+     "frac": 0.047619047619047616,
+     "ini": 0.000525,
+     "nombre": "decay"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "vjepa2_oficial",
+   "optimizer": "adamw",
+   "paper_steps": 252000,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.04,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "1cf2f40f3096",
+  "sha256": "2cfdd73d62a79ab07624a39afa318c339981beab4eb18942310ba8ee44fc7e99",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_vjepa2_s.json"
  }
 }

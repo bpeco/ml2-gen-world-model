@@ -1,0 +1,327 @@
+{
+ "model": "vjepa2_s",
+ "name": "vjepa2_s",
+ "kind": "vjepa2",
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "lectura": "latente",
+ "semilla": 0,
+ "datos": {
+  "train_segmentos": 1000,
+  "holdout_segmentos": 46,
+  "val_segmentos": 2212,
+  "ventanas": {
+   "train": 2000,
+   "holdout": 92,
+   "val": 4424
+  },
+  "val": "data/valp_tokens.npy",
+  "pasos_por_ventana": 16,
+  "hz": 4,
+  "estadisticas_de_pose": "del checkpoint"
+ },
+ "params": 43474944,
+ "pooling": "promedio sobre los tokens espaciales de cada paso temporal (tubelet) del target_encoder con layer_norm; las features son los últimos n pasos concatenados",
+ "probes": {
+  "normalizacion": "pose objetivo normalizada con la media y el desvío de train",
+  "n_train": 2000,
+  "n_holdout": 92,
+  "n_val": 4424,
+  "alpha": {
+   "obs/modelo": 100000.0,
+   "obs/sin_entrenar": 100.0,
+   "obs/pixeles": 1000.0
+  },
+  "obs": {
+   "dimensiones": 1152,
+   "modelo": {
+    "velocidad": {
+     "mse": {
+      "valor": 0.9738329400994036,
+      "ic95": [
+       0.9372941526324983,
+       1.0122209534290216
+      ]
+     },
+     "r2": {
+      "valor": 0.024864338438272293,
+      "ic95": [
+       0.011519002161342714,
+       0.037811356340034796
+      ]
+     },
+     "pearson": 0.1663007964857775
+    },
+    "giro": {
+     "mse": {
+      "valor": 1.6799529688871173,
+      "ic95": [
+       1.3787936261470932,
+       2.013363276514319
+      ]
+     },
+     "r2": {
+      "valor": -0.0009634449533435507,
+      "ic95": [
+       -0.0033511246900471414,
+       0.000834362682612009
+      ]
+     },
+     "pearson": -0.0012156126143572424
+    }
+   },
+   "sin_entrenar": {
+    "velocidad": {
+     "mse": {
+      "valor": 0.9043229730827045,
+      "ic95": [
+       0.865621133997363,
+       0.9437172935357472
+      ]
+     },
+     "r2": {
+      "valor": 0.09446729073216775,
+      "ic95": [
+       0.06859357771742809,
+       0.12024441491509362
+      ]
+     },
+     "pearson": 0.31744691606953646
+    },
+    "giro": {
+     "mse": {
+      "valor": 1.7047010566523284,
+      "ic95": [
+       1.402327887483759,
+       2.0404789242782866
+      ]
+     },
+     "r2": {
+      "valor": -0.01570905488662855,
+      "ic95": [
+       -0.02736771870039447,
+       -0.0052019464157826
+      ]
+     },
+     "pearson": 0.033286917253768464
+    }
+   },
+   "pixeles": {
+    "velocidad": {
+     "mse": {
+      "valor": 0.8464478471003805,
+      "ic95": [
+       0.8081155611589595,
+       0.8833180143600046
+      ]
+     },
+     "r2": {
+      "valor": 0.15241983776449675,
+      "ic95": [
+       0.12737383714867118,
+       0.17973431772089604
+      ]
+     },
+     "pearson": 0.3955065761729513
+    },
+    "giro": {
+     "mse": {
+      "valor": 1.7190226101460195,
+      "ic95": [
+       1.4141046876938528,
+       2.0502935023909714
+      ]
+     },
+     "r2": {
+      "valor": -0.02424224110530293,
+      "ic95": [
+       -0.0412286250083367,
+       -0.008831531673620625
+      ]
+     },
+     "pearson": 0.01589892527792653
+    }
+   },
+   "media_train": {
+    "velocidad": {
+     "mse": {
+      "valor": 1.0015641928762697,
+      "ic95": [
+       0.9641180739376841,
+       1.039801323601669
+      ]
+     },
+     "r2": {
+      "valor": -0.0029040111512830258,
+      "ic95": [
+       -0.008537043108809983,
+       -0.00013809357726952707
+      ]
+     },
+     "pearson": NaN
+    },
+    "giro": {
+     "mse": {
+      "valor": 1.6783760065626987,
+      "ic95": [
+       1.3769430773586455,
+       2.010049367941195
+      ]
+     },
+     "r2": {
+      "valor": -2.384624430518123e-05,
+      "ic95": [
+       -0.0011704333739985973,
+       -3.100789432053394e-07
+      ]
+     },
+     "pearson": NaN
+    }
+   },
+   "dif_mse_modelo_menos_sin_entrenar": {
+    "velocidad": {
+     "valor": 0.06950996701669913,
+     "ic95": [
+      0.046968073096764686,
+      0.09252531798671296
+     ]
+    },
+    "giro": {
+     "valor": -0.024748087765211063,
+     "ic95": [
+      -0.04261117906832603,
+      -0.008043844242851116
+     ]
+    }
+   },
+   "dif_mse_modelo_menos_pixeles": {
+    "velocidad": {
+     "valor": 0.12738509299902312,
+     "ic95": [
+      0.10412161937828482,
+      0.15141392285454783
+     ]
+    },
+    "giro": {
+     "valor": -0.039069641258902305,
+     "ic95": [
+      -0.06593642154490437,
+      -0.013010187084079566
+     ]
+    }
+   },
+   "dif_mse_modelo_menos_media_train": {
+    "velocidad": {
+     "valor": -0.0277312527768661,
+     "ic95": [
+      -0.040567597342650946,
+      -0.015395707243121077
+     ]
+    },
+    "giro": {
+     "valor": 0.001576962324418568,
+     "ic95": [
+      -0.0017140417519791943,
+      0.004666896213200494
+     ]
+    }
+   }
+  }
+ },
+ "horizonte": {
+  "aplica": false,
+  "motivo": "no predice el futuro"
+ },
+ "sorpresa": {
+  "aplica": false,
+  "motivo": "no predice el futuro"
+ },
+ "cem": {
+  "aplica": false,
+  "motivo": "no tiene acciones ni predictor"
+ },
+ "fuente": [
+  "encoder evaluado = target_encoder (EMA) con layer_norm (V-JEPA 2 arXiv 2506.09985; vjepa2 configs/eval, checkpoint_key target_encoder)"
+ ],
+ "propio": [
+  {
+   "item": "ventanas",
+   "detalle": "16 pasos a 4 Hz con las 5 poses de cada paso apiladas; 2 ventanas por segmento en posiciones aleatorias (semilla fija), dejando lugar para el salto de 2 s"
+  },
+  {
+   "item": "probe",
+   "detalle": "ridge lineal sobre features estandarizadas; α entre 1e-2 y 1e5 elegido en el holdout de Windows (segmentos con ruta ausente de train) y reajustado con todo train; sin MLP"
+  },
+  {
+   "item": "features",
+   "detalle": "las de los últimos 3 pasos del modelo concatenadas (pooling por modelo en 'pooling'); 'pred' = lo que el predictor da para esos pasos desde su historia, sin acciones (no se le da la pose que se lee)"
+  },
+  {
+   "item": "referencia sin entrenar",
+   "detalle": "la misma arquitectura y config con init aleatoria, semilla 0; para vjepa2_ac incluye el encoder; las estadísticas de pose se copian del modelo"
+  },
+  {
+   "item": "referencia de píxeles",
+   "detalle": "píxeles de los mismos frames, promediados en parches de 16x16 (8x16 por canal); para vjepa2 los 2 frames de cada tubelet se promedian"
+  },
+  {
+   "item": "probes: pose objetivo",
+   "detalle": "velocidad (dim 0) y giro (dim 5) de la pose del último frame; normalizadas con la media y el desvío de los targets de train"
+  },
+  {
+   "item": "horizonte",
+   "detalle": "3 frames de contexto, 8 pasos, acciones reales de las poses; errores medios por paso en el espacio latente de cada modelo (no comparables entre modelos); acción nula = la acción media"
+  },
+  {
+   "item": "sorpresa",
+   "detalle": "corte en el paso 8 de 16; teletransporte = frames del mismo paso de una ventana de un segmento de otra ruta; salto = frames 8 pasos (2 s) más adelante del mismo segmento; las poses no se tocan; una ventana por segmento; el test es pareado entre segmentos (t de Student sobre la diferencia por segmento)"
+  },
+  {
+   "item": "cem: contexto",
+   "detalle": "3 frames de contexto con sus acciones ya tomadas; el objetivo es el frame a `horizonte` pasos; sin momento"
+  },
+  {
+   "item": "cem: desvío de muestreo",
+   "detalle": "el desvío por dimensión de las acciones de train (normalizadas para lewm; diferencias de estado normalizadas para vjepa2_ac), no el N(0, 1) fijo de los papers; media inicial 0"
+  },
+  {
+   "item": "cem: horizontes",
+   "detalle": "lewm: 5 pasos (el del repo); vjepa2_ac: 1 paso (el del paper) y 5 pasos (propio, para compararlo con lewm, con menos planes por su costo: --n-plan-largo); el paper de V-JEPA 2-AC no fija el largo del contexto; el predictor de AC corre en bf16 en CUDA (como se entrenó)"
+  },
+  {
+   "item": "cem: lo que se compara",
+   "detalle": "la pose (velocidad, giro) de cada paso del plan contra la real: lewm = promedio de las 5 poses del paso; vjepa2_ac = pose del frame al que se llega (estado + acciones); MAE en unidades crudas y en desvíos de los datos; un plan por segmento"
+  },
+  {
+   "item": "IC95",
+   "detalle": "percentiles 2,5 y 97,5 de 1000 remuestreos de segmentos con reposición (semilla fija); los mismos segmentos remuestreados para el modelo y sus referencias, así que las diferencias son pareadas"
+  }
+ ],
+ "segundos": 550.2757322788239,
+ "args": {
+  "model": "vjepa2_s",
+  "name": null,
+  "limite": null,
+  "no_plan": false,
+  "n_plan": 100,
+  "n_plan_largo": 25,
+  "train_seg": 1000,
+  "por_seg": 2,
+  "bs": 8,
+  "n_boot": 1000,
+  "seed": 0,
+  "out": "results"
+ },
+ "_bitacora": {
+  "id": "20261118-124832-5bd9",
+  "comando": "python -m src.cli vjepa2 evaluar",
+  "commit": "a592b9d1c2429ec70a0723412ee4c65744551186"
+ }
+}

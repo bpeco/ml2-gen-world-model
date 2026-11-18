@@ -1,0 +1,201 @@
+{
+ "run": "vjepa2_s",
+ "kind": "vjepa2",
+ "size": null,
+ "config": {
+  "encoder": "small",
+  "embed_dim": 0,
+  "depth": 0,
+  "num_heads": 0,
+  "pred_dim": 384,
+  "pred_depth": 12,
+  "pred_heads": 12,
+  "frames": 16,
+  "height": 128,
+  "width": 256,
+  "patch": 16,
+  "tubelet": 2,
+  "ema_momentum": 0.99925,
+  "crop_scale": [
+   0.3,
+   1.0
+  ],
+  "crop_ratio": [
+   0.75,
+   1.35
+  ],
+  "flip": true,
+  "oficial_rope": true,
+  "grad_ckpt": true,
+  "bank": 16,
+  "mask_seed": 0
+ },
+ "params": 43474944,
+ "tokens": 100657152,
+ "frames": 780288,
+ "steps": 1524,
+ "seconds": 4641.159811973572,
+ "tokens_per_s": 21687.930620341493,
+ "final_monitor_ce": 0.19405090808868408,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 16512000,
+   "monitor_ce": 0.31292644143104553
+  },
+  {
+   "step": 500,
+   "tokens": 33024000,
+   "monitor_ce": 0.2514905035495758
+  },
+  {
+   "step": 750,
+   "tokens": 49536000,
+   "monitor_ce": 0.2233404815196991
+  },
+  {
+   "step": 1000,
+   "tokens": 66048000,
+   "monitor_ce": 0.2033444046974182
+  },
+  {
+   "step": 1250,
+   "tokens": 82560000,
+   "monitor_ce": 0.2011835277080536
+  },
+  {
+   "step": 1500,
+   "tokens": 99072000,
+   "monitor_ce": 0.19656813144683838
+  },
+  {
+   "step": 1524,
+   "tokens": 100657152,
+   "monitor_ce": 0.19405090808868408
+  }
+ ],
+ "args": {
+  "kind": "vjepa2",
+  "size": null,
+  "config": "{}",
+  "run": "vjepa2_s",
+  "receta": null,
+  "set": [],
+  "presupuesto": null,
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": null,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [],
+  "receta_hash": "1cf2f40f3096",
+  "receta_nombre": "vjepa2_oficial"
+ },
+ "receta": {
+  "name": "vjepa2_oficial",
+  "fuente": "V-JEPA 2 (arXiv 2506.09985) Tab. 9; configs/train/vitl16/pretrain-256px-16f.yaml",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "warmup",
+    "forma": "linear",
+    "ini": 0.0001,
+    "fin": 0.000525,
+    "frac": 0.047619047619047616
+   },
+   {
+    "nombre": "constante",
+    "forma": "constant",
+    "ini": 0.000525,
+    "fin": 0.000525
+   },
+   {
+    "nombre": "decay",
+    "forma": "linear",
+    "ini": 0.000525,
+    "fin": 1e-06,
+    "frac": 0.047619047619047616
+   }
+  ],
+  "wd_ini": 0.04,
+  "wd_fin": null,
+  "wd_on": "matrices",
+  "ema_segs": null,
+  "grad_clip": null,
+  "amp": "bf16",
+  "batch": 32,
+  "frames": 16,
+  "frameskip": 5,
+  "accum": 1,
+  "presupuesto": 780000,
+  "extras": {},
+  "paper_steps": 252000,
+  "batch_fuente": 3072,
+  "forzado": [
+   [
+    "batch",
+    "32 clips por paso en vez de 3072: con el presupuesto común de 780k frames da ~1.5k pasos (con 3072 serían ~16). El lr queda el del paper: el humo eligió x3 por menor L1 (0,255 contra 0,291), pero con menos dispersión del target entre parches (0,47 contra 0,51); en un JEPA un L1 menor no implica una representación mejor (results/humo_vjepa2.json)",
+    "presupuesto"
+   ],
+   [
+    "presupuesto",
+    "~1.5k pasos en vez de 252k; el warmup y el enfriamiento conservan sus fracciones",
+    "presupuesto"
+   ],
+   [
+    "frames/frameskip",
+    "16 frames a 4 fps = 1 de cada 5 de los 20 FPS",
+    "datos"
+   ],
+   [
+    "encoder",
+    "ViT small (384, 12 capas) en vez de ViT-L",
+    "presupuesto"
+   ]
+  ]
+ },
+ "receta_hash": "1cf2f40f3096",
+ "desviaciones": [],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261118-113059-2de8",
+  "comando": "python -m src.cli vjepa2 entrenar",
+  "commit": "3f9a51df001fac505412875cfa621adfac3d6d90"
+ }
+}

@@ -34,6 +34,11 @@
   "motivo": "bitácora 20261118-111117-05f1: python -m src.cli lewm evaluar",
   "fecha": "2026-11-18"
  },
+ "results/latent_vjepa2_s.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-124832-5bd9: python -m src.cli vjepa2 evaluar",
+  "fecha": "2026-11-18"
+ },
  "results/train_convlstm_px.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-041132-ab00: python -m src.cli convlstm_px entrenar",
@@ -122,6 +127,11 @@
  "results/train_vjepa2_humo_x3.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-021806-8c0d: python -m src.cli vjepa2 entrenar --humo --humo-candidatos fuente,raiz,x3",
+  "fecha": "2026-11-18"
+ },
+ "results/train_vjepa2_s.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-113059-2de8: python -m src.cli vjepa2 entrenar",
   "fecha": "2026-11-18"
  },
  "results/video_congelado.json": {

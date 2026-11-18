@@ -1,0 +1,15 @@
+{
+ "model": "vjepa2_s",
+ "origen": "6ae52b4e7346efa3613e66cd643ab0c8_17 desde el frame 300",
+ "tapado": [
+  0.734375,
+  0.5625
+ ],
+ "decoder": null,
+ "png": "results\\demo\\vjepa2_s_mascaras.png",
+ "_bitacora": {
+  "id": "20261118-125754-1b2e",
+  "comando": "python -m src.cli vjepa2 demo",
+  "commit": "a592b9d1c2429ec70a0723412ee4c65744551186"
+ }
+}
