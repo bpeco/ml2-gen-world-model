@@ -181,6 +181,33 @@ class MaskGITStream(TokenStream):
     return g[0](self.ctx, *noise), None
 
 
+class GenieStream(TokenStream):
+  """Como MaskGITStream, para Genie: prefill del contexto + S pasos + muestreo en un CUDA graph con el contexto lleno."""
+
+  def __init__(self, model, **kw):
+    super().__init__(model, **kw)
+    self.S = self.steps or model.cfg.default_steps
+    self._g = {}
+
+  def _noise(self, B):
+    from src.models.genie import make_noise
+    return make_noise(B, self.temperature, self.S, self.m.cfg.choice_temp, self.gen, self.dev)
+
+  def _frame(self, ctx, *noise):
+    """ctx (B, ctx_frames, 128) -> tokens (B, 128). Puro: no hay estado de caché."""
+    return self.m.decode(ctx, self.temperature, self.S, noise=list(noise))
+
+  def _sample_next(self, pose):
+    if not (self.graphs and self.full):
+      return self.m.next_frame(self.ctx, self.temperature, self.S, self.gen), None
+    B = self.ctx.shape[0]
+    noise = self._noise(B)
+    g = self._g.get(B)
+    if g is None:
+      g = self._g[B] = GraphedStep(self._frame, self.ctx, *noise)
+    return g(self.ctx, *noise), None
+
+
 # ---------------------------------------------------------------- LeWM
 
 class LatentStream(Stream):
@@ -249,7 +276,10 @@ class LatentStream(Stream):
 def make_stream(model, **kw) -> Stream:
   """El adaptador que corresponde a la familia del modelo. kw: temperature, steps, seed, graphs."""
   from src.models.latent import LatentWM
+  from src.models.genie import Genie
   from src.models.maskgit import MaskGIT
+  if isinstance(model, Genie):
+    return GenieStream(model, **kw)
   if isinstance(model, LatentWM):
     if kw.get("graphs", True):
       model.use_cuda_graphs(True)

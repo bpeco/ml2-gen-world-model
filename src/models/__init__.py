@@ -27,6 +27,7 @@ KINDS = {
   "gpt": ("src.models.gpt", "GPT"),
   "maskgit": ("src.models.maskgit", "MaskGIT"),
   "lewm": ("src.models.lewm", "LeWM"),      # LeWorldModel (un embedding por frame, SIGReg, AdaLN)
+  "genie": ("src.models.genie", "Genie"),   # dinámica de Genie (ST-transformer + MaskGIT, sin acciones)
 }
 
 # tamaños de los transformers propios (D3): capas, cabezas, ancho
@@ -89,7 +90,7 @@ def load_model(spec: str, dev="cpu") -> WorldModel:
       m.name = spec.replace(":", "_")
       return m.to(dev).eval()
     kind, _, size = run.rpartition("_")
-    if kind in ("gpt", "maskgit"):
+    if kind in ("gpt", "maskgit", "genie"):
       m = build(kind, size=size)
     else:  # random:lewm
       m = build(kind if kind else size)
