@@ -9,6 +9,7 @@ no fija y hubo que elegir va en `forzado` con su motivo y categoría:
 
   python -m src.recipes --table              tabla markdown de todos los modelos registrados
   python -m src.recipes gpt --size s         una receta (JSON + resumen + hash)
+  python -m src.recipes --fidelidad genie    tabla de fidelidad (decisión, fuente, aquí, categoría) en markdown
 
 Unidades: el presupuesto se mide en frames vistos (780k frames = 100M tokens a 129 tokens/frame).
 """
@@ -23,6 +24,8 @@ from dataclasses import dataclass, field
 from src import schedules as S
 
 CATEGORIAS = ("datos", "presupuesto", "propio")
+FID_CATEGORIAS = ("fiel", "datos", "presupuesto", "propio")   # las de las listas FIDELIDAD de cada modelo
+FID_EXTRA = {"baselines": "src.models.baselines", "gpt2m": "src.models.gpt2m"}  # con FIDELIDAD pero fuera de KINDS
 PRESUPUESTO_DEFAULT = 780_000  # frames (= 100M tokens)
 
 
@@ -38,7 +41,7 @@ class Recipe:
   lr_segs: list = field(default_factory=list)   # tramos de src.schedules (valores absolutos de lr)
   wd_ini: float = 0.1                 # weight decay; con wd_fin es una rampa lineal wd_ini -> wd_fin
   wd_fin: float | None = None
-  wd_on: str = "matrices"             # "matrices" (ndim >= 2) | "todos"
+  wd_on: str = "matrices"             # "matrices" (ndim >= 2) | "todos" | "lineales" (solo weight de Linear/Conv1d, como IRIS)
   ema_segs: list | None = None        # None sin EMA de pesos; si no, schedule del momento
   grad_clip: float | None = 1.0
   amp: str | None = "fp16"            # "fp16" | "bf16" | None; la receta solo se aplica en CUDA
@@ -250,16 +253,45 @@ def table():
   return "\n".join(lines)
 
 
+def fidelidad_kinds():
+  from src.models import KINDS
+  return list(KINDS) + list(FID_EXTRA)
+
+
+def fidelidad(kind):
+  """Lista FIDELIDAD de un kind registrado (o de 'baselines' / 'gpt2m')."""
+  import importlib
+  from src.models import KINDS
+  mod = KINDS[kind][0] if kind in KINDS else FID_EXTRA[kind]
+  return importlib.import_module(mod).FIDELIDAD
+
+
+def fidelidad_md(kind):
+  """Tabla markdown de la fidelidad de un modelo (la fuente del valor se llama 'paper' en algunos módulos)."""
+  head = ["decisión", "fuente / paper", "aquí", "categoría", "fuente"]
+  lines = ["| " + " | ".join(head) + " |", "|" + "---|" * len(head)]
+  for f in fidelidad(kind):
+    vals = [f["campo"], f.get("fuente_valor", f.get("paper")), f["aquí"], f["categoría"], f["fuente"]]
+    lines.append("| " + " | ".join(str(v).replace("|", "/").replace(chr(10), " ") for v in vals) + " |")
+  return chr(10).join(lines)
+
+
 def main(argv=None):
   p = argparse.ArgumentParser(prog="python -m src.recipes", description=__doc__.split("\n")[0])
   p.add_argument("kind", nargs="?")
   p.add_argument("--size", choices=["s", "m", "l"])
   p.add_argument("--table", action="store_true")
+  p.add_argument("--fidelidad", metavar="KIND", help="tabla de fidelidad en markdown (un kind, 'baselines' o 'gpt2m')")
   a = p.parse_args(argv)
   if hasattr(sys.stdout, "reconfigure"):
     sys.stdout.reconfigure(encoding="utf-8")
   if a.table:
     print(table())
+    return
+  if a.fidelidad:
+    if a.fidelidad not in fidelidad_kinds():
+      p.error(f"--fidelidad: {a.fidelidad} no existe ({', '.join(fidelidad_kinds())})")
+    print(fidelidad_md(a.fidelidad))
     return
   if not a.kind:
     p.error("indicá un kind o --table")

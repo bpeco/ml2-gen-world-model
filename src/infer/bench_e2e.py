@@ -7,6 +7,9 @@
   python -m src.infer.bench_e2e --model random:maskgit_m --steps 2           # sin checkpoint (la latencia no depende de los pesos)
   python -m src.infer.bench_e2e --model lewm --opt rollout=latent            # LeWM: la cámara va directo al modelo
 
+ConvLSTM (convlstm_px, predice píxeles): la cámara entra directo y sale el frame predicho, sin encoder ni decoder
+de comma (las etapas "encoder" y "decoder" quedan en ~0; el "modelo" incluye la copia a la salida).
+
 LeWM (ve píxeles): en línea, el frame de la cámara entra al modelo sin el encoder de comma (la
 etapa "encoder" queda en ~0). Para imaginar conviene rollout=latent: con rollout=token cada frame generado se
 decodifica y se vuelve a codificar desde píxeles.
@@ -65,6 +68,7 @@ class Chain:
     self.stream = make_stream(model, **stream_kw) if model is not None else None
     self.cuda = dev.type == "cuda"
     self.out_host = torch.empty(1, 128, 256, 3, dtype=torch.uint8, pin_memory=self.cuda)
+    self.pix_out = getattr(model, "output", "tokens") == "pixels"  # el modelo ya predice píxeles: sin decoder de comma
     self._imagine = None
     self.last_tok = None
 
@@ -95,7 +99,7 @@ class Chain:
     else:
       pred = next(self._imagine)
     e2 = self._ev()
-    self.out_host.copy_(self.codec.decode(pred), non_blocking=True)
+    self.out_host.copy_(pred if self.pix_out else self.codec.decode(pred), non_blocking=True)
     e3 = self._ev()
     if self.cuda:
       e3.synchronize()

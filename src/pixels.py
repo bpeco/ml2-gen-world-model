@@ -16,23 +16,49 @@ CACHE = Path("data/cache")
 _RENDER = {}
 
 
+def _codec(dev):
+  from src.infer.codec import Codec
+  key = (dev.type, dev.index)
+  if key not in _RENDER:
+    _RENDER[key] = Codec(dev, "fp16" if dev.type == "cuda" else "fp32", graphs=False, encoder=False)
+  return _RENDER[key]
+
+
+def _chunks(tok, chunk, fn):
+  """Aplica fn(uint8 (n, 128, 256, 3)) a cada trozo de frames y concatena, todo en el device de `tok`."""
+  tok = torch.as_tensor(tok)
+  codec = _codec(tok.device)
+  flat = tok.reshape(-1, tok.shape[-1]).long()
+  with torch.autocast(tok.device.type, enabled=False):
+    out = torch.cat([fn(codec.decode(flat[i:i + chunk])) for i in range(0, len(flat), chunk)])
+  return out.view(*tok.shape[:-1], *out.shape[1:])
+
+
 @torch.no_grad()
 def render(tok, chunk=32):
   """tokens (..., 128) -> imágenes uint8 (..., 128, 256, 3) con el decoder de comma congelado.
 
-  fp16 sin autocast en CUDA, fp32 en CPU; por trozos de `chunk` frames para acotar la memoria.
+  fp16 sin autocast en CUDA, fp32 en CPU; por trozos de `chunk` frames para acotar la memoria. La salida queda en
+  el device de `tok` (con tokens CUDA no hay .cpu() ni transferencias).
   """
-  from src.infer.codec import Codec
-  tok = torch.as_tensor(tok)
-  dev = tok.device
-  key = (dev.type, dev.index)
-  if key not in _RENDER:
-    _RENDER[key] = Codec(dev, "fp16" if dev.type == "cuda" else "fp32", graphs=False, encoder=False)
-  codec = _RENDER[key]
-  flat = tok.reshape(-1, tok.shape[-1]).long()
-  with torch.autocast(dev.type, enabled=False):
-    out = torch.cat([codec.decode(flat[i:i + chunk]) for i in range(0, len(flat), chunk)])
-  return out.view(*tok.shape[:-1], *out.shape[1:])
+  return _chunks(tok, chunk, lambda y: y)
+
+
+@torch.no_grad()
+def render_float(tok, chunk=32, mean=None, std=None, dtype=torch.float32):
+  """Como render pero devuelve float en [0, 1] (o normalizado con mean/std por canal) en el device de `tok`.
+
+  Para entrenar desde píxeles: la conversión a float ocurre en la GPU, trozo a trozo, sin pasar por el host. Se
+  conserva el truncado a uint8 del decoder (mismo valor que render()/255) para que train y evaluación vean las
+  mismas imágenes. Forma (..., 128, 256, 3) (NHWC). mean/std: 3 valores en escala [0, 1]; pasalos
+  como tensores ya en el device (si son listas se suben en cada llamada: una transferencia HtoD por trozo).
+  """
+  def conv(y):
+    y = y.to(dtype) / 255
+    if mean is not None:
+      y = (y - torch.as_tensor(mean, dtype=dtype, device=y.device)) / torch.as_tensor(std, dtype=dtype, device=y.device)
+    return y
+  return _chunks(tok, chunk, conv)
 
 
 def _hash(tokens) -> str:

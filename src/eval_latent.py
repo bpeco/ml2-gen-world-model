@@ -1,7 +1,9 @@
 """Evaluaciones propias de los world models latentes (lewm), al estilo de LeWorldModel.
 
 Todo sobre el holdout de train separado por ruta (src.windows.disjoint_holdout: 46 segmentos cuya ruta no
-aparece en train), porque val.zip no tiene poses. Ventanas de 20 frames cada 60 frames de cada segmento.
+aparece en train), porque val.zip no tiene poses. Ventanas de 20 frames (1 s a 20 fps) cada 60 frames de cada segmento.
+LeWM da un paso cada `frameskip` = 5 frames (4 Hz): ve de cada ventana el último frame y uno de cada 5 hacia atrás
+(model_view: 4 frames, con la acción de cada uno = sus 5 poses apiladas).
 
   probes      ¿la representación sabe la pose? Probe lineal (ridge) y MLP desde las features del último frame
               de la ventana hasta su pose (velocidad y giro): MSE (poses normalizadas) y Pearson r en test
@@ -11,9 +13,9 @@ aparece en train), porque val.zip no tiene poses. Ventanas de 20 frames cada 60 
               el frame 10 hacia otro segmento ("teletransporte") o hacia 2 s más adelante ("salto"). t pareado.
   rectitud    coseno medio entre velocidades latentes consecutivas (z_{t+1} − z_t) de la ventana real.
   acciones    error latente con las poses reales vs. con la acción nula, pareado por ventana.
-  plan        CEM (300 muestras, 30 élites, 10 iteraciones, historia 3) de las poses de los próximos H frames
-              para llegar al latente del frame t+H; error contra las poses reales vs. repetir la última pose y
-              vs. la pose media de train.
+  plan        CEM (300 muestras, 30 élites, 10 iteraciones, historia 3, horizonte 5 pasos = 25 frames) de las
+              poses de los próximos H frames para llegar al latente del frame t+H; error contra las poses
+              reales vs. repetir la última pose y vs. la pose media de train.
 
   python -m src.eval_latent --model lewm [--name lewm] [--no-plan]
   python -m src.eval_latent --model maskgit_s --probes-only
@@ -41,12 +43,25 @@ W = CTX_FRAMES          # 20 frames por ventana
 STRIDE = 60             # una ventana cada 3 s
 CUT = 10                # frame de la perturbación
 JUMP = 40               # salto de 2 s
-H = 10                  # horizonte de planificación (0,5 s)
+H = 25                  # horizonte de planificación (1,25 s = 5 pasos de LeWM, el horizonte del CEM oficial)
 DIMS = {"velocidad": 0, "giro": 5}
 
 
 def windows(segs, T):
   return [(s, t) for s in segs for t in range(0, T - W - JUMP - H, STRIDE)]
+
+
+def model_view(model, X, P=None):
+  """Ventana cruda (B, W, 128) y poses (B, W, 6) -> lo que ve LeWM: el último frame y uno de cada `frameskip` hacia
+  atrás (B, W // k, 128), con la acción de cada uno (B, W // k, 6k): sus k poses apiladas (NaN fuera de la ventana)."""
+  k = model.cfg.frameskip
+  n = X.shape[1] // k
+  off = X.shape[1] - 1 - (n - 1) * k
+  Xs = X[:, off::k]
+  if P is None:
+    return Xs, None
+  Pp = torch.cat([P, torch.full((P.shape[0], k, P.shape[2]), float("nan"))], 1)
+  return Xs, torch.stack([Pp[:, off + k * i:off + k * (i + 1)].reshape(len(P), -1) for i in range(n)], 1)
 
 
 def gather(arr, idx, n, offset=0):
@@ -57,7 +72,7 @@ def gather(arr, idx, n, offset=0):
 def probe_features(model, x):
   """(B, F, 128) -> {"pred": (B, D)} (+ "obs" en los latentes): features del último frame de la ventana."""
   if isinstance(model, LatentWM):
-    z, zh = model.features(x)  # sin acciones: la acción del frame es justo la pose que se quiere leer
+    z, zh = model.features(model_view(model, x.cpu())[0].to(x.device))  # sin acciones: la pose es lo que se quiere leer
     return {"pred": zh[:, -1], "obs": z[:, -1]}
   if isinstance(model, GPT):
     model._drop_cache()
@@ -149,7 +164,7 @@ def main(argv=None):
     for k, v in f.items():
       feats.setdefault(k, []).append(v.cpu().numpy())
   feats = {k: np.concatenate(v) for k, v in feats.items()}
-  mean, std = (model.pose_mean.float().cpu().numpy(), model.pose_std.float().cpu().numpy()) if isinstance(model, LatentWM) \
+  mean, std = (model.pose_mean[:6].float().cpu().numpy(), model.pose_std[:6].float().cpu().numpy()) if isinstance(model, LatentWM) \
     else (np.nanmean(pos[:-50].reshape(-1, 6), 0), np.nanstd(pos[:-50].reshape(-1, 6), 0))
   y = (P[:, -1].numpy() - mean) / std
   ok = np.isfinite(y).all(1)
@@ -162,9 +177,9 @@ def main(argv=None):
   def errs(frames, poses):
     out = []
     for i in range(0, len(frames), a.bs):
-      p = None if poses is None else poses[i:i + a.bs].to(dev)
-      out.append(model.latent_error(frames[i:i + a.bs].to(dev), p).cpu())
-    return torch.cat(out).numpy()
+      fr, p = model_view(model, frames[i:i + a.bs], None if poses is None else poses[i:i + a.bs])
+      out.append(model.latent_error(fr.to(dev), None if p is None else p.to(dev)).cpu())
+    return torch.cat(out).numpy()  # (N, F-1): el error del frame j + 1 está en la columna j
 
   other = np.roll(np.arange(len(idx)), len(idx) // 2)  # otra ventana, de otro segmento
   assert (seg_ids != seg_ids[other]).all()
@@ -173,17 +188,19 @@ def main(argv=None):
   jump = X.clone()
   jump[:, CUT:] = torch.from_numpy(gather(tok, idx, W - CUT, offset=CUT + JUMP).astype(np.int64))
   e_orig, e_tele, e_jump = errs(X, P), errs(tele, P), errs(jump, P)
-  res["sorpresa"] = {"teletransporte": paired_t(e_orig[:, CUT], e_tele[:, CUT]),
-                     "salto_2s": paired_t(e_orig[:, CUT], e_jump[:, CUT]),
+  k = model.cfg.frameskip
+  cm = next(i for i in range(W // k) if (W - 1 - (W // k - 1) * k) + k * i >= CUT)  # primer frame del modelo perturbado
+  res["sorpresa"] = {"teletransporte": paired_t(e_orig[:, cm - 1], e_tele[:, cm - 1]),
+                     "salto_2s": paired_t(e_orig[:, cm - 1], e_jump[:, cm - 1]),
                      "por_frame_orig": e_orig.mean(0).tolist()}
   e_null = errs(X, None)
-  res["acciones"] = {"error_pose_real": float(e_orig[:, 1:].mean()), "error_accion_nula": float(e_null[:, 1:].mean()),
-                     "pareado": paired_t(e_orig[:, 1:].mean(1), e_null[:, 1:].mean(1)),
-                     "per_window_real": e_orig[:, 1:].mean(1).tolist(), "per_window_nula": e_null[:, 1:].mean(1).tolist()}
+  res["acciones"] = {"error_pose_real": float(e_orig.mean()), "error_accion_nula": float(e_null.mean()),
+                     "pareado": paired_t(e_orig.mean(1), e_null.mean(1)),
+                     "per_window_real": e_orig.mean(1).tolist(), "per_window_nula": e_null.mean(1).tolist()}
   cos = []
   with torch.no_grad():
     for i in range(0, len(X), a.bs):
-      z = model.encode(X[i:i + a.bs].to(dev)).float().flatten(2)
+      z = model.encode(model_view(model, X[i:i + a.bs])[0].to(dev)).float().flatten(2)
       v = z[:, 1:] - z[:, :-1]
       cos.append(F.cosine_similarity(v[:, 1:], v[:, :-1], dim=-1).mean(1).cpu())
   res["rectitud"] = float(torch.cat(cos).mean())
@@ -198,21 +215,23 @@ def main(argv=None):
     g = torch.Generator(device=dev).manual_seed(0)
     for i in plan_idx:
       s, t = idx[i]
-      ctx = torch.from_numpy(tok[s, t:t + W].astype(np.int64))[None].to(dev)
+      ctx = torch.from_numpy(tok[s, t:t + W].astype(np.int64))[None]
       goal = torch.from_numpy(tok[s, t + W + H - 1].astype(np.int64))[None].to(dev)
       cp = torch.from_numpy(pos[s, t:t + W].astype(np.float32))[None]
+      ctx, cp = model_view(model, ctx, cp)
+      ctx, cp = ctx.to(dev), cp.to(dev)
       if dev.type == "cuda":
         torch.cuda.synchronize()
       t1 = time.perf_counter()
-      pl = model.plan_cem(ctx, goal, H, ctx_poses=cp, history=3, generator=g, n_samples=300, n_elites=30, iters=10)
+      pl = model.plan_cem(ctx, goal, H // k, ctx_poses=cp, generator=g, n_samples=300, n_elites=30, iters=10)
       if dev.type == "cuda":
         torch.cuda.synchronize()
       ms.append((time.perf_counter() - t1) * 1000)
-      planned.append(pl[0].cpu().numpy())
-      real.append(np.asarray(pos[s, t + W:t + W + H], dtype=np.float32))
+      planned.append(pl[0].cpu().numpy().reshape(H, 6))  # H // k pasos x (k poses apiladas) = H poses crudas
+      real.append(np.asarray(pos[s, t + W - 1:t + W - 1 + H], dtype=np.float32))  # las que siguen al último frame
     planned, real = np.stack(planned), np.stack(real)
     last = np.stack([np.repeat(np.asarray(pos[idx[i][0], idx[i][1] + W - 1])[None], H, 0) for i in plan_idx])
-    mean_pose = np.broadcast_to(model.pose_mean.float().cpu().numpy(), real.shape)
+    mean_pose = np.broadcast_to(model.pose_mean[:6].float().cpu().numpy(), real.shape)
 
     def mae(p):
       ok = np.isfinite(real).all(-1)

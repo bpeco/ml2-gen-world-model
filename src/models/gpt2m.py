@@ -10,6 +10,19 @@ from src.models.cudagraph import GraphedStep
 sys.path.insert(0, "third_party/commavq")
 from utils.gpt import GPT, GPTConfig, KVCache, find_multiple  # noqa: E402
 
+FIDELIDAD = [
+  dict(campo="Modelo", fuente_valor="commaai/commavq-gpt2m: 24 capas, 16 cabezas, 1024, MLP 4096, vocab 1025, bloque 2580",
+       aquí="el código y los pesos de comma, sin cambios (third_party/commavq/utils/gpt.py)", categoría="fiel",
+       fuente="commaVQ utils/gpt.py L26-123; config.json"),
+  dict(campo="Pesos", fuente_valor="pytorch_model.bin de Hugging Face", aquí="data/raw/pytorch_model.bin, bajado por src.data",
+       categoría="fiel", fuente="HF commaai/commavq-gpt2m"),
+  dict(campo="Muestreo y KV caché", fuente_valor="generación autoregresiva con KV caché",
+       aquí="la misma con caché estática propia (y CUDA graphs opcional); mismas distribuciones", categoría="propio",
+       fuente="src/models/gpt2m.py: adaptación a la interfaz WorldModel"),
+  dict(campo="Receta de entrenamiento", fuente_valor="'a similar recipe to IRIS' (no publicada)", aquí="no se entrena aquí; "
+       "es la referencia y el maestro de la destilación", categoría="fiel", fuente="commaVQ README L354"),
+]
+
 WEIGHTS = "data/raw/pytorch_model.bin"  # commaai/commavq-gpt2m, bajado por src.data
 
 

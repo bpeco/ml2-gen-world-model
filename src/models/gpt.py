@@ -1,4 +1,9 @@
-"""GPT alumno autoregresivo: mismo formato de secuencia que gpt2m (BOS antes de cada frame)."""
+"""GPT alumno autoregresivo: el modelo de mundo de commaVQ a menor escala (mismo formato: BOS antes de cada frame).
+
+Arquitectura de commaVQ (utils/gpt.py): pre-LN, GELU, bias, posición absoluta aprendida, sin weight tying, vocab 1025,
+bloque de 20 frames x 129. Receta: la de IRIS, que commaVQ dice seguir ("a similar recipe to IRIS"). FIDELIDAD (abajo)
+lista cada decisión con su fuente y categoría: fiel | datos | presupuesto | propio.
+"""
 from dataclasses import dataclass
 
 import torch
@@ -7,7 +12,53 @@ from src.common import BLOCK, BOS, TPF, VOCAB, with_bos
 from src.models.backbone import Backbone, BackboneConfig
 from src.models.base import WorldModel, lm_loss, sample_logits
 from src.models.cudagraph import GraphedStep
-from src.recipes import legacy_cosine
+from src import schedules as S
+from src.recipes import Recipe
+
+
+COMMA = "commaVQ (utils/gpt.py, commaai/commavq-gpt2m)"
+IRIS = "IRIS (arXiv 2209.00588; github.com/eloialonso/iris)"
+
+FIDELIDAD = [
+  dict(campo="Arquitectura", fuente_valor="pre-LN, GELU (tanh), MLP 4x, bias en Linear, ln_f, cabeza sin bias",
+       aquí="igual", categoría="fiel", fuente=f"{COMMA} L63-123"),
+  dict(campo="Posición", fuente_valor="absoluta aprendida (wpe) sobre 2580 posiciones", aquí="igual (pos='abs')",
+       categoría="fiel", fuente=f"{COMMA} L117; {IRIS} world_model.py L38"),
+  dict(campo="Weight tying", fuente_valor="sin tying (lm_head aparte)", aquí="sin tying", categoría="fiel",
+       fuente=f"{COMMA} L123"),
+  dict(campo="Formato de secuencia", fuente_valor="128 tokens + BOS (1024) por frame, bloque de 20 frames, vocab 1025",
+       aquí="igual", categoría="fiel", fuente=f"{COMMA}; nanogpt/prepare.py L16, L29-31"),
+  dict(campo="Tamaño", fuente_valor="24 capas, 16 cabezas, 1024 (comma); 10 capas, 256 (IRIS)",
+       aquí="S = 6 x 384 (6 cabezas), M = 8 x 512 (8 cabezas), L = 12 x 768", categoría="presupuesto",
+       fuente=f"{COMMA} config.json; {IRIS} world_model/default.yaml"),
+  dict(campo="Posición factorizada (ablación)", fuente_valor="no existe en comma ni IRIS",
+       aquí="pos='frame': embedding de frame + de celda; solo para correr las corridas viejas", categoría="propio",
+       fuente="decisión del repo (corridas previas a la revisión de fidelidad)"),
+  dict(campo="Dropout", fuente_valor="IRIS: 0.1 en embedding, residual y atención; comma: 0 (dropout_p=0.0)",
+       aquí="0.1 en los tres (default de Config; el de IRIS, que es la receta que comma dice seguir)",
+       categoría="fiel", fuente=f"{IRIS} world_model/default.yaml L8-10; {COMMA} L97"),
+  dict(campo="Inicialización", fuente_valor="N(0, 0.02) en Linear y Embedding, bias 0, LayerNorm 1/0",
+       aquí="igual, sin la escala 1/sqrt(2L) de GPT-2 en las proyecciones residuales (res_scale=False)",
+       categoría="fiel", fuente=f"{IRIS} utils.py L52-59"),
+  dict(campo="Optimizador", fuente_valor="AdamW, betas (0.9, 0.999)", aquí="igual, eps 1e-8", categoría="fiel",
+       fuente=f"{IRIS} trainer.py L91, Tab. 5"),
+  dict(campo="Learning rate", fuente_valor="1e-4 constante, sin warmup ni scheduler", aquí="igual", categoría="fiel",
+       fuente=f"{IRIS} config/trainer.yaml L55"),
+  dict(campo="Weight decay", fuente_valor="0.01 solo en el weight de nn.Linear y nn.Conv1d (no bias, LayerNorm ni "
+       "Embedding, incluida la posición)", aquí="igual (wd_on='lineales'; incluye la cabeza)", categoría="fiel",
+       fuente=f"{IRIS} trainer.yaml L66, utils.py L14-36"),
+  dict(campo="Grad clip", fuente_valor="10.0", aquí="10.0", categoría="fiel", fuente=f"{IRIS} trainer.yaml L65"),
+  dict(campo="Batch", fuente_valor="64 secuencias de 20 pasos", aquí="64 efectivas = 16 x accum 4 (micro-batch "
+       "a verificar en la GPU de 12 GB)", categoría="presupuesto", fuente=f"{IRIS} trainer.yaml, world_model/default.yaml L2-3"),
+  dict(campo="Precisión", fuente_valor="fp32 (sin autocast)", aquí="fp32", categoría="fiel", fuente=f"{IRIS} trainer.py"),
+  dict(campo="Pasos / presupuesto", fuente_valor="no publicado para comma", aquí="780k frames (100M tokens)",
+       categoría="presupuesto", fuente="presupuesto de cómputo del repo"),
+  dict(campo="Datos", fuente_valor="segmentos de 1200 frames a 20 fps", aquí="igual (ventanas de 20 frames)",
+       categoría="datos", fuente=f"{COMMA} nanogpt/prepare.py"),
+  dict(campo="Destilación (--kd)", fuente_valor="no existe en comma ni IRIS",
+       aquí="loss = alpha CE + (1-alpha) tau^2 KL(maestro gpt2m || alumno), alpha 0.5, tau 1, misma receta que el alumno",
+       categoría="propio", fuente="Hinton et al. 2015; extensión del repo"),
+]
 
 
 class GPT(WorldModel):
@@ -20,21 +71,29 @@ class GPT(WorldModel):
     n_layer: int = 6
     n_head: int = 6
     dim: int = 384
-    dropout: float = 0.0
+    dropout: float = 0.1            # IRIS: embedding, residual y atención (comma: 0)
     block_size: int = BLOCK
     pos: str = "abs"                # embedding de posición: "abs" | "frame" (frame + celda)
 
   @classmethod
   def recipe(cls, size=None):
-    """Receta de entrenamiento. Hoy es la actual del repo (propia); la del paper la reemplaza."""
-    return legacy_cosine(name="gpt_actual", fuente="receta actual del repo")
+    """Receta de IRIS (la que commaVQ dice seguir): AdamW (0.9, 0.999), lr 1e-4 constante, wd 0.01 solo en Linear,
+    clip 10, batch 64, fp32. Con teacher (--kd) es la misma más la pérdida de destilación."""
+    return Recipe(
+      name="gpt_iris", fuente=f"{IRIS}; commaVQ: 'a similar recipe to IRIS'", optimizer="adamw", betas=(0.9, 0.999),
+      eps=1e-8, lr_segs=[S.constant(1e-4)], wd_ini=0.01, wd_on="lineales", grad_clip=10.0, amp=None,
+      batch=16, accum=4, frames=20, extras={"dropout": 0.1}, paper_steps=None,
+      forzado=[("batch", "64 efectivas como IRIS, en 4 micro-batches de 16 por la memoria de 12 GB", "presupuesto"),
+               ("presupuesto", "780k frames (100M tokens) en vez de lo que haya usado comma (no publicado)", "presupuesto"),
+               ("tamaño", "6x384 / 8x512 en vez de 24x1024", "presupuesto")])
 
   def __init__(self, cfg: "GPT.Config"):
     super().__init__()
     self.cfg = cfg
     self.net = Backbone(BackboneConfig(n_layer=cfg.n_layer, n_head=cfg.n_head, dim=cfg.dim,
                                        block_size=cfg.block_size, vocab_in=VOCAB, vocab_out=VOCAB,
-                                       attn="causal", dropout=cfg.dropout, pos=cfg.pos))
+                                       attn="causal", dropout=cfg.dropout, pos=cfg.pos,
+                                       res_scale=False))
     self._graphs_on = False
     self._graphs = {}
     self._cache_key = None

@@ -4,6 +4,7 @@
                               [--boot-fvd 200]
 Escribe results/video_<name>.json.
 
+- Rollouts de un modelo de píxeles (convlstm_px): uint8 (N, 60, 128, 256, 3); se usan tal cual, sin decodificar.
 - Referencia: los tokens reales decodificados con el mismo decoder (aísla al world model).
 - LPIPS (alex) pareado frame a frame, 60 horizontes; IC 95% por bootstrap sobre clips.
 - FVD: ventanas de 16 frames que terminan a 1, 2 y 3 s (frames [4:20], [24:40], [44:60] del rollout).
@@ -82,6 +83,16 @@ def window_feats(fn, frames, bs=8):
   return {k: feats(fn, frames[:, a:b], bs) for k, (a, b) in WINDOWS.items()}
 
 
+def is_pixels(roll):
+  """Rollouts de un modelo de píxeles: uint8 (N, 60, H, W, 3); los de tokens son (N, 60, 128) int16."""
+  return roll.ndim == 5 and roll.dtype == np.uint8
+
+
+def fake_frames(roll_chunk, dec_frames):
+  """Frames del modelo (B, 60, H, W, 3) uint8: tal cual si el rollout ya son píxeles; si son tokens, se decodifican."""
+  return np.asarray(roll_chunk) if is_pixels(roll_chunk) else dec_frames(roll_chunk)
+
+
 def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--name", required=True)
@@ -100,7 +111,7 @@ def main(argv=None):
   t0 = time.time()
   dev = device()
   h = clips_hash()
-  roll = np.load(a.rollouts or OUT / f"{a.name}.npy")
+  roll = np.load(a.rollouts or OUT / f"{a.name}.npy", mmap_mode="r")
   n = len(roll)
   val = np.load(VAL, mmap_mode="r")
 
@@ -148,7 +159,7 @@ def main(argv=None):
     return torch.as_tensor(x, device=dev).permute(0, 3, 1, 2).float() / 127.5 - 1
 
   for i in range(0, n, a.bs):
-    fk = dec_frames(roll[i:i + a.bs])
+    fk = fake_frames(roll[i:i + a.bs], dec_frames)
     rl = np.asarray(frames_real[i:i + a.bs])
     B = len(fk)
     with torch.no_grad():

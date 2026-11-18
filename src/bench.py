@@ -118,16 +118,30 @@ def main(argv=None):
       model, method = quantize_int8(model.to(dev), dev)
     model = model.to(dev, dtype) if not a.int8 else model
     if a.graphs:
-      if not hasattr(model, "use_cuda_graphs"):
+      if not hasattr(model, "use_cuda_graphs") and getattr(model, "output", "tokens") != "pixels":
         raise SystemExit(f"{a.model} no soporta --graphs (sin use_cuda_graphs)")
       if dev.type != "cuda":
         raise SystemExit("--graphs necesita CUDA")
-      model.use_cuda_graphs(True)
+      if hasattr(model, "use_cuda_graphs"):
+        model.use_cuda_graphs(True)
     name, ctx_frames = a.name or model.name, a.ctx_frames
     ctx = load_context(a.ctx_frames).to(dev)
 
-    def it():
-      yield from model.generate(ctx, n, temperature=1.0, steps=a.steps, generator=gen)
+    if getattr(model, "output", "tokens") == "pixels":
+      # modelo de píxeles (convlstm_px): un frame de cámara entra al stream y sale el frame predicho, sin codec
+      from src.infer.stream import make_stream
+      from src.pixels import render
+      cam = render(ctx)[0]  # (F, 128, 256, 3) uint8, fuera de la medición
+      stream = make_stream(model, graphs=a.graphs)
+
+      def it():
+        with torch.no_grad():
+          for i in range(n):
+            stream.observe_pixels(cam[i % len(cam)][None])
+            yield stream.predict()
+    else:
+      def it():
+        yield from model.generate(ctx, n, temperature=1.0, steps=a.steps, generator=gen)
 
   ms = timed(it(), n, dev)[a.warmup:]
   med = float(np.median(ms))

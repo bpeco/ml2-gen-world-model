@@ -50,10 +50,9 @@ def tiny(kind, dev="cpu", **kw):
   if kind == "maskgit":
     m = shake(MaskGIT(MaskGIT.Config(n_layer=2, n_head=4, dim=64, block_size=FRAMES * TPF, **kw)))
   else:
-    m = shake(LeWM(LeWM.Config(dim=32, enc_layers=1, enc_heads=2, proj_hidden=64, pred_dim=32, pred_layers=2,
-                               pred_heads=4, pred_mlp=64, pred_dropout=0.0, dec_dim=32, dec_layers=1, dec_heads=2,
-                               dec_kv=2, frames=FRAMES, num_proj=64, **kw)), scale=1.0, noise=0.05)
-    m.ctx_frames = FRAMES - 1
+    m = shake(LeWM(LeWM.Config(dim=32, enc_layers=1, enc_heads=2, enc_mlp=64, proj_hidden=64, pred_layers=2,
+                               pred_heads=4, pred_dim_head=8, pred_mlp=64, pred_dropout=0.0, num_proj=64, **kw)),
+              scale=1.0, noise=0.05)
   return m.to(dev).eval()
 
 
@@ -69,17 +68,12 @@ def via_generate(m, ctx, n, temperature, steps=None, seed=0):
   return m.rollout(ctx, n, temperature=temperature, steps=steps, generator=g)
 
 
-CASES = [("maskgit", {}), ("lewm", {}), ("lewm", {"rollout": "latent"})]
-
-
-@pytest.mark.parametrize("kind,kw", CASES)
 @pytest.mark.parametrize("temperature", [0.0, 1.0])
-def test_stream_equals_generate_cpu(kind, kw, temperature):
-  m = tiny(kind, **kw)
+def test_stream_equals_generate_cpu(temperature):
+  m = tiny("maskgit")
   ctx = frames(2, FRAMES - 1)
-  steps = 3 if kind == "maskgit" else None
-  ref = via_generate(m, ctx, 4, temperature, steps)
-  got, s = via_stream(m, ctx, 4, temperature, steps)
+  ref = via_generate(m, ctx, 4, temperature, 3)
+  got, s = via_stream(m, ctx, 4, temperature, 3)
   assert got.shape == ref.shape == (2, 4, 128)
   assert torch.equal(got, ref)
 
@@ -102,9 +96,8 @@ def test_maskgit_fused_frame_equals_next_frame(temperature):
   assert torch.equal(got, ref)
 
 
-@pytest.mark.parametrize("kind", ["maskgit", "lewm"])
-def test_predict_k_does_not_change_state(kind):
-  m = tiny(kind)
+def test_predict_k_does_not_change_state():
+  m = tiny("maskgit")
   ctx = frames(1, FRAMES - 1)
   s = make_stream(m, temperature=0.0, steps=2, graphs=False)
   for f in range(ctx.shape[1]):
@@ -138,47 +131,116 @@ def test_random_run_spec_uses_manifest_config():
   assert m.cfg.dim == man["gpt_m"]["config"]["dim"] and sum(p.numel() for p in m.parameters()) == man["gpt_m"]["params"]
 
 
-# ---------------------------------------------------------------- LeWM desde píxeles
+# ---------------------------------------------------------------- LeWM desde píxeles (LatentStream)
+
+K = 5  # frameskip de LeWM: un paso del modelo cada 5 frames de cámara
+
+
+def poses(B, n, seed=2):
+  return torch.randn(B, n, 6, generator=torch.Generator().manual_seed(seed))
+
+
+def feed(s, tok, pose=None, pixels=False):
+  """Alimenta el stream con n frames de cámara (tokens (B, n, 128), poses (B, n, 6))."""
+  for f in range(tok.shape[1]):
+    p = None if pose is None else pose[:, f]
+    s.observe_pixels(fake_render(tok[:, f]), p) if pixels else s.observe(tok[:, f], p)
+
 
 def test_lewm_pixels_encode_tokens_equals_pixels(px):
   m = px()
   tok = frames(2, 3)
   assert torch.equal(m.encode(tok), m.encode(fake_render(tok)))
   assert m.encode(tok).shape == (2, 3, m.cfg.dim)
-  assert all(not n.startswith("encoder.in_proj") for n, _ in m.named_parameters())  # sin el codebook a la entrada
 
 
 def test_lewm_pixels_train_step(px):
   m = px().train()
-  loss, met = m.train_loss(frames(2, FRAMES))
+  loss, met = m.train_loss(frames(2, 4), poses=torch.randn(2, 4, 30))
   loss.backward()
-  assert torch.isfinite(loss) and m.encoder.patch.weight.grad is not None
+  assert torch.isfinite(loss) and m.encoder.patch_embed.weight.grad is not None
 
 
-@pytest.mark.parametrize("rollout", ["token", "latent"])
-@pytest.mark.parametrize("temperature", [0.0, 1.0])
-def test_lewm_pixels_stream_equals_generate(px, rollout, temperature):
-  m = px(rollout=rollout)
-  ctx = frames(2, FRAMES - 1)
-  ref = via_generate(m, ctx, 4, temperature)
-  got, _ = via_stream(m, ctx, 4, temperature)
-  assert torch.equal(got, ref)
+def test_lewm_stream_steps_every_frameskip_camera_frames(px):
+  """Solo 1 de cada 5 frames de cámara se codifica; las acciones del estado son las 5 poses apiladas del bloque."""
+  m = px()
+  tok, pose = frames(1, 3 * K + 1), poses(1, 3 * K + 1)
+  s = make_stream(m, graphs=False)
+  moved = [s.observe(tok[:, f], pose[:, f]) for f in range(tok.shape[1])]
+  assert moved == [f % K == 0 for f in range(tok.shape[1])] and s.n_seen == 4 and s.full
+  ref = m.encode(tok[:, ::K])                                          # los frames 0, 5, 10, 15
+  assert torch.allclose(s.z, ref[:, -3:], atol=1e-6) and s.acts.shape == (1, 2, m.cfg.dim)
+  stacked = torch.stack([pose[:, K * i:K * i + K].reshape(1, -1) for i in range(1, 3)], 1)   # bloques 1 y 2
+  assert torch.allclose(s.acts, m.action_embed(stacked, 1, 2, "cpu"), atol=1e-6)
+
+
+def test_lewm_stream_predict_equals_model(px):
+  """predict() = el paso del modelo sobre los últimos 3 frames con sus acciones y la acción pedida."""
+  m = px()
+  tok, pose = frames(2, 3 * K), poses(2, 3 * K)
+  s = make_stream(m, graphs=False)
+  feed(s, tok, pose)
+  nxt = poses(2, 1, seed=9)[:, 0]
+  got = s.predict(pose=nxt)
+  z = m.encode(tok[:, ::K])
+  stack = torch.cat([torch.stack([pose[:, K * i:K * i + K].reshape(2, -1) for i in range(2)], 1),
+                     nxt.repeat(1, K)[:, None]], 1)                    # la pose pedida se mantiene los 5 frames
+  assert torch.allclose(got, m._next(z, m.action_embed(stack, 2, 3, "cpu")), atol=1e-6)
+  assert got.shape == (2, m.cfg.dim)
 
 
 def test_lewm_pixels_observe_pixels_equals_tokens(px):
   """Desde la cámara (observe_pixels) da lo mismo que desde los tokens de esos frames."""
   m = px()
-  ctx = frames(1, FRAMES - 1)
-  a = make_stream(m, temperature=0.0, graphs=False)
-  b = make_stream(m, temperature=0.0, graphs=False)
-  for f in range(ctx.shape[1]):
-    a.observe(ctx[:, f])
-    b.observe_pixels(fake_render(ctx[:, f]))
+  tok = frames(1, 2 * K)
+  a, b = make_stream(m, graphs=False), make_stream(m, graphs=False)
+  feed(a, tok, pixels=False)
+  feed(b, tok, pixels=True)
   assert torch.equal(a.predict(), b.predict())
 
 
+def test_lewm_stream_predict_k_does_not_change_state(px):
+  m = px()
+  s = make_stream(m, graphs=False)
+  feed(s, frames(1, 3 * K), poses(1, 3 * K))
+  z, acts = s.z.clone(), s.acts.clone()
+  far = s.predict(k=3)
+  assert torch.equal(s.z, z) and torch.equal(s.acts, acts) and torch.equal(s.predict(), s.predict())
+  roll = torch.stack(list(s.imagine(3)), 1)                            # imagine: cada ẑ entra al estado
+  assert torch.allclose(far, roll[:, -1], atol=1e-6) and s.n_seen == 6
+
+
+def test_lewm_stream_works_with_fewer_than_history_frames(px):
+  m = px()
+  s = make_stream(m, graphs=False)
+  feed(s, frames(1, K), poses(1, K))
+  assert not s.full and s.z.shape[1] == 1 and s.predict().shape == (1, m.cfg.dim)
+
+
+def test_lewm_stream_predict_pixels_with_decoder(px):
+  from src.models.lewm_decoder import DecoderConfig, LeWMDecoder
+  m = px()
+  dec = LeWMDecoder(DecoderConfig(dim_in=32, dec_dim=32, layers=1, heads=2, n_kv=2)).eval()
+  s = make_stream(m, graphs=False)
+  s.decoder = dec
+  feed(s, frames(1, K))
+  img = s.predict_pixels()
+  assert img.dtype == torch.uint8 and img.shape == (1, 128, 256, 3)
+
+
 @needs_cuda
-@pytest.mark.parametrize("kind", ["maskgit", "lewm"])
+def test_lewm_stream_graphs_equal_eager_cuda():
+  m = tiny("lewm", dev="cuda")
+  tok, pose = frames(1, 4 * K, dev="cuda"), poses(1, 4 * K).cuda()
+  a, b = make_stream(m, graphs=False), make_stream(m, graphs=True)
+  for s in (a, b):
+    for f in range(tok.shape[1]):
+      s.observe_pixels(fake_render(tok[:, f]), pose[:, f])
+  assert torch.allclose(a.predict(), b.predict(), atol=1e-4)
+
+
+@needs_cuda
+@pytest.mark.parametrize("kind", ["maskgit"])
 def test_graphs_equal_eager_cuda(kind):
   m = tiny(kind, dev="cuda")
   ctx = frames(1, FRAMES - 1, dev="cuda")

@@ -64,7 +64,8 @@ def test_kd_alpha1_equals_ce():
 
 
 def run_args(tmp_path, data, run, extra=()):
-  return ["--kind", "gpt", "--config", json.dumps({"n_layer": 2, "n_head": 2, "dim": 32}), "--run", run, "--tokens", str(1032 * 6),
+  return ["--kind", "gpt", "--config", json.dumps({"n_layer": 2, "n_head": 2, "dim": 32, "dropout": 0.0}), "--run", run,
+          "--receta", "legacy_cosine", "--tokens", str(1032 * 6),
           "--bs", "2", "--frames", "4", "--warmup", "2", "--lr", "3e-3", "--eval-every", "2", "--log-every", "1",
           "--data", str(data), "--ckpt-dir", str(tmp_path / "ck"), "--results-dir", str(tmp_path / "res"), *extra]
 

@@ -15,7 +15,7 @@ from src.models import build, load_checkpoint
 from src.train import main
 from src.windows import Windows
 
-CFG = {"n_layer": 2, "n_head": 2, "dim": 32}
+CFG = {"n_layer": 2, "n_head": 2, "dim": 32, "dropout": 0.0}
 
 
 def synth(n=60, t=30, seed=0):
@@ -31,7 +31,7 @@ def data(tmp_path, monkeypatch):
 
 
 def base_args(tmp_path, data, run, extra=()):
-  return ["--kind", "gpt", "--config", json.dumps(CFG), "--run", run, "--bs", "2", "--frames", "4",
+  return ["--kind", "gpt", "--config", json.dumps(CFG), "--run", run, "--receta", "legacy_cosine", "--bs", "2", "--frames", "4",
           "--eval-every", "100", "--log-every", "1", "--data", str(data), "--ckpt-dir", str(tmp_path / "ck"),
           "--results-dir", str(tmp_path / "res"), *extra]
 
@@ -105,7 +105,7 @@ def test_legacy_cosine_matches_old_code(tmp_path, data):
     assert torch.equal(v, new[k]), k
   # la receta guardada y las desviaciones (--lr, --warmup, --bs y --frames difieren de la receta actual 1e-3 / 200)
   res = json.loads((tmp_path / "res" / "train_nuevo.json").read_text())
-  assert {d["campo"] for d in res["desviaciones"]} == {"lr", "warmup", "batch", "frames"} and res["receta"]["name"] == "gpt_actual"
+  assert {d["campo"] for d in res["desviaciones"]} == {"lr", "warmup", "batch", "frames"} and res["receta"]["name"] == "legacy_cosine"
   assert res["args"]["desviaciones"] == res["desviaciones"]
   # una corrida vieja (args de su checkpoint) se reconstruye con la misma receta
   old_args = dict(lr=lr, warmup=warm, min_lr_frac=mf, wd=0.1, clip=1.0, bs=2, accum=1, frames=4, amp=None)

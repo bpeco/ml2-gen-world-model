@@ -17,6 +17,9 @@ Adaptadores (make_stream elige):
   Pose opcional por frame (acción); sin pose, la acción nula. LeWM ve píxeles: observe(tokens) los renderiza con
   el decoder de comma, y observe_pixels(img) acepta la imagen de la cámara directo, sin el encoder de comma.
 
+- ConvLSTMPxStream (ConvLSTM de Shi 2015, píxeles -> píxeles): ventana de los últimos 10 frames en el device; observe_pixels
+  (cámara) o observe (tokens, renderizados); predict/step devuelven uint8 (B, 128, 256, 3), sin codec de comma.
+
 Los pasos que se capturan son funciones puras (estado de entrada y de salida explícitos): el calentamiento de
 GraphedStep los ejecuta varias veces. Los tensores que devuelven predict e imagine son nuevos (se pueden guardar).
 Con el estado vacío (menos de ctx_frames frames) se usa el camino sin graphs: es el primer segundo del stream.
@@ -211,60 +214,125 @@ class GenieStream(TokenStream):
 # ---------------------------------------------------------------- LeWM
 
 class LatentStream(Stream):
+  """LeWM en línea, todo en el device: cámara (píxeles) -> ViT -> predictor, sin el codec de comma.
+
+  La cámara va a 20 fps y el modelo da un paso cada `frameskip` frames de cámara (5: 250 ms). observe_pixels(img, pose)
+  se llama en cada frame de cámara: solo el primero de cada bloque se codifica (el resto solo acumula su pose, que
+  forma la acción del bloque: las k poses apiladas). El estado son los últimos `history` embeddings y las acciones
+  ya tomadas entre ellos. predict() devuelve el embedding ẑ del próximo paso del modelo (B, dim): LeWM no emite tokens;
+  con `decoder` (src/models/lewm_decoder.py) predict_pixels() lo pasa a imagen.
+
+  pose de predict/step: la acción que se va a tomar tras el último frame codificado, (B, 6) cruda (se mantiene los k
+  frames de cámara) o (B, 6k) apilada; None = acción 0 (la media).
+  """
+
+  def __init__(self, model, temperature: float = 1.0, steps=None, seed: int = 0, graphs: bool = True, decoder=None):
+    self.decoder = decoder
+    super().__init__(model, temperature=temperature, steps=steps, seed=seed, graphs=graphs)
+    self.k = model.cfg.frameskip
+
   def reset(self):
-    self.z = None       # (B, F, *S) latentes de los últimos ctx_frames frames
-    self.acts = None    # (B, F, Da) acción de cada frame del contexto
+    self.z = None       # (B, n, D) embeddings de los últimos `history` pasos del modelo
+    self.acts = None    # (B, n - 1, D) acción embebida entre cada par de frames del estado
+    self._poses = []    # poses (B, 6) crudas del bloque de cámara en curso
+    self._cam = 0       # frames de cámara vistos (fase del bloque)
     self.n_seen = 0
 
   @property
   def full(self):
     return self.z is not None and self.z.shape[1] == self.ctx_frames
 
+  # ---- acciones
   def _act(self, pose, B):
+    """Acción embebida (B, 1, D) de una pose (B, 6) / (B, 6k) cruda; None = acción 0."""
     m = self.m
-    dt = m.null_act.dtype
     if pose is None:
-      return m.null_act.expand(B, 1, -1).to(dt)
-    pn, valid = m.normalize_poses(pose.to(self.dev).view(B, 1, -1))
-    return m.actions_norm(pn, valid).to(dt)
+      return m.action_embed(None, B, 1, self.dev)
+    pose = pose.to(self.dev).float().view(B, 1, -1)
+    return m.action_embed(pose, B, 1, self.dev)
+
+  # ---- observar
+  @torch.no_grad()
+  def observe_pixels(self, img: torch.Tensor, pose: Optional[torch.Tensor] = None) -> bool:
+    """Un frame de cámara uint8 (B, 128, 256, 3) en el device y su pose cruda (B, 6) (None: sin pose).
+
+    Devuelve True si el modelo avanzó un paso (cada `frameskip` frames de cámara)."""
+    B = img.shape[0]
+    new_block = self._cam % self.k == 0
+    if new_block:
+      self._close_block(B)
+      zn = self.m._graphed(("encpx", B), self._encode_px, img) if self.graphs else self._encode_px(img)
+      self._append(zn)
+    p = torch.full((B, 6), float("nan"), device=self.dev) if pose is None else pose.to(self.dev).float().view(B, -1)
+    self._poses.append(p)
+    self._cam += 1
+    self.n_seen += int(new_block)
+    return new_block
 
   @torch.no_grad()
-  def observe_pixels(self, img: torch.Tensor, pose: Optional[torch.Tensor] = None):
-    """Un frame de cámara uint8 (B, 128, 256, 3) en el device entra al estado."""
-    m, B = self.m, img.shape[0]
-    zn = m._graphed(("encpx", B), self._encode_px, img) if self.graphs else self._encode_px(img)
-    self._append(zn, pose)
-    self.n_seen += 1
+  def observe(self, tok: torch.Tensor, pose: Optional[torch.Tensor] = None) -> bool:
+    """Como observe_pixels, desde los tokens del frame de cámara (se renderizan con el decoder de comma)."""
+    from src.models.lewm import render_tokens
+    tok = tok.to(self.dev).long()
+    img = render_tokens(tok) if self._cam % self.k == 0 else tok.new_zeros(tok.shape[0], 1, 1, 3, dtype=torch.uint8)
+    return self.observe_pixels(img, pose)
 
   def _encode_px(self, img):
     return self.m.encode(img[:, None])[:, 0]
 
-  def _push(self, tok, aux, pose):
-    m, B = self.m, tok.shape[0]
-    if aux is not None and m.cfg.rollout == "latent":
-      zn = aux                                   # ẑ entra al contexto sin re-codificar
-    else:
-      zn = m._graphed(("enc", B), m._encode_one, tok) if self.graphs else m._encode_one(tok)
-    self._append(zn, pose)
+  def _close_block(self, B):
+    """Termina el bloque anterior: sus k poses apiladas son la acción entre el frame anterior y el que entra."""
+    if self.z is None or not self._poses:
+      self._poses = []
+      return
+    a = self.m.action_embed(torch.cat(self._poses, -1)[:, None], B, 1, self.dev)
+    self.acts = torch.cat([self.acts, a.to(self.acts.dtype)], 1)[:, -(self.ctx_frames - 1):]
+    self._poses = []
 
-  def _append(self, zn, pose):
-    m, B = self.m, zn.shape[0]
-    zn = zn[:, None].to(next(m.parameters()).dtype).clone()
-    a = self._act(pose, B)
+  def _append(self, zn):
+    zn = zn[:, None].to(next(self.m.parameters()).dtype).clone()
     if self.z is None:
-      self.z, self.acts = zn, a
+      self.z = zn
+      self.acts = zn.new_zeros(zn.shape[0], 0, zn.shape[-1])
     else:
       self.z = torch.cat([self.z, zn], 1)[:, -self.ctx_frames:]
-      self.acts = torch.cat([self.acts, a], 1)[:, -self.ctx_frames:]
 
-  def _sample_next(self, pose):
-    m, B = self.m, self.z.shape[0]
-    a = torch.cat([self.acts, self._act(pose, B)], 1).contiguous()
-    if self.graphs and self.full:
-      zh, lg = m._graphed(("next", B), m._next, self.z, a)
-    else:
-      zh, lg = m._next(self.z, a)
-    return sample_logits(lg.float(), self.temperature, self.gen), zh.clone()
+  # ---- predecir
+  def _step_from(self, z, acts, pose):
+    """(ẑ del paso siguiente (B, D), acción tras el último frame (B, 1, D))."""
+    a_last = self._act(pose, z.shape[0]).to(acts.dtype)
+    a = torch.cat([acts, a_last], 1).contiguous()
+    full = z.shape[1] == self.ctx_frames
+    zh = self.m._graphed(("next", z.shape[0]), self.m._next, z, a) if (self.graphs and full) else self.m._next(z, a)
+    return zh, a_last
+
+  @torch.no_grad()
+  def predict(self, k: int = 1, pose: Optional[torch.Tensor] = None) -> torch.Tensor:
+    """ẑ del paso k del modelo (B, D) sin tocar el estado; los pasos intermedios usan la acción 0."""
+    z, acts = self.z, self.acts
+    for i in range(k):
+      zh, a_last = self._step_from(z, acts, pose if i == 0 else None)
+      zh = zh.clone()
+      if i + 1 < k:
+        z = torch.cat([z, zh[:, None].to(z.dtype)], 1)[:, -self.ctx_frames:]
+        acts = torch.cat([acts, a_last], 1)[:, -(self.ctx_frames - 1):]
+    return zh
+
+  @torch.no_grad()
+  def predict_pixels(self, k: int = 1, pose: Optional[torch.Tensor] = None) -> torch.Tensor:
+    """predict() pasado por el decoder de visualización: uint8 (B, 128, 256, 3)."""
+    assert self.decoder is not None, "LatentStream sin decoder (src/models/lewm_decoder.py)"
+    return self.decoder.decode(self.predict(k, pose))
+
+  @torch.no_grad()
+  def step(self, pose: Optional[torch.Tensor] = None) -> torch.Tensor:
+    """Un paso imaginado: ẑ (B, D) entra al estado (rollout latente)."""
+    zh, a_last = self._step_from(self.z, self.acts, pose)
+    zh = zh.clone()
+    self.acts = torch.cat([self.acts, a_last], 1)[:, -(self.ctx_frames - 1):]
+    self._append(zh)
+    self.n_seen += 1
+    return zh
 
   def _save(self):
     return self.z, self.acts
@@ -273,11 +341,186 @@ class LatentStream(Stream):
     self.z, self.acts = snap
 
 
+# ---------------------------------------------------------------- ConvLSTM desde píxeles
+
+class ConvLSTMPxStream(Stream):
+  """ConvLSTM de Shi 2015 (output = "pixels"): entra y sale píxeles uint8 (B, 128, 256, 3), sin codec de comma.
+
+  El estado es la ventana de los últimos n_in frames (float en [0, 1], en el device). Cada predicción re-codifica la
+  ventana desde estado 0 (como se entrenó) y pronostica; es una función pura de la ventana, así que se captura en un
+  CUDA graph con la ventana llena. step() pronostica n_out frames de una vez, los va entregando de a uno y cada uno
+  entra a la ventana (el mismo rollout por bloques que model.generate). observe() descarta lo que quede por entregar.
+  Sin .item()/.cpu() en la ruta por frame; observe también acepta tokens (B, 128), que renderiza en el device.
+  """
+
+  def reset(self):
+    self.win = None     # (B, F, 3, H, W), F <= n_in
+    self.queue = None   # (B, K, 3, H, W) pronóstico pendiente de entregar
+    self.qi = 0
+    self.n_seen = 0
+    self._g = {}
+
+  @property
+  def full(self):
+    return self.win is not None and self.win.shape[1] == self.ctx_frames
+
+  def _enter(self, p):
+    p = p[:, None].to(self.win.dtype if self.win is not None else next(self.m.parameters()).dtype)
+    self.win = p if self.win is None else torch.cat([self.win, p], 1)[:, -self.ctx_frames:]
+
+  @torch.no_grad()
+  def observe_pixels(self, img: torch.Tensor, pose=None):
+    """Un frame de cámara uint8 (B, 128, 256, 3) en el device entra a la ventana."""
+    self._enter(self.m.to_float(img.to(self.dev)))
+    self.queue = None
+    self.n_seen += 1
+
+  @torch.no_grad()
+  def observe(self, tok, pose=None):
+    if tok.dim() == 4:   # imagen
+      return self.observe_pixels(tok)
+    from src.pixels import render
+    self.observe_pixels(render(tok.to(self.dev).long()))
+
+  def _probs(self, n):
+    """Pronóstico de n frames desde la ventana (graph con la ventana llena)."""
+    if not (self.graphs and self.full):
+      return self.m.probs(self.win, n)
+    key = (self.win.shape[0], n)
+    g = self._g.get(key)
+    if g is None:
+      g = self._g[key] = GraphedStep(lambda w: self.m.probs(w, n), self.win)
+    return g(self.win)
+
+  @torch.no_grad()
+  def predict(self, k: int = 1, pose=None) -> torch.Tensor:
+    """Frame t+k (B, 128, 256, 3) uint8: los primeros k pasos del forecaster; no modifica el estado."""
+    return self.m.to_uint8(self._probs(k)[:, -1])
+
+  @torch.no_grad()
+  def step(self) -> torch.Tensor:
+    if self.queue is None or self.qi >= self.queue.shape[1]:
+      self.queue, self.qi = self._probs(self.m.cfg.n_out).clone(), 0
+    p = self.queue[:, self.qi]
+    self.qi += 1
+    self._enter(p)
+    self.n_seen += 1
+    return self.m.to_uint8(p)
+
+
+# ---------------------------------------------------------------- V-JEPA 2-AC
+
+class VJEPAStream:
+  """V-JEPA 2-AC en línea: cámara a 20 Hz -> un paso del predictor cada 5 frames (4 Hz, 0.25 s), sin codec.
+
+    s = make_stream(model)               # model: VJEPA2AC
+    s.observe_pixels(img, pose)          # img uint8 (B, 128, 256, 3) en el device; pose (B, n_pose) cruda o None
+                                         # devuelve True si ese frame entró al estado (1 de cada `cada` = 5)
+    zh = s.predict(accion)               # (B, N, D) frame imaginado 0.25 s adelante (layer_norm); acción normalizada (B, A)
+    zh = s.step(accion)                  # como predict, y el frame imaginado entra al estado (rollout)
+
+  Frame de cámara -> encoder (un frame en un tubelet duplicado) -> latentes del estado; el predictor ve las últimas
+  `ctx` (15) representaciones con sus estados (pose normalizada) y acciones (diferencia de estados observados; la del
+  último frame es la que se pasa a predict). Todo es tensor en el device, con contadores de Python: sin .item/.cpu. Con la
+  ventana llena el encoder y el paso del predictor son CUDA graphs (GraphedStep) de forma estática. La latencia de un paso
+  es la del predictor (más un encoder cada 5 frames de cámara): ver latencia_ms().
+  """
+
+  def __init__(self, model, graphs: bool = True, cada: int = 5, ctx: Optional[int] = None, **_):
+    self.m = model.eval()
+    self.dev = model.device
+    self.graphs = graphs and self.dev.type == "cuda"
+    self.cada = cada
+    self.ctx = ctx or model.ctx_frames
+    self._g = {}
+    self.reset()
+
+  @property
+  def full(self):
+    return self.z is not None and self.z.shape[1] == self.ctx
+
+  def reset(self):
+    self.z = self.s = self.a = None  # (B, F, N, D), (B, F, A), (B, F-1, A)
+    self.n_cam = 0
+
+  def _enc(self, img):
+    from src.models.vjepa.patch import normalizar_cthw
+    x = normalizar_cthw(img.float().div(255).permute(0, 3, 1, 2)[:, :, None])
+    return self.m.codificar(x)[:, 0]
+
+  def _pred(self, z, a, s):
+    return self.m.predecir(z, a, s)[:, -1]
+
+  def _run(self, key, fn, *args):
+    if not self.graphs:
+      return fn(*args)
+    g = self._g.get(key)
+    if g is None:
+      g = self._g[key] = GraphedStep(fn, *args)
+    return g(*args)
+
+  def _push(self, z, s, a):
+    if self.z is None:
+      self.z, self.s, self.a = z, s, s[:, :0].clone()
+      return
+    self.z = torch.cat([self.z, z], 1)[:, -self.ctx:]
+    self.a = torch.cat([self.a, a], 1)[:, -(self.ctx - 1):] if self.ctx > 1 else self.a
+    self.s = torch.cat([self.s, s], 1)[:, -self.ctx:]
+
+  @torch.no_grad()
+  def observe_pixels(self, img, pose=None):
+    n = self.n_cam
+    self.n_cam += 1
+    if n % self.cada:
+      return False
+    B = img.shape[0]
+    z = self._run(("enc", B), self._enc, img.to(self.dev))[:, None].clone()
+    s, _ = self.m.estados_acciones(None if pose is None else pose.to(self.dev)[:, None], B, 1, self.dev)
+    self._push(z, s, None if self.s is None else s - self.s[:, -1:])
+    return True
+
+  @torch.no_grad()
+  def predict(self, accion=None):
+    B = self.z.shape[0]
+    acc = torch.zeros(B, 1, self.s.shape[-1], device=self.dev) if accion is None else accion.to(self.dev).view(B, 1, -1)
+    a = torch.cat([self.a, acc], 1)
+    return self._run(("pred", B), self._pred, self.z, a, self.s).clone() if self.full else self._pred(self.z, a, self.s)
+
+  @torch.no_grad()
+  def step(self, accion=None):
+    B = self.z.shape[0]
+    acc = torch.zeros(B, 1, self.s.shape[-1], device=self.dev) if accion is None else accion.to(self.dev).view(B, 1, -1)
+    zh = self.predict(accion)
+    self._push(zh[:, None], self.s[:, -1:] + acc, acc)
+    return zh
+
+
+def latencia_ms(stream, img, n: int = 20) -> float:
+  """Milisegundos por paso del predictor (con la ventana ya llena); sincroniza solo al medir."""
+  import time
+  for _ in range(3):
+    stream.predict()
+  if stream.dev.type == "cuda":
+    torch.cuda.synchronize()
+  t0 = time.perf_counter()
+  for _ in range(n):
+    stream.predict()
+  if stream.dev.type == "cuda":
+    torch.cuda.synchronize()
+  return (time.perf_counter() - t0) / n * 1000
+
+
 def make_stream(model, **kw) -> Stream:
   """El adaptador que corresponde a la familia del modelo. kw: temperature, steps, seed, graphs."""
   from src.models.latent import LatentWM
   from src.models.genie import Genie
+  from src.models.vjepa.action import VJEPA2AC
+  if isinstance(model, VJEPA2AC):
+    return VJEPAStream(model, **kw)
   from src.models.maskgit import MaskGIT
+  from src.models.convlstm_px import ConvLSTMPx
+  if isinstance(model, ConvLSTMPx):
+    return ConvLSTMPxStream(model, **kw)
   if isinstance(model, Genie):
     return GenieStream(model, **kw)
   if isinstance(model, LatentWM):

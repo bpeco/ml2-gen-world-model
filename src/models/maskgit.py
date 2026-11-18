@@ -3,6 +3,10 @@
 Mismo formato de secuencia que el GPT (BOS + 128 códigos por frame), pero la salida en la posición
 p predice el token EN p (no el siguiente). Atención por bloques: causal entre frames y bidireccional
 dentro de cada frame (Genie). El BOS nunca se enmascara.
+
+Es una ABLACIÓN PROPIA, no una réplica de MaskGIT: el entrenamiento (posición factorizada, p_clean, tasa de máscara por
+frame) es del repo; solo la decodificación sigue a MaskGIT. FIDELIDAD (abajo) separa lo que sigue al paper de lo propio.
+El modelo fiel a Genie está en genie.py.
 """
 import math
 from dataclasses import dataclass
@@ -16,6 +20,38 @@ from src.models.cudagraph import GraphedStep
 from src.recipes import legacy_cosine
 
 CODES = TPF - 1
+MG = "MaskGIT (arXiv 2202.04200; github.com/google-research/maskgit)"
+
+FIDELIDAD = [
+  dict(campo="Calendario de máscara en inferencia", fuente_valor="coseno: quedan floor(128·cos(π/2·s/S)) enmascarados",
+       aquí="igual", categoría="fiel", fuente=f"{MG} §3.2; libml/mask_schedule.py"),
+  dict(campo="Decodificación por confianza", fuente_valor="se muestrea cada celda, se fijan las más confiables con ruido "
+       "Gumbel sobre log p que baja a 0", aquí="igual (choice_temp 1.0 por defecto, el de MaskGIT es 4.5)",
+       categoría="fiel", fuente=f"{MG} libml/parallel_decode.py L29-53; choice_temp: propio"),
+  dict(campo="Pasos de decodificación", fuente_valor="8 en el paper", aquí="8 por defecto (default_steps)",
+       categoría="fiel", fuente=f"{MG} §3.2"),
+  dict(campo="Loss", fuente_valor="cross-entropy solo en los tokens enmascarados", aquí="igual, sin label smoothing "
+       "(MaskGIT usa 0.1)", categoría="fiel", fuente=f"{MG} Eq. 1; config L41-42"),
+  dict(campo="Máscara en entrenamiento", fuente_valor="una tasa coseno por muestra de imagen (r ~ U[0,1), cos(π/2·r))",
+       aquí="una tasa por frame (coseno o U[0.5,1]), independiente entre frames", categoría="propio",
+       fuente="MaskGIT genera una imagen; el video por frames no está en el paper"),
+  dict(campo="p_clean", fuente_valor="no existe", aquí="probabilidad de dejar un frame limpio al entrenar, para que el "
+       "contexto se parezca al de inferencia", categoría="propio", fuente="decisión del repo"),
+  dict(campo="Atención", fuente_valor="bidireccional sobre la imagen",
+       aquí="bloques: causal entre frames, bidireccional dentro del frame", categoría="propio",
+       fuente="extensión a video (la de Genie es el ST-transformer de genie.py)"),
+  dict(campo="Posición", fuente_valor="aprendida", aquí="pos='abs' (por defecto) o 'frame' (frame + celda, el de las corridas "
+       "propias)", categoría="propio", fuente=f"{MG} config L55-59; variante factorizada: repo"),
+  dict(campo="Arquitectura y tamaño", fuente_valor="24 capas, 768, MLP 3072 (bidireccional, sobre 256 tokens de imagen)",
+       aquí="S = 6 x 384, M = 8 x 512, L = 12 x 768 (backbone propio compartido con el GPT)", categoría="presupuesto",
+       fuente=f"{MG} config L55-59"),
+  dict(campo="Receta de entrenamiento", fuente_valor="Adam (0.9, 0.96), lr 1e-4 constante tras warmup 5k, wd 4.5e-2, "
+       "batch 256, dropout 0.1 (código de entrenamiento no publicado)",
+       aquí="receta 'maskgit_propia': AdamW (0.9, 0.95), warmup + coseno, wd 0.1, clip 1, fp16, sin dropout",
+       categoría="propio", fuente="receta heredada del repo; MaskGIT no publica el código de entrenamiento"),
+  dict(campo="Datos", fuente_valor="ImageNet 256x256, tokens VQGAN 16x16", aquí="tokens de comma, 128 por frame",
+       categoría="datos", fuente="commaVQ"),
+]
 
 
 def n_masked(s: int, S: int) -> int:
@@ -80,8 +116,9 @@ class MaskGIT(WorldModel):
 
   @classmethod
   def recipe(cls, size=None):
-    """Receta de entrenamiento. Hoy es la actual del repo (propia); la del paper la reemplaza."""
-    return legacy_cosine(name="maskgit_actual", fuente="receta actual del repo")
+    """Receta propia de la ablación (la heredada del repo): MaskGIT no publica su código de entrenamiento."""
+    return legacy_cosine(name="maskgit_propia", fuente="propia (ablación del repo; MaskGIT no publica el entrenamiento)",
+                         forzado=[("toda la receta", "ablación propia: no hay receta publicada que seguir", "propio")])
 
   def __init__(self, cfg: "MaskGIT.Config"):
     super().__init__()

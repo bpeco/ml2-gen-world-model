@@ -25,6 +25,7 @@ class BackboneConfig:
   attn: str = "causal"     # "causal" | "block"
   dropout: float = 0.0
   pos: str = "abs"         # "abs": un embedding por posición | "frame": frame + celda (factorizado)
+  res_scale: bool = True   # proyecciones residuales con std 0.02/sqrt(2L) (GPT-2); False: N(0, 0.02) en todo (IRIS)
 
 
 def mult8(n: int) -> int:
@@ -98,7 +99,7 @@ class Backbone(nn.Module):
     self.register_buffer("mask", make_mask(mult8(cfg.block_size), cfg.attn), persistent=False)
     self.cache_len = 0
     self.apply(self._init)
-    for b in self.blocks:  # proyecciones residuales escaladas (GPT-2)
+    for b in self.blocks if cfg.res_scale else ():  # proyecciones residuales escaladas (GPT-2)
       for lin in (b.attn.proj, b.proj):
         nn.init.normal_(lin.weight, 0.0, 0.02 / math.sqrt(2 * cfg.n_layer))
 

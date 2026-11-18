@@ -28,6 +28,9 @@ KINDS = {
   "maskgit": ("src.models.maskgit", "MaskGIT"),
   "lewm": ("src.models.lewm", "LeWM"),      # LeWorldModel (un embedding por frame, SIGReg, AdaLN)
   "genie": ("src.models.genie", "Genie"),   # dinámica de Genie (ST-transformer + MaskGIT, sin acciones)
+  "vjepa2": ("src.models.vjepa.pretrain", "VJEPA2"),       # V-JEPA 2: preentrenamiento autosupervisado (EMA, máscaras 3D)
+  "vjepa2_ac": ("src.models.vjepa.action", "VJEPA2AC"),    # V-JEPA 2-AC: predictor con acciones sobre el encoder congelado
+  "convlstm_px": ("src.models.convlstm_px", "ConvLSTMPx"),  # ConvLSTM de Shi 2015, píxeles -> píxeles
 }
 
 # tamaños de los transformers propios (D3): capas, cabezas, ancho
@@ -92,8 +95,8 @@ def load_model(spec: str, dev="cpu") -> WorldModel:
     kind, _, size = run.rpartition("_")
     if kind in ("gpt", "maskgit", "genie"):
       m = build(kind, size=size)
-    else:  # random:lewm
-      m = build(kind if kind else size)
+    else:  # random:lewm, random:convlstm_px
+      m = build(run if run in KINDS else (kind if kind else size))
     m.name = spec.replace(":", "_")
     return m.to(dev).eval()
   if spec.endswith(".pt") or Path(spec).exists():

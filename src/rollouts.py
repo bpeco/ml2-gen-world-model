@@ -7,7 +7,8 @@ Rollouts:
   python -m src.rollouts --model SPEC [--name NAME] [--bs 50] [--steps S] [--temperature 1.0]
                          [--dtype fp32|fp16|bf16] [--ctx-frames K] [--limit N] [--seed 0]
   SPEC es lo que entiende src.models.load_model, o "real" (los tokens reales como "rollout").
-  Escribe results/rollouts/<name>.npy (N, 60, 128) int16 y <name>.json con los metadatos.
+  Escribe results/rollouts/<name>.npy (N, 60, 128) int16 y <name>.json con los metadatos. Un modelo con
+  output = "pixels" (convlstm_px) escribe en cambio uint8 (N, 60, 128, 256, 3): son los frames predichos, sin tokens.
 
 Nombre por defecto: model.name + sufijos solo para lo que no es el valor por defecto:
   _s<steps> (--steps), _<dtype> (fp16/bf16), _ctx<K> (--ctx-frames), _t<temp> (temperatura != 1).
@@ -118,7 +119,12 @@ def main(argv=None):
   base = "real" if real else model.name
   name = a.name or (base if real else default_name(base, a.steps, a.dtype, a.ctx_frames, a.temperature))
 
-  out = np.zeros((n, HORIZON, 128), np.int16)
+  pix = model is not None and getattr(model, "output", "tokens") == "pixels"
+  if pix:  # modelo de píxeles: uint8 (N, 60, 128, 256, 3) en disco (memmap), metrics_video lo usa sin decodificar
+    OUT.mkdir(parents=True, exist_ok=True)
+    out = np.lib.format.open_memmap(OUT / f"{name}.npy", mode="w+", dtype=np.uint8, shape=(n, HORIZON, model.cfg.height, model.cfg.width, 3))
+  else:
+    out = np.zeros((n, HORIZON, 128), np.int16)
   t0 = time.time()
   n_batches = 0
   for i in range(0, n, a.bs):
@@ -128,7 +134,7 @@ def main(argv=None):
     ctx = torch.as_tensor(ctx_all[i:i + a.bs].astype(np.int64), device=dev)
     g = torch.Generator(device=dev).manual_seed(a.seed * 100003 + i)
     r = model.rollout(ctx, HORIZON, temperature=a.temperature, steps=a.steps, generator=g)
-    out[i:i + a.bs] = r.cpu().numpy().astype(np.int16)
+    out[i:i + a.bs] = r.cpu().numpy() if pix else r.cpu().numpy().astype(np.int16)
     n_batches += 1
     print(f"  clips {i + len(ctx)}/{n}  {time.time() - t0:.1f} s", flush=True)
   if dev.type == "cuda":
@@ -136,8 +142,11 @@ def main(argv=None):
   sec = time.time() - t0
 
   OUT.mkdir(parents=True, exist_ok=True)
-  np.save(OUT / f"{name}.npy", out)
-  meta = {"model": a.model, "name": name, "opt": a.opt, "steps": a.steps, "temperature": a.temperature, "dtype": a.dtype,
+  if pix:
+    out.flush()
+  else:
+    np.save(OUT / f"{name}.npy", out)
+  meta = {"output": "pixels" if pix else "tokens", "model": a.model, "name": name, "opt": a.opt, "steps": a.steps, "temperature": a.temperature, "dtype": a.dtype,
           "bs": a.bs, "seed": a.seed, "graphs": a.graphs, "ctx_frames": a.ctx_frames, "n_clips": n, "seconds": sec,
           "ms_per_frame_batch": 1000 * sec / (max(n_batches, 1) * HORIZON) if not real else None,
           "device_info": info, "clips_hash": clips_hash()}

@@ -19,6 +19,19 @@ import torch
 from src.common import VOCAB
 from src.models.base import FrameModel, WorldModel, sample_logits
 
+FIDELIDAD = [
+  dict(campo="unigrama", fuente_valor="no existe en la literatura de comma", aquí="p(y) = frecuencia del código en train, "
+       "add-one", categoría="propio", fuente="baseline del repo (cota inferior)"),
+  dict(campo="transicion", fuente_valor="no existe en la literatura de comma", aquí="p(y | x), x = código de la misma celda "
+       "en el frame anterior; tabla 1024x1024 de conteos suavizada hacia el unigrama", categoría="propio",
+       fuente="baseline del repo (primer orden por celda); se llamó 'copy'"),
+  dict(campo="congelado", fuente_valor="no existe en la literatura de comma", aquí="mezcla p_copy·1[misma celda] + "
+       "(1 - p_copy)·unigrama; con temperatura 0 repite el último frame", categoría="propio",
+       fuente="baseline del repo (frame congelado, copy_mix)"),
+  dict(campo="Ajuste", fuente_valor="-", aquí="conteos sobre train; alpha del suavizado por máxima verosimilitud en los "
+       "últimos segmentos de train, nunca en val", categoría="propio", fuente="baseline del repo"),
+]
+
 STATS = Path("checkpoints/baselines.npz")
 TRAIN = "data/train_tokens.npy"
 N_CODES = 1024

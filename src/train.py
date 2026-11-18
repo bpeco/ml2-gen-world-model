@@ -148,6 +148,10 @@ def make_optimizer(model, r, dev, lr0):
               {"params": [p for p in params if p.ndim < 2], "weight_decay": 0.0}]
   elif r.wd_on == "todos":
     groups = [{"params": params, "weight_decay": r.wd_ini}]
+  elif r.wd_on == "lineales":  # IRIS: solo el weight de nn.Linear y nn.Conv1d (no biases, normas ni embeddings, tampoco la posición)
+    lin = {id(m.weight) for m in model.modules() if isinstance(m, (torch.nn.Linear, torch.nn.Conv1d))}
+    groups = [{"params": [p for p in params if id(p) in lin], "weight_decay": r.wd_ini},
+              {"params": [p for p in params if id(p) not in lin], "weight_decay": 0.0}]
   else:
     raise ValueError(f"wd_on no soportado: {r.wd_on}")
   if r.optimizer == "adamw":
@@ -191,14 +195,16 @@ def monitor_ce(model, windows, bs, autocast, dev, frameskip=1):
   torch.manual_seed(1234)
   was_training = model.training
   model.eval()
-  x, tot, n = windows.monitor(frameskip=frameskip), 0.0, 0
+  x, n = windows.monitor(frameskip=frameskip).to(dev), 0  # ya residente en CUDA: .to es no-op
+  tot = torch.zeros((), device=dev, dtype=torch.float32)  # acumula en el device: un solo sync al final
   for i in range(0, len(x), bs):
-    xb = x[i:i + bs].to(dev)
+    xb = x[i:i + bs]
     with autocast():
       loss, met = model.train_loss(xb)
     # los modelos latentes (lewm) suman otras pérdidas: se monitorea la CE de su lectura a tokens
-    tot += met.get("ce", loss).item() * len(xb)
+    tot += met.get("ce", loss).detach().float() * len(xb)
     n += len(xb)
+  tot = tot.item()
   model.train(was_training)
   torch.set_rng_state(rng)
   if cuda_rng is not None:
@@ -339,13 +345,16 @@ def _train(a, dev, run_dir, last_path):
   # num_params(): solo lo que se usa en inferencia (los latentes no cuentan su encoder target EMA)
   n_params = model.num_params() if hasattr(model, "num_params") else sum(p.numel() for p in model.parameters())
   use_poses = getattr(model, "uses_poses", False)
-  windows = Windows(a.data, seed=a.seed, poses=a.poses if use_poses else None)
+  windows = Windows(a.data, seed=a.seed, poses=a.poses if use_poses else None, device=dev)  # en CUDA: tokens/poses residentes
   if use_poses:  # normalización de las acciones; viaja en el checkpoint como buffer
     model.set_pose_stats(*windows.pose_stats(r.frameskip))
   opt = make_optimizer(model, r, dev, r.lr(0, lt))
   # --amp manda en cualquier device; la receta solo se aplica en CUDA (como siempre: fp16 en CUDA, nada en el resto)
   amp = a.amp if a.amp is not None else ((r.amp or "none") if dev.type == "cuda" else "none")
   adtype = {"fp16": torch.float16, "bf16": torch.bfloat16}.get(amp)
+  # El scaler solo existe con fp16 (bf16/fp32 no lo necesitan: deshabilitado, scale/unscale_/step/update son no-ops
+  # y step() va directo a opt.step()). Con fp16, scaler.step() hace un sync por paso que PyTorch exige: lee
+  # found_inf (.item()) para decidir si saltea el paso; clip_grad_norm_ no sincroniza (error_if_nonfinite=False).
   scaler = torch.amp.GradScaler(dev.type, enabled=amp == "fp16" and dev.type == "cuda")
   autocast = (lambda: torch.autocast(dev.type, dtype=adtype)) if adtype else (lambda: torch.autocast(dev.type, enabled=False))
   ema = ema_init(model) if r.ema_segs is not None else None
@@ -426,6 +435,8 @@ def _train(a, dev, run_dir, last_path):
     log({"step": step, "tokens": tokens, "monitor_ce": ce})
     print(f"[eval] step {step} monitor_ce {ce:.4f}", flush=True)
 
+  # índices (segmento, inicio) de todos los pasos que faltan, calculados una vez con el mismo RNG y subidos al device
+  windows.prepare((stop_at - step) * r.accum, r.batch, r.frames, r.frameskip, first_step=step * r.accum)
   model.train()
   status("en curso")
   t_log, tok_log, step_log, t_ckpt = t0, tokens, step, t0
