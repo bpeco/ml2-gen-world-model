@@ -18,9 +18,10 @@
 #   (fuente, raíz, x3). LeWM usa el batch de su paper y ConvLSTM no publica el suyo: los dos van con el lr de la fuente.
 #   El humo de gpt corre sin el maestro (5 veces más rápido); el lr se elige para el alumno, declarado en la receta.
 # - El lr que elige el humo entra a la receta por un commit (cambio de código + test), no por --set: después de los
-#   trabajos 1, 10 y 11 se commitea la receta antes de seguir.
+#   trabajos 1, 10 y 11 se commitea la receta antes de seguir. LeWM no: su receta queda la del paper y el lr del
+#   humo va a la variante lewm_lrx3 (trabajo 13), por --set y declarada en su FIDELIDAD; las dos corridas van a la tabla.
 # - El único GPT entrenado es gpt_s_kd (S destilado de gpt2m, receta IRIS); gpt2m es la referencia.
-# - El MaskGIT de video fiel es la dinámica de Genie (D7b). El `maskgit` propio y sus ablaciones son el trabajo opcional 19.
+# - El MaskGIT de video fiel es la dinámica de Genie (D7b). El `maskgit` propio y sus ablaciones son el trabajo opcional 20.
 # - Solo hay datos actuales: results/ arranca vacío y cada resultado sale de un comando de esta cola (tabla modelo -> performance).
 # - `entrenar` se niega si la corrida ya tiene last.pt o final.pt (salvo `continuar` o --forzar).
 # - bench_e2e agrega _s<pasos> a su nombre (e2e_genie_s_s4__...), no _p<pasos>.
@@ -154,6 +155,18 @@ comandos = [
 
 [[trabajo]]
 id = 13
+nombre = "lewm_lrx3: LeWM con el lr del humo (x3, 1,5e-4), su decoder y su evaluación (agregado tras el trabajo 10)"
+horas = 1.3
+# La corrida fiel (lewm, trabajo 8) queda con el lr del paper; esta es la escalada, al lado y marcada como forzada
+# (plan, sección 8). El --set queda como desvío en el manifest.
+comandos = [
+  "lewm entrenar --variante lrx3 --set receta.lr_peak=1.5e-4",
+  "lewm demo --entrenar-decoder --variante lrx3",
+  "lewm evaluar --variante lrx3",
+]
+
+[[trabajo]]
+id = 14
 nombre = "Latencia unificada y de punta a punta, y calidad en línea (con la GPU libre)"
 horas = 1.8
 comandos = [
@@ -179,7 +192,7 @@ comandos = [
 ]
 
 [[trabajo]]
-id = 14
+id = 15
 nombre = "Semillas 1 y 2 de genie_s y convlstm_px (evaluadas a 8 pasos en genie)"
 horas = 3.5
 comandos = [
@@ -194,7 +207,7 @@ comandos = [
 ]
 
 [[trabajo]]
-id = 15
+id = 16
 nombre = "Estadística: media entre semillas y diferencias pareadas de FVD (CPU, desde la caché)"
 horas = 0.3
 comandos = [
@@ -208,7 +221,7 @@ comandos = [
 # gpt_s, gpt_m, genie_m y maskgit_s (con sus ablaciones) siguen entrenables por la CLI; el único GPT de la cola es gpt_s_kd y el único Genie, genie_s.
 
 [[trabajo]]
-id = 16
+id = 17
 opcional = true
 nombre = "OPCIONAL: gpt_s de cero (receta IRIS, sin destilar)"
 horas = 1.0
@@ -218,7 +231,7 @@ comandos = [
 ]
 
 [[trabajo]]
-id = 17
+id = 18
 opcional = true
 nombre = "OPCIONAL: gpt_m de cero (receta IRIS, sin destilar)"
 horas = 1.5
@@ -228,7 +241,7 @@ comandos = [
 ]
 
 [[trabajo]]
-id = 18
+id = 19
 opcional = true
 nombre = "OPCIONAL: genie_m (entrenar, evaluar a 1, 2, 4, 8, 12 y 25 pasos)"
 horas = 1.5
@@ -238,7 +251,7 @@ comandos = [
 ]
 
 [[trabajo]]
-id = 19
+id = 20
 opcional = true
 nombre = "OPCIONAL: maskgit_s propio y sus ablaciones (posición absoluta, máscara de Genie, sin p_clean), con 1, 2, 4, 8 y 12 pasos"
 horas = 3.0

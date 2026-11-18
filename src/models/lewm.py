@@ -286,6 +286,11 @@ FIDELIDAD = [
        fuente=f"{REPO} module.py L10-36 (la precisión: propio; el oficial corre bajo autocast bf16)"),
   dict(campo="Optimizador", fuente_valor="AdamW lr 5e-5, wd 1e-3, betas por defecto", aquí="igual, wd en todos los "
        "parámetros", categoría="fiel", fuente=f"{REPO} lewm.yaml L31-34"),
+  dict(campo="Variante lewm_lrx3", fuente_valor="lr 5e-5", aquí="la corrida fiel (lewm) usa el lr del paper y con ~1.500 pasos "
+       "apenas superó a copiar el último latente. El humo de 300 pasos (fuente, x3, x10, x30: monitor 0,261 / 0,222 / 0,250 / "
+       "0,266, sin colapso; results/humo_lewm.json) eligió x3, así que se entrena además lewm_lrx3 con "
+       "--set receta.lr_peak=1.5e-4 (misma forma: warmup 1 % y coseno a 0). Las dos van a la tabla", categoría="presupuesto",
+       fuente=f"{REPO} lewm.yaml L31-34"),
   dict(campo="Schedule", fuente_valor="LinearWarmupCosineAnnealingLR por época: warmup 1 % desde 0, coseno a 0",
        aquí="igual pero por paso: warmup lineal sobre el 1 % de los pasos (piso 1) y coseno a 0", categoría="presupuesto",
        fuente=f"{REPO} train.py L87-94; con 1 500 pasos no hay épocas que contar"),

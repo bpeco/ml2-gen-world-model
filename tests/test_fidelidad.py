@@ -1,5 +1,7 @@
 """FIDELIDAD de cada modelo y recetas de los papers (IRIS para el GPT, Genie Tab. 9)."""
 import math
+import tomllib
+from pathlib import Path
 
 import pytest
 import torch
@@ -77,6 +79,18 @@ def test_genie_receta():
   assert r.lr(5000 - 1, 200_000) == pytest.approx(3e-4) and r.lr(200_000, 200_000) == pytest.approx(3e-5)
   assert r.lr(199_999, 200_000) == pytest.approx(3e-5, rel=1e-3)
   assert any(f[0] == "lr" and "humo" in f[1] and f[2] == "presupuesto" for f in r.forzado)
+
+
+def test_lewm_fiel_y_variante_del_humo():
+  # la receta de lewm queda la del paper; el lr del humo (x3) va a la variante lewm_lrx3, declarada y en la cola
+  r = model_class("lewm").recipe()
+  assert max(r.lr(s, 1500) for s in range(1500)) == pytest.approx(5e-5)
+  fila = next(f for f in R.fidelidad("lewm") if "lrx3" in f["campo"])
+  assert "--set receta.lr_peak=1.5e-4" in fila["aquí"] and fila["categoría"] == "presupuesto"
+  with open(Path(__file__).resolve().parents[1] / "scripts" / "queue.toml", "rb") as f:
+    comandos = {c for t in tomllib.load(f)["trabajo"] for c in t["comandos"]}
+  assert {"lewm entrenar --variante lrx3 --set receta.lr_peak=1.5e-4", "lewm demo --entrenar-decoder --variante lrx3",
+          "lewm evaluar --variante lrx3"} <= comandos
 
 
 def test_maskgit_propia_y_legacy():
