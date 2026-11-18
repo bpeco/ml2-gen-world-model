@@ -357,6 +357,109 @@
   "tokens": 100657152,
   "train_json": "results/train_lewm.json"
  },
+ "vjepa2_ac": {
+  "bytes": 174029525,
+  "config": {
+   "action_dim": 6,
+   "auto_steps": 2,
+   "cargar_encoder": false,
+   "depth": 0,
+   "embed_dim": 0,
+   "encoder": "small",
+   "encoder_run": "vjepa2_s",
+   "frames": 16,
+   "grad_ckpt": true,
+   "height": 128,
+   "n_pose": 30,
+   "num_heads": 0,
+   "oficial_rope": true,
+   "patch": 16,
+   "pred_depth": 12,
+   "pred_dim": 384,
+   "pred_heads": 12,
+   "tubelet": 2,
+   "width": 256
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "vjepa2_ac",
+  "params": 21595392,
+  "receta": {
+   "accum": 2,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 16,
+   "batch_fuente": 256,
+   "betas": [
+    0.9,
+    0.999
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 efectivo (16 x accum 2) en vez de 256: con el presupuesto com\u00fan de 780k frames da ~1.5k pasos (con 256 ser\u00edan ~190). El lr queda el del paper: el humo de 300 pasos lo eligi\u00f3 entre fuente, ra\u00edz y x3, con diferencias menores al 1 % (results/humo_vjepa2_ac.json)",
+     "presupuesto"
+    ],
+    [
+     "presupuesto",
+     "~1.5k pasos en vez de 94.5k; las fracciones de warmup y decay se conservan",
+     "presupuesto"
+    ],
+    [
+     "predictor",
+     "12 x 384 en vez de 24 x 1024",
+     "presupuesto"
+    ],
+    [
+     "frames/frameskip",
+     "16 frames a 4 fps = 1 de cada 5 de los 20 FPS",
+     "datos"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 5,
+   "fuente": "V-JEPA 2 (arXiv 2506.09985) \u00a73.1; configs/train/vitg16/droid-256px-8f.yaml",
+   "grad_clip": null,
+   "lr_segs": [
+    {
+     "fin": 0.000425,
+     "forma": "linear",
+     "frac": 0.047619047619047616,
+     "ini": 7.5e-05,
+     "nombre": "warmup"
+    },
+    {
+     "fin": 0.000425,
+     "forma": "constant",
+     "ini": 0.000425,
+     "nombre": "constante"
+    },
+    {
+     "fin": 0.0,
+     "forma": "linear",
+     "frac": 0.047619047619047616,
+     "ini": 0.000425,
+     "nombre": "decay"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "vjepa2_ac_oficial",
+   "optimizer": "adamw",
+   "paper_steps": 94500,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.04,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "fc9176850076",
+  "sha256": "5bbad490571b7493807f6abd737429e991cbe44b391bb3d8bd5cf4f50dcff6a8",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_vjepa2_ac.json"
+ },
  "vjepa2_s": {
   "bytes": 261599942,
   "config": {

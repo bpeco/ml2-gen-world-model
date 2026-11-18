@@ -134,6 +134,11 @@
   "motivo": "bitácora 20261118-125920-0cb9: python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
   "fecha": "2026-11-18"
  },
+ "results/train_vjepa2_ac.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-145508-68fc: python -m src.cli vjepa2_ac entrenar --encoder vjepa2_s",
+  "fecha": "2026-11-18"
+ },
  "results/train_vjepa2_ac_humo_fuente.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-134633-962c: python -m src.cli vjepa2_ac entrenar --encoder vjepa2_s --humo --humo-candidatos fuente,raiz,x3",
