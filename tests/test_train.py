@@ -85,3 +85,34 @@ def test_train_resume_reproducible(tmp_path, monkeypatch):
     assert torch.allclose(a[k], b[k], atol=1e-6), k
   assert abs(full["final_monitor_ce"] - split["final_monitor_ce"]) < 1e-5
   assert (tmp_path / "res" / "train_full.json").exists()
+
+
+def test_monitor_usa_el_largo_de_ventana_de_la_receta():
+  """Regresión (cola, trabajo 1): el monitor le pasaba ventanas de 20 frames a Genie, que entrena con 16."""
+  import contextlib
+
+  from src.train import monitor_ce
+  pedidos = []
+
+  class W:
+    def monitor(self, n_windows=32, n_frames=20, frameskip=1):
+      pedidos.append(n_frames)
+      return torch.zeros(4, n_frames, 128, dtype=torch.long)
+
+  class M(torch.nn.Module):
+    def train_loss(self, x):
+      assert x.shape[1] == 16, f"llegaron {x.shape[1]} frames"
+      return torch.tensor(1.5), {}
+
+  ce = monitor_ce(M(), W(), 2, contextlib.nullcontext, torch.device("cpu"), 1, 16)
+  assert pedidos == [16] and ce == pytest.approx(1.5)
+
+
+def test_genie_entrena_con_su_receta_y_monitorea(tmp_path):
+  """De punta a punta en CPU: Genie con sus 16 frames entrena y pasa por el monitor sin errores."""
+  tok = tmp_path / "tok.npy"
+  np.save(tok, synth(n=60, t=40))  # más de 50 segmentos: Windows deja 50 de holdout para el monitor
+  cfg = json.dumps(dict(n_layer=1, n_head=2, dim=32))
+  main(["--kind", "genie", "--config", cfg, "--run", "g", "--data", str(tok), "--ckpt-dir", str(tmp_path / "ck"),
+        "--results-dir", str(tmp_path / "res"), "--bs", "2", "--max-steps", "2", "--eval-every", "1", "--presupuesto", "64"])
+  assert (tmp_path / "ck" / "g" / "final.pt").exists()

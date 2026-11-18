@@ -1,0 +1,49 @@
+{
+ "kind": "gpt",
+ "pasos": 300,
+ "batch_efectivo": 16,
+ "batch_fuente": 64,
+ "candidatos": [
+  {
+   "nombre": "fuente",
+   "run": "gpt_humo_fuente",
+   "lr": 0.0001,
+   "monitor_ce": 6.659919261932373,
+   "dispersion": {}
+  },
+  {
+   "nombre": "raiz",
+   "run": "gpt_humo_raiz",
+   "lr": 5e-05,
+   "monitor_ce": 6.694178581237793,
+   "dispersion": {}
+  },
+  {
+   "nombre": "x3",
+   "run": "gpt_humo_x3",
+   "lr": 0.0003,
+   "monitor_ce": 6.616512298583984,
+   "dispersion": {}
+  }
+ ],
+ "alias": {},
+ "elegido": "x3",
+ "lr_elegido": 0.0003,
+ "es_la_fuente": false,
+ "forzado": {
+  "campo": "lr",
+  "receta": 0.0001,
+  "elegido": 0.0003,
+  "candidato": "x3",
+  "categoria": "presupuesto",
+  "motivo": "el humo de 300 pasos elige lr 0.0003 (x3) y no el de la fuente (0.0001): declararlo como forzado por presupuesto en la receta"
+ },
+ "chequeo_colapso": "no aplica",
+ "nota": "",
+ "fecha": "2026-11-18T02:11:00",
+ "_bitacora": {
+  "id": "20261118-020350-6616",
+  "comando": "python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3",
+  "commit": "6ec801dee03cd1235d7c2896a120d2c336ae9632"
+ }
+}

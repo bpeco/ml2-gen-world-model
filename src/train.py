@@ -189,15 +189,16 @@ def atomic_save(obj, path):
 
 
 @torch.no_grad()
-def monitor_ce(model, windows, bs, autocast, dev, frameskip=1):
-  """CE (sin maestro) sobre las ventanas fijas del holdout. No altera el RNG del entrenamiento."""
+def monitor_ce(model, windows, bs, autocast, dev, frameskip=1, n_frames=20):
+  """CE (sin maestro) sobre las ventanas fijas del holdout, del mismo largo que las de entrenamiento (n_frames de la
+  receta: Genie y V-JEPA entrenan con 16, LeWM con 4). No altera el RNG del entrenamiento."""
   rng = torch.get_rng_state()
   cuda_rng = torch.cuda.get_rng_state_all() if dev.type == "cuda" else None
   mps_rng = torch.mps.get_rng_state() if dev.type == "mps" else None
   torch.manual_seed(1234)
   was_training = model.training
   model.eval()
-  x, n = windows.monitor(frameskip=frameskip).to(dev), 0  # ya residente en CUDA: .to es no-op
+  x, n = windows.monitor(n_frames=n_frames, frameskip=frameskip).to(dev), 0  # ya residente en CUDA: .to es no-op
   tot = torch.zeros((), device=dev, dtype=torch.float32)  # acumula en el device: un solo sync al final
   for i in range(0, len(x), bs):
     xb = x[i:i + bs]
@@ -437,7 +438,7 @@ def _train(a, dev, run_dir, last_path):
     atomic_save(state(), last_path)
 
   def evaluate():
-    ce = monitor_ce(model, windows, r.batch, autocast, dev, r.frameskip)
+    ce = monitor_ce(model, windows, r.batch, autocast, dev, r.frameskip, r.frames)
     history.append({"step": step, "tokens": tokens, "monitor_ce": ce})
     log({"step": step, "tokens": tokens, "monitor_ce": ce})
     print(f"[eval] step {step} monitor_ce {ce:.4f}", flush=True)
