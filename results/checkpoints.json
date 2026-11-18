@@ -1,4 +1,91 @@
 {
+ "convlstm_px": {
+  "bytes": 32024873,
+  "config": {
+   "height": 128,
+   "hidden": [
+    128,
+    64,
+    64
+   ],
+   "in_ch": 3,
+   "kernel": 5,
+   "n_in": 10,
+   "n_out": 10,
+   "patch": 4,
+   "width": 256
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "convlstm_px",
+  "params": 8003120,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.9,
+   "amp": null,
+   "batch": 4,
+   "batch_fuente": 4,
+   "betas": [
+    0.9,
+    0.95
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch 4, clip 1.0, eps 1e-8",
+     "el paper no los publica; batch por la memoria de 12 GB",
+     "propio"
+    ],
+    [
+     "batch_fuente 4",
+     "Shi 2015 no publica su batch: sin batch de referencia, el lr de la fuente no se escala",
+     "propio"
+    ],
+    [
+     "early stopping",
+     "se entrena el presupuesto completo; train.py guarda el \u00faltimo estado",
+     "presupuesto"
+    ],
+    [
+     "RGB 128x256, 20 FPS, parches 4x4 -> 32x64x48",
+     "el dato de comma obliga",
+     "datos"
+    ],
+    [
+     "fp32",
+     "el paper no publica la precisi\u00f3n",
+     "propio"
+    ]
+   ],
+   "frames": 20,
+   "frameskip": 1,
+   "fuente": "Shi et al. 2015 (arXiv 1506.04214) \u00a74.1",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.001,
+     "forma": "constant",
+     "ini": 0.001,
+     "nombre": "constante"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "convlstm_px_shi2015",
+   "optimizer": "rmsprop",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0,
+   "wd_on": "todos"
+  },
+  "receta_hash": "c23ba4babe55",
+  "sha256": "7021f53d216cc1f96400a4073da65b72e37283d8dc323b2eec1852f0316ed725",
+  "step": 9750,
+  "tokens": 100620000,
+  "train_json": "results/train_convlstm_px.json"
+ },
  "genie_s": {
   "bytes": 60245857,
   "config": {
