@@ -45,7 +45,8 @@ FIDELIDAD_PRETRAIN = FIDELIDAD + [
        aquí="las mismas fracciones (12k/252k = 0.0476) del total de pasos de la corrida; piso de 100 pasos de warmup",
        categoría="fiel", fuente=f"{PAPER} Tab. 9; {YAML} L91-97"),
   dict(campo="Batch", paper="3072 clips", aquí="32 clips por paso, sin acumulación: con el presupuesto fijo, el batch del "
-       "paper daría ~16 pasos; lr a confirmar en el humo", categoría="presupuesto", fuente=f"{PAPER} Tab. 9"),
+       "paper daría ~16 pasos. El lr queda el del paper: el humo eligió x3 por menor L1 pero con menos dispersión del target "
+       "(posible inicio de colapso), así que no se usa", categoría="presupuesto", fuente=f"{PAPER} Tab. 9"),
   dict(campo="Pasos / presupuesto", paper="252k pasos", aquí="el presupuesto común de 780k frames ≈ 1.5k pasos de 32 clips de "
        "16 frames; con tan pocos pasos el EMA de 0.99925 (constante de tiempo ~1.3k pasos) deja al target cerca de la "
        "inicialización al principio", categoría="presupuesto", fuente=f"{PAPER} Tab. 9"),
@@ -114,7 +115,9 @@ class VJEPA2(WorldModel):
       wd_ini=0.04, wd_fin=None, wd_on="matrices", ema_segs=None, grad_clip=None, amp="bf16",
       batch=32, frames=16, frameskip=5, accum=1, presupuesto=780_000, paper_steps=252_000, batch_fuente=3072,
       forzado=[("batch", "32 clips por paso en vez de 3072: con el presupuesto común de 780k frames da ~1.5k pasos (con 3072 "
-                "serían ~16); lr a confirmar en el humo", "presupuesto"),
+                "serían ~16). El lr queda el del paper: el humo eligió x3 por menor L1 (0,255 contra 0,291), pero con menos "
+                "dispersión del target entre parches (0,47 contra 0,51); en un JEPA un L1 menor no implica una representación "
+                "mejor (results/humo_vjepa2.json)", "presupuesto"),
                ("presupuesto", "~1.5k pasos en vez de 252k; el warmup y el enfriamiento conservan sus fracciones", "presupuesto"),
                ("frames/frameskip", "16 frames a 4 fps = 1 de cada 5 de los 20 FPS", "datos"),
                ("encoder", "ViT small (384, 12 capas) en vez de ViT-L", "presupuesto")])

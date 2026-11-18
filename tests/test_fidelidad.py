@@ -37,9 +37,11 @@ def test_recipe_en_modelos_entrenables():
 def test_gpt_receta_iris():
   r = model_class("gpt").recipe("s")
   assert r.optimizer == "adamw" and tuple(r.betas) == (0.9, 0.999) and r.grad_clip == 10.0 and r.amp is None
-  assert r.lr_segs == [S.constant(1e-4)] and r.wd_ini == 0.01 and r.wd_fin is None and r.wd_on == "lineales"
+  # lr: forma de IRIS (constante, sin warmup) con el valor que eligió el humo (x10 de 1e-4), declarado en forzado
+  assert r.lr_segs == [S.constant(1e-3)] and r.wd_ini == 0.01 and r.wd_fin is None and r.wd_on == "lineales"
   assert r.batch * r.accum == 16 and r.batch_fuente == 64 and r.frames == 20
-  assert all(r.lr(s, 1000) == 1e-4 for s in (0, 1, 500, 999, 5000))  # sin warmup, constante
+  assert all(r.lr(s, 1000) == 1e-3 for s in (0, 1, 500, 999, 5000))  # sin warmup, constante
+  assert any(f[0] == "lr" and "humo" in f[1] and f[2] == "presupuesto" for f in r.forzado)
   assert r.kind_continuacion() == "constante"
   assert model_class("gpt").Config().dropout == 0.1 and model_class("gpt").Config().pos == "abs"
 
@@ -71,8 +73,10 @@ def test_genie_receta():
   warm = r.lr_segs[0]
   assert warm["nombre"] == "warmup" and warm["frac"] == 0.025 and S.lengths(r.lr_segs, 200_000)[0][1] == 5000
   assert S.lengths(r.lr_segs, 190)[0][1] == 100  # piso
-  assert r.lr(5000 - 1, 200_000) == pytest.approx(3e-5) and r.lr(200_000, 200_000) == pytest.approx(3e-6)
-  assert r.lr(199_999, 200_000) == pytest.approx(3e-6, rel=1e-3)
+  # forma de Genie (warmup 0.025, coseno al 10 %) con el máximo que eligió el humo (x10 de 3e-5), declarado en forzado
+  assert r.lr(5000 - 1, 200_000) == pytest.approx(3e-4) and r.lr(200_000, 200_000) == pytest.approx(3e-5)
+  assert r.lr(199_999, 200_000) == pytest.approx(3e-5, rel=1e-3)
+  assert any(f[0] == "lr" and "humo" in f[1] and f[2] == "presupuesto" for f in r.forzado)
 
 
 def test_maskgit_propia_y_legacy():

@@ -42,14 +42,16 @@ FIDELIDAD = [
        categoría="fiel", fuente=f"{IRIS} utils.py L52-59"),
   dict(campo="Optimizador", fuente_valor="AdamW, betas (0.9, 0.999)", aquí="igual, eps 1e-8", categoría="fiel",
        fuente=f"{IRIS} trainer.py L91, Tab. 5"),
-  dict(campo="Learning rate", fuente_valor="1e-4 constante, sin warmup ni scheduler", aquí="igual", categoría="fiel",
-       fuente=f"{IRIS} config/trainer.yaml L55"),
+  dict(campo="Learning rate", fuente_valor="1e-4 constante, sin warmup ni scheduler",
+       aquí="1e-3 constante (x10), sin warmup ni scheduler: lo eligió el humo de 300 pasos entre fuente, raíz, x3, x10 y x30 "
+       "(CE de monitoreo 6,66 / 6,69 / 6,62 / 5,54 / 6,75; results/humo_gpt.json)",
+       categoría="presupuesto", fuente=f"{IRIS} config/trainer.yaml L55"),
   dict(campo="Weight decay", fuente_valor="0.01 solo en el weight de nn.Linear y nn.Conv1d (no bias, LayerNorm ni "
        "Embedding, incluida la posición)", aquí="igual (wd_on='lineales'; incluye la cabeza)", categoría="fiel",
        fuente=f"{IRIS} trainer.yaml L66, utils.py L14-36"),
   dict(campo="Grad clip", fuente_valor="10.0", aquí="10.0", categoría="fiel", fuente=f"{IRIS} trainer.yaml L65"),
   dict(campo="Batch", fuente_valor="64 secuencias de 20 pasos", aquí="16 por paso, sin acumulación (~2.440 pasos con 780k frames); "
-       "lr a confirmar en el humo", categoría="presupuesto", fuente=f"{IRIS} trainer.yaml, world_model/default.yaml L2-3"),
+       "el lr lo eligió el humo (ver Learning rate)", categoría="presupuesto", fuente=f"{IRIS} trainer.yaml, world_model/default.yaml L2-3"),
   dict(campo="Precisión", fuente_valor="fp32 (sin autocast)", aquí="fp32", categoría="fiel", fuente=f"{IRIS} trainer.py"),
   dict(campo="Pasos / presupuesto", fuente_valor="no publicado para comma", aquí="780k frames (100M tokens)",
        categoría="presupuesto", fuente="presupuesto de cómputo del repo"),
@@ -82,13 +84,16 @@ class GPT(WorldModel):
   @classmethod
   def recipe(cls, size=None):
     """Receta de IRIS (la que commaVQ dice seguir): AdamW (0.9, 0.999), lr 1e-4 constante, wd 0.01 solo en Linear,
-    clip 10, batch 64 (aquí 16: ver forzado), fp32. Con teacher (--kd) es la misma más la pérdida de destilación."""
+    clip 10, batch 64, fp32. Aquí batch 16 y lr 1e-3 (x10, elegido por el humo): ver forzado. Con teacher (--kd) es la
+    misma más la pérdida de destilación."""
     return Recipe(
       name="gpt_iris", fuente=f"{IRIS}; commaVQ: 'a similar recipe to IRIS'", optimizer="adamw", betas=(0.9, 0.999),
-      eps=1e-8, lr_segs=[S.constant(1e-4)], wd_ini=0.01, wd_on="lineales", grad_clip=10.0, amp=None,
+      eps=1e-8, lr_segs=[S.constant(1e-3)], wd_ini=0.01, wd_on="lineales", grad_clip=10.0, amp=None,
       batch=16, accum=1, frames=20, extras={"dropout": 0.1}, paper_steps=None, batch_fuente=64,
-      forzado=[("batch", "16 por paso en vez de 64 (IRIS): con el presupuesto fijo de 780k frames da ~2.440 pasos; "
-                         "lr a confirmar en el humo", "presupuesto"),
+      forzado=[("batch", "16 por paso en vez de 64 (IRIS): con el presupuesto fijo de 780k frames da ~2.440 pasos",
+                "presupuesto"),
+               ("lr", "1e-3 (x10 del 1e-4 de IRIS): con ~2.440 pasos, el humo de 300 pasos eligió x10 entre fuente, raíz, "
+                      "x3, x10 y x30 (results/humo_gpt.json)", "presupuesto"),
                ("presupuesto", "780k frames (100M tokens) en vez de lo que haya usado comma (no publicado)", "presupuesto"),
                ("tamaño", "6x384 / 8x512 en vez de 24x1024", "presupuesto")])
 

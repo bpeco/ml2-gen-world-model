@@ -26,10 +26,10 @@ Qué sigue a la fuente y qué no. Las categorías son `fiel`, `datos`, `presupue
 | Dropout | IRIS: 0.1 en embedding, residual y atención; comma: 0 (dropout_p=0.0) | 0.1 en los tres (default de Config; el de IRIS, que es la receta que comma dice seguir) | fiel | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) world_model/default.yaml L8-10; commaVQ (utils/gpt.py, commaai/commavq-gpt2m) L97 |
 | Inicialización | N(0, 0.02) en Linear y Embedding, bias 0, LayerNorm 1/0 | igual, sin la escala 1/sqrt(2L) de GPT-2 en las proyecciones residuales (res_scale=False) | fiel | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) utils.py L52-59 |
 | Optimizador | AdamW, betas (0.9, 0.999) | igual, eps 1e-8 | fiel | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) trainer.py L91, Tab. 5 |
-| Learning rate | 1e-4 constante, sin warmup ni scheduler | igual | fiel | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) config/trainer.yaml L55 |
+| Learning rate | 1e-4 constante, sin warmup ni scheduler | 1e-3 constante (x10), sin warmup ni scheduler: lo eligió el humo de 300 pasos entre fuente, raíz, x3, x10 y x30 (CE de monitoreo 6,66 / 6,69 / 6,62 / 5,54 / 6,75; results/humo_gpt.json) | presupuesto | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) config/trainer.yaml L55 |
 | Weight decay | 0.01 solo en el weight de nn.Linear y nn.Conv1d (no bias, LayerNorm ni Embedding, incluida la posición) | igual (wd_on='lineales'; incluye la cabeza) | fiel | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) trainer.yaml L66, utils.py L14-36 |
 | Grad clip | 10.0 | 10.0 | fiel | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) trainer.yaml L65 |
-| Batch | 64 secuencias de 20 pasos | 16 por paso, sin acumulación (~2.440 pasos con 780k frames); lr a confirmar en el humo | presupuesto | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) trainer.yaml, world_model/default.yaml L2-3 |
+| Batch | 64 secuencias de 20 pasos | 16 por paso, sin acumulación (~2.440 pasos con 780k frames); el lr lo eligió el humo (ver Learning rate) | presupuesto | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) trainer.yaml, world_model/default.yaml L2-3 |
 | Precisión | fp32 (sin autocast) | fp32 | fiel | IRIS (arXiv 2209.00588; github.com/eloialonso/iris) trainer.py |
 | Pasos / presupuesto | no publicado para comma | 780k frames (100M tokens) | presupuesto | presupuesto de cómputo del repo |
 | Datos | segmentos de 1200 frames a 20 fps | igual (ventanas de 20 frames) | datos | commaVQ (utils/gpt.py, commaai/commavq-gpt2m) nanogpt/prepare.py |
@@ -41,11 +41,12 @@ Qué sigue a la fuente y qué no. Las categorías son `fiel`, `datos`, `presupue
 <!-- auto:receta kind=gpt -->
 | modelo | fuente | optimizador | betas | lr | wd | EMA | clip | precisión | batch x frames (frameskip) x acumulación | presupuesto (frames) | extras | pasos del paper |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `gpt_s`, `gpt_m`, `gpt_l` | IRIS (arXiv 2209.00588; github.com/eloialonso/iris); commaVQ: 'a similar recipe to IRIS' | adamw | (0.9, 0.999) | constante: 0.0001 (resto) | 0.01 (lineales) | no | 10.0 | fp32 | 16 x 20 (1) x 1 | 780000 | dropout=0.1 | - |
+| `gpt_s`, `gpt_m`, `gpt_l` | IRIS (arXiv 2209.00588; github.com/eloialonso/iris); commaVQ: 'a similar recipe to IRIS' | adamw | (0.9, 0.999) | constante: 0.001 (resto) | 0.01 (lineales) | no | 10.0 | fp32 | 16 x 20 (1) x 1 | 780000 | dropout=0.1 | - |
 
 Valores forzados (campo: motivo, categoría):
 
-- `gpt_s`: batch: 16 por paso en vez de 64 (IRIS): con el presupuesto fijo de 780k frames da ~2.440 pasos; lr a confirmar en el humo (presupuesto)
+- `gpt_s`: batch: 16 por paso en vez de 64 (IRIS): con el presupuesto fijo de 780k frames da ~2.440 pasos (presupuesto)
+- `gpt_s`: lr: 1e-3 (x10 del 1e-4 de IRIS): con ~2.440 pasos, el humo de 300 pasos eligió x10 entre fuente, raíz, x3, x10 y x30 (results/humo_gpt.json) (presupuesto)
 - `gpt_s`: presupuesto: 780k frames (100M tokens) en vez de lo que haya usado comma (no publicado) (presupuesto)
 - `gpt_s`: tamaño: 6x384 / 8x512 en vez de 24x1024 (presupuesto)
 <!-- /auto -->

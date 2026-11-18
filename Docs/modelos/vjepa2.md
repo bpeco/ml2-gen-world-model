@@ -27,7 +27,7 @@ El preentrenamiento autosupervisado de V-JEPA 2 (arXiv 2506.09985; código `gith
 | Optimizador | AdamW β=(0.9, 0.999), eps 1e-8, sin grad-clip | igual | fiel | app/vjepa/utils.py L224-225, L243; train.py (sin clip); configs/train/vitl16/pretrain-256px-16f.yaml L92 |
 | Weight decay | 0.04 constante, sin wd en bias ni en parámetros 1-D | igual (wd_on=matrices: solo ndim >= 2) | fiel | app/vjepa/utils.py L205-216 |
 | LR | 1e-4 → 5.25e-4 en 12k pasos de 252k, constante, enfriamiento lineal a 1e-6 en los últimos 12k | las mismas fracciones (12k/252k = 0.0476) del total de pasos de la corrida; piso de 100 pasos de warmup | fiel | V-JEPA 2 (arXiv 2506.09985) Tab. 9; configs/train/vitl16/pretrain-256px-16f.yaml L91-97 |
-| Batch | 3072 clips | 32 clips por paso, sin acumulación: con el presupuesto fijo, el batch del paper daría ~16 pasos; lr a confirmar en el humo | presupuesto | V-JEPA 2 (arXiv 2506.09985) Tab. 9 |
+| Batch | 3072 clips | 32 clips por paso, sin acumulación: con el presupuesto fijo, el batch del paper daría ~16 pasos. El lr queda el del paper: el humo eligió x3 por menor L1 pero con menos dispersión del target (posible inicio de colapso), así que no se usa | presupuesto | V-JEPA 2 (arXiv 2506.09985) Tab. 9 |
 | Pasos / presupuesto | 252k pasos | el presupuesto común de 780k frames ≈ 1.5k pasos de 32 clips de 16 frames; con tan pocos pasos el EMA de 0.99925 (constante de tiempo ~1.3k pasos) deja al target cerca de la inicialización al principio | presupuesto | V-JEPA 2 (arXiv 2506.09985) Tab. 9 |
 | Precisión | bf16 | bf16 (autocast del entrenador, solo CUDA) | fiel | configs/train/vitl16/pretrain-256px-16f.yaml L69 |
 | EMA del target | 0.99925 constante | igual, actualizado con _foreach sobre los parámetros en el device (after_step) | fiel | configs/train/vitl16/pretrain-256px-16f.yaml L87-89; train.py L299-301 |
@@ -47,7 +47,7 @@ El preentrenamiento autosupervisado de V-JEPA 2 (arXiv 2506.09985; código `gith
 
 Valores forzados (campo: motivo, categoría):
 
-- `vjepa2`: batch: 32 clips por paso en vez de 3072: con el presupuesto común de 780k frames da ~1.5k pasos (con 3072 serían ~16); lr a confirmar en el humo (presupuesto)
+- `vjepa2`: batch: 32 clips por paso en vez de 3072: con el presupuesto común de 780k frames da ~1.5k pasos (con 3072 serían ~16). El lr queda el del paper: el humo eligió x3 por menor L1 (0,255 contra 0,291), pero con menos dispersión del target entre parches (0,47 contra 0,51); en un JEPA un L1 menor no implica una representación mejor (results/humo_vjepa2.json) (presupuesto)
 - `vjepa2`: presupuesto: ~1.5k pasos en vez de 252k; el warmup y el enfriamiento conservan sus fracciones (presupuesto)
 - `vjepa2`: frames/frameskip: 16 frames a 4 fps = 1 de cada 5 de los 20 FPS (datos)
 - `vjepa2`: encoder: ViT small (384, 12 capas) en vez de ViT-L (presupuesto)

@@ -38,10 +38,10 @@ La dinámica de Genie (Bruce et al. 2024, arXiv 2402.15391) sin el modelo de acc
 | Precisión | bf16 | bf16 (autocast; solo en CUDA) | fiel | Genie (arXiv 2402.15391) §3 |
 | Optimizador | AdamW, β = (0.9, 0.9) | igual, eps 1e-8 | fiel | Genie (arXiv 2402.15391) Tab. 9 |
 | Weight decay | 1e-4 | 1e-4 en todo lo de >= 2 dimensiones (no biases ni normas) | fiel | Genie (arXiv 2402.15391) Tab. 9; a qué parámetros se aplica: propio |
-| Learning rate: valores | max 3e-5, min 3e-6 | igual | fiel | Genie (arXiv 2402.15391) Tab. 9 |
+| Learning rate: valores | max 3e-5, min 3e-6 | max 3e-4, min 3e-5 (x10): lo eligió el humo de 300 pasos entre fuente, raíz, x3, x10 y x30 (CE de monitoreo 6,58 / 6,84 / 5,58 / 4,45 / 4,98; results/humo_genie.json) | presupuesto | Genie (arXiv 2402.15391) Tab. 9 |
 | Warmup | 5k pasos de 200k (fracción 0.025) | fracción 0.025 de la corrida, piso 100 pasos | presupuesto | Genie (arXiv 2402.15391) Tab. 9, Tab. 10; nuestra corrida tiene muchos menos pasos |
-| Forma tras el warmup | no publicada para la dinámica (el tokenizador usa cosine decay) | coseno de 3e-5 a 3e-6 | propio | Genie (arXiv 2402.15391) App. F.1; Jafar (no oficial) también usa coseno |
-| Batch | 256 | 32 por paso = 16 x accum 2 (~1.520 pasos con 780k frames); lr a confirmar en el humo | presupuesto | Genie (arXiv 2402.15391) Tab. 10; micro-batch por la memoria de 12 GB |
+| Forma tras el warmup | no publicada para la dinámica (el tokenizador usa cosine decay) | coseno del máximo al 10 % (3e-4 a 3e-5) | propio | Genie (arXiv 2402.15391) App. F.1; Jafar (no oficial) también usa coseno |
+| Batch | 256 | 32 por paso = 16 x accum 2 (~1.520 pasos con 780k frames); el lr lo eligió el humo | presupuesto | Genie (arXiv 2402.15391) Tab. 10; micro-batch por la memoria de 12 GB |
 | Grad clip | no publicado | 1.0 | propio | Genie no lo publica |
 | Pasos | 200k | los que da el presupuesto de 780k frames (~1.520 pasos de 32 x 16 frames) | presupuesto | Genie (arXiv 2402.15391) Tab. 10 |
 <!-- /auto -->
@@ -51,13 +51,14 @@ La dinámica de Genie (Bruce et al. 2024, arXiv 2402.15391) sin el modelo de acc
 <!-- auto:receta kind=genie -->
 | modelo | fuente | optimizador | betas | lr | wd | EMA | clip | precisión | batch x frames (frameskip) x acumulación | presupuesto (frames) | extras | pasos del paper |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
-| `genie_s`, `genie_m`, `genie_l` | Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio | adamw | (0.9, 0.9) | warmup: 0->3e-05 (0.025); cosine: coseno 3e-05->3e-06 (resto) | 0.0001 | no | 1.0 | bf16 | 16 x 16 (1) x 2 | 780000 | - | 200000 |
+| `genie_s`, `genie_m`, `genie_l` | Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio | adamw | (0.9, 0.9) | warmup: 0->0.0003 (0.025); cosine: coseno 0.0003->3e-05 (resto) | 0.0001 | no | 1.0 | bf16 | 16 x 16 (1) x 2 | 780000 | - | 200000 |
 
 Valores forzados (campo: motivo, categoría):
 
-- `genie_s`: batch: 32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos; lr a confirmar en el humo (presupuesto)
+- `genie_s`: batch: 32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos (presupuesto)
+- `genie_s`: lr: 3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligió x10 entre fuente, raíz, x3, x10 y x30 (results/humo_genie.json) (presupuesto)
 - `genie_s`: warmup: 0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos (presupuesto)
-- `genie_s`: lr_segs: coseno hasta 3e-6 tras el warmup: Genie no publica la forma para la dinámica (propio)
+- `genie_s`: lr_segs: coseno hasta el 10 % del máximo tras el warmup: Genie no publica la forma para la dinámica (propio)
 - `genie_s`: grad_clip: 1.0: Genie no lo publica (propio)
 <!-- /auto -->
 

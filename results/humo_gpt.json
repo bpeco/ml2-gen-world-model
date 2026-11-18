@@ -31,6 +31,13 @@
    "lr": 0.001,
    "monitor_ce": 5.541088104248047,
    "dispersion": {}
+  },
+  {
+   "nombre": "x30",
+   "run": "gpt_humo_x30",
+   "lr": 0.003,
+   "monitor_ce": 6.750125885009766,
+   "dispersion": {}
   }
  ],
  "alias": {},
@@ -47,10 +54,10 @@
  },
  "chequeo_colapso": "no aplica",
  "nota": "",
- "fecha": "2026-11-18T03:06:17",
+ "fecha": "2026-11-18T03:11:49",
  "_bitacora": {
-  "id": "20261118-030343-6044",
-  "comando": "python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10 --forzar",
-  "commit": "be02b7c1ae9f91352c6a6009fca20cff32d521e8"
+  "id": "20261118-030912-5d3b",
+  "comando": "python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10,x30 --forzar",
+  "commit": "9251f61a54bb267866ecf85c63c44cf87ad4afcd"
  }
 }

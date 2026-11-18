@@ -82,13 +82,14 @@ FIDELIDAD = [
        fuente=f"{GENIE} Tab. 9"),
   dict(campo="Weight decay", fuente_valor="1e-4", aquí="1e-4 en todo lo de >= 2 dimensiones (no biases ni normas)",
        categoría="fiel", fuente=f"{GENIE} Tab. 9; a qué parámetros se aplica: propio"),
-  dict(campo="Learning rate: valores", fuente_valor="max 3e-5, min 3e-6", aquí="igual", categoría="fiel",
-       fuente=f"{GENIE} Tab. 9"),
+  dict(campo="Learning rate: valores", fuente_valor="max 3e-5, min 3e-6",
+       aquí="max 3e-4, min 3e-5 (x10): lo eligió el humo de 300 pasos entre fuente, raíz, x3, x10 y x30 (CE de monitoreo "
+       "6,58 / 6,84 / 5,58 / 4,45 / 4,98; results/humo_genie.json)", categoría="presupuesto", fuente=f"{GENIE} Tab. 9"),
   dict(campo="Warmup", fuente_valor="5k pasos de 200k (fracción 0.025)", aquí="fracción 0.025 de la corrida, piso 100 pasos",
        categoría="presupuesto", fuente=f"{GENIE} Tab. 9, Tab. 10; nuestra corrida tiene muchos menos pasos"),
   dict(campo="Forma tras el warmup", fuente_valor="no publicada para la dinámica (el tokenizador usa cosine decay)",
-       aquí="coseno de 3e-5 a 3e-6", categoría="propio", fuente=f"{GENIE} App. F.1; Jafar (no oficial) también usa coseno"),
-  dict(campo="Batch", fuente_valor="256", aquí="32 por paso = 16 x accum 2 (~1.520 pasos con 780k frames); lr a confirmar en el humo", categoría="presupuesto",
+       aquí="coseno del máximo al 10 % (3e-4 a 3e-5)", categoría="propio", fuente=f"{GENIE} App. F.1; Jafar (no oficial) también usa coseno"),
+  dict(campo="Batch", fuente_valor="256", aquí="32 por paso = 16 x accum 2 (~1.520 pasos con 780k frames); el lr lo eligió el humo", categoría="presupuesto",
        fuente=f"{GENIE} Tab. 10; micro-batch por la memoria de 12 GB"),
   dict(campo="Grad clip", fuente_valor="no publicado", aquí="1.0", categoría="propio", fuente="Genie no lo publica"),
   dict(campo="Pasos", fuente_valor="200k", aquí="los que da el presupuesto de 780k frames (~1.520 pasos de 32 x 16 frames)",
@@ -250,16 +251,19 @@ class Genie(WorldModel):
   @classmethod
   def recipe(cls, size=None):
     """Receta de Genie (Tab. 9): AdamW (0.9, 0.9), wd 1e-4, lr 3e-5 -> 3e-6, warmup 5k de 200k (fracción 0.025), bf16,
-    batch 256, 16 frames. El decaimiento tras el warmup no se publica para la dinámica: coseno (propio)."""
+    batch 256, 16 frames. El decaimiento tras el warmup no se publica para la dinámica: coseno (propio). Aquí batch 32 y
+    lr 3e-4 -> 3e-5 (x10, elegido por el humo): ver forzado."""
     return Recipe(
       name="genie_paper", fuente=f"{GENIE} Tab. 9, 10, App. F.1; schedule y clip: propio", optimizer="adamw",
       betas=(0.9, 0.9), eps=1e-8,
-      lr_segs=[S.linear(0.0, 3e-5, frac=0.025, nombre="warmup"), S.cosine(3e-5, 0.1)],
+      lr_segs=[S.linear(0.0, 3e-4, frac=0.025, nombre="warmup"), S.cosine(3e-4, 0.1)],
       wd_ini=1e-4, wd_on="matrices", grad_clip=1.0, amp="bf16", batch=16, accum=2, frames=16, paper_steps=200_000, batch_fuente=256,
-      forzado=[("batch", "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos; "
-                         "lr a confirmar en el humo", "presupuesto"),
+      forzado=[("batch", "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos",
+                "presupuesto"),
+               ("lr", "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligió x10 entre "
+                      "fuente, raíz, x3, x10 y x30 (results/humo_genie.json)", "presupuesto"),
                ("warmup", "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos", "presupuesto"),
-               ("lr_segs", "coseno hasta 3e-6 tras el warmup: Genie no publica la forma para la dinámica", "propio"),
+               ("lr_segs", "coseno hasta el 10 % del máximo tras el warmup: Genie no publica la forma para la dinámica", "propio"),
                ("grad_clip", "1.0: Genie no lo publica", "propio")])
 
   def __init__(self, cfg: "Genie.Config"):

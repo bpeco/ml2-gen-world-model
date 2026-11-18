@@ -31,6 +31,13 @@
    "lr": 0.0003,
    "monitor_ce": 4.454339027404785,
    "dispersion": {}
+  },
+  {
+   "nombre": "x30",
+   "run": "genie_humo_x30",
+   "lr": 0.0009,
+   "monitor_ce": 4.9762372970581055,
+   "dispersion": {}
   }
  ],
  "alias": {},
@@ -47,10 +54,10 @@
  },
  "chequeo_colapso": "no aplica",
  "nota": "",
- "fecha": "2026-11-18T03:07:52",
+ "fecha": "2026-11-18T03:13:28",
  "_bitacora": {
-  "id": "20261118-030619-ceb0",
-  "comando": "python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10 --forzar",
-  "commit": "be02b7c1ae9f91352c6a6009fca20cff32d521e8"
+  "id": "20261118-031151-9faf",
+  "comando": "python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10,x30 --forzar",
+  "commit": "9251f61a54bb267866ecf85c63c44cf87ad4afcd"
  }
 }
