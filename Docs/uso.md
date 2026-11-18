@@ -6,17 +6,16 @@ Cómo entrenar, evaluar, medir y mostrar cualquier modelo del repo con las misma
 
 1. [Cómo está armado](#cómo-está-armado)
 2. [Instalación y uso por sistema](#instalación-y-uso-por-sistema)
-3. [Modelos entrenados (Git LFS)](#modelos-entrenados-git-lfs)
-4. [Datos](#datos)
-5. [La CLI](#la-cli)
-6. [La cola](#la-cola)
-7. [Bitácora](#bitácora)
-8. [Seguimiento](#seguimiento)
-9. [Continuar un entrenamiento](#continuar-un-entrenamiento)
-10. [Notebooks](#notebooks)
-11. [Dispositivos e inferencia](#dispositivos-e-inferencia)
-12. [Resultados y reporte](#resultados-y-reporte)
-13. [Verificar el repo](#verificar-el-repo)
+3. [Datos](#datos)
+4. [La CLI](#la-cli)
+5. [La cola](#la-cola)
+6. [Bitácora](#bitácora)
+7. [Seguimiento](#seguimiento)
+8. [Continuar un entrenamiento](#continuar-un-entrenamiento)
+9. [Notebooks](#notebooks)
+10. [Dispositivos e inferencia](#dispositivos-e-inferencia)
+11. [Resultados y reporte](#resultados-y-reporte)
+12. [Verificar el repo](#verificar-el-repo)
 
 ## Cómo está armado
 
@@ -157,9 +156,10 @@ git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq
 - **Operaciones sin soporte en MPS:** `export PYTORCH_ENABLE_MPS_FALLBACK=1` hace que caigan a la CPU en vez de fallar.
 - **Qué anda bien:** la CLI (`receta`, `estado`, `--dry-run`), los notebooks, las demos de clase, la evaluación y la inferencia de los modelos ya entrenados (con `--limite` para probar rápido) y el bench de latencia.
 - **Qué es lento:** entrenar las recetas completas (780.000 frames por modelo): están pensadas para una GPU NVIDIA de 12 GB. Los CUDA graphs y el fp16 con graphs de la inferencia son de CUDA; en Mac la latencia no es comparable con la de las tablas. Para probar, usá `--limite`.
-- **Los modelos entrenados llegan con el repo por Git LFS** ([Modelos entrenados](#modelos-entrenados-git-lfs)). Con el checkpoint en su lugar, la demo corre igual que en cualquier máquina:
+- **Los checkpoints no se suben a ningún lado.** Para correr una demo con modelos entrenados en otra máquina, copiá `checkpoints/<run>/final.pt` y `results/train_<run>.json` a las mismas carpetas del repo del Mac y registrá la corrida:
 
 ```bash
+python -m src.store register genie_s
 python -m src.cli genie demo --tamaño s --pasos 4 --limite 100
 ```
 
@@ -177,30 +177,6 @@ python -m src.cli genie bench --tamaño s --pasos 4 --cadena --aleatorio --devic
 ```
 
 Para la NPU hay que exportar el codec a ONNX (`python -m src.cli codec exportar`) y medir con `python -m src.infer.bench_ort` eligiendo el provider de cada etapa (`--enc vitisai`, `--dec dml`); `--profile` dice cuántos nodos caen en la CPU. La NPU está sin probar en la máquina de desarrollo.
-
-## Modelos entrenados (Git LFS)
-
-Los modelos de la tabla de resultados y sus decoders viajan con el repo por [Git LFS](https://git-lfs.com): `checkpoints/<run>/final.pt`, `checkpoints/lewm/decoder.pt` y `checkpoints/vjepa2_s_viz/decoder.pt`. Cada uno está registrado con su sha256 en `results/checkpoints.json`, y `load_model("<run>")` lo encuentra en su lugar. Los humos, `last.pt` y `pre_decay.pt` no se suben: `checkpoints/` sigue en `.gitignore` y solo entra lo que se agrega a mano.
-
-Una vez por máquina:
-
-```bash
-git lfs install
-```
-
-Con eso, `git clone` y `git pull` bajan todos los modelos (hoy unos 0,7 GB). Para bajar solo los que vas a usar:
-
-```bash
-GIT_LFS_SKIP_SMUDGE=1 git clone https://github.com/bpeco/ml2-gen-world-model.git
-git lfs pull --include "checkpoints/genie_s/*,checkpoints/gpt_s_kd/*"
-```
-
-En PowerShell, la primera línea es `$env:GIT_LFS_SKIP_SMUDGE=1; git clone ...`.
-
-- **Un archivo de unos 130 bytes en lugar del modelo** es un puntero de LFS: falta `git lfs pull --include "checkpoints/<run>/*"`.
-- **La cuota:** el espacio y la bajada de LFS se descuentan a la cuenta dueña del repo, y cada clon completo baja todos los modelos. Conviene bajar solo los que se usan.
-- **Comprobar:** `git lfs ls-files` lista los modelos del repo (`*` si está bajado, `-` si es un puntero) y `python -m src.store verify` compara cada `final.pt` con su sha256.
-- **Compartir un modelo nuevo de la tabla:** después de entrenarlo (la corrida queda registrada en `results/checkpoints.json`), `git add -f checkpoints/<run>/final.pt`, más su decoder si tiene, y commit. `.gitattributes` lo manda a LFS.
 
 ## Datos
 

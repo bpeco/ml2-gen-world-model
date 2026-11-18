@@ -1,2 +1,0 @@
-# Checkpoints compartidos por Git LFS: solo los que se agregan a mano (git add -f), el resto de checkpoints/ sigue ignorado
-checkpoints/**/*.pt filter=lfs diff=lfs merge=lfs -text
