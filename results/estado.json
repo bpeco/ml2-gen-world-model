@@ -1,12 +1,32 @@
 {
+ "results/eval_congelado.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-094028-7f09: python -m src.cli congelado evaluar",
+  "fecha": "2026-11-18"
+ },
  "results/eval_genie_s.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-18"
  },
+ "results/eval_gpt2m.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-082302-5342: python -m src.cli gpt2m evaluar",
+  "fecha": "2026-11-18"
+ },
  "results/eval_gpt_s_kd.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-081139-6aef: python -m src.cli gpt evaluar '--tamaño' s --variante kd",
+  "fecha": "2026-11-18"
+ },
+ "results/eval_transicion.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-093608-2f96: python -m src.cli transicion evaluar",
+  "fecha": "2026-11-18"
+ },
+ "results/eval_unigram.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-093145-47c0: python -m src.cli unigram evaluar",
   "fecha": "2026-11-18"
  },
  "results/train_convlstm_px.json": {
@@ -89,6 +109,11 @@
   "motivo": "bitácora 20261118-021806-8c0d: python -m src.cli vjepa2 entrenar --humo --humo-candidatos fuente,raiz,x3",
   "fecha": "2026-11-18"
  },
+ "results/video_congelado.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-094028-7f09: python -m src.cli congelado evaluar",
+  "fecha": "2026-11-18"
+ },
  "results/video_convlstm_px.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-082005-1a6a: python -m src.cli convlstm_px evaluar",
@@ -124,9 +149,29 @@
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-18"
  },
+ "results/video_gpt2m.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-082302-5342: python -m src.cli gpt2m evaluar",
+  "fecha": "2026-11-18"
+ },
  "results/video_gpt_s_kd.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-081139-6aef: python -m src.cli gpt evaluar '--tamaño' s --variante kd",
+  "fecha": "2026-11-18"
+ },
+ "results/video_real.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-094446-cc2b: python -m src.cli real evaluar",
+  "fecha": "2026-11-18"
+ },
+ "results/video_transicion.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-093608-2f96: python -m src.cli transicion evaluar",
+  "fecha": "2026-11-18"
+ },
+ "results/video_unigram.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-093145-47c0: python -m src.cli unigram evaluar",
   "fecha": "2026-11-18"
  }
 }

@@ -1,5 +1,21 @@
 [
  {
+  "label": "Frame congelado",
+  "family": "baseline",
+  "eval": "results/eval_congelado.json",
+  "video": "results/video_congelado.json",
+  "bench": null,
+  "params": null,
+  "autoregressive": false,
+  "horizon": true,
+  "group": "principal",
+  "e2e": null,
+  "short": "Frame congelado",
+  "size": null,
+  "steps": null,
+  "kd": false
+ },
+ {
   "label": "convlstm_px",
   "family": "convlstm",
   "eval": null,
@@ -128,6 +144,22 @@
   "kd": false
  },
  {
+  "label": "gpt2m",
+  "family": "gpt2m",
+  "eval": "results/eval_gpt2m.json",
+  "video": "results/video_gpt2m.json",
+  "bench": null,
+  "params": null,
+  "autoregressive": true,
+  "horizon": true,
+  "group": "principal",
+  "e2e": null,
+  "short": "gpt2m",
+  "size": null,
+  "steps": null,
+  "kd": false
+ },
+ {
   "label": "gpt_s_kd",
   "family": "gpt_kd",
   "eval": "results/eval_gpt_s_kd.json",
@@ -142,5 +174,53 @@
   "size": "s",
   "steps": null,
   "kd": true
+ },
+ {
+  "label": "Real (piso)",
+  "family": "baseline",
+  "eval": null,
+  "video": "results/video_real.json",
+  "bench": null,
+  "params": null,
+  "autoregressive": false,
+  "horizon": true,
+  "group": "principal",
+  "e2e": null,
+  "short": "Real (piso)",
+  "size": null,
+  "steps": null,
+  "kd": false
+ },
+ {
+  "label": "Transición por celda",
+  "family": "baseline",
+  "eval": "results/eval_transicion.json",
+  "video": "results/video_transicion.json",
+  "bench": null,
+  "params": null,
+  "autoregressive": true,
+  "horizon": true,
+  "group": "principal",
+  "e2e": null,
+  "short": "Transición por celda",
+  "size": null,
+  "steps": null,
+  "kd": false
+ },
+ {
+  "label": "Unigrama",
+  "family": "baseline",
+  "eval": "results/eval_unigram.json",
+  "video": "results/video_unigram.json",
+  "bench": null,
+  "params": null,
+  "autoregressive": false,
+  "horizon": true,
+  "group": "principal",
+  "e2e": null,
+  "short": "Unigrama",
+  "size": null,
+  "steps": null,
+  "kd": false
  }
 ]
