@@ -1,4 +1,4 @@
-"""Entrenamiento de los world models propios (gpt, maskgit, convlstm), con o sin destilación.
+"""Entrenamiento de los world models propios (gpt, maskgit, lewm), con o sin destilación.
 
   python -m src.train --kind gpt --size s --run gpt_s_scratch --tokens 100e6
   python -m src.train --kind gpt --size s --run gpt_s_kd --tokens 100e6 --kd
@@ -89,7 +89,7 @@ def monitor_ce(model, windows, bs, autocast, dev):
     xb = x[i:i + bs].to(dev)
     with autocast():
       loss, met = model.train_loss(xb)
-    # los modelos latentes (jepa, lewm) suman otras pérdidas: se monitorea la CE de su lectura a tokens
+    # los modelos latentes (lewm) suman otras pérdidas: se monitorea la CE de su lectura a tokens
     tot += met.get("ce", loss).item() * len(xb)
     n += len(xb)
   model.train(was_training)
@@ -202,7 +202,7 @@ def main(argv=None):
     opt.zero_grad(set_to_none=True)
     step += 1
     tokens += tok_per_step
-    if hasattr(model, "after_step"):  # EMA del encoder target (jepa, lewm_s_ema)
+    if hasattr(model, "after_step"):  # EMA del encoder target (los modelos latentes que la usen)
       model.after_step(step, total)
 
     if step % a.log_every == 0 or step == stop_at:

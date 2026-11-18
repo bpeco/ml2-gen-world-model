@@ -1,15 +1,16 @@
-"""Tests de los world models latentes: JEPA (estilo V-JEPA) y LeWM (LeWorldModel), y su integración."""
+"""Tests de los world models latentes: LeWM (LeWorldModel, desde píxeles) y las piezas comunes de latent.py."""
 import json
+from types import SimpleNamespace
 
 import numpy as np
 import pytest
 import torch
+import torch.nn as nn
 
 from src import store
 from src.models import load_checkpoint, load_model
 from src.models.base import WorldModel, lm_loss
-from src.models.jepa import JEPA
-from src.models.latent import SIGReg, cem, ema_momentum
+from src.models.latent import SIGReg, cem, ema_momentum, ema_update
 from src.models.lewm import LeWM
 from src.train import main
 from src.windows import Windows, disjoint_holdout
@@ -18,17 +19,26 @@ needs_cuda = pytest.mark.skipif(not torch.cuda.is_available(), reason="sin CUDA"
 FRAMES = 6  # capacidad del predictor de los modelos de juguete
 
 
-def tiny(family="jepa", objective=None, **kw):
+def fake_render(tok):
+  """Cámara de juguete (sin los pesos del decoder de comma): cada token pinta su parche de 16x16."""
+  pal = (torch.arange(1024)[:, None] * torch.tensor([37, 91, 53]) % 256).to(torch.uint8).to(tok.device)
+  img = pal[tok.long()].view(*tok.shape[:-1], 8, 16, 3)
+  return img.repeat_interleave(16, -3).repeat_interleave(16, -2).contiguous()
+
+
+@pytest.fixture(autouse=True)
+def camera(monkeypatch):
+  """LeWM ve píxeles: en los tests, los tokens se renderizan con la cámara de juguete."""
+  import src.models.lewm as lewm
+  monkeypatch.setattr(lewm, "render_tokens", fake_render)
+
+
+def tiny(**kw):
   torch.manual_seed(0)
-  if family == "jepa":
-    cfg = dict(n_layer=3, n_head=2, dim=32, n_enc=1, block_size=FRAMES * 129, num_proj=64, sigreg_n=256,
-               objective=objective or "ema")
-    m = JEPA(JEPA.Config(**{**cfg, **kw}))
-  else:
-    cfg = dict(dim=32, enc_layers=1, enc_heads=2, proj_hidden=64, pred_dim=32, pred_layers=2, pred_heads=4,
-               pred_mlp=64, pred_dropout=0.0, dec_dim=32, dec_layers=1, dec_heads=2, dec_kv=2, frames=FRAMES,
-               num_proj=64, objective=objective or "sigreg")
-    m = LeWM(LeWM.Config(**{**cfg, **kw}))
+  cfg = dict(dim=32, enc_layers=1, enc_heads=2, proj_hidden=64, pred_dim=32, pred_layers=2, pred_heads=4,
+             pred_mlp=64, pred_dropout=0.0, dec_dim=32, dec_layers=1, dec_heads=2, dec_kv=2, frames=FRAMES,
+             num_proj=64)
+  m = LeWM(LeWM.Config(**{**cfg, **kw}))
   m.ctx_frames = FRAMES - 1
   return m
 
@@ -46,10 +56,6 @@ def frames(B=2, F=4, seed=1):
   return torch.randint(0, 1024, (B, F, 128), generator=torch.Generator().manual_seed(seed))
 
 
-CASES = [("jepa", "ema"), ("jepa", "sigreg"), ("jepa", "codebook"), ("jepa", "ce"),
-         ("lewm", "sigreg"), ("lewm", "ema"), ("lewm", "ce")]
-
-
 def test_sigreg_gaussian_vs_collapsed():
   torch.manual_seed(0)
   s = SIGReg(num_proj=256)
@@ -59,9 +65,8 @@ def test_sigreg_gaussian_vs_collapsed():
   assert gauss < 0.5 < narrow < collapsed
 
 
-@pytest.mark.parametrize("family,objective", CASES)
-def test_no_future_leak(family, objective):
-  m = wake(tiny(family, objective)).eval()
+def test_no_future_leak():
+  m = wake(tiny()).eval()
   x = frames(1, 4)
   p = torch.randn(1, 4, 6)
   y = x.clone()
@@ -79,50 +84,54 @@ def test_no_future_leak(family, objective):
   assert (a[:, 2] - c[:, 2]).abs().max() > 1e-6
 
 
-@pytest.mark.parametrize("family", ["jepa", "lewm"])
-def test_readout_does_not_train_encoder(family):
-  """Con EMA, el gradiente del encoder es el de la pérdida latente sola: la CE de la lectura no lo toca."""
-  m = tiny(family, "ema").train()
+def test_readout_does_not_train_encoder():
+  """El gradiente del encoder es el de pred_mse + λ·SIGReg: la CE de la lectura (sobre ẑ y z detach) no lo toca."""
+  m = tiny().train()
   m.cfg.p_null = 0.0
   x = frames()
+  torch.manual_seed(5)  # SIGReg proyecta en direcciones al azar: misma semilla en los dos cálculos
   loss, met = m.train_loss(x)
-  assert {"ce", "ce_techo", "z_std"} <= set(met)
+  assert {"pred_mse", "sigreg", "ce", "ce_techo", "z_std"} <= set(met)
   loss.backward()
   g_total = [p.grad.clone() for p in m.encoder.parameters() if p.grad is not None]
+  assert all(p.grad is not None for p in m.decoder.parameters())  # el decoder a tokens sí aprende de la CE
   m.zero_grad()
+  torch.manual_seed(5)
   z, zh = m.predict_frames(x)
-  tz = m.targets(x)
-  err = (zh.float() - tz.float())
-  (err.abs().mean() if family == "jepa" else err.square().mean()).backward()
+  ref = (zh.float() - z.float()).square().mean() + m.cfg.lam * m.sigreg(z.reshape(1, -1, z.shape[-1]))
+  ref.backward()
   g_pred = [p.grad.clone() for p in m.encoder.parameters() if p.grad is not None]
   assert len(g_total) == len(g_pred) > 0
   for a, b in zip(g_total, g_pred):
     assert torch.allclose(a, b, atol=1e-6)
-  assert all(p.grad is None for p in m.tgt.parameters())
 
 
-@pytest.mark.parametrize("family", ["jepa", "lewm"])
-def test_ema(family):
-  m = tiny(family, "ema", ema=(0.0, 0.0))
+def test_ema_helpers():
+  """ema_momentum / ema_update / make_target / after_step: piezas genéricas (las reutilizará V-JEPA 2)."""
+  assert ema_momentum(0, 10, 0.996, 1.0) == pytest.approx(0.996) and ema_momentum(10, 10, 0.996, 1.0) == 1.0
+  assert 0.996 < ema_momentum(5, 10, 0.996, 1.0) < 1.0
+  tgt, onl = nn.Linear(3, 3), nn.Linear(3, 3)
+  before = [p.clone() for p in tgt.parameters()]
+  ema_update(tgt, onl, 1.0)  # momento 1: no cambia
+  assert all(torch.equal(a, b) for a, b in zip(before, tgt.parameters()))
+  ema_update(tgt, onl, 0.0)  # momento 0: target = online
+  assert all(torch.equal(a, b) for a, b in zip(onl.parameters(), tgt.parameters()))
+
+  m = tiny()
+  m.tgt = m.make_target()
+  assert all(not p.requires_grad for p in m.tgt.parameters())
+  m.cfg = SimpleNamespace(**{**vars(m.cfg), "ema": (0.0, 0.0)})
   with torch.no_grad():
     for p in m.encoder.parameters():
       p.add_(1.0)
   m.after_step(1, 10)  # momento 0: target = online
   for a, b in zip(m.tgt.parameters(), m.encoder.parameters()):
     assert torch.equal(a, b)
-  m.cfg.ema = (1.0, 1.0)
-  before = [p.clone() for p in m.tgt.parameters()]
-  with torch.no_grad():
-    for p in m.encoder.parameters():
-      p.add_(1.0)
-  m.after_step(2, 10)  # momento 1: no cambia
-  assert all(torch.equal(a, b) for a, b in zip(before, m.tgt.parameters()))
-  assert ema_momentum(0, 10, 0.996, 1.0) == pytest.approx(0.996) and ema_momentum(10, 10, 0.996, 1.0) == 1.0
   assert m.num_params() < sum(p.numel() for p in m.parameters())  # el target no cuenta
 
 
 def test_adaln_zero_init():
-  m = tiny("lewm").eval()
+  m = tiny().eval()
   z = torch.randn(2, 3, 32)
   with torch.no_grad():
     a = m.predict(z, m.actions_norm(torch.randn(2, 3, 6)))
@@ -130,9 +139,8 @@ def test_adaln_zero_init():
   assert torch.equal(a, b)
 
 
-@pytest.mark.parametrize("family,objective", CASES)
-def test_generate_cache_matches_generic(family, objective):
-  m = wake(tiny(family, objective)).eval()
+def test_generate_cache_matches_generic():
+  m = wake(tiny()).eval()
   ctx = frames(2, 3)
   fast = m.rollout(ctx, 4, temperature=0)
   slow = torch.stack(list(WorldModel.generate(m, ctx, 4, 0.0, None, None)), 1)
@@ -141,15 +149,13 @@ def test_generate_cache_matches_generic(family, objective):
   assert torch.equal(m.rollout(ctx, 2, generator=g1), torch.stack(list(WorldModel.generate(m, ctx, 2, 1.0, None, g2)), 1))
   out = list(m.generate(ctx, 3, temperature=0, poses=torch.randn(2, 6, 6)))  # con acciones
   assert len(out) == 3 and out[0].shape == (2, 128)
-  if objective != "codebook":
-    m.cfg.rollout = "latent"
-    assert m.rollout(ctx, 3, temperature=0).shape == (2, 3, 128)
+  m.cfg.rollout = "latent"
+  assert m.rollout(ctx, 3, temperature=0).shape == (2, 3, 128)
 
 
 @needs_cuda
-@pytest.mark.parametrize("family", ["jepa", "lewm"])
-def test_cuda_graphs_match_eager(family):
-  m = wake(tiny(family)).cuda().eval()
+def test_cuda_graphs_match_eager():
+  m = wake(tiny()).cuda().eval()
   ctx = frames(2, 5).cuda()  # contexto lleno: ahí se usan los graphs
   eager = m.rollout(ctx, 4, temperature=0)
   m.use_cuda_graphs(True)
@@ -163,9 +169,8 @@ def test_cem_recovers_minimum():
   assert torch.allclose(plan[:, 0], target, atol=0.05)
 
 
-@pytest.mark.parametrize("family", ["jepa", "lewm"])
-def test_plan_and_features(family):
-  m = wake(tiny(family)).eval()
+def test_plan_and_features():
+  m = wake(tiny()).eval()
   x, p = frames(2, 4), torch.randn(2, 4, 6)
   plan = m.plan_cem(x[:, :3], x[:, 3], horizon=2, ctx_poses=p[:, :3], n_samples=16, n_elites=4, iters=2,
                     generator=torch.Generator().manual_seed(0))
@@ -176,7 +181,7 @@ def test_plan_and_features(family):
 
 
 def test_poses_nan_and_dropout_use_null_action():
-  m = tiny("lewm").eval()
+  m = tiny().eval()
   B, T = 2, 3
   p = torch.randn(B, T, 6)
   p[0, 1] = float("nan")
@@ -205,13 +210,10 @@ def test_windows_poses():
   assert disjoint_holdout(keys, holdout=2) == [11]
 
 
-@pytest.mark.parametrize("kind,cfg", [  # capacidad de 20 frames: monitor_ce usa ventanas de 20
-  ("jepa", dict(n_layer=3, n_head=2, dim=32, n_enc=1, sigreg_n=128, num_proj=32)),
-  ("jepa", dict(n_layer=3, n_head=2, dim=32, n_enc=1, sigreg_n=128, num_proj=32, objective="sigreg")),
-  ("lewm", dict(dim=32, enc_layers=1, enc_heads=2, proj_hidden=64, pred_dim=32, pred_layers=2, pred_heads=4,
-                pred_mlp=64, dec_dim=32, dec_layers=1, dec_heads=2, dec_kv=2, num_proj=32)),
-])
-def test_train_resume_register_and_load(tmp_path, monkeypatch, kind, cfg):
+def test_train_resume_register_and_load(tmp_path, monkeypatch):
+  kind = "lewm"  # capacidad de 20 frames: monitor_ce usa ventanas de 20
+  cfg = dict(dim=32, enc_layers=1, enc_heads=2, proj_hidden=64, pred_dim=32, pred_layers=2, pred_heads=4,
+             pred_mlp=64, dec_dim=32, dec_layers=1, dec_heads=2, dec_kv=2, num_proj=32)
   monkeypatch.setenv("ML2_DEVICE", "cpu")
   tok, pos = tmp_path / "tok.npy", tmp_path / "pos.npy"
   np.save(tok, np.random.default_rng(0).integers(0, 1024, (60, 30, 128)).astype(np.int16))
@@ -227,7 +229,7 @@ def test_train_resume_register_and_load(tmp_path, monkeypatch, kind, cfg):
 
   full = main(args("full"))
   main(args("split", ["--max-steps", "3"]))
-  split = main(args("split"))  # reanuda: mismos batches, máscaras, dropout de acción y proyecciones de SIGReg
+  split = main(args("split"))  # reanuda: mismos batches, dropout de acción y proyecciones de SIGReg
   assert full["steps"] == split["steps"] == 6
   a = load_checkpoint(tmp_path / "checkpoints" / "full" / "final.pt")
   b = load_checkpoint(tmp_path / "checkpoints" / "split" / "final.pt")

@@ -1,14 +1,16 @@
 """Baselines de conteo: los primeros WorldModel, validan el evaluador.
 
   unigram: sin contexto, p(y) = frecuencia del código en train (suavizado add-one).
-  copy:    p(y | x) con x = código de la misma celda en el frame anterior (tabla 1024x1024 de conteos
-           sobre train, suavizada hacia el unigram). Es el "copy" de las slides.
-  copy_mix: p(y) = p_copy * 1[y == misma celda del frame anterior] + (1 - p_copy) * unigram(y).
-           Con temperatura 0 repite el último frame (referencia de video congelado).
+  transicion: p(y | x) con x = código de la misma celda en el frame anterior (tabla 1024x1024 de conteos
+           sobre train, suavizada hacia el unigram): una tabla de transición de primer orden por celda. Se llamaba
+           "copy"; ese nombre sigue cargando, pero está obsoleto (no copia nada).
+  copy_mix / congelado: p(y) = p_copy * 1[y == misma celda del frame anterior] + (1 - p_copy) * unigram(y).
+           Con temperatura 0 repite el último frame: es el "frame congelado" (alias congelado).
 
 Uso: python -m src.models.baselines   (ajusta sobre train y guarda checkpoints/baselines.npz)
 """
 import time
+import warnings
 from pathlib import Path
 
 import numpy as np
@@ -119,7 +121,7 @@ class CopyMix(FrameModel):
 
 class Transition(FrameModel):
   """p(y | x): x = código de la misma celda en el frame anterior, tabla de conteos de train."""
-  name = "copy"
+  name = "transicion"
 
   def __init__(self, uni, trans_logp):
     super().__init__()
@@ -138,8 +140,15 @@ def save_stats(uni, p_copy, trans_logp, alpha, path=STATS):
   np.savez(path, unigram=uni, p_copy=p_copy, trans_logp=trans_logp, alpha=alpha)
 
 
+BASELINES = ("unigram", "transicion", "copy_mix", "congelado")
+DEPRECATED = {"copy": "transicion"}  # nombre viejo de la tabla de transición
+
+
 def load_baseline(name, dev="cpu"):
-  if name not in ("unigram", "copy", "copy_mix"):
+  if name in DEPRECATED:
+    warnings.warn(f'baseline "{name}" está obsoleto: usar "{DEPRECATED[name]}"', DeprecationWarning, stacklevel=2)
+    name = DEPRECATED[name]
+  if name not in BASELINES:
     raise ValueError(f"baseline desconocido: {name}")
   if not STATS.exists() or "trans_logp" not in np.load(STATS):
     print("ajustando baselines sobre train...", flush=True)
@@ -147,10 +156,11 @@ def load_baseline(name, dev="cpu"):
   s = np.load(STATS)
   if name == "unigram":
     m = Unigram(s["unigram"])
-  elif name == "copy":
+  elif name == "transicion":
     m = Transition(s["unigram"], s["trans_logp"])
   else:
     m = CopyMix(s["unigram"], float(s["p_copy"]))
+    m.name = name
   return m.to(dev).eval()
 
 

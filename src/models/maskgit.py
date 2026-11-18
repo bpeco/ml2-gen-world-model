@@ -11,7 +11,7 @@ import torch
 
 from src.common import BOS, MASK, TPF, with_bos
 from src.models.backbone import Backbone, BackboneConfig
-from src.models.base import WorldModel, lm_loss, sample_logits
+from src.models.base import WorldModel, lm_loss
 from src.models.cudagraph import GraphedStep
 
 CODES = TPF - 1
@@ -20,6 +20,41 @@ CODES = TPF - 1
 def n_masked(s: int, S: int) -> int:
   """Tokens que siguen enmascarados tras el paso s de S (cosine; n_S = 0)."""
   return 0 if s >= S else int(math.floor(CODES * math.cos(math.pi / 2 * s / S)))
+
+
+def decode_frame(logits_fn, steps, temperature, choice_temp, cur, generator=None, noise=None):
+  """Decodificación iterativa por confianza (el sampler de MaskGIT), única para PyTorch, el stream y ONNX.
+
+  cur (B, 128): los códigos del frame, todo MASK al empezar. logits_fn(cur) -> logits (B, 128, 1024) float32 de
+  una pasada con los códigos parciales. En cada paso s de `steps` se muestrea cada celda, se fija en las más
+  confiables (con ruido Gumbel de choice_temp, que baja linealmente a 0) hasta dejar n_masked(s, steps) en MASK.
+  noise: None (el ruido sale de generator, por paso: (B, 128, 1024) del muestreo y (B, 128) del Gumbel) o la
+  lista ya generada en ese mismo orden (para capturar el frame entero en un CUDA graph). Devuelve (B, 128).
+  """
+  B = cur.shape[0]
+  fixed = torch.zeros(B, CODES, dtype=torch.bool, device=cur.device)
+  n_prev, j = CODES, 0
+  for s in range(1, steps + 1):
+    lg = logits_fn(cur)
+    if temperature == 0:
+      samp = lg.argmax(-1)
+    else:
+      q = noise[j] if noise is not None else torch.empty_like(lg).exponential_(1, generator=generator)
+      j += 1
+      samp = (torch.softmax(lg / temperature, -1) / q).argmax(-1)
+    lp = torch.log_softmax(lg / temperature if temperature > 0 else lg, -1).gather(-1, samp[..., None])[..., 0]
+    if temperature > 0 and choice_temp > 0 and s < steps:
+      q = noise[j] if noise is not None else torch.empty_like(lp).exponential_(1, generator=generator)
+      j += 1
+      lp = lp + choice_temp * (1 - s / steps) * -torch.log(q)
+    n_s = n_masked(s, steps)
+    k = n_prev - n_s
+    lp = lp.masked_fill(fixed, float("-inf"))
+    if k > 0:
+      fixed = fixed.scatter(1, lp.topk(k, dim=-1).indices, True)
+    cur = torch.where(fixed & (cur == MASK), samp, cur)
+    n_prev = n_s
+  return cur
 
 
 class MaskGIT(WorldModel):
@@ -122,27 +157,15 @@ class MaskGIT(WorldModel):
     tok = torch.full((B, TPF), MASK, dtype=torch.long, device=dev)
     tok[:, 0] = BOS
     use_graph = self._graphs_on and dev.type == "cuda"
-    fixed = torch.zeros(B, CODES, dtype=torch.bool, device=dev)
-    n_prev = CODES
-    for s in range(1, S + 1):
+
+    def logits_fn(cur):
+      tok[:, 1:] = cur
       if use_graph:
         g = self._graphs.get(B)
         if g is None:
           g = self._graphs[B] = GraphedStep(self._frame_pass, tok, pos)
-        lg = g(tok, pos)
-      else:
-        lg = self._frame_pass(tok, pos)
-      lg = lg[:, 1:].float()
-      samp = sample_logits(lg, temperature, generator)
-      lp = torch.log_softmax(lg / temperature if temperature > 0 else lg, -1).gather(-1, samp[..., None])[..., 0]
-      if temperature > 0 and self.cfg.choice_temp > 0 and s < S:
-        gum = -torch.log(torch.empty_like(lp).exponential_(1, generator=generator))
-        lp = lp + self.cfg.choice_temp * (1 - s / S) * gum
-      n_s = n_masked(s, S)
-      k = n_prev - n_s
-      lp = lp.masked_fill(fixed, float("-inf"))
-      if k > 0:
-        fixed.scatter_(1, lp.topk(k, dim=-1).indices, True)
-      tok[:, 1:] = torch.where(fixed.logical_and(tok[:, 1:] == MASK), samp, tok[:, 1:])
-      n_prev = n_s
-    return tok[:, 1:].clone()
+        return g(tok, pos)[:, 1:].float()
+      return self._frame_pass(tok, pos)[:, 1:].float()
+
+    cur = torch.full((B, CODES), MASK, dtype=torch.long, device=dev)
+    return decode_frame(logits_fn, S, temperature, self.cfg.choice_temp, cur, generator).clone()

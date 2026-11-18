@@ -1,6 +1,6 @@
 """CE según la posición dentro de la ventana de 20 frames -> results/ce_por_posicion.json.
 
-- Modelos con verosimilitud (GPT, ConvLSTM, gpt2m, baselines): CE de los 128 códigos de cada frame f de
+- Modelos con verosimilitud (GPT, gpt2m, baselines): CE de los 128 códigos de cada frame f de
   la ventana, con el protocolo de comma (ventanas que arrancan en los frames 0, 20, 40... del segmento).
 - MaskGIT: CE con 1 paso del frame f dados los f frames anteriores limpios (last_frame_logits).
 
@@ -19,7 +19,7 @@ sys.path.insert(0, ".")
 from src.common import BLOCK, TPF, device, with_bos  # noqa: E402
 from src.models import load_model  # noqa: E402
 
-LIK = ["gpt2m", "gpt_s_abs", "gpt_s", "gpt_m_kd", "convlstm", "convlstm_1b", "copy"]
+LIK = ["gpt2m", "gpt_s_abs", "gpt_s", "gpt_m_kd", "transicion"]
 MG = ["maskgit_s", "maskgit_s_nopc", "maskgit_s_abs", "maskgit_m"]
 
 

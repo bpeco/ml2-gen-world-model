@@ -21,7 +21,7 @@ class BackboneConfig:
   dim: int = 384
   block_size: int = BLOCK
   vocab_in: int = VOCAB    # MaskGIT: 1026 (+ MASK). 0: sin embedding de tokens (entrada continua, forward(emb=...))
-  vocab_out: int = VOCAB   # MaskGIT: 1024. 0: sin cabeza, devuelve el estado oculto normalizado (jepa, lewm)
+  vocab_out: int = VOCAB   # MaskGIT: 1024. 0: sin cabeza, devuelve el estado oculto normalizado (lewm)
   attn: str = "causal"     # "causal" | "block"
   dropout: float = 0.0
   pos: str = "abs"         # "abs": un embedding por posición | "frame": frame + celda (factorizado)

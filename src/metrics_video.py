@@ -1,7 +1,7 @@
 """LPIPS y FVD de los rollouts contra los tokens reales decodificados (plan 2.4).
 
   python -m src.metrics_video --name NAME [--rollouts results/rollouts/NAME.npy] [--bs 32] [--boot 1000]
-                              [--boot-fvd 200] [--fvd-model i3d|videomae]
+                              [--boot-fvd 200]
 Escribe results/video_<name>.json.
 
 - Referencia: los tokens reales decodificados con el mismo decoder (aísla al world model).
@@ -18,7 +18,6 @@ import time
 from pathlib import Path
 
 import numpy as np
-import scipy.linalg
 import torch
 
 from src.common import FPS, device, device_info
@@ -39,12 +38,6 @@ def frechet(mu1, s1, mu2, s2):
   tr = np.sqrt(np.clip(ev, 0, None)).sum()
   d = np.square(mu1 - mu2).sum() + np.trace(s1) + np.trace(s2) - 2 * tr
   return float(max(d, 0.0))                                   # recorta negativos numéricos
-
-
-def frechet_sqrtm(mu1, s1, mu2, s2):
-  """Versión de cd-fvd con scipy.linalg.sqrtm (para contrastar en los tests)."""
-  s = scipy.linalg.sqrtm(s1 @ s2)
-  return float(np.real(np.square(mu1 - mu2).sum() + np.trace(s1 + s2 - 2 * s)))
 
 
 def fvd_from_feats(a, b):
@@ -71,13 +64,11 @@ def boot_ci(stat, n, reps, seed=0, point=None):
 
 
 def load_fvd_model(kind, dev):
-  if kind == "i3d":
-    from cdfvd.third_party.i3d.utils import load_i3d_model, preprocess_i3d
-    m = load_i3d_model(dev).eval()
-    return lambda x: m(preprocess_i3d(x).to(dev))                 # logits (B, 400)
-  from cdfvd.third_party.VideoMAEv2.utils import load_videomae_model, preprocess_videomae
-  m = load_videomae_model(dev).eval().half()                      # ViT-g: fp16 para que quepa
-  return lambda x: m.forward_features(preprocess_videomae(x).to(dev).half()).float()
+  if kind != "i3d":
+    raise ValueError(f"extractor de FVD no soportado: {kind} (solo i3d)")
+  from cdfvd.third_party.i3d.utils import load_i3d_model, preprocess_i3d
+  m = load_i3d_model(dev).eval()
+  return lambda x: m(preprocess_i3d(x).to(dev))                   # logits (B, 400)
 
 
 @torch.no_grad()
@@ -98,7 +89,7 @@ def main():
   ap.add_argument("--bs", type=int, default=32)
   ap.add_argument("--boot", type=int, default=1000)
   ap.add_argument("--boot-fvd", type=int, default=200)
-  ap.add_argument("--fvd-model", default="i3d", choices=["i3d", "videomae"])
+  ap.add_argument("--fvd-model", default="i3d", choices=["i3d"])
   ap.add_argument("--from-cache", action="store_true",
                   help="recalcula las estadísticas desde results/cache (LPIPS por clip y features I3D), sin decodificar")
   a = ap.parse_args()

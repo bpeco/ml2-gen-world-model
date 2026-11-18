@@ -31,7 +31,7 @@ def fake(tmp, name, family, params, ce, fvd, ms, lp=0.3, **kw):
 @pytest.fixture
 def manifest(tmp_path):
   cfgs = [fake(tmp_path, "copy", "baseline", 0, 4.9, 900, 1, eval=True, ar=False),
-          fake(tmp_path, "convlstm", "convlstm", 5e6, 4.0, 500, 20),
+          fake(tmp_path, "gpt_l", "gpt", 5e6, 4.0, 500, 20),
           fake(tmp_path, "gpt_s", "gpt", 12e6, 3.5, 300, 40),
           fake(tmp_path, "gpt_kd", "gpt_kd", 12e6, 3.3, 250, 40),
           fake(tmp_path, "maskgit", "maskgit", 12e6, None, 280, 25, eval=True),
@@ -54,7 +54,7 @@ def test_report_runs(manifest, tmp_path):
   assert len(s["configs"]) == 7
   rows = {r["label"]: r for r in s["configs"]}
   assert rows["novideo"]["fvd_1s"] is None and rows["novideo"]["pareto"] is None
-  assert rows["maskgit"]["ce_all"] is None and s["ce_vs_fvd1"]["n"] == 4  # gpt_s, gpt_kd, convlstm, gpt2m
+  assert rows["maskgit"]["ce_all"] is None and s["ce_vs_fvd1"]["n"] == 4  # gpt_s, gpt_kd, gpt_l, gpt2m
   assert rows["copy"]["realtime"] and not rows["gpt2m"]["realtime"]
   assert "| copy |" in (out / "summary.md").read_text(encoding="utf-8")
 
@@ -77,7 +77,7 @@ def test_spearman_monotone():
 
 
 def test_bench_smoke_cpu(tmp_path):
-  spec = "random:convlstm"
+  spec = "random:gpt_s"
   r = subprocess.run([sys.executable, "-m", "src.bench", "--model", spec, "--device", "cpu", "--warmup", "2",
                       "--frames", "5", "--name", "pytest_smoke"], cwd=ROOT, capture_output=True, text=True)
   if r.returncode != 0:

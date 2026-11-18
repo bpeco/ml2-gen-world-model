@@ -1,26 +1,22 @@
-"""Piezas comunes de los world models latentes: JEPA estilo V-JEPA (src/models/jepa.py) y
-LeWorldModel (src/models/lewm.py).
+"""Piezas comunes de los world models latentes: LeWorldModel (src/models/lewm.py) y, más adelante, V-JEPA 2.
 
 SIGReg, ConditionalBlock (AdaLN-zero), Embedder y MLP siguen el código oficial de LeWorldModel
 (github.com/lucas-maes/le-wm, module.py, licencia MIT): Maes, Le Lidec, Scieur, LeCun y Balestriero,
 "LeWorldModel: Stable End-to-End Joint-Embedding Predictive Architecture from Pixels", arXiv 2603.19312.
 
-Convenciones de las dos familias (además de las de base.py):
+Convenciones de los latentes (además de las de base.py):
 - Son FrameModel: frame_logits(frames, poses=None) predice el frame f desde los frames < f, con una
   lectura (cabeza o decoder) que pasa del latente predicho a los logits de las 128 celdas.
 - Un frame "vacío" aprendido (start) abre la ventana: el frame 0 se predice sin contexto.
 - Acción del frame f = pose del frame f (velocidades de traslación y giro, data/train_poses.npy). poses=None
   o NaN = acción nula aprendida. Al entrenar, con prob. p_null la pose se cambia por la nula: el mismo modelo
   corre sin poses (val, comparación justa con el resto) y con poses (holdout, planificación).
-- Las subclases definen encode(frames, target=False) -> z (B, F, *S), predict(z_in, acts) -> ẑ (B, F, *S),
+- Las subclases definen encode(frames) -> z (B, F, *S), predict(z_in, acts) -> ẑ (B, F, *S),
   readout(ẑ) -> (B, F, 128, 1024), targets(frames) -> lo que el predictor imita, y los módulos
-  start, null_act, act_embed y encoder (más tgt si usan EMA).
+  start, null_act, act_embed y encoder (más tgt si usan EMA: ver make_target y after_step).
 """
 import copy
-import functools
 import math
-import warnings
-from pathlib import Path
 from typing import Optional
 
 import torch
@@ -30,28 +26,6 @@ import torch.nn.functional as F
 from src.common import CTX_FRAMES
 from src.models.base import FrameModel, sample_logits
 from src.models.cudagraph import GraphedStep
-
-CODEBOOK = "data/raw/decoder_pytorch_model.bin"
-
-
-@functools.lru_cache(maxsize=1)
-def _read_codebook(path: str) -> Optional[torch.Tensor]:
-  p = Path(path)
-  if not p.exists():
-    return None
-  sd = torch.load(p, map_location="cpu", weights_only=True)
-  return sd["quantize._embedding.weight"].float()
-
-
-def load_codebook(path: str = CODEBOOK) -> torch.Tensor:
-  """(1024, 256) vectores del codebook del VQ-VAE de comma (congelados). Va como buffer en el checkpoint,
-  así que cargar un modelo entrenado no necesita data/raw. Sin el archivo (tests), uno aleatorio fijo."""
-  cb = _read_codebook(str(path))
-  if cb is None:
-    warnings.warn(f"{path} no existe: codebook aleatorio (solo sirve para tests o latencia)")
-    return torch.randn(1024, 256, generator=torch.Generator().manual_seed(0))
-  return cb.clone()
-
 
 # ---------------------------------------------------------------- piezas de LeWorldModel (module.py)
 
@@ -63,7 +37,7 @@ class SIGReg(nn.Module):
   `knots` nodos de [0, 3] con peso gaussiano. x: (..., N, D), N muestras. Se calcula en float32.
 
   Adaptación: el código original multiplica por N (el batch, 128 en el paper). Acá N varía entre familias
-  (B·T embeddings en LeWM, una muestra de celdas en JEPA), así que se multiplica por n_ref = 128 fijo: λ
+  (B·T embeddings en LeWM, otro número en otras familias), así que se multiplica por n_ref = 128 fijo: λ
   significa lo mismo que en el paper. n_ref=None reproduce el original.
   """
 
@@ -190,20 +164,19 @@ def cem(cost_fn, batch: int, shape, n_samples: int = 300, n_elites: int = 30, it
 # ---------------------------------------------------------------- clase base
 
 class LatentWM(FrameModel):
-  """Base de jepa y lewm: acciones, generación con caché de latentes, EMA, features y planificación."""
+  """Base de los latentes (lewm): acciones, generación con caché de latentes, EMA, features y planificación."""
 
   uses_poses = True
   ctx_frames = CTX_FRAMES - 1
 
   def _init_common(self, n_pose: int):
-    self.register_buffer("codebook", load_codebook())
     self.register_buffer("pose_mean", torch.zeros(n_pose))
     self.register_buffer("pose_std", torch.ones(n_pose))
     self._graphs_on = False
     self._graphs = {}
 
   # ---- a definir por cada familia
-  def encode(self, frames, target=False):
+  def encode(self, frames):
     raise NotImplementedError
 
   def predict(self, z_in, acts):
@@ -290,8 +263,6 @@ class LatentWM(FrameModel):
     poses: None (acción nula) o (B, F_ctx + n_frames, 6) crudas, alineadas con [contexto, frames nuevos].
     cfg.rollout = "token": el frame muestreado se re-codifica; "latent": entra ẑ al contexto (sin cuantizar).
     """
-    if self.cfg.rollout == "latent" and getattr(self.cfg, "objective", None) == "codebook":
-      raise ValueError("rollout latente no aplica al objetivo codebook (ẑ está en el espacio del codebook)")
     ctx = ctx[:, -self.ctx_frames:]
     B, Fc = ctx.shape[:2]
     if poses is not None:
@@ -320,7 +291,7 @@ class LatentWM(FrameModel):
     return sum(p.numel() for n, p in self.named_parameters() if not n.startswith("tgt."))
 
   def make_target(self):
-    """Copia EMA del encoder, sin gradiente (V-JEPA y la ablación lewm_s_ema)."""
+    """Copia EMA del encoder, sin gradiente (para V-JEPA 2; LeWM no la usa)."""
     tgt = copy.deepcopy(self.encoder)
     for p in tgt.parameters():
       p.requires_grad_(False)

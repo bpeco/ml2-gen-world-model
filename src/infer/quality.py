@@ -1,7 +1,7 @@
 """Calidad de la inferencia por stream (Docs/plan-inferencia.md, fase 4).
 
-  python -m src.infer.quality online --model convlstm [--k 1] [--segments 50] [--frames 400]
-  python -m src.infer.quality online --model convlstm --frames 1200 --segments 20 --reset-every 20   # deriva
+  python -m src.infer.quality online --model maskgit_s [--k 1] [--segments 50] [--frames 400]
+  python -m src.infer.quality online --model maskgit_s --frames 1200 --segments 20                  # deriva
   python -m src.infer.quality imagine --model maskgit_s --steps 4 --name maskgit_s_s4
 
 online: el modelo ve los frames reales de val uno por uno (tokens del dataset, para aislar al world model del
@@ -10,7 +10,7 @@ online: el modelo ve los frames reales de val uno por uno (tokens del dataset, p
   - LPIPS (alex) del frame predicho decodificado contra el real decodificado, cada --every frames, con IC 95% por
     bootstrap sobre segmentos;
   - la misma métrica para "repetir el último frame" (frame congelado), que a 20 FPS es una referencia fuerte.
-  Escribe results/infer/online_<nombre>[_k<k>][_r<reset>][_f<frames>].json
+  Escribe results/infer/online_<nombre>[_k<k>][_f<frames>].json
 imagine: rollouts de los 400 clips de evaluación con el camino nuevo (Stream), mismos lotes y semillas que
   src.rollouts. Compara los tokens con results/rollouts/<name>.npy y guarda <name>_stream.npy para medir
   LPIPS/FVD con src.metrics_video (--name <name>_stream). Con temperatura 1, una diferencia numérica mínima en
@@ -52,8 +52,6 @@ def online(a, dev):
   import lpips
   model = load(a.model, dev, a.dtype, a.opt)
   kw = dict(temperature=a.temperature, steps=a.steps, seed=a.seed, graphs=dev.type == "cuda")
-  if a.reset_every:
-    kw["reset_every"] = a.reset_every
   s = make_stream(model, **kw)
   val = np.load(VAL, mmap_mode="r")
   tok = torch.as_tensor(np.array(val[:a.segments, :a.frames]).astype(np.int64), device=dev)
@@ -93,11 +91,11 @@ def online(a, dev):
 
   name = a.name or model.name + (f"_s{a.steps}" if a.steps else "")
   res = {"name": name, "model": a.model, "steps": a.steps, "k": a.k, "temperature": a.temperature, "dtype": a.dtype,
-         "reset_every": a.reset_every, "segments": S, "frames": T, "every": a.every, "ctx_frames": s.ctx_frames,
+         "segments": S, "frames": T, "every": a.every, "ctx_frames": s.ctx_frames,
          "model_metrics": summary(acc, lp_m), "frozen_metrics": summary(acc_frozen, lp_f),
          "acc_curve": acc[t0:T - a.k].mean(1).tolist(), "curve_start": t0, "seconds": sec,
          "device": device_info(dev), "timestamp": datetime.now().isoformat(timespec="seconds")}
-  suffix = (f"_k{a.k}" if a.k > 1 else "") + (f"_r{a.reset_every}" if a.reset_every else "") \
+  suffix = (f"_k{a.k}" if a.k > 1 else "") \
     + (f"_f{a.frames}" if a.frames != 400 else "") + (f"_t{a.temperature:g}" if a.temperature != 1.0 else "")
   OUT.mkdir(parents=True, exist_ok=True)
   path = OUT / f"online_{name}{suffix}.json"
@@ -158,7 +156,6 @@ def main():
   ap.add_argument("--segments", type=int, default=50)
   ap.add_argument("--frames", type=int, default=400)
   ap.add_argument("--every", type=int, default=4, help="online: LPIPS cada cuántos frames")
-  ap.add_argument("--reset-every", type=int)
   ap.add_argument("--bs", type=int, default=50)
   ap.add_argument("--seed", type=int, default=0)
   ap.add_argument("--opt", action="append")

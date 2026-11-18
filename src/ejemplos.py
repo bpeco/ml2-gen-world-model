@@ -28,10 +28,8 @@ ETIQUETAS = {
   "real": (None, "Real"),
   "frozen": ("Frame congelado", "Frame congelado"),
   "unigram": ("Unigrama", "Unigrama"),
-  "copy": ("Copia (tabla por celda)", "Copia (baseline)"),
+  "copy": ("Transición por celda", "Transición (baseline)"),  # rollouts/copy.npy: nombre viejo
   "gpt2m": ("gpt2m (comma)", "gpt2m (comma)"),
-  "convlstm": ("ConvLSTM", "ConvLSTM"),
-  "convlstm_1b": ("ConvLSTM, 1B tokens", "ConvLSTM, 1B tokens"),
   "gpt_s": ("GPT-S", "GPT-S"),
   "gpt_s_kd": ("GPT-S destilado", "GPT-S destilado"),
   "gpt_m": ("GPT-M", "GPT-M"),
@@ -39,7 +37,7 @@ ETIQUETAS = {
   **{f"maskgit_{z}_s{s}": (f"MaskGIT-{z.upper()} {s} pasos", f"MaskGIT-{z.upper()}, {s} paso{'s' * (s > 1)}")
      for z in "sm" for s in (1, 2, 4, 8)},
 }
-MODELOS = ["real", "gpt2m", "gpt_s", "maskgit_s_s4", "convlstm", "convlstm_1b", "copy"]
+MODELOS = ["real", "gpt2m", "gpt_s", "maskgit_s_s4", "copy"]
 HORIZONTES = [10, 20, 40, 60]  # frames generados: 0,5 / 1 / 2 / 3 s
 PERCENTILES = [50, 75, 90]
 _decoder = None

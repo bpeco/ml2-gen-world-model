@@ -1,6 +1,6 @@
 """Exporta a ONNX las piezas de la cadena para correrlas con ONNX Runtime en la NPU o la iGPU (plan, fase 7).
 
-  python -m src.infer.export_codec [--out checkpoints/onnx] [--convlstm convlstm] [--fp16]
+  python -m src.infer.export_codec [--out checkpoints/onnx] [--fp16]
 
 Piezas (todas con batch 1 y forma fija):
 - codec_encoder_body.onnx: imagen float (1, 3, 128, 256) RGB en [0, 255] -> latentes antes del cuantizador
@@ -8,9 +8,7 @@ Piezas (todas con batch 1 y forma fija):
   NPU no suele soportar ArgMin con esas formas.
 - codec_decoder_body.onnx: embeddings del codebook (1, 128, 256) (el lookup va en la CPU) -> imagen float
   (1, 3, 128, 256) en [0, 255], sin recortar.
-- <corrida>_step.onnx: un paso de ConvLSTM, entrada x (1, emb, 8, 16) y (h, c) por capa -> logits (1, 128, 1024) y
-  el estado nuevo. x es el embedding del frame (lookup en la CPU con <corrida>_tok_emb.npy) o, en el primer paso,
-  el embedding aprendido de inicio (<corrida>_start.npy). MaskGIT ya tiene su export (src/export_onnx.py).
+  Los modelos de mundo tienen su export aparte (MaskGIT: src/export_onnx.py).
 Cada pieza se valida contra PyTorch con ONNX Runtime en la CPU. --fp16 convierte los pesos a fp16 (entradas y
 salidas quedan en float32).
 """
@@ -22,7 +20,6 @@ import torch
 import torch.nn as nn
 
 from src.infer.codec import ensure_weights, load_decoder, load_encoder
-from src.infer.stream import convlstm_step
 
 OUT = Path("checkpoints/onnx")
 
@@ -59,15 +56,6 @@ class DecoderBody(nn.Module):
     return self.dec(z)
 
 
-class ConvLSTMStep(nn.Module):
-  def __init__(self, model):
-    super().__init__()
-    self.m = model
-
-  def forward(self, x, *state):     # x (1, emb, 8, 16)
-    return convlstm_step(self.m, x, *state)
-
-
 def export(module, inputs, names_in, names_out, path, fp16=False):
   path.parent.mkdir(parents=True, exist_ok=True)
   module = module.eval()
@@ -97,7 +85,6 @@ def check(module, inputs, path, names_in, atol):
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument("--out", default=str(OUT))
-  ap.add_argument("--convlstm", default="convlstm", help="spec de load_model de un ConvLSTM (o 'none')")
   ap.add_argument("--fp16", action="store_true")
   a = ap.parse_args()
   out = Path(a.out)
@@ -116,19 +103,6 @@ def main():
   p = export(dec, (z,), ["emb"], ["img"], out / f"codec_decoder_body{sfx}.onnx", a.fp16)
   check(dec, (z,), p, ["emb"], atol=2.0 if a.fp16 else 1e-1)
 
-  if a.convlstm != "none":
-    from src.models import load_model
-    m = load_model(a.convlstm, "cpu").eval()
-    step = ConvLSTMStep(m)
-    Hd = m.cfg.hidden
-    state = [torch.randn(1, Hd, 8, 16) * 0.1 for _ in range(2 * m.cfg.n_layers)]
-    x = m._embed(torch.randint(0, 1024, (1, 1, 128)))[:, 0].detach()
-    names_in = ["x"] + [f"{k}{l}" for l in range(m.cfg.n_layers) for k in ("h", "c")]
-    names_out = ["logits"] + [f"{k}{l}_out" for l in range(m.cfg.n_layers) for k in ("h", "c")]
-    p = export(step, (x, *state), names_in, names_out, out / f"{m.name}_step{sfx}.onnx", a.fp16)
-    check(step, (x, *state), p, names_in, atol=0.5 if a.fp16 else 1e-3)
-    np.save(out / f"{m.name}_start.npy", m.start.detach().numpy())        # (emb, 8, 16): entrada del paso 0
-    np.save(out / f"{m.name}_tok_emb.npy", m.tok.weight.detach().numpy())  # (1024, emb)
   print("->", out)
 
 

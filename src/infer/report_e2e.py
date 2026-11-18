@@ -5,7 +5,7 @@
 Lee results/infer/codec_<disp>.json, e2e_*.json y online_*.json, y la calidad de los rollouts de la tabla principal
 (results/video_<nombre>.json: FVD a 1 s). Un bloque por dispositivo.
 
-Colores: MaskGIT naranja, ConvLSTM aqua y los latentes (JEPA y LeWM) violeta, con la forma del marcador y el rótulo
+Colores: MaskGIT naranja y los latentes (LeWM) violeta, con la forma del marcador y el rótulo
 como segundo canal (validado con el validador de dataviz, --pairs all: ΔE CVD 9,2, normal 27,6). GPT-S queda fuera
 de la figura (~170 ms por frame, fuera de escala) y está en la tabla.
 """
@@ -22,16 +22,14 @@ from src.report import GRID, INK, INK2, MUTED, SURF, _repel, pareto_mask
 R = Path("results")
 INF = R / "infer"
 RT_MS = 50.0
-COL = {"maskgit": "#eb6834", "convlstm": "#1baf7a", "jepa": "#6250d6", "lewm": "#6250d6", "baseline": MUTED,
-       "gpt": MUTED, "codec": MUTED}
-MARK = {"maskgit": "^", "convlstm": "s", "jepa": "P", "lewm": "h", "baseline": "X", "gpt": "o", "codec": "|"}
-ORDER = ["codec", "copy", "convlstm", "maskgit_s_s1", "maskgit_s_s2", "maskgit_s_s4", "maskgit_s_s8", "maskgit_s_s12",
-         "maskgit_m_s1", "maskgit_m_s2", "maskgit_m_s4", "maskgit_m_s8", "maskgit_m_s12", "jepa_s", "jepa_xs",
-         "jepa_xxs", "lewm_s", "lewm_xs", "lewm_px", "lewm_px_xs", "gpt_s"]
-LABEL = {"codec": "solo codec (encoder + decoder)", "copy": "Copia (tabla por celda)", "convlstm": "ConvLSTM",
-         "jepa_s": "JEPA-S", "jepa_xs": "JEPA-XS", "jepa_xxs": "JEPA-XXS", "lewm_s": "LeWM", "lewm_xs": "LeWM-XS",
-         "lewm_px": "LeWM desde píxeles", "lewm_px_xs": "LeWM-XS desde píxeles",
-         "gpt_s": "GPT-S"}
+COL = {"maskgit": "#eb6834", "lewm": "#6250d6", "baseline": MUTED, "gpt": MUTED, "codec": MUTED}
+MARK = {"maskgit": "^", "lewm": "h", "baseline": "X", "gpt": "o", "codec": "|"}
+# "copy" es el nombre viejo de la tabla de transición: los JSON de e2e que ya están en disco siguen llamándose así
+ORDER = ["codec", "transicion", "copy", "maskgit_s_s1", "maskgit_s_s2", "maskgit_s_s4", "maskgit_s_s8",
+         "maskgit_s_s12", "maskgit_m_s1", "maskgit_m_s2", "maskgit_m_s4", "maskgit_m_s8", "maskgit_m_s12", "lewm",
+         "gpt_s"]
+LABEL = {"codec": "solo codec (encoder + decoder)", "copy": "Transición por celda", "transicion": "Transición por celda",
+         "lewm": "LeWM", "gpt_s": "GPT-S"}
 
 
 def label(name):
@@ -40,7 +38,7 @@ def label(name):
 
 
 def family(name):
-  for f in ("maskgit", "convlstm", "jepa", "lewm", "gpt"):
+  for f in ("maskgit", "lewm", "gpt"):
     if name.startswith(f):
       return f
   return "codec" if name == "codec" else "baseline"
@@ -138,7 +136,7 @@ def online_table():
   rows = []
   for p in sorted(INF.glob("online_*.json")):
     d = jload(p)
-    if d["frames"] != 400 or d["k"] != 1 or d.get("reset_every"):
+    if d["frames"] != 400 or d["k"] != 1:
       continue
     rows.append(d)
   if not rows:
@@ -154,12 +152,6 @@ def online_table():
     m = d["model_metrics"]
     lines.append(f"| {label(d['name'])} | {d['temperature']:g} | {m['token_acc'] * 100:.1f} | {m['lpips']:.3f} "
                  f"[{m['lpips_ci'][0]:.3f}, {m['lpips_ci'][1]:.3f}] |")
-  drift = [jload(INF / n) for n in ("online_convlstm_f1200.json", "online_convlstm_r20_f1200.json")]
-  if all(drift):
-    a, b = (x["model_metrics"]["token_acc_by_window"] for x in drift)
-    lines += ["", "Deriva de ConvLSTM en streams de 1 minuto (20 segmentos × 1200 frames), acierto por tramo, estado "
-              "continuo contra recalculado con la ventana de 19 frames: "
-              + ", ".join(f"frames {w}: {a[w] * 100:.1f} % contra {b[w] * 100:.1f} %" for w in a) + "."]
   chk = [jload(p) for p in sorted(INF.glob("imagine_check_*.json"))]
   for c in [c for c in chk if c]:
     n = c["name"]
@@ -221,8 +213,8 @@ def figure(tag, block, path):
   ax.set_ylim(0, max(p["ci"][1] if p["ci"] and p["ci"][1] else p["y"] for p in pts) * 1.08)
   _repel(ax, items, points=[(p["x"], p["y"]) for p in pts])
   leg = [Line2D([], [], marker=MARK[k], ls="", c=COL[k], mec=SURF, ms=7, label=lab) for k, lab in
-         (("maskgit", "MaskGIT-S y -M (hueco); n.º = pasos"), ("convlstm", "ConvLSTM"),
-          ("jepa", "JEPA"), ("lewm", "LeWM"), ("baseline", "Copia")) if any(p["fam"] == k for p in pts)]
+         (("maskgit", "MaskGIT-S y -M (hueco); n.º = pasos"), ("lewm", "LeWM"),
+          ("baseline", "Transición por celda")) if any(p["fam"] == k for p in pts)]
   leg.append(Line2D([], [], c=MUTED, lw=1, label="frontera de Pareto"))
   ax.legend(handles=leg, loc="upper left", bbox_to_anchor=(0.4, 1.0), fontsize=8)
   ax.set_xlabel(f"latencia de punta a punta por frame, modo imaginación (ms, p99, batch 1, {gpu_name(block)})")

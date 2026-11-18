@@ -5,7 +5,7 @@
 #   bash scripts/e2e_all.sh codec     # fidelidad y latencia del codec en este dispositivo
 #   bash scripts/e2e_all.sh bench     # latencia de la cadena de cada configuración, en línea e imaginación
 #   bash scripts/e2e_all.sh paced     # algunas configuraciones a ritmo de cámara (un frame cada 50 ms)
-#   bash scripts/e2e_all.sh quality   # calidad a 1 paso en línea, deriva de ConvLSTM y verificación del camino nuevo
+#   bash scripts/e2e_all.sh quality   # calidad a 1 paso en línea y verificación del camino nuevo
 #   bash scripts/e2e_all.sh new       # rollouts y LPIPS/FVD de lo que no estaba medido (MaskGIT con 12 pasos)
 #   bash scripts/e2e_all.sh all       # codec + bench + paced (lo que hay que correr en cada dispositivo)
 #
@@ -35,15 +35,10 @@ FRAMES=${FRAMES:-3000}  # frames medidos por configuración (en Colab, FRAMES=10
 
 CONFIGS=(  # nombre|modelo|args
   "codec|none|"
-  "convlstm|convlstm|"
   "maskgit_s_s1|maskgit_s|--steps 1" "maskgit_s_s2|maskgit_s|--steps 2" "maskgit_s_s4|maskgit_s|--steps 4"
   "maskgit_s_s8|maskgit_s|--steps 8" "maskgit_s_s12|maskgit_s|--steps 12"
   "maskgit_m_s1|maskgit_m|--steps 1" "maskgit_m_s2|maskgit_m|--steps 2" "maskgit_m_s4|maskgit_m|--steps 4"
   "maskgit_m_s8|maskgit_m|--steps 8" "maskgit_m_s12|maskgit_m|--steps 12"
-  "jepa_s|jepa_s|" "jepa_xs|jepa_xs|" "jepa_xxs|jepa_xxs|"
-  "lewm_s|lewm_s|" "lewm_xs|lewm_xs|"
-  # LeWM desde píxeles (E5c): la cámara entra directo al modelo, sin el encoder de comma; imagina en el latente
-  "lewm_px_xs|lewm_px_xs|--opt rollout=latent" "lewm_px|lewm_px|--opt rollout=latent"
   "gpt_s|gpt_s|--frames 300 --warmup 10"
 )
 
@@ -52,7 +47,7 @@ codec() {
 }
 
 bench() {
-  [ -z "$RANDOM_MODELS" ] && e2e copy online 0 --model copy && e2e copy imagine 0 --model copy
+  [ -z "$RANDOM_MODELS" ] && e2e copy online 0 --model transicion && e2e copy imagine 0 --model transicion
   for c in "${CONFIGS[@]}"; do
     IFS="|" read -r name model args <<< "$c"
     m=$([ "$model" = none ] && echo none || spec "$model")
@@ -63,7 +58,7 @@ bench() {
     done
   done
   for k in 5 20; do  # en línea, prediciendo más adelante (k pasos del modelo, un solo decode)
-    for c in "convlstm|convlstm|" "maskgit_s_s4|maskgit_s|--steps 4" "jepa_xxs|jepa_xxs|"; do
+    for c in "maskgit_s_s4|maskgit_s|--steps 4"; do
       IFS="|" read -r name model args <<< "$c"
       [ -f "results/infer/e2e_${name}__online_k${k}__closed__${TAGV}.json" ] && continue
       $PY -u -m src.infer.bench_e2e --name "${name%_s[0-9]*}" --model "$(spec $model)" $args --k $k --frames "$FRAMES" \
@@ -73,8 +68,7 @@ bench() {
 }
 
 paced() {
-  for c in "codec|none|" "convlstm|convlstm|" "maskgit_s_s4|maskgit_s|--steps 4" "maskgit_m_s8|maskgit_m|--steps 8" \
-           "jepa_s|jepa_s|" "lewm_xs|lewm_xs|"; do
+  for c in "codec|none|" "maskgit_s_s4|maskgit_s|--steps 4" "maskgit_m_s8|maskgit_m|--steps 8"; do
     IFS="|" read -r name model args <<< "$c"
     m=$([ "$model" = none ] && echo none || spec "$model")
     mode=$([ "$model" = none ] && echo online || echo imagine)
@@ -84,9 +78,9 @@ paced() {
 
 quality() {
   # calidad a 1 paso en línea (50 segmentos de val x 400 frames), temperatura 1 y 0
-  for c in "convlstm|" "maskgit_s|--steps 4" "maskgit_m|--steps 8" "jepa_s|" "jepa_xxs|" "lewm_xs|" "lewm_px_xs|" "lewm_px|" "copy|"; do
+  for c in "maskgit_s|--steps 4" "maskgit_m|--steps 8" "transicion|"; do
     IFS="|" read -r model args <<< "$c"
-    [ "$model" = copy ] || have "$model" || continue
+    [ "$model" = transicion ] || have "$model" || continue
     for t in 1 0; do
       name=$model$(echo "$args" | sed -E 's/--steps ([0-9]+)/_s\1/; s/ //g')
       sfx=$([ "$t" = 0 ] && echo _t0 || echo "")
@@ -94,11 +88,8 @@ quality() {
       $PY -u -m src.infer.quality online --model $model $args --temperature $t 2>&1 | grep -v -i warn
     done
   done
-  # deriva de ConvLSTM en streams de 1 minuto: estado continuo vs. recalculado con la ventana de 19 frames
-  [ -f results/infer/online_convlstm_f1200.json ] || $PY -u -m src.infer.quality online --model convlstm --segments 20 --frames 1200
-  [ -f results/infer/online_convlstm_r20_f1200.json ] || $PY -u -m src.infer.quality online --model convlstm --segments 20 --frames 1200 --reset-every 20
   # el camino nuevo (Stream) contra los rollouts de la tabla: tokens y LPIPS/FVD
-  for c in "maskgit_s_s4|maskgit_s|--steps 4" "convlstm|convlstm|"; do
+  for c in "maskgit_s_s4|maskgit_s|--steps 4"; do
     IFS="|" read -r name model args <<< "$c"
     [ -f "results/infer/imagine_check_${name}.json" ] || $PY -u -m src.infer.quality imagine --model $model $args --name $name 2>&1 | grep -v -i warn
     [ -f "results/video_${name}_stream.json" ] || $PY -u -m src.metrics_video --name "${name}_stream" > "results/logs/video_${name}_stream.out" 2>&1

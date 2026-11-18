@@ -7,9 +7,7 @@ import pytest
 import torch
 
 from src.common import TPF
-from src.infer.stream import ConvLSTMStream, LatentStream, MaskGITStream, TokenStream, make_stream
-from src.models.convlstm import ConvLSTM
-from src.models.jepa import JEPA
+from src.infer.stream import LatentStream, MaskGITStream, TokenStream, make_stream
 from src.models.lewm import LeWM
 from src.models.maskgit import MaskGIT
 
@@ -20,6 +18,21 @@ FRAMES = 6
 def frames(B, F, seed=1, dev="cpu"):
   g = torch.Generator().manual_seed(seed)
   return torch.randint(0, 1024, (B, F, 128), generator=g).to(dev)
+
+
+def fake_render(tok):
+  """Cámara de juguete para los tests (sin los pesos del decoder): cada token pinta su parche de 16x16."""
+  pal = (torch.arange(1024)[:, None] * torch.tensor([37, 91, 53]) % 256).to(torch.uint8).to(tok.device)
+  img = pal[tok.long()].view(*tok.shape[:-1], 8, 16, 3)
+  return img.repeat_interleave(16, -3).repeat_interleave(16, -2).contiguous()
+
+
+@pytest.fixture(autouse=True)
+def px(monkeypatch):
+  """LeWM ve píxeles: los tests de este módulo usan la cámara de juguete en vez del decoder de comma."""
+  import src.models.lewm as lewm
+  monkeypatch.setattr(lewm, "render_tokens", fake_render)
+  return lambda **kw: tiny("lewm", **kw)
 
 
 def shake(m, scale=4.0, noise=0.0, seed=3):
@@ -36,13 +49,6 @@ def tiny(kind, dev="cpu", **kw):
   torch.manual_seed(0)
   if kind == "maskgit":
     m = shake(MaskGIT(MaskGIT.Config(n_layer=2, n_head=4, dim=64, block_size=FRAMES * TPF, **kw)))
-  elif kind == "convlstm":
-    m = shake(ConvLSTM(ConvLSTM.Config(emb=8, hidden=16, n_layers=2)), scale=3.0)
-    m.ctx_frames = FRAMES - 1
-  elif kind == "jepa":
-    m = shake(JEPA(JEPA.Config(n_layer=3, n_head=2, dim=32, n_enc=1, block_size=FRAMES * TPF, num_proj=64,
-                               sigreg_n=256, **kw)), scale=1.0, noise=0.05)
-    m.ctx_frames = FRAMES - 1
   else:
     m = shake(LeWM(LeWM.Config(dim=32, enc_layers=1, enc_heads=2, proj_hidden=64, pred_dim=32, pred_layers=2,
                                pred_heads=4, pred_mlp=64, pred_dropout=0.0, dec_dim=32, dec_layers=1, dec_heads=2,
@@ -63,7 +69,7 @@ def via_generate(m, ctx, n, temperature, steps=None, seed=0):
   return m.rollout(ctx, n, temperature=temperature, steps=steps, generator=g)
 
 
-CASES = [("maskgit", {}), ("convlstm", {}), ("jepa", {}), ("lewm", {}), ("lewm", {"rollout": "latent"})]
+CASES = [("maskgit", {}), ("lewm", {}), ("lewm", {"rollout": "latent"})]
 
 
 @pytest.mark.parametrize("kind,kw", CASES)
@@ -80,8 +86,7 @@ def test_stream_equals_generate_cpu(kind, kw, temperature):
 
 def test_adapters():
   assert isinstance(make_stream(tiny("maskgit")), MaskGITStream)
-  assert isinstance(make_stream(tiny("convlstm")), ConvLSTMStream)
-  assert isinstance(make_stream(tiny("jepa")), LatentStream)
+  assert isinstance(make_stream(tiny("lewm")), LatentStream)
   from src.models.baselines import Unigram
   assert isinstance(make_stream(Unigram(torch.zeros(1024))), TokenStream)
 
@@ -97,7 +102,7 @@ def test_maskgit_fused_frame_equals_next_frame(temperature):
   assert torch.equal(got, ref)
 
 
-@pytest.mark.parametrize("kind", ["maskgit", "convlstm", "lewm"])
+@pytest.mark.parametrize("kind", ["maskgit", "lewm"])
 def test_predict_k_does_not_change_state(kind):
   m = tiny(kind)
   ctx = frames(1, FRAMES - 1)
@@ -108,18 +113,6 @@ def test_predict_k_does_not_change_state(kind):
   roll = torch.stack(list(s.imagine(3)), 1)
   assert torch.equal(far, roll[:, -1])          # el frame t+3 de predict es el tercero del rollout
   assert torch.equal(s.predict(), s.predict())  # predict no avanza el estado
-
-
-def test_convlstm_reset_every_matches_window():
-  """reset_every = ctx_frames + 1: el estado se recalcula con la ventana de los últimos ctx_frames frames en cada
-  frame, que es justo lo que hace generate con un contexto más largo que ctx_frames."""
-  m = tiny("convlstm")
-  long = frames(1, 3 * FRAMES)
-  s = make_stream(m, temperature=0.0, graphs=False, reset_every=m.ctx_frames + 1)
-  for f in range(long.shape[1]):
-    s.observe(long[:, f])
-  ref = m.next_frame(long, 0.0)
-  assert torch.equal(s.predict(), ref)
 
 
 def test_step_commits_frame():
@@ -134,50 +127,18 @@ def test_step_commits_frame():
   assert torch.equal(a, b)
 
 
-def test_convlstm_step_onnx(tmp_path):
-  """El paso de ConvLSTM exportado a ONNX (src/infer/export_codec.py) da lo mismo que el stream."""
-  pytest.importorskip("onnxruntime")
-  import onnxruntime as ort
-  from src.infer.export_codec import ConvLSTMStep, export
-  m = tiny("convlstm")
-  st = [torch.randn(1, m.cfg.hidden, 8, 16) * 0.1 for _ in range(2 * m.cfg.n_layers)]
-  x = m._embed(frames(1, 1))[:, 0].detach()
-  names = ["x"] + [f"s{i}" for i in range(len(st))]
-  p = export(ConvLSTMStep(m), (x, *st), names, ["logits"] + [f"o{i}" for i in range(len(st))], tmp_path / "s.onnx")
-  got = ort.InferenceSession(str(p), providers=["CPUExecutionProvider"]).run(
-    None, {n: t.numpy() for n, t in zip(names, (x, *st))})
-  with torch.no_grad():
-    ref = ConvLSTMStream(m, graphs=False)._step(x, *st)
-  for g, r in zip(got, ref):
-    assert abs(g - r.numpy()).max() < 1e-4
-
-
 def test_random_run_spec_uses_manifest_config():
   """random:<corrida> arma la arquitectura registrada en results/checkpoints.json (sin bajar el checkpoint)."""
   from src import store
   from src.models import load_model
   man = store.load_manifest()
-  if "jepa_xs" not in man:
+  if "gpt_m" not in man:
     pytest.skip("sin results/checkpoints.json")
-  m = load_model("random:jepa_xs")
-  assert m.cfg.dim == man["jepa_xs"]["config"]["dim"] and m.num_params() == man["jepa_xs"]["params"]
+  m = load_model("random:gpt_m")
+  assert m.cfg.dim == man["gpt_m"]["config"]["dim"] and sum(p.numel() for p in m.parameters()) == man["gpt_m"]["params"]
 
 
 # ---------------------------------------------------------------- LeWM desde píxeles
-
-def fake_render(tok):
-  """Cámara de juguete para los tests (sin los pesos del decoder): cada token pinta su parche de 16x16."""
-  pal = (torch.arange(1024)[:, None] * torch.tensor([37, 91, 53]) % 256).to(torch.uint8).to(tok.device)
-  img = pal[tok.long()].view(*tok.shape[:-1], 8, 16, 3)
-  return img.repeat_interleave(16, -3).repeat_interleave(16, -2).contiguous()
-
-
-@pytest.fixture
-def px(monkeypatch):
-  import src.models.lewm as lewm
-  monkeypatch.setattr(lewm, "render_tokens", fake_render)
-  return lambda **kw: tiny("lewm", input="pixels", **kw)
-
 
 def test_lewm_pixels_encode_tokens_equals_pixels(px):
   m = px()
@@ -213,13 +174,11 @@ def test_lewm_pixels_observe_pixels_equals_tokens(px):
   for f in range(ctx.shape[1]):
     a.observe(ctx[:, f])
     b.observe_pixels(fake_render(ctx[:, f]))
-  assert b.pixels and torch.equal(a.predict(), b.predict())
-  with pytest.raises(AssertionError):
-    make_stream(tiny("lewm"), graphs=False).observe_pixels(fake_render(ctx[:, 0]))
+  assert torch.equal(a.predict(), b.predict())
 
 
 @needs_cuda
-@pytest.mark.parametrize("kind", ["maskgit", "convlstm", "jepa", "lewm"])
+@pytest.mark.parametrize("kind", ["maskgit", "lewm"])
 def test_graphs_equal_eager_cuda(kind):
   m = tiny(kind, dev="cuda")
   ctx = frames(1, FRAMES - 1, dev="cuda")

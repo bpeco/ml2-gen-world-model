@@ -72,7 +72,7 @@ def timed(step_iter, n, dev):
 
 def main():
   ap = argparse.ArgumentParser()
-  ap.add_argument("--model", help="spec de load_model (gpt2m, copy, random:gpt_s, ruta.pt)")
+  ap.add_argument("--model", help="spec de load_model (gpt2m, transicion, random:gpt_s, ruta.pt)")
   ap.add_argument("--name")
   ap.add_argument("--dtype", default="fp32", choices=DTYPES)
   ap.add_argument("--graphs", action="store_true")

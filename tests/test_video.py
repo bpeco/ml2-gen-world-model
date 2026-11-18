@@ -2,9 +2,10 @@
 import json
 
 import numpy as np
+import scipy.linalg
 
 from src import rollouts
-from src.metrics_video import AT, WINDOWS, boot_ci, frechet, frechet_sqrtm, fvd_from_feats
+from src.metrics_video import AT, WINDOWS, boot_ci, frechet, fvd_from_feats
 
 
 def feats(n=300, d=16, shift=0.0, seed=0):
@@ -22,6 +23,12 @@ def test_frechet_crece_con_el_desplazamiento():
   assert v == sorted(v) and v[-1] > v[0] + 10
   # con medias distintas y covarianza igual el valor es ~ d * shift^2
   assert abs(fvd_from_feats(x, x + 2.0) - 16 * 4) < 1e-6
+
+
+def frechet_sqrtm(mu1, s1, mu2, s2):
+  """Versión de cd-fvd con scipy.linalg.sqrtm (referencia para contrastar)."""
+  s = scipy.linalg.sqrtm(s1 @ s2)
+  return float(np.real(np.square(mu1 - mu2).sum() + np.trace(s1 + s2 - 2 * s)))
 
 
 def test_frechet_coincide_con_sqrtm():

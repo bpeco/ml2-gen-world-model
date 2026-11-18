@@ -1,4 +1,4 @@
-"""Tests con datos sintéticos de Windows, ConvLSTM y src/train.py (CPU, pequeños)."""
+"""Tests con datos sintéticos de Windows y src/train.py (CPU, pequeños)."""
 import json
 
 import numpy as np
@@ -6,18 +6,12 @@ import pytest
 import torch
 
 from src.models import load_checkpoint
-from src.models.base import FrameModel
-from src.models.convlstm import ConvLSTM
 from src.train import main
 from src.windows import Windows
 
 
 def synth(n=12, t=40, seed=0):
   return np.random.default_rng(seed).integers(0, 1024, (n, t, 128)).astype(np.int16)
-
-
-def tiny_convlstm():
-  return ConvLSTM(ConvLSTM.Config(emb=8, hidden=16, n_layers=2, kernel=3))
 
 
 def test_windows_deterministic():
@@ -38,41 +32,6 @@ def test_windows_deterministic():
     assert not any(tuple(r.tolist()) in {h[s:s + 10] for h in hold for s in range(31)} for r in x[:, :, 0])
 
 
-def test_convlstm_causal():
-  torch.manual_seed(0)
-  m = tiny_convlstm().eval()
-  x = torch.randint(0, 1024, (2, 6, 128))
-  y = x.clone()
-  y[:, 3] = torch.randint(0, 1024, (2, 128))
-  la, lb = m.frame_logits(x), m.frame_logits(y)
-  assert la.shape == (2, 6, 128, 1024)
-  assert torch.allclose(la[:, :4], lb[:, :4], atol=1e-6)      # frames <= 3 no ven el frame 3
-  assert not torch.allclose(la[:, 4], lb[:, 4], atol=1e-4)    # el frame 4 sí
-
-
-def test_convlstm_stateful_generate_matches_stateless():
-  torch.manual_seed(0)
-  m = tiny_convlstm().eval()
-  ctx = torch.randint(0, 1024, (2, 3, 128))
-  fast = m.rollout(ctx, 4, temperature=0)
-  slow = torch.stack(list(FrameModel_generate(m, ctx, 4)), 1)
-  assert torch.equal(fast, slow)
-  # con temperatura > 0 y mismo generator, mismos frames
-  g1, g2 = torch.Generator().manual_seed(1), torch.Generator().manual_seed(1)
-  assert torch.equal(m.rollout(ctx, 3, generator=g1), torch.stack(list(FrameModel_generate(m, ctx, 3, 1.0, g2)), 1))
-
-
-def FrameModel_generate(m, ctx, n, temperature=0, generator=None):
-  """Camino sin estado de la clase base (next_frame repetido)."""
-  from src.models.base import WorldModel
-  return WorldModel.generate(m, ctx, n, temperature, None, generator)
-
-
-def test_convlstm_no_kd():
-  with pytest.raises(ValueError):
-    tiny_convlstm().train_loss(torch.zeros(1, 3, 128, dtype=torch.long), teacher=object())
-
-
 def overfit(model, steps=100, lr=3e-3):
   torch.manual_seed(0)
   x = torch.from_numpy(synth(1, 4).astype(np.int64))  # un solo segmento: el frame 0 no tiene contexto
@@ -85,11 +44,6 @@ def overfit(model, steps=100, lr=3e-3):
     loss.backward()
     opt.step()
   return first, loss.item()
-
-
-def test_overfit_convlstm():
-  first, last = overfit(ConvLSTM(ConvLSTM.Config(emb=16, hidden=32)))
-  assert first > 6.5 and last < 0.5 * first
 
 
 def test_overfit_gpt():
@@ -110,7 +64,7 @@ def test_kd_alpha1_equals_ce():
 
 
 def run_args(tmp_path, data, run, extra=()):
-  return ["--kind", "convlstm", "--config", json.dumps({"emb": 8, "hidden": 16}), "--run", run, "--tokens", str(1032 * 6),
+  return ["--kind", "gpt", "--config", json.dumps({"n_layer": 2, "n_head": 2, "dim": 32}), "--run", run, "--tokens", str(1032 * 6),
           "--bs", "2", "--frames", "4", "--warmup", "2", "--lr", "3e-3", "--eval-every", "2", "--log-every", "1",
           "--data", str(data), "--ckpt-dir", str(tmp_path / "ck"), "--results-dir", str(tmp_path / "res"), *extra]
 

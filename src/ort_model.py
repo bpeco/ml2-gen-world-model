@@ -25,8 +25,8 @@ import torch
 
 from src.bench import load_context
 from src.common import BOS, MASK, TPF, device_info, with_bos
-from src.models.base import WorldModel, sample_logits
-from src.models.maskgit import CODES, n_masked
+from src.models.base import WorldModel
+from src.models.maskgit import CODES, decode_frame
 
 PROVIDERS = {"cpu": "CPUExecutionProvider", "cuda": "CUDAExecutionProvider", "dml": "DmlExecutionProvider"}
 VITIS = "VitisAIExecutionProvider"
@@ -96,24 +96,13 @@ class OrtMaskGIT(WorldModel):
     ctx = ctx[:, -self.ctx_frames:].cpu()
     seq = torch.cat([with_bos(ctx), torch.full((1, TPF), MASK, dtype=torch.long)], 1)
     seq[:, -TPF] = BOS
-    fixed = torch.zeros(1, CODES, dtype=torch.bool)
-    n_prev = CODES
-    for s in range(1, S + 1):
-      lg = self.window_logits(seq)[:, -CODES:]  # la posición p predice el token en p
-      samp = sample_logits(lg, temperature, generator)
-      lp = torch.log_softmax(lg / temperature if temperature > 0 else lg, -1).gather(-1, samp[..., None])[..., 0]
-      if temperature > 0 and self.choice_temp > 0 and s < S:
-        gum = -torch.log(torch.empty_like(lp).exponential_(1, generator=generator))
-        lp = lp + self.choice_temp * (1 - s / S) * gum
-      n_s = n_masked(s, S)
-      k = n_prev - n_s
-      lp = lp.masked_fill(fixed, float("-inf"))
-      if k > 0:
-        fixed.scatter_(1, lp.topk(k, dim=-1).indices, True)
-      new = seq[:, -CODES:]
-      seq[:, -CODES:] = torch.where(fixed & (new == MASK), samp, new)
-      n_prev = n_s
-    return seq[:, -CODES:].clone()
+
+    def logits_fn(cur):
+      seq[:, -CODES:] = cur
+      return self.window_logits(seq)[:, -CODES:]  # la posición p predice el token en p
+
+    cur = torch.full((1, CODES), MASK, dtype=torch.long)
+    return decode_frame(logits_fn, S, temperature, self.choice_temp, cur, generator).clone()
 
 
 def bench_ort(sess, K, n=100, warmup=20):

@@ -165,7 +165,7 @@ def register(run):
   m = load_manifest()
   digest = sha256(p)
   old = m.get(run, {})
-  # params de inferencia según train.py si están (los latentes guardan además el encoder target y el codebook)
+  # params de inferencia según train.py si están (los latentes con EMA guardan además el encoder target)
   tj = json.loads((RESULTS / f"train_{run}.json").read_text() or "{}")
   params = tj.get("params") or sum(v.numel() for v in ck["model"].values())
   entry = {"file": "final.pt", "sha256": digest, "bytes": p.stat().st_size, "kind": ck["kind"], "config": ck["config"],

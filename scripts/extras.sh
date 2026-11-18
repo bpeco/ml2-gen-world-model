@@ -30,9 +30,6 @@ quality() {
     roll maskgit_s_s2_ctx$k --model maskgit_s --steps 2 --dtype fp16 --graphs --ctx-frames $k
     roll maskgit_s_s4_ctx$k --model maskgit_s --steps 4 --dtype fp16 --graphs --ctx-frames $k
   done
-  # presupuesto 10x (1B tokens) para el modelo barato con mejor calidad
-  train convlstm_1b --kind convlstm --lr 1e-3 --tokens 1e9 --eval-every 1000 --log-every 200
-  ce convlstm_1b; roll convlstm_1b --model convlstm_1b
   # control: ¿el tamaño M necesitaba el LR de S? (con 6e-4 queda igual o peor que S)
   train gpt_m_lr1e3 --kind gpt --size m --lr 1e-3 --tokens 100e6 --config '{"pos": "frame"}'
   ce gpt_m_lr1e3

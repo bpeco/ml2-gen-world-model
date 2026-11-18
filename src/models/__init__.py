@@ -2,18 +2,18 @@
 
 Especificaciones que entiende load_model():
   "gpt2m"                 GPT de comma (referencia y maestro), data/raw/pytorch_model.bin
-  "unigram", "copy"       baselines de conteo (se ajustan sobre train la primera vez); "copy" es la
-                          tabla de transición por celda (el de las slides)
-  "copy_mix"              mezcla copiar/unigrama: a temperatura 0 repite el último frame (frame congelado)
+  "unigram", "transicion" baselines de conteo (se ajustan sobre train la primera vez); "transicion" es la
+                          tabla de transición de primer orden por celda ("copy" es su nombre viejo, con aviso)
+  "copy_mix", "congelado" mezcla copiar/unigrama: a temperatura 0 repite el último frame (frame congelado)
   "random:<kind>_<size>"  modelo sin entrenar, para medir latencia (p. ej. random:gpt_l, random:maskgit_m,
-                          random:lewm). random:<corrida> (p. ej. random:jepa_xs) arma la arquitectura de una
+                          random:lewm). random:<corrida> (p. ej. random:gpt_s) arma la arquitectura de una
                           corrida de results/checkpoints.json sin bajar el checkpoint
   "<ruta>.pt"             checkpoint de src/train.py
   "<corrida>"             nombre de una corrida de results/checkpoints.json (p. ej. "gpt_s_kd"): si no está
                           en checkpoints/, src.store la baja del almacén compartido y verifica el sha256
 
 Formato de checkpoint (lo escribe src/train.py):
-  {"kind": "gpt" | "maskgit" | "convlstm" | "jepa" | "lewm", "config": dict, "model": state_dict, "name": str, ...}
+  {"kind": "gpt" | "maskgit" | "lewm", "config": dict, "model": state_dict, "name": str, ...}
 Cada clase entrenable tiene un dataclass Config y se construye con Clase(Config(**config)).
 """
 import importlib
@@ -26,8 +26,6 @@ from src.models.base import WorldModel
 KINDS = {
   "gpt": ("src.models.gpt", "GPT"),
   "maskgit": ("src.models.maskgit", "MaskGIT"),
-  "convlstm": ("src.models.convlstm", "ConvLSTM"),
-  "jepa": ("src.models.jepa", "JEPA"),      # JEPA estilo V-JEPA (latente por celda, EMA)
   "lewm": ("src.models.lewm", "LeWM"),      # LeWorldModel (un embedding por frame, SIGReg, AdaLN)
 }
 
@@ -79,7 +77,7 @@ def load_model(spec: str, dev="cpu") -> WorldModel:
   if spec == "gpt2m":
     from src.models.gpt2m import Gpt2m
     return Gpt2m.load(dev)
-  if spec in ("unigram", "copy", "copy_mix"):
+  if spec in ("unigram", "transicion", "copy", "copy_mix", "congelado"):
     from src.models.baselines import load_baseline
     return load_baseline(spec, dev)
   if spec.startswith("random:"):
@@ -91,9 +89,9 @@ def load_model(spec: str, dev="cpu") -> WorldModel:
       m.name = spec.replace(":", "_")
       return m.to(dev).eval()
     kind, _, size = run.rpartition("_")
-    if kind in ("gpt", "maskgit", "jepa"):
+    if kind in ("gpt", "maskgit"):
       m = build(kind, size=size)
-    else:  # random:convlstm_default, random:lewm
+    else:  # random:lewm
       m = build(kind if kind else size)
     m.name = spec.replace(":", "_")
     return m.to(dev).eval()

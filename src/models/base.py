@@ -31,7 +31,7 @@ class WorldModel(nn.Module):
     ctx_frames: máximo de frames de contexto que usa next_frame. gpt2m: 19, porque el frame
       nuevo ocupa el lugar 20 del bloque de 20 x 129 tokens.
     has_likelihood: True si logits() define la verosimilitud del protocolo de comma
-      (GPT, ConvLSTM, baselines). MaskGIT: False (solo last_frame_logits).
+      (GPT, baselines). MaskGIT: False (solo last_frame_logits).
   """
   name = "base"
   ctx_frames = CTX_FRAMES - 1
@@ -67,7 +67,7 @@ class WorldModel(nn.Module):
                generator: Optional[torch.Generator] = None) -> Iterator[torch.Tensor]:
     """Rollout frame a frame: el frame nuevo entra al contexto y sale el más viejo. Itera (B, 128).
 
-    Los modelos con estado (ConvLSTM) o con caché reutilizable pueden redefinirlo.
+    Los modelos con caché reutilizable pueden redefinirlo.
     """
     ctx = ctx[:, -self.ctx_frames:]
     for _ in range(n_frames):
@@ -91,7 +91,7 @@ class WorldModel(nn.Module):
 
 class FrameModel(WorldModel):
   """Modelo que predice las 128 celdas de un frame independientes, dados los frames anteriores
-  (baselines, ConvLSTM). Alcanza con definir frame_logits()."""
+  (baselines). Alcanza con definir frame_logits()."""
 
   def frame_logits(self, frames: torch.Tensor) -> torch.Tensor:
     """(B, F, 128) -> (B, F, 128, 1024): predicción del frame f dados los frames < f.

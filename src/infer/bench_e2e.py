@@ -1,13 +1,13 @@
 """Latencia de punta a punta por frame: video en la CPU -> encoder -> world model -> decoder -> video en la CPU.
 
   python -m src.infer.bench_e2e --model maskgit_s --steps 4                  # modo en línea, bucle cerrado
-  python -m src.infer.bench_e2e --model convlstm --mode imagine --pace 50    # imaginación, un frame cada 50 ms
-  python -m src.infer.bench_e2e --model lewm_xs --mode online --k 5          # en línea, predice el frame t+5
+  python -m src.infer.bench_e2e --model maskgit_s --mode imagine --pace 50   # imaginación, un frame cada 50 ms
+  python -m src.infer.bench_e2e --model lewm --mode online --k 5             # en línea, predice el frame t+5
   python -m src.infer.bench_e2e --model none                                 # solo el codec (piso de la cadena)
   python -m src.infer.bench_e2e --model random:maskgit_m --steps 2           # sin checkpoint (la latencia no depende de los pesos)
-  python -m src.infer.bench_e2e --model lewm_px_xs --opt rollout=latent      # LeWM desde píxeles: la cámara va directo al modelo
+  python -m src.infer.bench_e2e --model lewm --opt rollout=latent            # LeWM: la cámara va directo al modelo
 
-LeWM desde píxeles (cfg.input = "pixels"): en línea, el frame de la cámara entra al modelo sin el encoder de comma (la
+LeWM (ve píxeles): en línea, el frame de la cámara entra al modelo sin el encoder de comma (la
 etapa "encoder" queda en ~0). Para imaginar conviene rollout=latent: con rollout=token cada frame generado se
 decodifica y se vuelve a codificar desde píxeles.
 
@@ -80,12 +80,12 @@ class Chain:
     Devuelve los eventos (inicio, tras encoder, tras modelo, fin) o None en CPU."""
     e0 = self._ev()
     encode = self.mode == "online" or self.stream is None or self._imagine is None
-    pixels = self.stream is not None and getattr(self.stream, "pixels", False)
+    pixels = self.stream is not None and hasattr(self.stream, "observe_pixels")
     if encode:
       x = frame_host.to(self.dev, non_blocking=True)
-      if not pixels:  # LeWM desde píxeles no necesita el encoder de comma: la imagen va directo al modelo
+      if not pixels:  # LeWM no necesita el encoder de comma: la imagen va directo al modelo
         tok = self.codec.encode(x)
-    e1 = self._ev()  # el paso del modelo incluye observe (ConvLSTM: el paso recurrente; JEPA/LeWM: codificar el latente)
+    e1 = self._ev()  # el paso del modelo incluye observe (LeWM: codificar el latente)
     if encode and self.stream is not None:
       self.stream.observe_pixels(x) if pixels else self.stream.observe(tok)
     if self.stream is None:
@@ -153,7 +153,6 @@ def main():
   ap.add_argument("--pace", type=float, default=0, help="ms entre frames (0 = bucle cerrado)")
   ap.add_argument("--budget", type=float, default=50)
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent)")
-  ap.add_argument("--reset-every", type=int, help="ConvLSTM: recalcular el estado cada N frames")
   ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
   ap.add_argument("--tag")
   a = ap.parse_args()
@@ -176,8 +175,6 @@ def main():
   for g in ([graphs, False] if graphs else [False]):
     codec = Codec(dev, a.codec_dtype, graphs=g)
     kw = dict(temperature=a.temperature, steps=a.steps, seed=0, graphs=g)
-    if a.reset_every:
-      kw["reset_every"] = a.reset_every
     chain = Chain(model, codec, dev, a.mode, a.k, **kw)
     n_ctx = chain.stream.ctx_frames if chain.stream is not None else 0
     try:
@@ -197,7 +194,7 @@ def main():
   out = {"name": name, "model": a.model, "mode": a.mode, "k": a.k, "steps": a.steps, "temperature": a.temperature,
          "dtype": a.dtype, "codec_dtype": a.codec_dtype, "graphs": graphs, "graphs_error": graphs_error,
          "pace_ms": a.pace, "budget_ms": a.budget,
-         "reset_every": a.reset_every, "opts": a.opt, "params": params, "ctx_frames": n_ctx, "warmup": a.warmup,
+         "opts": a.opt, "params": params, "ctx_frames": n_ctx, "warmup": a.warmup,
          **res, "fps_p50": 1000 / st["p50"], "realtime_p99": st["p99"] < a.budget,
          "peak_mem_mb": torch.cuda.max_memory_allocated(dev) / 2**20 if dev.type == "cuda" else None,
          "device": device_info(dev), "tag": tag, "timestamp": datetime.now().isoformat(timespec="seconds")}

@@ -2,7 +2,7 @@
 
 Salida:
   data/train_tokens.npy  (N, 1200, 128) int16, desde un shard webdataset
-  data/train_poses.npy   (N, 1200, 6) float32, poses por frame del mismo shard (acciones de jepa/lewm)
+  data/train_poses.npy   (N, 1200, 6) float32, poses por frame del mismo shard (acciones de lewm)
   data/train_keys.json   nombre de cada segmento de train, en el mismo orden
   data/val_tokens.npy    (100, 1200, 128) int16, val oficial viejo (val.zip, sin poses)
 
@@ -32,7 +32,7 @@ def extract_shard(tar_path: Path, with_poses: bool = False):
   """keys, tokens (N, 1200, 128) int16 y, con with_poses, poses (N, 1200, 6) float32 en el mismo orden.
 
   Las poses (ego-movimiento por frame: traslación y rotación) se usan como acciones en los world models
-  latentes (src/models/jepa.py, src/models/lewm.py). Un segmento sin pose.npy queda en NaN.
+  latentes (src/models/lewm.py). Un segmento sin pose.npy queda en NaN.
   """
   keys, tokens, poses = [], [], {}
   with tarfile.open(tar_path, "r:gz") as tar:

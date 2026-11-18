@@ -1,4 +1,4 @@
-"""Evaluaciones propias de los world models latentes (jepa, lewm), al estilo de LeWorldModel.
+"""Evaluaciones propias de los world models latentes (lewm), al estilo de LeWorldModel.
 
 Todo sobre el holdout de train separado por ruta (src.windows.disjoint_holdout: 46 segmentos cuya ruta no
 aparece en train), porque val.zip no tiene poses. Ventanas de 20 frames cada 60 frames de cada segmento.
@@ -10,12 +10,12 @@ aparece en train), porque val.zip no tiene poses. Ventanas de 20 frames cada 60 
   sorpresa    violación de expectativa: error latente del frame 10 con la ventana original vs. cortada en
               el frame 10 hacia otro segmento ("teletransporte") o hacia 2 s más adelante ("salto"). t pareado.
   rectitud    coseno medio entre velocidades latentes consecutivas (z_{t+1} − z_t) de la ventana real.
-  acciones    error latente con las poses reales vs. con la acción nula (H6), pareado por ventana.
+  acciones    error latente con las poses reales vs. con la acción nula, pareado por ventana.
   plan        CEM (300 muestras, 30 élites, 10 iteraciones, historia 3) de las poses de los próximos H frames
               para llegar al latente del frame t+H; error contra las poses reales vs. repetir la última pose y
               vs. la pose media de train.
 
-  python -m src.eval_latent --model jepa_s [--name jepa_s] [--no-plan]
+  python -m src.eval_latent --model lewm [--name lewm] [--no-plan]
   python -m src.eval_latent --model maskgit_s --probes-only
 Salida: results/latent_<nombre>.json
 """

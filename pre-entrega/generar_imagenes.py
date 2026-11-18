@@ -26,7 +26,7 @@ ROOT = Path(__file__).resolve().parents[1]
 os.chdir(ROOT)
 sys.path.insert(0, str(ROOT))
 from src.common import BLOCK, BOS, CTX_FRAMES, TPF, device, with_bos  # noqa: E402
-from src.evaluate import load_model  # noqa: E402
+from src.models import load_model  # noqa: E402
 from src.viz import decode, load_decoder  # noqa: E402
 
 SEG, START = 0, 600
@@ -81,7 +81,7 @@ def main():
   val = np.load("data/val_tokens.npy").astype(np.int64)
   ctx = val[SEG, START - (CTX_FRAMES - 1):START]
   dev = device()
-  model = load_model("gpt2m", dev)
+  model = load_model("gpt2m", dev).gpt  # el GPT crudo de comma
 
   torch.manual_seed(args.seed)
   t0 = time.time()

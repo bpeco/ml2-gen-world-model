@@ -9,7 +9,7 @@ renormalizados sobre los 1024 códigos. Es lo único que se puede medir en model
 (MaskGIT): ahí ce_all, ce_tok, etc. quedan en null.
 
 Uso: python -m src.evaluate --model SPEC [--segments N] [--dtype fp32|fp16|bf16]
-  SPEC: gpt2m, unigram, copy, random:..., o ruta a un checkpoint (ver src.models.load_model)
+  SPEC: gpt2m, unigram, transicion, random:..., o ruta a un checkpoint (ver src.models.load_model)
 """
 import argparse
 import json
@@ -22,18 +22,12 @@ import torch
 import torch.nn.functional as F
 
 from src.common import BLOCK, BOS, CTX_FRAMES, TPF, device, device_info, log_device, strip_bos, with_bos
-from src.models import load_model as _load_model
+from src.models import load_model
 
 N_FRAMES = 1200
 N_WIN = (N_FRAMES - CTX_FRAMES) // CTX_FRAMES  # 59
 LAST = (CTX_FRAMES - 1) * TPF                   # posición del BOS del último frame de la ventana
 DTYPES = {"fp32": torch.float32, "fp16": torch.float16, "bf16": torch.bfloat16}
-
-
-def load_model(name, dev):
-  """Compatibilidad con pre-entrega/generar_imagenes.py, que devuelve el GPT crudo de comma."""
-  m = _load_model(name, dev)
-  return m.gpt if name == "gpt2m" else m
 
 
 @torch.no_grad()
@@ -92,7 +86,7 @@ if __name__ == "__main__":
   args = ap.parse_args()
   dev = device()
   log_device(dev)
-  model = _load_model(args.model, dev).to(DTYPES[args.dtype]).eval()
+  model = load_model(args.model, dev).to(DTYPES[args.dtype]).eval()
   name = args.name or model.name
   val = np.load("data/val_tokens.npy")
   res = {"model": name, "dtype": args.dtype, "device": device_info(dev), **evaluate(model, val, dev, args.bs, args.segments)}

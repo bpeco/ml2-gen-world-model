@@ -69,9 +69,9 @@ def test_unigram_uniform_ce():
   assert m.last_frame_logits(fr).shape == (2, 128, 1024)
 
 
-@pytest.mark.parametrize("kind", ["unigram", "copy", "copy_mix"])
+@pytest.mark.parametrize("kind", ["unigram", "transicion", "copy_mix"])
 def test_next_frame(stats, kind):
-  m = {"unigram": lambda: Unigram(stats[0]), "copy": lambda: Transition(stats[0], stats[2]),
+  m = {"unigram": lambda: Unigram(stats[0]), "transicion": lambda: Transition(stats[0], stats[2]),
        "copy_mix": lambda: CopyMix(stats[0], stats[1])}[kind]()
   ctx = torch.from_numpy(synth(3, 5).astype(np.int64))
   g = lambda s: torch.Generator().manual_seed(s)
@@ -80,7 +80,7 @@ def test_next_frame(stats, kind):
   assert torch.equal(a, b)
   assert not torch.equal(a, m.next_frame(ctx, generator=g(1)))
   assert m.rollout(ctx, 4, generator=g(0)).shape == (3, 4, 128)
-  if kind in ("copy", "copy_mix"):  # con p_copy ~0.9, la mayoría de celdas repiten
+  if kind in ("transicion", "copy_mix"):  # con p_copy ~0.9, la mayoría de celdas repiten
     assert (m.next_frame(ctx, generator=g(0)) == ctx[:, -1]).float().mean() > 0.7
 
 
@@ -109,3 +109,18 @@ def test_transition_learns_mapping():
 def test_load_baseline_validates_name():
   with pytest.raises(ValueError):
     load_baseline("nope")
+
+
+def test_load_baseline_aliases(tmp_path, monkeypatch, stats):
+  """"copy" (nombre viejo de la tabla de transición) sigue cargando con un aviso; "congelado" es copy_mix."""
+  from src.models import baselines
+  monkeypatch.setattr(baselines, "STATS", tmp_path / "b.npz")
+  baselines.save_stats(*stats, path=tmp_path / "b.npz")
+  with pytest.warns(DeprecationWarning, match="transicion"):
+    old = load_baseline("copy")
+  assert isinstance(old, Transition) and old.name == "transicion"
+  assert isinstance(load_baseline("transicion"), Transition)
+  fro = load_baseline("congelado")
+  assert isinstance(fro, CopyMix) and fro.name == "congelado"
+  ctx = torch.from_numpy(synth(2, 4).astype(np.int64))
+  assert torch.equal(fro.next_frame(ctx, temperature=0), ctx[:, -1])  # temperatura 0: repite el último frame

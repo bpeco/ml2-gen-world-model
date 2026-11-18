@@ -1,9 +1,9 @@
 """Demo: mp4 con el video real y el predicho lado a lado, con la cadena de punta a punta en el device.
 
   python -m src.infer.demo --model maskgit_s --steps 4                          # video de cámara de comma, imaginación
-  python -m src.infer.demo --model convlstm --mode online --k 10                # en línea, predice 0,5 s adelante
+  python -m src.infer.demo --model maskgit_s --mode online --k 10               # en línea, predice 0,5 s adelante
   python -m src.infer.demo --model maskgit_s --steps 4 --video mi_video.mp4     # video propio (fuera de distribución)
-  python -m src.infer.demo --model jepa_s --segment 3                           # un segmento de val (tokens decodificados)
+  python -m src.infer.demo --model lewm --segment 3                              # un segmento de val (tokens decodificados)
 
 Modos:
 - imagine: el modelo ve --ctx frames reales (1 s), imagina --horizon frames (default 3 s) y vuelve a anclarse en
@@ -89,7 +89,7 @@ def main():
     src = "video de cámara de commaVQ"
   n = len(real)
 
-  pixels = getattr(stream, "pixels", False)  # LeWM desde píxeles: la cámara entra directo, sin el encoder de comma
+  pixels = hasattr(stream, "observe_pixels")  # LeWM: la cámara entra directo, sin el encoder de comma
 
   def observe(t):
     if pixels and tokens is None:

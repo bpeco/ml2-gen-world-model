@@ -26,7 +26,6 @@ run() {  # run <nombre> <args...>: salta las corridas que ya tienen final.pt
 # E1, E2, E3 (de cero)
 run gpt_s           --kind gpt --size s --lr 1e-3 --config "$FPOS"
 run maskgit_s       --kind maskgit --size s --lr 1e-3 --config "$MG"
-run convlstm        --kind convlstm --lr 1e-3
 run gpt_m           --kind gpt --size m --lr 6e-4 --config "$FPOS"
 run maskgit_m       --kind maskgit --size m --lr 6e-4 --config "$MG"
 # ablaciones baratas (tamaño S): máscara de Genie (tasa uniforme en [0,5; 1]), sin p_clean y posición absoluta
@@ -37,26 +36,5 @@ run maskgit_s_abs   --kind maskgit --size s --lr 1e-3
 # E2b: destilados (H1), mismos tamaños, datos, semilla y LR que los de cero
 run gpt_s_kd        --kind gpt --size s --lr 1e-3 --config "$FPOS" --kd --alpha 0.5 --tau 1.0
 run gpt_m_kd        --kind gpt --size m --lr 6e-4 --config "$FPOS" --kd --alpha 0.5 --tau 1.0
-# E5: world models latentes (Docs/plan-jepa.md), mismos batches, semilla y 100M tokens. Las poses entran como
-# acciones con dropout (p_null=0,25): sin poses (val) usan la acción nula. Necesitan data/train_poses.npy
-# (python -m src.data --poses-only). lr elegido en corridas de humo de 400 pasos: jepa 1e-3, lewm 3e-4 (wd 1e-3
-# como en el paper). jepa = V-JEPA (latente por celda + EMA); lewm = LeWorldModel (un vector por frame + SIGReg).
-run jepa_s          --kind jepa --size s --lr 1e-3
-run jepa_s_ce       --kind jepa --size s --lr 1e-3 --config '{"objective": "ce"}'
-run jepa_s_sigreg   --kind jepa --size s --lr 1e-3 --config '{"objective": "sigreg"}'
-run jepa_s_codebook --kind jepa --size s --lr 1e-3 --config '{"objective": "codebook"}'
-run lewm_s          --kind lewm --lr 3e-4 --wd 1e-3
-run lewm_s_ce       --kind lewm --lr 3e-4 --wd 1e-3 --config '{"objective": "ce"}'
-run lewm_s_ema      --kind lewm --lr 3e-4 --wd 1e-3 --config '{"objective": "ema"}'
-run lewm_s_l003     --kind lewm --lr 3e-4 --wd 1e-3 --config '{"lam": 0.03}'
-run lewm_s_l03      --kind lewm --lr 3e-4 --wd 1e-3 --config '{"lam": 0.3}'
-# E5b: versiones más chicas (mismo lr que su familia), para ver si alguna entra en la zona rápida del Pareto
-# (entre la Copia, 0,47 ms, y ConvLSTM, 1,1 ms). Latencia sin entrenar: jepa_xs 1,7 ms, jepa_xxs 1,0, lewm_xs 0,7.
-run jepa_xs         --kind jepa --lr 1e-3 --config '{"n_layer": 4, "n_head": 4, "dim": 256, "n_enc": 1}'
-run jepa_xxs        --kind jepa --lr 1e-3 --config '{"n_layer": 3, "n_head": 3, "dim": 192, "n_enc": 1}'
-run lewm_xs         --kind lewm --lr 3e-4 --wd 1e-3 --config '{"enc_layers": 6, "proj_hidden": 1024, "pred_dim": 256, "pred_layers": 4, "pred_heads": 8, "pred_mlp": 1024, "dec_layers": 2}'
-# E5c: LeWM desde píxeles, como el paper: ViT sobre parches de 16x16 de la imagen RGB en vez de los vectores del codebook.
-# El dataset solo trae tokens, así que los frames se generan al vuelo con el decoder de comma congelado (fp16). Misma
-# arquitectura que lewm_xs / lewm_s salvo la entrada: compara tokens contra píxeles. En inferencia no necesita el encoder de comma.
-run lewm_px_xs      --kind lewm --lr 3e-4 --wd 1e-3 --config '{"input": "pixels", "enc_layers": 6, "proj_hidden": 1024, "pred_dim": 256, "pred_layers": 4, "pred_heads": 8, "pred_mlp": 1024, "dec_layers": 2}'
-run lewm_px         --kind lewm --lr 3e-4 --wd 1e-3 --config '{"input": "pixels"}'
+# Los world models latentes (LeWM, V-JEPA 2) y el ConvLSTM de píxeles se entrenan con la cola de entrenamiento
+# (receta por modelo), no con este script.

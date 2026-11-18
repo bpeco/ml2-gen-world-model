@@ -13,11 +13,9 @@ Adaptadores (make_stream elige):
 - MaskGITStream: como TokenStream, pero con el contexto lleno el frame entero (prefill + S pasadas + muestreo)
   es un solo CUDA graph. El ruido del muestreo se genera afuera, en el mismo orden que next_frame, y entra
   como dato: mismos tokens que model.next_frame con el mismo generador.
-- ConvLSTMStream: un paso recurrente por frame, con (h, c) explícitos. El estado arrastra todo el stream
-  (no solo los últimos 19 frames); reset_every reinicia cada tanto desde los últimos ctx_frames frames.
-- LatentStream (JEPA, LeWM): caché de latentes de los últimos ctx_frames frames; cada frame se codifica una
-  vez. Pose opcional por frame (acción); sin pose, la acción nula. LeWM desde píxeles (cfg.input = "pixels")
-  también acepta la imagen de la cámara directo: observe_pixels(img), sin el encoder de comma.
+- LatentStream (LeWM): caché de latentes de los últimos ctx_frames frames; cada frame se codifica una vez.
+  Pose opcional por frame (acción); sin pose, la acción nula. LeWM ve píxeles: observe(tokens) los renderiza con
+  el decoder de comma, y observe_pixels(img) acepta la imagen de la cámara directo, sin el encoder de comma.
 
 Los pasos que se capturan son funciones puras (estado de entrada y de salida explícitos): el calentamiento de
 GraphedStep los ejecuta varias veces. Los tensores que devuelven predict e imagine son nuevos (se pueden guardar).
@@ -30,6 +28,7 @@ import torch
 from src.common import BOS, MASK, TPF, with_bos
 from src.models.base import sample_logits
 from src.models.cudagraph import GraphedStep
+from src.models.maskgit import CODES, decode_frame
 
 
 class Stream:
@@ -132,8 +131,7 @@ class MaskGITStream(TokenStream):
 
   def __init__(self, model, **kw):
     super().__init__(model, **kw)
-    from src.models.maskgit import CODES, n_masked
-    self.CODES, self.n_masked = CODES, n_masked
+    self.CODES = CODES
     self.S = self.steps or model.cfg.default_steps
     self.ctx_frames = min(self.ctx_frames, model.cfg.block_size // TPF - 1)  # como next_frame: el frame nuevo cabe
     self._g = {}
@@ -152,7 +150,7 @@ class MaskGITStream(TokenStream):
 
   def _frame(self, ctx, *noise):
     """ctx (B, ctx_frames, 128) -> tokens (B, 128). Puro salvo la caché KV (se reescribe entera)."""
-    m, S, t, CODES = self.m, self.S, self.temperature, self.CODES
+    m, S, t = self.m, self.S, self.temperature
     B = ctx.shape[0]
     m._ensure_cache(B, next(m.parameters()).dtype, ctx.device)  # no-op salvo la primera vez (antes de capturar)
     seq = with_bos(ctx)
@@ -162,28 +160,13 @@ class MaskGITStream(TokenStream):
     pos = pos_all[P:P + TPF]
     tok = torch.full((B, TPF), MASK, dtype=torch.long, device=ctx.device)
     tok[:, 0] = BOS
-    fixed = torch.zeros(B, CODES, dtype=torch.bool, device=ctx.device)
-    n_prev, j = CODES, 0
-    for s in range(1, S + 1):
-      lg = m.net(tok, pos)[:, 1:].float()
-      if t == 0:
-        samp = lg.argmax(-1)
-      else:
-        probs = torch.softmax(lg / t, -1)
-        samp = (probs / noise[j]).argmax(-1)
-        j += 1
-      lp = torch.log_softmax(lg / t if t > 0 else lg, -1).gather(-1, samp[..., None])[..., 0]
-      if t > 0 and m.cfg.choice_temp > 0 and s < S:
-        lp = lp + m.cfg.choice_temp * (1 - s / S) * -torch.log(noise[j])
-        j += 1
-      n_s = self.n_masked(s, S)
-      k = n_prev - n_s
-      lp = lp.masked_fill(fixed, float("-inf"))
-      if k > 0:
-        fixed = fixed.scatter(1, lp.topk(k, dim=-1).indices, True)
-      tok[:, 1:] = torch.where(fixed.logical_and(tok[:, 1:] == MASK), samp, tok[:, 1:])
-      n_prev = n_s
-    return tok[:, 1:].clone()
+
+    def logits_fn(cur):
+      tok[:, 1:] = cur
+      return m.net(tok, pos)[:, 1:].float()
+
+    cur = torch.full((B, self.CODES), MASK, dtype=torch.long, device=ctx.device)
+    return decode_frame(logits_fn, S, t, m.cfg.choice_temp, cur, noise=list(noise)).clone()
 
   def _sample_next(self, pose):
     if not (self.graphs and self.full):
@@ -198,98 +181,7 @@ class MaskGITStream(TokenStream):
     return g[0](self.ctx, *noise), None
 
 
-# ---------------------------------------------------------------- ConvLSTM
-
-def convlstm_step(m, x, *state):
-  """Un paso de ConvLSTM: x (B, emb, 8, 16), state [h, c] por capa -> (logits (B, 128, 1024), *state nuevo).
-  La misma cuenta que ConvLSTM._run para un frame (también se exporta a ONNX en src/infer/export_codec.py)."""
-  out = []
-  for l in range(m.cfg.n_layers):
-    h, c = state[2 * l], state[2 * l + 1]
-    i, f, g, o = (m.conv_x[l](x) + m.conv_h[l](h)).chunk(4, 1)
-    c = torch.sigmoid(f) * c + torch.sigmoid(i) * torch.tanh(g)
-    h = torch.sigmoid(o) * torch.tanh(c)
-    out += [h, c]
-    x = h
-  B = x.shape[0]
-  lg = m.head(x).permute(0, 2, 3, 1).reshape(B, -1, 1024)
-  return (lg, *out)
-
-
-class ConvLSTMStream(Stream):
-  """reset_every: cada cuántos frames observados se recalcula el estado desde los últimos ctx_frames frames
-  (como en el entrenamiento, que usa ventanas de 20). None = el estado arrastra todo el stream."""
-
-  def __init__(self, model, reset_every: Optional[int] = None, **kw):
-    self.reset_every = reset_every
-    super().__init__(model, **kw)
-    self._g = {}
-
-  def reset(self):
-    self.state = None   # [h0, c0, h1, c1, ...]
-    self.lg = None      # logits del frame siguiente (B, 128, 1024)
-    self.hist = None    # últimos ctx_frames tokens, para reset_every
-    self.n_state = 0    # frames dentro del estado actual
-    self.n_seen = 0
-
-  @property
-  def full(self):
-    return self.n_state >= self.ctx_frames
-
-  def _step(self, x, *state):
-    return convlstm_step(self.m, x, *state)
-
-  def _run_step(self, x):
-    if self.state is None:
-      B, Hd = x.shape[0], self.m.cfg.hidden
-      z = x.new_zeros(B, Hd, *x.shape[-2:])
-      self.state = [z] * (2 * self.m.cfg.n_layers)
-    if self.graphs:
-      g = self._g.get(x.shape[0])
-      if g is None:
-        g = self._g[x.shape[0]] = GraphedStep(self._step, x, *self.state)
-      out = g(x, *self.state)
-    else:
-      out = self._step(x, *self.state)
-    self.lg, self.state = out[0].clone(), [t.clone() for t in out[1:]]
-
-  def _start_x(self, B):
-    return self.m.start[None].expand(B, -1, -1, -1).to(next(self.m.parameters()).dtype)
-
-  def _embed(self, tok):
-    return self.m._embed(tok[:, None])[:, 0]
-
-  def _push(self, tok, aux, pose):
-    if self.lg is None:  # primer frame: el paso de "start" predice el frame 0
-      self._run_step(self._start_x(tok.shape[0]))
-    self.hist = tok[:, None] if self.hist is None else torch.cat([self.hist, tok[:, None]], 1)[:, -self.ctx_frames:]
-    self._run_step(self._embed(tok))
-    self.n_state += 1
-    if self.reset_every and self.n_state >= self.reset_every:
-      self._rewarm()
-
-  def _rewarm(self):
-    """Estado desde cero con los últimos ctx_frames frames (lo que vería el modelo en una ventana nueva)."""
-    hist = self.hist
-    self.state, self.lg, self.n_state = None, None, 0
-    self._run_step(self._start_x(hist.shape[0]))
-    for f in range(hist.shape[1]):
-      self._run_step(self._embed(hist[:, f]))
-      self.n_state += 1
-
-  def _sample_next(self, pose):
-    if self.lg is None:
-      raise RuntimeError("observe() al menos un frame antes de predecir")
-    return sample_logits(self.lg.float(), self.temperature, self.gen), None
-
-  def _save(self):
-    return self.state, self.lg, self.hist, self.n_state
-
-  def _load(self, snap):
-    self.state, self.lg, self.hist, self.n_state = snap
-
-
-# ---------------------------------------------------------------- JEPA y LeWM
+# ---------------------------------------------------------------- LeWM
 
 class LatentStream(Stream):
   def reset(self):
@@ -309,15 +201,9 @@ class LatentStream(Stream):
     pn, valid = m.normalize_poses(pose.to(self.dev).view(B, 1, -1))
     return m.actions_norm(pn, valid).to(dt)
 
-  @property
-  def pixels(self) -> bool:
-    """El modelo recibe la imagen (LeWM con input="pixels"): observe_pixels no necesita el encoder de comma."""
-    return getattr(self.m.cfg, "input", "tokens") == "pixels"
-
   @torch.no_grad()
   def observe_pixels(self, img: torch.Tensor, pose: Optional[torch.Tensor] = None):
-    """Un frame de cámara uint8 (B, 128, 256, 3) en el device entra al estado (solo modelos desde píxeles)."""
-    assert self.pixels, "observe_pixels es para modelos con input='pixels'; los demás usan observe(tokens)"
+    """Un frame de cámara uint8 (B, 128, 256, 3) en el device entra al estado."""
     m, B = self.m, img.shape[0]
     zn = m._graphed(("encpx", B), self._encode_px, img) if self.graphs else self._encode_px(img)
     self._append(zn, pose)
@@ -361,14 +247,9 @@ class LatentStream(Stream):
 
 
 def make_stream(model, **kw) -> Stream:
-  """El adaptador que corresponde a la familia del modelo. kw: temperature, steps, seed, graphs (y reset_every
-  para ConvLSTM)."""
-  from src.models.convlstm import ConvLSTM
+  """El adaptador que corresponde a la familia del modelo. kw: temperature, steps, seed, graphs."""
   from src.models.latent import LatentWM
   from src.models.maskgit import MaskGIT
-  if isinstance(model, ConvLSTM):
-    return ConvLSTMStream(model, **kw)
-  kw.pop("reset_every", None)
   if isinstance(model, LatentWM):
     if kw.get("graphs", True):
       model.use_cuda_graphs(True)

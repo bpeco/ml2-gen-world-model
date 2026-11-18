@@ -21,7 +21,7 @@
    "pareto": null
   },
   {
-   "label": "Copia (tabla por celda)",
+   "label": "Transición por celda",
    "family": "baseline",
    "params_M": null,
    "ce_all": 3.48,
@@ -77,26 +77,6 @@
    "e2e_p99_ms": null,
    "fps": 1.4,
    "realtime": false,
-   "group": "principal",
-   "pareto": true
-  },
-  {
-   "label": "ConvLSTM",
-   "family": "convlstm",
-   "params_M": 8.0,
-   "ce_all": 2.879,
-   "ce_last": 2.618,
-   "lpips_1s": 0.287,
-   "fvd_1s": 162.8,
-   "fvd_1s_ci": [
-    140.1,
-    185.5
-   ],
-   "fvd_3s": 293.3,
-   "ms_frame": 1.1,
-   "e2e_p99_ms": 7.4,
-   "fps": 907.6,
-   "realtime": true,
    "group": "principal",
    "pareto": true
   },
@@ -198,7 +178,7 @@
    "fps": 188.4,
    "realtime": true,
    "group": "principal",
-   "pareto": false
+   "pareto": true
   },
   {
    "label": "MaskGIT-S 2 pasos",
@@ -218,7 +198,7 @@
    "fps": 142.4,
    "realtime": true,
    "group": "principal",
-   "pareto": false
+   "pareto": true
   },
   {
    "label": "MaskGIT-S 4 pasos",
@@ -461,26 +441,6 @@
    "pareto": null
   },
   {
-   "label": "ConvLSTM, 1B tokens",
-   "family": "convlstm",
-   "params_M": 8.0,
-   "ce_all": 2.685,
-   "ce_last": 2.398,
-   "lpips_1s": 0.259,
-   "fvd_1s": 117.3,
-   "fvd_1s_ci": [
-    100.6,
-    134.0
-   ],
-   "fvd_3s": 249.6,
-   "ms_frame": 1.1,
-   "e2e_p99_ms": null,
-   "fps": 907.6,
-   "realtime": true,
-   "group": "extra",
-   "pareto": null
-  },
-  {
    "label": "GPT-S, contexto 4",
    "family": "contexto",
    "params_M": 11.5,
@@ -599,325 +559,11 @@
    "realtime": true,
    "group": "extra",
    "pareto": null
-  },
-  {
-   "label": "JEPA-S (V-JEPA, latente por celda)",
-   "family": "jepa",
-   "params_M": 11.6,
-   "ce_all": 3.708,
-   "ce_last": 3.525,
-   "lpips_1s": 0.441,
-   "fvd_1s": 460.0,
-   "fvd_1s_ci": [
-    411.8,
-    508.3
-   ],
-   "fvd_3s": 1187.7,
-   "ms_frame": 2.92,
-   "e2e_p99_ms": 13.3,
-   "fps": 342.9,
-   "realtime": true,
-   "group": "principal",
-   "pareto": false
-  },
-  {
-   "label": "LeWM (LeWorldModel, un vector por frame)",
-   "family": "lewm",
-   "params_M": 21.7,
-   "ce_all": 6.637,
-   "ce_last": 6.683,
-   "lpips_1s": 0.501,
-   "fvd_1s": 1016.3,
-   "fvd_1s_ci": [
-    961.5,
-    1071.2
-   ],
-   "fvd_3s": 1080.0,
-   "ms_frame": 1.36,
-   "e2e_p99_ms": 8.8,
-   "fps": 732.6,
-   "realtime": true,
-   "group": "principal",
-   "pareto": false
-  },
-  {
-   "label": "JEPA-XS (4 capas, D 256)",
-   "family": "jepa",
-   "params_M": 3.7,
-   "ce_all": 3.858,
-   "ce_last": 3.676,
-   "lpips_1s": 0.463,
-   "fvd_1s": 510.1,
-   "fvd_1s_ci": [
-    457.0,
-    563.2
-   ],
-   "fvd_3s": 1120.5,
-   "ms_frame": 1.89,
-   "e2e_p99_ms": 9.3,
-   "fps": 529.9,
-   "realtime": true,
-   "group": "principal",
-   "pareto": false
-  },
-  {
-   "label": "JEPA-XXS (3 capas, D 192)",
-   "family": "jepa",
-   "params_M": 1.7,
-   "ce_all": 3.924,
-   "ce_last": 3.724,
-   "lpips_1s": 0.463,
-   "fvd_1s": 545.7,
-   "fvd_1s_ci": [
-    496.2,
-    595.2
-   ],
-   "fvd_3s": 1264.2,
-   "ms_frame": 1.2,
-   "e2e_p99_ms": 8.5,
-   "fps": 834.7,
-   "realtime": true,
-   "group": "principal",
-   "pareto": false
-  },
-  {
-   "label": "LeWM-XS (ViT de 6 capas, predictor de 4)",
-   "family": "lewm",
-   "params_M": 10.9,
-   "ce_all": 6.637,
-   "ce_last": 6.683,
-   "lpips_1s": 0.508,
-   "fvd_1s": 996.9,
-   "fvd_1s_ci": [
-    937.7,
-    1056.1
-   ],
-   "fvd_3s": 1024.8,
-   "ms_frame": 0.81,
-   "e2e_p99_ms": 8.1,
-   "fps": 1231.5,
-   "realtime": true,
-   "group": "principal",
-   "pareto": false
-  },
-  {
-   "label": "LeWM-XS desde píxeles",
-   "family": "lewm",
-   "params_M": 11.0,
-   "ce_all": 6.636,
-   "ce_last": 6.681,
-   "lpips_1s": 0.51,
-   "fvd_1s": 956.8,
-   "fvd_1s_ci": [
-    904.9,
-    1008.6
-   ],
-   "fvd_3s": 990.5,
-   "ms_frame": 6.88,
-   "e2e_p99_ms": 7.0,
-   "fps": 145.4,
-   "realtime": true,
-   "group": "principal",
-   "pareto": false
-  },
-  {
-   "label": "JEPA-S, control CE",
-   "family": "jepa",
-   "params_M": 11.6,
-   "ce_all": 2.959,
-   "ce_last": 2.739,
-   "lpips_1s": 0.358,
-   "fvd_1s": 265.3,
-   "fvd_1s_ci": [
-    234.5,
-    296.2
-   ],
-   "fvd_3s": 826.3,
-   "ms_frame": 2.92,
-   "e2e_p99_ms": null,
-   "fps": 342.9,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
-  },
-  {
-   "label": "JEPA-S con SIGReg",
-   "family": "jepa",
-   "params_M": 11.6,
-   "ce_all": 4.256,
-   "ce_last": 4.033,
-   "lpips_1s": 0.541,
-   "fvd_1s": 806.2,
-   "fvd_1s_ci": [
-    754.9,
-    857.4
-   ],
-   "fvd_3s": 849.5,
-   "ms_frame": 2.92,
-   "e2e_p99_ms": null,
-   "fps": 342.9,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
-  },
-  {
-   "label": "JEPA-S, target codebook",
-   "family": "jepa",
-   "params_M": 11.4,
-   "ce_all": 4.336,
-   "ce_last": 3.863,
-   "lpips_1s": 0.488,
-   "fvd_1s": 582.3,
-   "fvd_1s_ci": [
-    534.9,
-    629.6
-   ],
-   "fvd_3s": 970.8,
-   "ms_frame": 2.92,
-   "e2e_p99_ms": null,
-   "fps": 342.9,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
-  },
-  {
-   "label": "LeWM, control CE",
-   "family": "lewm",
-   "params_M": 21.7,
-   "ce_all": 6.574,
-   "ce_last": 6.615,
-   "lpips_1s": 0.597,
-   "fvd_1s": 1379.2,
-   "fvd_1s_ci": [
-    1294.7,
-    1463.8
-   ],
-   "fvd_3s": 1944.8,
-   "ms_frame": 1.36,
-   "e2e_p99_ms": null,
-   "fps": 732.6,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
-  },
-  {
-   "label": "LeWM con EMA",
-   "family": "lewm",
-   "params_M": 21.7,
-   "ce_all": 6.628,
-   "ce_last": 6.673,
-   "lpips_1s": 0.519,
-   "fvd_1s": 1020.6,
-   "fvd_1s_ci": [
-    961.4,
-    1079.7
-   ],
-   "fvd_3s": 1043.2,
-   "ms_frame": 1.36,
-   "e2e_p99_ms": null,
-   "fps": 732.6,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
-  },
-  {
-   "label": "LeWM, λ = 0,03",
-   "family": "lewm",
-   "params_M": 21.7,
-   "ce_all": 6.634,
-   "ce_last": 6.679,
-   "lpips_1s": null,
-   "fvd_1s": null,
-   "fvd_1s_ci": null,
-   "fvd_3s": null,
-   "ms_frame": 1.36,
-   "e2e_p99_ms": null,
-   "fps": 732.6,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
-  },
-  {
-   "label": "LeWM, λ = 0,3",
-   "family": "lewm",
-   "params_M": 21.7,
-   "ce_all": 6.624,
-   "ce_last": 6.667,
-   "lpips_1s": null,
-   "fvd_1s": null,
-   "fvd_1s_ci": null,
-   "fvd_3s": null,
-   "ms_frame": 1.36,
-   "e2e_p99_ms": null,
-   "fps": 732.6,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
-  },
-  {
-   "label": "JEPA-S, rollout latente",
-   "family": "jepa",
-   "params_M": 11.6,
-   "ce_all": null,
-   "ce_last": null,
-   "lpips_1s": 0.438,
-   "fvd_1s": 553.4,
-   "fvd_1s_ci": [
-    503.8,
-    602.9
-   ],
-   "fvd_3s": 2989.6,
-   "ms_frame": 3.06,
-   "e2e_p99_ms": null,
-   "fps": 326.7,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
-  },
-  {
-   "label": "LeWM, rollout latente",
-   "family": "lewm",
-   "params_M": 21.7,
-   "ce_all": null,
-   "ce_last": null,
-   "lpips_1s": 0.481,
-   "fvd_1s": 990.9,
-   "fvd_1s_ci": [
-    934.4,
-    1047.4
-   ],
-   "fvd_3s": 1029.2,
-   "ms_frame": 1.03,
-   "e2e_p99_ms": null,
-   "fps": 966.9,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
-  },
-  {
-   "label": "LeWM-XS desde píxeles, rollout latente",
-   "family": "lewm",
-   "params_M": 11.0,
-   "ce_all": null,
-   "ce_last": null,
-   "lpips_1s": 0.457,
-   "fvd_1s": 952.2,
-   "fvd_1s_ci": [
-    894.5,
-    1009.9
-   ],
-   "fvd_3s": 939.8,
-   "ms_frame": 0.53,
-   "e2e_p99_ms": null,
-   "fps": 1888.9,
-   "realtime": true,
-   "group": "latente",
-   "pareto": null
   }
  ],
  "ce_vs_fvd1": {
   "spearman_rho": 1.0,
   "p": 0.0,
-  "n": 9
+  "n": 7
  }
 }

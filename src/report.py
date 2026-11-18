@@ -16,23 +16,22 @@ from scipy.stats import spearmanr
 
 FPS = 20
 RT_MS = 1000 / FPS
-# Paleta categórica validada (dataviz, --pairs all, 3 tonos): GPT azul, MaskGIT naranja, ConvLSTM aqua.
+# Paleta categórica validada (dataviz, --pairs all, 3 tonos): GPT azul, MaskGIT naranja.
 # gpt2m y los baselines van en neutros. La forma del marcador es el segundo canal de identidad y los
 # destilados (y los extras) llevan marcador hueco.
 INK, INK2, MUTED, GRID = "#0b0b0b", "#52514e", "#8a8985", "#e4e3df"
 SURF = "#fcfcfb"
-# E5 (jepa, lewm): ningún 4.º tono pasa el validador contra azul/naranja/aqua con todos los pares, así que van en
-# su propia figura (fig_pareto_latente*.png) con un par validado aparte (verde/violeta, ΔE CVD 28,8, contraste ≥ 3:1)
-# y las referencias de tokens en gris. No aparecen en las figuras de las otras familias.
-COLORS = {"gpt": "#2a78d6", "gpt_kd": "#2a78d6", "maskgit": "#eb6834", "convlstm": "#1baf7a", "gpt2m": INK,
-          "baseline": MUTED, "ablación": "#6250d6", "contexto": "#eb6834", "jepa": "#008300", "lewm": "#6250d6"}
-MARKERS = {"gpt": "o", "gpt_kd": "o", "maskgit": "^", "convlstm": "s", "gpt2m": "D", "baseline": "X",
-           "ablación": "v", "contexto": "^", "jepa": "P", "lewm": "h"}
-FAMILY_NAMES = {"baseline": "baselines de conteo", "convlstm": "ConvLSTM", "gpt": "GPT de cero",
+# Los latentes (lewm) van en su propia figura (fig_pareto_latente*.png), con el violeta de la ablación y las
+# referencias de tokens en gris. No aparecen en las figuras de las otras familias.
+COLORS = {"gpt": "#2a78d6", "gpt_kd": "#2a78d6", "maskgit": "#eb6834", "gpt2m": INK,
+          "baseline": MUTED, "ablación": "#6250d6", "contexto": "#eb6834", "lewm": "#6250d6"}
+MARKERS = {"gpt": "o", "gpt_kd": "o", "maskgit": "^", "gpt2m": "D", "baseline": "X",
+           "ablación": "v", "contexto": "^", "lewm": "h"}
+FAMILY_NAMES = {"baseline": "baselines de conteo", "gpt": "GPT de cero",
                 "gpt_kd": "GPT destilado (hueco)", "maskgit": "MaskGIT: S lleno, M hueco (número = pasos)", "gpt2m": "gpt2m de comma (307M)",
                 "ablación": "ablación", "contexto": "contexto",
-                "jepa": "JEPA estilo V-JEPA (latente por celda)", "lewm": "LeWorldModel (un vector por frame)"}
-LATENT_FAMS = ("jepa", "lewm")
+                "lewm": "LeWorldModel (un vector por frame)"}
+LATENT_FAMS = ("lewm",)
 
 plt.rcParams.update({"font.size": 9, "axes.spines.top": False, "axes.spines.right": False,
                      "axes.edgecolor": MUTED, "axes.labelcolor": INK2, "xtick.color": INK2, "ytick.color": INK2,
@@ -178,14 +177,14 @@ def fig_pareto(cfgs, key, ylabel, path, ci):
     if c["family"] != "maskgit":
       _mark(ax, c["ms"], c[key], c, _err(c, c[key], *ci(c)), hollow=c.get("kd") or c["group"] == "extra")
   lab = {c["short"]: c for c in pts if c["family"] != "maskgit"}
-  pos = {"Copia": (9, 0, "left"), "ConvLSTM": (9, 5, "left"), "ConvLSTM, 1B tokens": (9, -7, "left"),
+  pos = {"Transición": (9, 0, "left"),
          "gpt2m (comma)": (-9, 9, "right"), "GPT-S": (-9, 7, "right"), "GPT-S KD": (-9, -7, "right"),
          "GPT-M": (9, 7, "left"), "GPT-M KD": (9, -7, "left")}
   for name, (dx, dy, ha) in pos.items():
     if name in lab:
       c = lab[name]
       _txt(ax, c["ms"], c[key], name.replace(", 1B tokens", " (1B tokens, 10×)"), dx=dx, dy=dy, ha=ha)
-  fams = [f for f in ("gpt", "gpt_kd", "maskgit", "convlstm", "gpt2m", "baseline") if any(c["family"] == f for c in pts)]
+  fams = [f for f in ("gpt", "gpt_kd", "maskgit", "gpt2m", "baseline") if any(c["family"] == f for c in pts)]
   _legend(ax, fams, loc="upper center", extra=[Line2D([], [], c=MUTED, lw=1, label="frontera de Pareto (100M tokens)")])
   ax.set_xlim(0.3, 2000)
   ax.set_ylim(0, None)
@@ -196,7 +195,7 @@ def fig_pareto(cfgs, key, ylabel, path, ci):
 
 
 def fig_pareto_latente(cfgs, key, ylabel, path, ci):
-  """E5: los world models latentes (jepa, lewm) sobre las referencias de tokens (gris, rotuladas)."""
+  """Los world models latentes (lewm) sobre las referencias de tokens (gris, rotuladas)."""
   from matplotlib.lines import Line2D
   lat = [c for c in cfgs if c["family"] in LATENT_FAMS and c["ms"] and c[key] is not None]
   if not lat:
@@ -212,7 +211,7 @@ def fig_pareto_latente(cfgs, key, ylabel, path, ci):
   front = sorted((c["ms"], c[key]) for c, o in zip(main, opt) if o)
   if front:
     ax.step([p[0] for p in front] + [2000], [p[1] for p in front] + [front[-1][1]], where="post", c=MUTED, lw=1, zorder=1)
-  ref_lab = {"Copia": "Copia", "ConvLSTM": "ConvLSTM", "GPT-S": "GPT-S", "gpt2m (comma)": "gpt2m"}
+  ref_lab = {"Transición": "Transición", "GPT-S": "GPT-S", "gpt2m (comma)": "gpt2m"}
   labels = []
   for c in refs:
     ax.plot(c["ms"], c[key], ls="", marker=MARKERS.get(c["family"], "o"), ms=5, color=MUTED, mfc=MUTED, zorder=2)
@@ -241,9 +240,9 @@ def fig_pareto_latente(cfgs, key, ylabel, path, ci):
   plt.close(fig)
 
 
-HORIZON = [("gpt2m (comma)", "-"), ("ConvLSTM, 1B tokens", "--"), ("ConvLSTM", "-"), ("MaskGIT-S 8 pasos", "--"),
+HORIZON = [("gpt2m (comma)", "-"), ("MaskGIT-S 8 pasos", "--"),
            ("MaskGIT-S 4 pasos", "-"), ("GPT-M destilado", "-"), ("GPT-S", "--"), ("Frame congelado", "--"),
-           ("Copia (tabla por celda)", "-")]
+           ("Transición por celda", "-")]
 
 
 def fig_horizon(cfgs, path):
@@ -302,9 +301,9 @@ def fig_ce_vs_fvd(cfgs, path):
   for c in pts:
     _mark(ax, c["ce_all"], c["fvd1"], c, _err(c, c["fvd1"], _get(c["fvd"]["1"], "lo"), _get(c["fvd"]["1"], "hi")),
           hollow=c.get("kd") or c["group"] != "principal")
-  pos = {"gpt2m (comma)": (9, 0, "left"), "ConvLSTM, 1B tokens": (9, -3, "left"), "ConvLSTM": (9, -3, "left"),
+  pos = {"gpt2m (comma)": (9, 0, "left"),
          "GPT-M KD": (-9, -3, "right"), "GPT-S KD": (-9, 9, "right"), "GPT-S": (9, -10, "left"), "GPT-M": (9, 6, "left"),
-         "Copia": (-9, 0, "right"), "GPT-S, posición absoluta": (9, 8, "left")}
+         "Transición": (-9, 0, "right"), "GPT-S, posición absoluta": (9, 8, "left")}
   for c in pts:
     name = c["short"] if c["family"] != "ablación" else "GPT-S, posición absoluta"
     dx, dy, ha = pos.get(name, (9, 0, "left"))
@@ -324,8 +323,7 @@ LAT = [("gpt2m (307M)", "gpt2m", ["fp32", "fp16", "fp16_graphs"]),
        ("GPT-M (26M)", "gpt_m", ["fp32", "fp16", "fp16_graphs"]), ("GPT-S (11M)", "gpt_s", ["fp32", "fp16", "fp16_graphs"]),
        ("MaskGIT-M, 8 pasos", "maskgit_m", ["fp32_s8", "fp16_s8", "fp16_graphs_s8"]),
        ("MaskGIT-S, 8 pasos", "maskgit_s", ["fp32_s8", "fp16_s8", "fp16_graphs_s8"]),
-       ("MaskGIT-S, 2 pasos", "maskgit_s", ["fp32_s2", None, "fp16_graphs_s2"]),
-       ("ConvLSTM (8M)", "convlstm", ["fp32", "fp16", None])]
+       ("MaskGIT-S, 2 pasos", "maskgit_s", ["fp32_s2", None, "fp16_graphs_s2"])]
 
 
 def fig_latency(bench_dir, path):
@@ -368,7 +366,7 @@ def fig_ce_posicion(path_json, path):
   f = np.arange(1, 21)
   for k, lab, col, ls in [("gpt_s_abs", "GPT-S, posición absoluta", color("gpt"), "--"),
                           ("gpt_s", "GPT-S, frame + celda", color("gpt"), "-"),
-                          ("convlstm", "ConvLSTM", color("convlstm"), "-"), ("gpt2m", "gpt2m (comma)", INK, "-")]:
+                          ("gpt2m", "gpt2m (comma)", INK, "-")]:
     if k in d["por_frame"]:
       a.plot(f[1:], d["por_frame"][k][1:], color=col, ls=ls, lw=1.6, marker="o", ms=3, label=lab)
   a.set_xticks([2, 5, 10, 15, 20])
