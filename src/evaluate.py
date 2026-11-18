@@ -10,6 +10,9 @@ renormalizados sobre los 1024 códigos. Es lo único que se puede medir en model
 
 Uso: python -m src.evaluate --model SPEC [--segments N] [--dtype fp32|fp16|bf16]
   SPEC: gpt2m, unigram, transicion, random:..., o ruta a un checkpoint (ver src.models.load_model)
+
+Los modelos latentes (lewm, vjepa2, vjepa2_ac) no tienen CE sobre tokens: se rechazan y se miden con
+python -m src.eval_latent (D12). convlstm_px predice píxeles con loss L2: no tiene CE, lo dice y sale sin error.
 """
 import argparse
 import json
@@ -87,6 +90,12 @@ def main(argv=None):
   dev = device()
   log_device(dev)
   model = load_model(args.model, dev).to(DTYPES[args.dtype]).eval()
+  from src.rollouts import rechazar_latente
+  rechazar_latente(model, "src.evaluate")
+  if getattr(model, "output", "tokens") == "pixels":
+    print(f"{model.name} predice píxeles (loss L2): no tiene CE sobre tokens, no hay nada que evaluar acá. "
+          "Su calidad va en la tabla de video: python -m src.rollouts + python -m src.metrics_video.")
+    return None
   name = args.name or model.name
   val = np.load("data/val_tokens.npy")
   res = {"model": name, "dtype": args.dtype, "device": device_info(dev), **evaluate(model, val, dev, args.bs, args.segments)}

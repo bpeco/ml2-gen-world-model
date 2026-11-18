@@ -38,7 +38,7 @@ def test_gpt_receta_iris():
   r = model_class("gpt").recipe("s")
   assert r.optimizer == "adamw" and tuple(r.betas) == (0.9, 0.999) and r.grad_clip == 10.0 and r.amp is None
   assert r.lr_segs == [S.constant(1e-4)] and r.wd_ini == 0.01 and r.wd_fin is None and r.wd_on == "lineales"
-  assert r.batch * r.accum == 64 and r.frames == 20
+  assert r.batch * r.accum == 16 and r.batch_fuente == 64 and r.frames == 20
   assert all(r.lr(s, 1000) == 1e-4 for s in (0, 1, 500, 999, 5000))  # sin warmup, constante
   assert r.kind_continuacion() == "constante"
   assert model_class("gpt").Config().dropout == 0.1 and model_class("gpt").Config().pos == "abs"
@@ -67,7 +67,7 @@ def test_gpt_pos_frame_sigue_cargando():
 def test_genie_receta():
   r = model_class("genie").recipe("s")
   assert tuple(r.betas) == (0.9, 0.9) and r.wd_ini == 1e-4 and r.amp == "bf16" and r.frames == 16
-  assert r.batch * r.accum == 256 and r.paper_steps == 200_000
+  assert r.batch * r.accum == 32 and r.batch_fuente == 256 and r.paper_steps == 200_000
   warm = r.lr_segs[0]
   assert warm["nombre"] == "warmup" and warm["frac"] == 0.025 and S.lengths(r.lr_segs, 200_000)[0][1] == 5000
   assert S.lengths(r.lr_segs, 190)[0][1] == 100  # piso

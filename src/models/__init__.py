@@ -31,6 +31,7 @@ KINDS = {
   "vjepa2": ("src.models.vjepa.pretrain", "VJEPA2"),       # V-JEPA 2: preentrenamiento autosupervisado (EMA, máscaras 3D)
   "vjepa2_ac": ("src.models.vjepa.action", "VJEPA2AC"),    # V-JEPA 2-AC: predictor con acciones sobre el encoder congelado
   "convlstm_px": ("src.models.convlstm_px", "ConvLSTMPx"),  # ConvLSTM de Shi 2015, píxeles -> píxeles
+  "plantilla": ("src.models._plantilla", "Plantilla"),     # modelo mínimo para copiar al sumar uno (CONTRIBUTING)
 }
 
 # tamaños de los transformers propios (D3): capas, cabezas, ancho

@@ -35,7 +35,7 @@ class Windows:
       self.poses = poses if isinstance(poses, np.ndarray) else np.load(poses)
       assert self.poses.shape[:2] == self.tokens.shape[:2], "poses y tokens no coinciden"
     self.device = torch.device(device) if device is not None else None
-    self.resident = self.device is not None and self.device.type == "cuda"
+    self.resident = self.device is not None and self.device.type in ("cuda", "mps")
     self._tok_t = self._pose_t = None
     self._plan = None  # (params, paso inicial, índices (S, B, 2)) de prepare()
     self._mon = {}
@@ -112,7 +112,7 @@ class Windows:
       ix = torch.from_numpy(np.stack([segs, starts], -1)).to(self.device)
       return self._gather_idx(ix, n_frames, frameskip, with_poses)
     x = self._gather(segs, starts, n_frames, frameskip)
-    pin = torch.cuda.is_available()
+    pin = torch.cuda.is_available() and (self.device is None or self.device.type == "cuda")  # pinned solo para CUDA
     x = x.pin_memory() if pin else x
     if not with_poses:
       return x

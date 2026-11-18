@@ -3,7 +3,11 @@
   python -m src.infer.demo --model maskgit_s --steps 4                          # video de cámara de comma, imaginación
   python -m src.infer.demo --model maskgit_s --mode online --k 10               # en línea, predice 0,5 s adelante
   python -m src.infer.demo --model maskgit_s --steps 4 --video mi_video.mp4     # video propio (fuera de distribución)
-  python -m src.infer.demo --model lewm --segment 3                              # un segmento de val (tokens decodificados)
+  python -m src.infer.demo --model maskgit_s --segment 3                        # un segmento de val (tokens decodificados)
+
+Los modelos latentes (lewm, vjepa2, vjepa2_ac) no emiten tokens ni pasan por el codec: esta demo los manda a
+src/infer/demo_latente.py (decoder de visualización, máscaras multibloque y curva de error latente), con los mismos argumentos
+de esa demo.
 
 Modos:
 - imagine: el modelo ve --ctx frames reales (1 s), imagina --horizon frames (default 3 s) y vuelve a anclarse en
@@ -17,6 +21,7 @@ decodificados, sin pasar por el encoder). Escribe results/demo/<nombre>_<modo>.m
 """
 import argparse
 import json
+import sys
 import time
 from pathlib import Path
 
@@ -49,9 +54,17 @@ def label(img, text):
   return out
 
 
+def es_latente(model) -> bool:
+  """lewm, vjepa2 y vjepa2_ac: modelos de embeddings, con su propia demo."""
+  from src.models.latent import LatentWM
+  from src.models.vjepa.action import VJEPA2AC
+  from src.models.vjepa.pretrain import VJEPA2
+  return isinstance(model, (LatentWM, VJEPA2, VJEPA2AC))
+
+
 def main(argv=None):
   ap = argparse.ArgumentParser()
-  ap.add_argument("--model", required=True)
+  ap.add_argument("--model", required=True, help="un modelo de video (gpt, maskgit, genie, convlstm_px); los latentes van a demo_latente")
   ap.add_argument("--steps", type=int)
   ap.add_argument("--temperature", type=float, default=1.0)
   ap.add_argument("--mode", choices=["imagine", "online"], default="imagine")
@@ -68,10 +81,16 @@ def main(argv=None):
   ap.add_argument("--seed", type=int, default=0)
   ap.add_argument("--out")
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent)")
-  a = ap.parse_args(argv)
+  a, extra = ap.parse_known_args(argv)  # las opciones de la demo latente se las deja a demo_latente
   dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   from src.models import apply_opts, load_model
-  model = apply_opts(load_model(a.model, "cpu"), a.opt).eval().to(dev, DTYPES[a.dtype])
+  model = load_model(a.model, "cpu")
+  if es_latente(model):
+    from src.infer import demo_latente
+    return demo_latente.main(sys.argv[1:] if argv is None else argv)
+  if extra:
+    ap.error(f"argumentos no reconocidos: {' '.join(extra)}")
+  model = apply_opts(model, a.opt).eval().to(dev, DTYPES[a.dtype])
   codec = Codec(dev, a.dtype, graphs=dev.type == "cuda")
   stream = make_stream(model, temperature=a.temperature, steps=a.steps, seed=a.seed)
 
@@ -89,7 +108,7 @@ def main(argv=None):
     src = "video de cámara de commaVQ"
   n = len(real)
 
-  pixels = hasattr(stream, "observe_pixels")  # LeWM: la cámara entra directo, sin el encoder de comma
+  pixels = hasattr(stream, "observe_pixels")  # ConvLSTM de píxeles: la cámara entra directo, sin el encoder de comma
 
   def observe(t):
     if pixels and tokens is None:

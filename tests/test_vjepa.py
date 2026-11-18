@@ -57,7 +57,7 @@ def test_receta_vjepa2():
   assert r.lr(T - 1, T) == pytest.approx(1e-6) and r.decay_start(T) == T - round(12_000 / 252_000 * T)
   assert r.lr(1, 40) < r.lr(2, 40)  # warmup con piso de 100 pasos
   ac = VJEPA2AC.recipe()
-  assert ac.lr(T - 1, T) == 0.0 and ac.accum * ac.batch == 256 and ac.kind_continuacion() == "wcd"
+  assert ac.lr(T - 1, T) == 0.0 and ac.accum * ac.batch == 32 and ac.batch_fuente == 256 and ac.kind_continuacion() == "wcd"
 
 
 # ---------------------------------------------------------------- aumentos

@@ -48,8 +48,8 @@ FIDELIDAD = [
        "Embedding, incluida la posición)", aquí="igual (wd_on='lineales'; incluye la cabeza)", categoría="fiel",
        fuente=f"{IRIS} trainer.yaml L66, utils.py L14-36"),
   dict(campo="Grad clip", fuente_valor="10.0", aquí="10.0", categoría="fiel", fuente=f"{IRIS} trainer.yaml L65"),
-  dict(campo="Batch", fuente_valor="64 secuencias de 20 pasos", aquí="64 efectivas = 16 x accum 4 (micro-batch "
-       "a verificar en la GPU de 12 GB)", categoría="presupuesto", fuente=f"{IRIS} trainer.yaml, world_model/default.yaml L2-3"),
+  dict(campo="Batch", fuente_valor="64 secuencias de 20 pasos", aquí="16 por paso, sin acumulación (~2.440 pasos con 780k frames); "
+       "lr a confirmar en el humo", categoría="presupuesto", fuente=f"{IRIS} trainer.yaml, world_model/default.yaml L2-3"),
   dict(campo="Precisión", fuente_valor="fp32 (sin autocast)", aquí="fp32", categoría="fiel", fuente=f"{IRIS} trainer.py"),
   dict(campo="Pasos / presupuesto", fuente_valor="no publicado para comma", aquí="780k frames (100M tokens)",
        categoría="presupuesto", fuente="presupuesto de cómputo del repo"),
@@ -59,6 +59,10 @@ FIDELIDAD = [
        aquí="loss = alpha CE + (1-alpha) tau^2 KL(maestro gpt2m || alumno), alpha 0.5, tau 1, misma receta que el alumno",
        categoría="propio", fuente="Hinton et al. 2015; extensión del repo"),
 ]
+
+# Capacidades que expone la CLI (src/cli.py, src/toolkit.py): solo las acciones que este modelo soporta.
+ACCIONES = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo")
+EVALUACION = "video"  # "video": CE + rollouts + LPIPS/FVD; "latente": src.eval_latent
 
 
 class GPT(WorldModel):
@@ -78,12 +82,13 @@ class GPT(WorldModel):
   @classmethod
   def recipe(cls, size=None):
     """Receta de IRIS (la que commaVQ dice seguir): AdamW (0.9, 0.999), lr 1e-4 constante, wd 0.01 solo en Linear,
-    clip 10, batch 64, fp32. Con teacher (--kd) es la misma más la pérdida de destilación."""
+    clip 10, batch 64 (aquí 16: ver forzado), fp32. Con teacher (--kd) es la misma más la pérdida de destilación."""
     return Recipe(
       name="gpt_iris", fuente=f"{IRIS}; commaVQ: 'a similar recipe to IRIS'", optimizer="adamw", betas=(0.9, 0.999),
       eps=1e-8, lr_segs=[S.constant(1e-4)], wd_ini=0.01, wd_on="lineales", grad_clip=10.0, amp=None,
-      batch=16, accum=4, frames=20, extras={"dropout": 0.1}, paper_steps=None,
-      forzado=[("batch", "64 efectivas como IRIS, en 4 micro-batches de 16 por la memoria de 12 GB", "presupuesto"),
+      batch=16, accum=1, frames=20, extras={"dropout": 0.1}, paper_steps=None, batch_fuente=64,
+      forzado=[("batch", "16 por paso en vez de 64 (IRIS): con el presupuesto fijo de 780k frames da ~2.440 pasos; "
+                         "lr a confirmar en el humo", "presupuesto"),
                ("presupuesto", "780k frames (100M tokens) en vez de lo que haya usado comma (no publicado)", "presupuesto"),
                ("tamaño", "6x384 / 8x512 en vez de 24x1024", "presupuesto")])
 

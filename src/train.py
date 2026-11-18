@@ -18,6 +18,7 @@ retoma ahí, sigue la meseta hasta el nuevo inicio de decay y decae al final (eq
 presupuesto grande de una vez, con warmup de largo absoluto). Con coseno hace falta --restart (no equivalente).
 """
 import argparse
+import copy
 import dataclasses
 import json
 import math
@@ -31,7 +32,7 @@ import torch
 
 from src import recipes as R
 from src import schedules as S
-from src.common import TPF, device, device_info, log_device
+from src.common import TPF, amp_dtype, device, device_info, log_device
 from src.models import KINDS, build, load_model, model_class
 from src.status import write_status
 from src.windows import Windows
@@ -175,7 +176,7 @@ def ema_step(ema, model, m):
 
 
 def ema_state_dict(model, ema):
-  sd = {k: v.clone() for k, v in model.state_dict().items()}
+  sd = {k: v.clone() if torch.is_tensor(v) else copy.deepcopy(v) for k, v in model.state_dict().items()}  # v: estado extra
   for n, v in ema.items():
     sd[n] = v.to(sd[n].dtype)
   return sd
@@ -192,6 +193,7 @@ def monitor_ce(model, windows, bs, autocast, dev, frameskip=1):
   """CE (sin maestro) sobre las ventanas fijas del holdout. No altera el RNG del entrenamiento."""
   rng = torch.get_rng_state()
   cuda_rng = torch.cuda.get_rng_state_all() if dev.type == "cuda" else None
+  mps_rng = torch.mps.get_rng_state() if dev.type == "mps" else None
   torch.manual_seed(1234)
   was_training = model.training
   model.eval()
@@ -209,6 +211,8 @@ def monitor_ce(model, windows, bs, autocast, dev, frameskip=1):
   torch.set_rng_state(rng)
   if cuda_rng is not None:
     torch.cuda.set_rng_state_all(cuda_rng)
+  if mps_rng is not None:
+    torch.mps.set_rng_state(mps_rng)
   return tot / n
 
 
@@ -350,8 +354,11 @@ def _train(a, dev, run_dir, last_path):
     model.set_pose_stats(*windows.pose_stats(r.frameskip))
   opt = make_optimizer(model, r, dev, r.lr(0, lt))
   # --amp manda en cualquier device; la receta solo se aplica en CUDA (como siempre: fp16 en CUDA, nada en el resto)
-  amp = a.amp if a.amp is not None else ((r.amp or "none") if dev.type == "cuda" else "none")
-  adtype = {"fp16": torch.float16, "bf16": torch.bfloat16}.get(amp)
+  amp = a.amp if a.amp is not None else ((r.amp or "none") if dev.type in ("cuda", "mps") else "none")
+  adtype, nota_amp = amp_dtype(dev, amp)   # MPS: bf16 solo si el sistema lo soporta; si no, fp32 declarado
+  if nota_amp:
+    print(f"aviso: {nota_amp}", flush=True)
+    amp = "none"
   # El scaler solo existe con fp16 (bf16/fp32 no lo necesitan: deshabilitado, scale/unscale_/step/update son no-ops
   # y step() va directo a opt.step()). Con fp16, scaler.step() hace un sync por paso que PyTorch exige: lee
   # found_inf (.item()) para decidir si saltea el paso; clip_grad_norm_ no sincroniza (error_if_nonfinite=False).

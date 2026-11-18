@@ -8,7 +8,11 @@ Escribe results/video_<name>.json.
 - Referencia: los tokens reales decodificados con el mismo decoder (aísla al world model).
 - LPIPS (alex) pareado frame a frame, 60 horizontes; IC 95% por bootstrap sobre clips.
 - FVD: ventanas de 16 frames que terminan a 1, 2 y 3 s (frames [4:20], [24:40], [44:60] del rollout).
-  Features = logits de I3D (400-d) como cd-fvd. Bootstrap pareado sobre clips (mismos índices en real y fake).
+  Features = logits de I3D (400-d) como cd-fvd. Bootstrap pareado por segmento (D14): los 400 clips son 100
+  segmentos x 4 arranques, se remuestrean segmentos y no clips (src/estadistica.py); mismos clips en real y fake.
+- Piso de FVD ("piso" en el JSON): real contra real con dos mitades disjuntas por segmento (src/estadistica.piso_fvd).
+- --from-cache recalcula todo esto en CPU desde results/cache (LPIPS por clip, features I3D del modelo y de la
+  referencia), sin GPU, sin decodificar y sin rollouts.
 - Cache (results/cache, ~2.4 GB): frames reales decodificados real_frames_<hash>.npy y sus features
   I3D fvd_real_<modelo>_<hash>.npz; la primera corrida los crea para los 400 clips. Los rollouts pueden ser
   un prefijo de los clips (--limit).
@@ -21,8 +25,9 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from src import estadistica
 from src.common import FPS, device, device_info
-from src.rollouts import HORIZON, OUT, VAL, clip_tokens, clips_hash, load_clips
+from src.rollouts import CLIPS, CLIPS_B, HORIZON, OUT, VAL, clip_tokens, clips_hash, load_clips
 from src.viz import decode, load_decoder
 
 RESULTS = Path("results")
@@ -100,6 +105,8 @@ def main(argv=None):
   ap.add_argument("--bs", type=int, default=32)
   ap.add_argument("--boot", type=int, default=1000)
   ap.add_argument("--boot-fvd", type=int, default=200)
+  ap.add_argument("--boot-piso", type=int, default=20, help="sorteos de mitades para el piso de FVD")
+  ap.add_argument("--clips", choices=["eval", "eval_b"], default="eval", help="set de clips de val (eval_b: el del piso)")
   ap.add_argument("--fvd-model", default="i3d", choices=["i3d"])
   ap.add_argument("--from-cache", action="store_true",
                   help="recalcula las estadísticas desde results/cache (LPIPS por clip y features I3D), sin decodificar")
@@ -110,7 +117,8 @@ def main(argv=None):
   import lpips
   t0 = time.time()
   dev = device()
-  h = clips_hash()
+  cp = CLIPS_B if a.clips == "eval_b" else CLIPS
+  h = clips_hash(cp)
   roll = np.load(a.rollouts or OUT / f"{a.name}.npy", mmap_mode="r")
   n = len(roll)
   val = np.load(VAL, mmap_mode="r")
@@ -119,7 +127,7 @@ def main(argv=None):
   lp = lpips.LPIPS(net="alex", verbose=False).to(dev).eval()
   fn = load_fvd_model(a.fvd_model, dev)
   # referencia: frames reales decodificados (memmap en disco) y sus features I3D, para los 400 clips (se crean una vez)
-  allc = load_clips()
+  allc = load_clips(cp)
   _, real_all = clip_tokens(val, allc)
   N = len(real_all)
   tag = f"{a.fvd_model}_{h}"
@@ -180,30 +188,36 @@ def main(argv=None):
 
 def write_stats(a, lpm, ff, real_feats, h, dev, t0):
   n = len(lpm)
+  seg = estadistica.segmentos_de(load_clips(CLIPS_B if getattr(a, "clips", "eval") == "eval_b" else CLIPS)["clips"][:n])        # bootstrap por segmento (D14)
+  assert len(seg) == n, "más rollouts que clips en results/clips_eval.json"
   lpips_res = {"curve": lpm.mean(0).tolist(), "at": {}}
   for k, f in AT.items():
     col = lpm[:, f]
-    lo, hi = boot_ci(lambda idx: col[idx].mean(), n, a.boot)
-    lpips_res["at"][k] = {"mean": float(col.mean()), "lo": lo, "hi": hi}
-  fvd = {}
+    ic = estadistica.ic_media_segmento(col, seg, a.boot)
+    lpips_res["at"][k] = {"mean": ic["mean"], "lo": ic["lo"], "hi": ic["hi"]}
+  fvd, piso = {}, {}
   for k in WINDOWS:
     r, f = real_feats[k][:n], ff[k]
-    val_k = fvd_from_feats(r, f)
-    lo, hi = boot_ci(lambda idx: fvd_from_feats(r[idx], f[idx]), n, a.boot_fvd, seed=1, point=val_k)
-    fvd[k] = {"value": val_k, "lo": lo, "hi": hi}
+    ic = estadistica.ic_fvd_segmento(r, f, seg, a.boot_fvd, fvd_fn=fvd_from_feats)
+    fvd[k] = {"value": ic["value"], "lo": ic["lo"], "hi": ic["hi"]}
+    piso[k] = estadistica.piso_fvd(r, seg, getattr(a, "boot_piso", 20), fvd_fn=fvd_from_feats, fake=f)
   meta = OUT / f"{a.name}.json"
   res = {"name": a.name, "n_clips": n, "lpips": lpips_res, "fvd": fvd, "fvd_model": a.fvd_model,
-         "fvd_ci": "normal: valor ± 1,96 · desvío bootstrap", "clips_hash": h,
+         "fvd_ci": "normal: valor ± 1,96 · desvío del bootstrap por segmento",
+         "lpips_ci": "percentil del bootstrap por segmento", "n_segmentos": int(len(np.unique(seg))),
+         "piso": piso, "clips_hash": h,
          "rollouts_meta": json.loads(meta.read_text()) if meta.exists() else None,
          "device": device_info(dev), "seconds": time.time() - t0}
   (RESULTS / f"video_{a.name}.json").write_text(json.dumps(res, indent=1))
   print("LPIPS:", {k: round(v["mean"], 4) for k, v in lpips_res["at"].items()})
   print("FVD  :", {k: round(v["value"], 2) for k, v in fvd.items()}, f"({res['seconds']:.0f} s)")
+  print("piso :", {k: round(v["value"], 2) for k, v in piso.items()})
   return res
 
 
 def stats_from_cache(a):
-  t0, h = time.time(), clips_hash()
+  t0 = time.time()
+  h = clips_hash(CLIPS_B if getattr(a, "clips", "eval") == "eval_b" else CLIPS)
   lpm = np.load(CACHE / f"lpips_{a.name}.npy").astype(np.float64)
   z = np.load(CACHE / f"fvd_fake_{a.fvd_model}_{a.name}.npz")
   zr = np.load(CACHE / f"fvd_real_{a.fvd_model}_{h}.npz")

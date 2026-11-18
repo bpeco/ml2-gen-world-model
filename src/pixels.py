@@ -12,6 +12,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
+from src.common import device
+
 CACHE = Path("data/cache")
 _RENDER = {}
 
@@ -20,7 +22,7 @@ def _codec(dev):
   from src.infer.codec import Codec
   key = (dev.type, dev.index)
   if key not in _RENDER:
-    _RENDER[key] = Codec(dev, "fp16" if dev.type == "cuda" else "fp32", graphs=False, encoder=False)
+    _RENDER[key] = Codec(dev, "fp16" if dev.type in ("cuda", "mps") else "fp32", graphs=False, encoder=False)
   return _RENDER[key]
 
 
@@ -84,7 +86,7 @@ def cached(tokens, name, cache_dir=CACHE, chunk=32, dev=None) -> np.ndarray:
     path.parent.mkdir(parents=True, exist_ok=True)
     tmp = path.with_suffix(".part")
     N, T = tokens.shape[:2]
-    dev = torch.device(dev or ("cuda" if torch.cuda.is_available() else "cpu"))
+    dev = torch.device(dev) if dev else device()
     out = np.lib.format.open_memmap(tmp, mode="w+", dtype=np.uint8, shape=(N, T, 128, 256, 3))
     for i in range(N):
       out[i] = render(torch.as_tensor(np.asarray(tokens[i])).to(dev), chunk).cpu().numpy()

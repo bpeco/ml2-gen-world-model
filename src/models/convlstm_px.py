@@ -80,6 +80,10 @@ FIDELIDAD = [
        "frames vistos (frames renderizados)", categoría="presupuesto", fuente="presupuesto común de la comparación"),
 ]
 
+# Capacidades que expone la CLI (src/cli.py, src/toolkit.py): solo las acciones que este modelo soporta.
+ACCIONES = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo")
+EVALUACION = "video"  # "video": CE + rollouts + LPIPS/FVD; "latente": src.eval_latent
+
 
 class ConvLSTMCell(nn.Module):
   """Celda ConvLSTM con peepholes (Eq. 3). in_ch = 0: sin entrada (capa 1 del forecaster)."""
@@ -128,8 +132,10 @@ class ConvLSTMPx(WorldModel):
     return Recipe(
       name="convlstm_px_shi2015", fuente=f"{SHI} §4.1", optimizer="rmsprop", alpha=0.9, momentum=0.0, eps=1e-8,
       lr_segs=[S.constant(1e-3)], wd_ini=0.0, wd_on="todos", ema_segs=None, grad_clip=1.0, amp=None,
-      batch=4, frames=20, frameskip=1, accum=1, presupuesto=780_000,
+      batch=4, frames=20, frameskip=1, accum=1, presupuesto=780_000, batch_fuente=4,
       forzado=[("batch 4, clip 1.0, eps 1e-8", "el paper no los publica; batch por la memoria de 12 GB", "propio"),
+               ("batch_fuente 4", "Shi 2015 no publica su batch: sin batch de referencia, el lr de la fuente no se escala",
+                "propio"),
                ("early stopping", "se entrena el presupuesto completo; train.py guarda el último estado", "presupuesto"),
                ("RGB 128x256, 20 FPS, parches 4x4 -> 32x64x48", "el dato de comma obliga", "datos"),
                ("fp32", "el paper no publica la precisión", "propio")])

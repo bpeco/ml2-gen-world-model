@@ -28,6 +28,7 @@ import numpy as np
 import torch
 
 from src.common import device_info
+from src.infer import backends
 from src.infer.codec import Codec
 from src.infer.video import sample_tokens, sample_video
 
@@ -181,14 +182,14 @@ def fidelity(dev, frames, ref_tok, n):
 
 def main(argv=None):
   ap = argparse.ArgumentParser()
-  ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
+  backends.agregar_device(ap, "torch")  # cuda, cpu, rocm...: lo que registra src/infer/backends.py
   ap.add_argument("--frames", type=int, default=500, help="llamadas medidas por etapa")
   ap.add_argument("--warmup", type=int, default=50)
   ap.add_argument("--no-check", action="store_true")
   ap.add_argument("--n-check", type=int, default=200)
   ap.add_argument("--tag", help="nombre del dispositivo en el archivo (default: el de la GPU)")
   a = ap.parse_args(argv)
-  dev = torch.device(a.device)
+  dev = backends.dispositivo(a.device)
   tag = a.tag or device_tag(dev)
   if dev.type == "cpu":
     a.frames, a.warmup = min(a.frames, 30), min(a.warmup, 3)

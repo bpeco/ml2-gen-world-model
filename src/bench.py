@@ -1,8 +1,16 @@
-"""Latencia por frame, batch 1 (protocolo 2.4 del plan): mediana de next_frame sin el decoder.
+"""Latencia por paso, batch 1 (protocolo único de D15): columna "modelo solo", sin codec ni decoder.
 
   python -m src.bench --model random:gpt_s --dtype fp16 --graphs
   python -m src.bench --decoder --dtype fp16
 Escribe results/bench/<name>__<variante>.json
+
+Protocolo (el mismo que usa src/infer/bench_e2e.py, que agrega las columnas de la cadena):
+- Unidad: un paso del stream (src/infer/stream.py) con batch 1 y el contexto lleno: step() para los tokens, el
+  paso del predictor para los latentes (lewm a 4 Hz con LatentStream, vjepa2_ac con VJEPAStream: el paso de modelo
+  es de 250 ms de video, no un frame de cámara), observe + predict para convlstm_px.
+- fp16 con CUDA graphs donde andan. Si los graphs fallan se mide en eager y el JSON lo declara: "graphs" es lo
+  pedido, "graphs_usados" lo que se midió y "graphs_error" el motivo del fallback.
+- Se reporta p50 y p99 (además de p10, p90, media y máximo). "median_ms" sigue siendo el p50, que lee report.py.
 """
 import argparse
 import json
@@ -13,7 +21,8 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from src.common import CTX_FRAMES, device_info
+from src.common import CTX_FRAMES, device_info, sync
+from src.infer import backends
 
 DTYPES = {"fp32": torch.float32, "fp16": torch.float16, "bf16": torch.bfloat16}
 CLIPS = Path("results/clips_eval.json")
@@ -52,6 +61,72 @@ def quantize_int8(model, dev):
   return model, "torchao int8 weight-only"
 
 
+def percentiles(ms):
+  """Resumen de latencias en ms: p10, p50, p90, p99, máximo, media y n."""
+  ms = np.asarray(ms, dtype=np.float64)
+  return {"p10": float(np.percentile(ms, 10)), "p50": float(np.percentile(ms, 50)), "p90": float(np.percentile(ms, 90)),
+          "p99": float(np.percentile(ms, 99)), "max": float(ms.max()), "mean": float(ms.mean()), "n": int(len(ms))}
+
+
+def es_latente(model):
+  """lewm, vjepa2 y vjepa2_ac: predicen embeddings, se miden por paso de modelo."""
+  return type(model).__name__ in ("LeWM", "VJEPA2", "VJEPA2AC")
+
+
+def preparar_stream(model, ctx, dev, graphs, steps=None, ctx_frames=None):
+  """(stream, paso) con el contexto lleno; paso() es la unidad del protocolo y devuelve su salida."""
+  from src.infer.stream import make_stream
+  from src.pixels import render
+  kw = dict(graphs=graphs)
+  if getattr(model, "output", "tokens") == "pixels":    # convlstm_px: entra un frame de cámara y sale el predicho
+    cam = render(ctx)[0]
+    stream, i = make_stream(model, **kw), [0]
+    for f in cam[:stream.ctx_frames]:
+      stream.observe_pixels(f[None])
+
+    def paso():
+      stream.observe_pixels(cam[i[0] % len(cam)][None])
+      i[0] += 1
+      return stream.predict()
+    return stream, paso
+  if es_latente(model):                                  # un paso de modelo = frameskip frames de cámara
+    cam = render(ctx)[0]
+    stream = make_stream(model, **kw)
+    k = getattr(stream, "k", None) or getattr(stream, "cada", 1)
+    j = 0
+    while not stream.full:                               # llena el estado con el video de cámara
+      stream.observe_pixels(cam[j % len(cam)][None])
+      j += 1
+    return stream, stream.step
+  stream = make_stream(model, temperature=1.0, steps=steps, seed=0, **kw)
+  if ctx_frames:
+    stream.ctx_frames = min(stream.ctx_frames, ctx_frames)
+  for i in range(ctx.shape[1]):
+    stream.observe(ctx[:, i])
+  return stream, stream.step
+
+
+def medir_modelo(model, ctx, n, warmup, dev, graphs, steps=None, ctx_frames=None):
+  """Protocolo de latencia del modelo solo: n pasos de stream (los primeros `warmup` se descartan), batch 1.
+
+  Con graphs pedidos, si fallan (RuntimeError) se repite en eager. Devuelve (ms, info) con info = {"graphs",
+  "graphs_usados", "graphs_error"}."""
+  err = None
+  for g in ([graphs, False] if graphs else [False]):
+    try:
+      with torch.no_grad():
+        _, paso = preparar_stream(model, ctx, dev, g, steps, ctx_frames)
+        ms = timed((paso() for _ in range(n)), n, dev)[warmup:]
+      return ms, {"graphs": graphs, "graphs_usados": g, "graphs_error": err}
+    except RuntimeError as e:
+      if not g:
+        raise
+      err = str(e).splitlines()[0]
+      print(f"   los CUDA graphs fallaron ({err}); se mide en eager", flush=True)
+      if hasattr(model, "use_cuda_graphs"):
+        model.use_cuda_graphs(False)
+
+
 def timed(step_iter, n, dev):
   """Tiempo en ms de cada next() de un iterador, con CUDA events o perf_counter."""
   ms = []
@@ -64,8 +139,10 @@ def timed(step_iter, n, dev):
       b.synchronize()
       ms.append(a.elapsed_time(b))
     else:
+      sync(dev)   # MPS: asíncrono, sin eventos: perf_counter con sincronización a cada lado
       t = time.perf_counter()
       next(step_iter)
+      sync(dev)
       ms.append((time.perf_counter() - t) * 1000)
   return ms
 
@@ -81,13 +158,13 @@ def main(argv=None):
   ap.add_argument("--ctx-frames", type=int)
   ap.add_argument("--warmup", type=int, default=20)
   ap.add_argument("--frames", type=int, default=100)
-  ap.add_argument("--device", choices=["cuda", "cpu"], default="cuda" if torch.cuda.is_available() else "cpu")
+  backends.agregar_device(ap, "torch+ort")  # cuda, cpu, rocm...: lo que registra src/infer/backends.py
   ap.add_argument("--decoder", action="store_true", help="medir el decoder del VQ-VAE (1 frame por llamada)")
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent); repetible")
   a = ap.parse_args(argv)
   if not a.decoder and not a.model:
     ap.error("falta --model (o --decoder)")
-  dev = torch.device(a.device)
+  dev = backends.dispositivo(a.device)
   # defaults explícitos de PyTorch: el fp32 depende de TF32
   torch.backends.cuda.matmul.allow_tf32 = False
   torch.backends.cudnn.allow_tf32 = True
@@ -95,7 +172,6 @@ def main(argv=None):
   n = a.warmup + a.frames
   if dev.type == "cuda":
     torch.cuda.reset_peak_memory_stats()
-  gen = torch.Generator(dev).manual_seed(0)
   method = None
 
   if a.decoder:
@@ -126,35 +202,22 @@ def main(argv=None):
         model.use_cuda_graphs(True)
     name, ctx_frames = a.name or model.name, a.ctx_frames
     ctx = load_context(a.ctx_frames).to(dev)
+    ms, info = medir_modelo(model, ctx, n, a.warmup, dev, a.graphs, a.steps, a.ctx_frames)
 
-    if getattr(model, "output", "tokens") == "pixels":
-      # modelo de píxeles (convlstm_px): un frame de cámara entra al stream y sale el frame predicho, sin codec
-      from src.infer.stream import make_stream
-      from src.pixels import render
-      cam = render(ctx)[0]  # (F, 128, 256, 3) uint8, fuera de la medición
-      stream = make_stream(model, graphs=a.graphs)
-
-      def it():
-        with torch.no_grad():
-          for i in range(n):
-            stream.observe_pixels(cam[i % len(cam)][None])
-            yield stream.predict()
-    else:
-      def it():
-        yield from model.generate(ctx, n, temperature=1.0, steps=a.steps, generator=gen)
-
-  ms = timed(it(), n, dev)[a.warmup:]
-  med = float(np.median(ms))
-  variant = a.dtype + ("_graphs" if a.graphs else "") + ("_int8" if a.int8 else "") \
+  if a.decoder:
+    ms, info = timed(it(), n, dev)[a.warmup:], {"graphs": a.graphs, "graphs_usados": False, "graphs_error": None}
+  pc = percentiles(ms)
+  med = pc["p50"]
+  variant = a.dtype + ("_graphs" if info["graphs_usados"] else "") + ("_int8" if a.int8 else "") \
     + (f"_s{a.steps}" if a.steps else "") + (f"_ctx{a.ctx_frames}" if a.ctx_frames else "") \
     + ("_cpu" if dev.type == "cpu" else "")
   res = {
     "name": name, "model": "decoder" if a.decoder else a.model, "variant": variant, "decoder": a.decoder,
-    "median_ms": med, "p10_ms": float(np.percentile(ms, 10)), "p90_ms": float(np.percentile(ms, 90)),
-    "mean_ms": float(np.mean(ms)), "fps": 1000 / med, "realtime": med < 50,
+    "median_ms": med, "p50_ms": med, "p99_ms": pc["p99"], "p10_ms": pc["p10"], "p90_ms": pc["p90"], "max_ms": pc["max"],
+    "mean_ms": pc["mean"], "fps": 1000 / med, "realtime": med < (250 if es_latente(model) else 50), "unidad": "paso de modelo (250 ms de video)" if es_latente(model) else "frame",
     "params": sum(p.numel() for p in model.parameters()),
     "peak_mem_mb": torch.cuda.max_memory_allocated() / 2**20 if dev.type == "cuda" else None,
-    "dtype": a.dtype, "graphs": a.graphs, "int8": a.int8, "int8_method": method, "steps": a.steps,
+    "dtype": a.dtype, "graphs": a.graphs, "graphs_usados": info["graphs_usados"], "graphs_error": info["graphs_error"], "int8": a.int8, "int8_method": method, "steps": a.steps,
     "ctx_frames": ctx_frames, "warmup": a.warmup, "frames": a.frames,
     "tf32_matmul": torch.backends.cuda.matmul.allow_tf32, "tf32_cudnn": torch.backends.cudnn.allow_tf32,
     "device": device_info(dev), "torch": torch.__version__, "timestamp": datetime.now().isoformat(timespec="seconds"),
@@ -162,7 +225,7 @@ def main(argv=None):
   OUT.mkdir(parents=True, exist_ok=True)
   path = OUT / f"{name}__{variant}.json"
   path.write_text(json.dumps(res, indent=1))
-  print(f"{name} {variant}: mediana {med:.2f} ms (p10 {res['p10_ms']:.2f}, p90 {res['p90_ms']:.2f}) "
+  print(f"{name} {variant}: p50 {med:.2f} ms (p99 {res['p99_ms']:.2f}, p10 {res['p10_ms']:.2f}) "
         f"{res['fps']:.1f} FPS, tiempo real: {'si' if res['realtime'] else 'no'} -> {path}")
   return res
 

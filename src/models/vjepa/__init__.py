@@ -23,6 +23,9 @@ Modelos completos (registrados en src/models/__init__.py como kinds `vjepa2` y `
   action.VJEPA2AC (+ ac.py, plan.py)                   encoder congelado (target_encoder de una corrida vjepa2), AC predictor,
                                                        train_loss(poses=...), planear() = CEM 800/10/10
   decoder.py / train_decoder.py                        decoder de visualización: python -m src.models.vjepa.train_decoder --run <vjepa2>
+  lat_features / lat_horizonte / lat_sorpresa / lat_plan   lectura para src/eval_latent.py (cada modelo la trae)
+  exportar_onnx(model, parte, ruta)                    pretrain: encoder; action: predictor (python -m src.export_latente)
+  src/infer/demo_latente.py                            máscaras multibloque y decodificación (vjepa2), rollout decodificado (AC)
   src/infer/stream.py VJEPAStream                      cámara 20 Hz -> predictor cada 5 frames (4 Hz)
 Cada módulo lista sus desviaciones en FIDELIDAD_PRETRAIN / FIDELIDAD_AC (categoría fiel|datos|presupuesto|propio).
 

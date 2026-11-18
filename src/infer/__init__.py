@@ -1,6 +1,6 @@
 """Inferencia de punta a punta residente en el dispositivo: video -> encoder VQ -> world model -> decoder VQ -> video.
 
-Ver Docs/plan-inferencia.md. Módulos:
+Ver Docs/uso.md (sección "Dispositivos e inferencia"). Módulos:
   codec.py       encoder y decoder del VQ-VAE de comma en fp16 con CUDA graphs (entrada y salida uint8 en el device)
   video.py       lectura del video de cámara de ejemplo de commaVQ y escritura de mp4
   stream.py      estado de inferencia por frame (observe / predict / imagine) para cada familia de modelos

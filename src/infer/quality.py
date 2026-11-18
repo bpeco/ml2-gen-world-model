@@ -1,4 +1,4 @@
-"""Calidad de la inferencia por stream (Docs/plan-inferencia.md, fase 4).
+"""Calidad de la inferencia por stream (Docs/uso.md, "Dispositivos e inferencia").
 
   python -m src.infer.quality online --model maskgit_s [--k 1] [--segments 50] [--frames 400]
   python -m src.infer.quality online --model maskgit_s --frames 1200 --segments 20                  # deriva

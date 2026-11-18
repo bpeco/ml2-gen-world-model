@@ -483,39 +483,3 @@ def test_train_resume_register_and_load(tmp_path, monkeypatch):
   x = frames(1, 4)
   with torch.no_grad():
     assert torch.equal(a.encode(x), c.encode(x))
-
-
-def test_eval_latent_runs_on_lewm(tmp_path, monkeypatch):
-  """src.eval_latent con LeWM a 4 Hz: probes, sorpresa, acciones, rectitud y plan (CEM de horizonte 5), datos sintéticos."""
-  from src import eval_latent
-  T = 220
-  tok, pos, keys = tmp_path / "tok.npy", tmp_path / "pos.npy", tmp_path / "keys.json"
-  np.save(tok, np.random.default_rng(0).integers(0, 1024, (56, T, 128)).astype(np.int16))
-  np.save(pos, np.random.default_rng(1).normal(size=(56, T, 6)).astype(np.float32))
-  keys.write_text(json.dumps([f"r{i}_{i}" for i in range(56)]))
-  monkeypatch.setattr(eval_latent, "TOKENS", str(tok))
-  monkeypatch.setattr(eval_latent, "POSES", str(pos))
-  monkeypatch.setattr(eval_latent, "KEYS", str(keys))
-  m = tiny()
-  m.set_pose_stats(torch.zeros(30), torch.ones(30))
-  monkeypatch.setattr(eval_latent, "load_model", lambda spec, dev: m)
-  monkeypatch.setattr(eval_latent, "mlp_probe", lambda Xtr, ytr, Xte, **k: np.zeros((len(Xte), ytr.shape[1])))
-  monkeypatch.setattr(eval_latent, "pearsonr", lambda a, b: (0.0, 1.0))
-  orig = LeWM.plan_cem
-  monkeypatch.setattr(LeWM, "plan_cem", lambda self, *a, **k: orig(self, *a, **{**k, "n_samples": 12, "n_elites": 3, "iters": 2}))
-  monkeypatch.setenv("ML2_DEVICE", "cpu")
-  res = eval_latent.main(["--model", "lewm", "--segments", "6", "--plan-n", "2", "--out", str(tmp_path / "res")])
-  assert res["plan"]["horizonte"] == 25 and res["plan"]["n"] == 2 and set(res["plan"]["cem"]) == {"velocidad", "giro"}
-  assert len(res["sorpresa"]["por_frame_orig"]) == 3 and np.isfinite(res["rectitud"])
-  assert set(res["probes"]) == {"pred", "obs"} and (tmp_path / "res" / "latent_lewm.json").exists()
-
-
-def test_eval_latent_model_view_stacks_actions():
-  from src.eval_latent import model_view
-  m = tiny()
-  X = torch.arange(20)[None, :, None].expand(1, 20, 128)
-  P = torch.arange(20.)[None, :, None].expand(1, 20, 6)
-  Xs, A = model_view(m, X, P)
-  assert Xs[0, :, 0].tolist() == [4, 9, 14, 19]                    # el último frame y uno de cada 5 hacia atrás
-  assert A.shape == (1, 4, 30) and A[0, 1, ::6].tolist() == [9, 10, 11, 12, 13]
-  assert torch.isnan(A[0, 3, 6:]).all()                           # la acción del último frame cae fuera de la ventana

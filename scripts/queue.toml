@@ -1,0 +1,242 @@
+# Cola de GPU de la etapa B (plan, sección 8, con las decisiones del 17-18/11). Cada trabajo es una secuencia de
+# llamadas a la CLI, sin el prefijo `python -m src.cli`. La ejecuta `python -m src.cli cola correr` (de a un trabajo;
+# frena ante una falla) y cada comando queda en results/bitacora.jsonl con su línea exacta.
+#
+#   python -m src.cli cola correr --dry-run             la cola completa, expandida a los subprocesos
+#   python -m src.cli cola correr --trabajo 2           solo el trabajo 2 (repetible)
+#   python -m src.cli cola correr --desde 5             desde el trabajo 5
+#
+# Orden: humo -> (commit del lr elegido a la receta) -> entrenar los modelos de tokens -> barrido de temperatura ->
+# evaluar (la T de cada familia sale de results/temperatura_<corrida de referencia>.json: gpt_s_kd, genie_s) ->
+# referencias y piso -> píxeles y latentes -> latencia -> semillas -> estadística.
+#
+# Nombres de corrida (sección 11): <modelo>_<tamaño>[_<variante>][_s<semilla>][_x<k>]. Los resultados de evaluación con
+# --pasos llevan el sufijo _p<pasos> (genie_s_p8), que no choca con el de semilla (genie_s_s1_p8).
+#
+# Notas
+# - Humo solo donde el batch es distinto al de la fuente (gpt, genie, vjepa2, vjepa2_ac), con 3 candidatos de lr
+#   (fuente, raíz, x3). LeWM usa el batch de su paper y ConvLSTM no publica el suyo: los dos van con el lr de la fuente.
+#   El humo de gpt corre sin el maestro (5 veces más rápido); el lr se elige para el alumno, declarado en la receta.
+# - El lr que elige el humo entra a la receta por un commit (cambio de código + test), no por --set: después de los
+#   trabajos 1 y 10 se commitea la receta antes de seguir.
+# - El único GPT entrenado es gpt_s_kd (S destilado de gpt2m, receta IRIS); gpt2m es la referencia.
+# - El MaskGIT de video fiel es la dinámica de Genie (D7b). El `maskgit` propio y sus ablaciones son el trabajo opcional 18.
+# - Solo hay datos actuales: results/ arranca vacío y cada resultado sale de un comando de esta cola (tabla modelo -> performance).
+# - `entrenar` se niega si la corrida ya tiene last.pt o final.pt (salvo `continuar` o --forzar).
+# - bench_e2e agrega _s<pasos> a su nombre (e2e_genie_s_s4__...), no _p<pasos>.
+# - Las ejecuciones 10x (etapa D) no están en esta cola: van después de todo lo demás
+#   (`vjepa2 continuar --run vjepa2_s --presupuesto 10x`, `lewm entrenar --presupuesto 10x --variante x10`).
+
+[[trabajo]]
+id = 0
+nombre = "Tests con CUDA"
+horas = 0.3
+comandos = [
+  "verificar --cuda",
+]
+
+[[trabajo]]
+id = 1
+nombre = "Humo (300 pasos, lr fuente, raíz y x3) donde el batch cambió: gpt (sin maestro), genie y vjepa2"
+horas = 1.0
+comandos = [
+  "gpt entrenar --tamaño s --humo --humo-candidatos fuente,raiz,x3",
+  "genie entrenar --tamaño s --humo --humo-candidatos fuente,raiz,x3",
+  "vjepa2 entrenar --humo --humo-candidatos fuente,raiz,x3",
+]
+
+[[trabajo]]
+id = 2
+nombre = "Entrenar los modelos de tokens: genie_s y gpt_s_kd"
+horas = 2.5
+comandos = [
+  "genie entrenar --tamaño s",
+  "gpt entrenar --tamaño s --destilar --variante kd",
+]
+
+[[trabajo]]
+id = 3
+nombre = "convlstm_px"
+horas = 1.0
+comandos = [
+  "convlstm_px entrenar",
+]
+
+[[trabajo]]
+id = 4
+nombre = "Barrido de temperatura en el holdout, por familia (gpt_s_kd, genie_s)"
+horas = 0.7
+comandos = [
+  "gpt evaluar --tamaño s --variante kd --barrer-temperatura",
+  "genie evaluar --tamaño s --barrer-temperatura",
+]
+
+[[trabajo]]
+id = 5
+nombre = "Evaluar genie_s (1, 2, 4, 8, 12 y 25 pasos), gpt_s_kd y convlstm_px, con la T elegida de la familia"
+horas = 0.8
+comandos = [
+  "genie evaluar --tamaño s --pasos 1,2,4,8,12,25",
+  "gpt evaluar --tamaño s --variante kd",
+  "convlstm_px evaluar",
+]
+
+[[trabajo]]
+id = 6
+nombre = "Referencias: gpt2m, unigrama, transición, frame congelado y real (rollouts y métricas, por la CLI)"
+horas = 1.2
+comandos = [
+  "gpt2m evaluar",
+  "unigram evaluar",
+  "transicion evaluar",
+  "congelado evaluar",
+  "real evaluar",
+]
+
+[[trabajo]]
+id = 7
+nombre = "Piso de FVD: segundo set de clips reales (eval_b) y real contra real"
+horas = 0.3
+comandos = [
+  "real evaluar --clips eval_b",
+  "estadistica piso --b real_eval_b",
+]
+
+[[trabajo]]
+id = 8
+nombre = "lewm fiel, su decoder de píxeles y su evaluación"
+horas = 1.55
+comandos = [
+  "lewm entrenar",
+  "lewm demo --entrenar-decoder",
+  "lewm evaluar",
+]
+
+[[trabajo]]
+id = 9
+nombre = "vjepa2: preentrenamiento, evaluación y demo (separado de vjepa2_ac)"
+horas = 1.7
+comandos = [
+  "vjepa2 entrenar",
+  "vjepa2 evaluar",
+  "vjepa2 demo",
+]
+
+[[trabajo]]
+id = 10
+nombre = "Humo de vjepa2_ac con el encoder vjepa2_s (requiere el trabajo 9); después se commitea su lr a la receta"
+horas = 0.6
+comandos = [
+  "vjepa2_ac entrenar --encoder vjepa2_s --humo --humo-candidatos fuente,raiz,x3",
+]
+
+[[trabajo]]
+id = 11
+nombre = "vjepa2_ac: entrenamiento, decoder de visualización y evaluación"
+horas = 2.0
+comandos = [
+  "vjepa2_ac entrenar --encoder vjepa2_s",
+  "vjepa2_ac demo --entrenar-decoder --encoder vjepa2_s",
+  "vjepa2_ac evaluar",   # el CEM de 5 pasos es caro: mirar los segundos por plan en results/latent_vjepa2_ac.json
+]
+
+[[trabajo]]
+id = 12
+nombre = "Latencia unificada y de punta a punta, y calidad en línea (con la GPU libre)"
+horas = 1.8
+comandos = [
+  "codec bench",
+  "transicion bench",
+  "gpt2m bench",
+  "gpt bench --tamaño s --variante kd",
+  "genie bench --tamaño s --pasos 1,2,4,8,12,25",
+  "convlstm_px bench",
+  "lewm bench",
+  "vjepa2 bench",
+  "vjepa2_ac bench",
+  "transicion bench --cadena",
+  "gpt bench --tamaño s --variante kd --cadena",
+  "genie bench --tamaño s --pasos 4 --cadena",
+  "convlstm_px bench --cadena",
+  "gpt bench --tamaño s --variante kd --cadena --ritmo 50",
+  "genie bench --tamaño s --pasos 4 --cadena --ritmo 50",
+  "convlstm_px bench --cadena --ritmo 50",
+  "genie bench --tamaño s --pasos 4 --cadena --ritmo 50 --diagnostico",
+  "genie evaluar --tamaño s --pasos 4 --cadena",
+  "transicion evaluar --cadena",
+]
+
+[[trabajo]]
+id = 13
+nombre = "Semillas 1 y 2 de genie_s y convlstm_px (evaluadas a 8 pasos en genie)"
+horas = 3.5
+comandos = [
+  "genie entrenar --tamaño s --semilla 1",
+  "genie entrenar --tamaño s --semilla 2",
+  "convlstm_px entrenar --semilla 1",
+  "convlstm_px entrenar --semilla 2",
+  "genie evaluar --tamaño s --semilla 1 --pasos 8",
+  "genie evaluar --tamaño s --semilla 2 --pasos 8",
+  "convlstm_px evaluar --semilla 1",
+  "convlstm_px evaluar --semilla 2",
+]
+
+[[trabajo]]
+id = 14
+nombre = "Estadística: media entre semillas y diferencias pareadas de FVD (CPU, desde la caché)"
+horas = 0.3
+comandos = [
+  "estadistica semillas --nombre genie_s_p8 --runs genie_s_p8,genie_s_s1_p8,genie_s_s2_p8",
+  "estadistica semillas --nombre convlstm_px --runs convlstm_px,convlstm_px_s1,convlstm_px_s2",
+  "estadistica diferencia --a genie_s_p8 --b gpt_s_kd",
+  "estadistica diferencia --a convlstm_px --b genie_s_p8",
+]
+
+# ---- Trabajos opcionales (desactivados): `cola correr` los saltea salvo con --trabajo N o --incluir-opcionales.
+# gpt_s, gpt_m, genie_m y maskgit_s (con sus ablaciones) siguen entrenables por la CLI; el único GPT de la cola es gpt_s_kd y el único Genie, genie_s.
+
+[[trabajo]]
+id = 15
+opcional = true
+nombre = "OPCIONAL: gpt_s de cero (receta IRIS, sin destilar)"
+horas = 1.0
+comandos = [
+  "gpt entrenar --tamaño s",
+  "gpt evaluar --tamaño s",
+]
+
+[[trabajo]]
+id = 16
+opcional = true
+nombre = "OPCIONAL: gpt_m de cero (receta IRIS, sin destilar)"
+horas = 1.5
+comandos = [
+  "gpt entrenar --tamaño m",
+  "gpt evaluar --tamaño m",
+]
+
+[[trabajo]]
+id = 17
+opcional = true
+nombre = "OPCIONAL: genie_m (entrenar, evaluar a 1, 2, 4, 8, 12 y 25 pasos)"
+horas = 1.5
+comandos = [
+  "genie entrenar --tamaño m",
+  "genie evaluar --tamaño m --pasos 1,2,4,8,12,25",
+]
+
+[[trabajo]]
+id = 18
+opcional = true
+nombre = "OPCIONAL: maskgit_s propio y sus ablaciones (posición absoluta, máscara de Genie, sin p_clean), con 1, 2, 4, 8 y 12 pasos"
+horas = 3.0
+comandos = [
+  "maskgit entrenar --tamaño s --set config.pos=frame --set config.p_clean=0.5",
+  "maskgit entrenar --tamaño s --variante abs",
+  "maskgit entrenar --tamaño s --variante genie --set config.pos=frame --set config.p_clean=0.5 --set config.mask_schedule=uniform",
+  "maskgit entrenar --tamaño s --variante nopc --set config.pos=frame",
+  "maskgit evaluar --tamaño s --pasos 1,2,4,8,12",
+  "maskgit evaluar --tamaño s --variante abs --pasos 8",
+  "maskgit evaluar --tamaño s --variante genie --pasos 8",
+  "maskgit evaluar --tamaño s --variante nopc --pasos 8",
+]

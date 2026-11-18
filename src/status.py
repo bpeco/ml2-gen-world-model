@@ -89,10 +89,20 @@ def collect(ckpt_dir="checkpoints"):
   return out
 
 
-def rows(ckpt_dir="checkpoints", now=None, alive=pid_alive):
+def es_de_kind(run, st, kind, kinds):
+  """¿La corrida es de ese modelo? Por el `kind` de su status.json, o por el nombre (<kind> o <kind>_...; gana el kind más largo)."""
+  if st and st.get("kind"):
+    return st["kind"] == kind
+  dueño = max((k for k in kinds if run == k or run.startswith(k + "_")), key=len, default=None)
+  return dueño == kind
+
+
+def rows(ckpt_dir="checkpoints", now=None, alive=pid_alive, kind=None, kinds=()):
   head = ("run", "estado", "%", "paso/total", "loss", "tramo", "ETA")
   out = [head]
   for run, st in collect(ckpt_dir):
+    if kind and not es_de_kind(run, st, kind, kinds):
+      continue
     if st is None:
       done = (Path(ckpt_dir) / run / "final.pt").exists()
       out.append((run, "lista" if done else "?", "-", "-", "-", "-", "-"))
@@ -105,8 +115,8 @@ def rows(ckpt_dir="checkpoints", now=None, alive=pid_alive):
   return out
 
 
-def render(ckpt_dir="checkpoints", now=None, alive=pid_alive):
-  r = rows(ckpt_dir, now, alive)
+def render(ckpt_dir="checkpoints", now=None, alive=pid_alive, kind=None, kinds=()):
+  r = rows(ckpt_dir, now, alive, kind, kinds)
   w = [max(len(str(x[i])) for x in r) for i in range(len(r[0]))]
   return "\n".join("  ".join(str(c).ljust(w[i]) for i, c in enumerate(x)).rstrip() for x in r)
 
@@ -119,13 +129,18 @@ def main(argv=None):
   p = argparse.ArgumentParser(prog="python -m src.status", description=__doc__.split("\n")[0])
   p.add_argument("--watch", nargs="?", const=10.0, type=float, metavar="seg")
   p.add_argument("--ckpt-dir", default="checkpoints")
+  p.add_argument("--kind", help="solo las corridas de este modelo (gpt, genie, vjepa2...)")
   a = p.parse_args(argv)
+  kinds = ()
+  if a.kind:
+    from src.models import KINDS
+    kinds = tuple(KINDS)
   if a.watch is None:
-    print(render(a.ckpt_dir))
+    print(render(a.ckpt_dir, kind=a.kind, kinds=kinds))
     return
   try:
     while True:
-      print("\033[2J\033[H" + time.strftime("%H:%M:%S") + "\n" + render(a.ckpt_dir), flush=True)
+      print("\033[2J\033[H" + time.strftime("%H:%M:%S") + "\n" + render(a.ckpt_dir, kind=a.kind, kinds=kinds), flush=True)
       time.sleep(a.watch)
   except KeyboardInterrupt:
     pass

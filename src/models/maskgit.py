@@ -53,6 +53,10 @@ FIDELIDAD = [
        categoría="datos", fuente="commaVQ"),
 ]
 
+# Capacidades que expone la CLI (src/cli.py, src/toolkit.py): solo las acciones que este modelo soporta.
+ACCIONES = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo", "exportar")
+EVALUACION = "video"  # "video": CE + rollouts + LPIPS/FVD; "latente": src.eval_latent
+
 
 def n_masked(s: int, S: int) -> int:
   """Tokens que siguen enmascarados tras el paso s de S (cosine; n_S = 0)."""
@@ -118,7 +122,8 @@ class MaskGIT(WorldModel):
   def recipe(cls, size=None):
     """Receta propia de la ablación (la heredada del repo): MaskGIT no publica su código de entrenamiento."""
     return legacy_cosine(name="maskgit_propia", fuente="propia (ablación del repo; MaskGIT no publica el entrenamiento)",
-                         forzado=[("toda la receta", "ablación propia: no hay receta publicada que seguir", "propio")])
+                         forzado=[("toda la receta", "ablación propia: no hay receta publicada que seguir", "propio")]
+                         ).replace(batch_fuente=16)  # la fuente es la receta propia: su batch es el de referencia (no se escala)
 
   def __init__(self, cfg: "MaskGIT.Config"):
     super().__init__()

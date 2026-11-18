@@ -88,12 +88,16 @@ FIDELIDAD = [
        categoría="presupuesto", fuente=f"{GENIE} Tab. 9, Tab. 10; nuestra corrida tiene muchos menos pasos"),
   dict(campo="Forma tras el warmup", fuente_valor="no publicada para la dinámica (el tokenizador usa cosine decay)",
        aquí="coseno de 3e-5 a 3e-6", categoría="propio", fuente=f"{GENIE} App. F.1; Jafar (no oficial) también usa coseno"),
-  dict(campo="Batch", fuente_valor="256", aquí="256 efectivas = 16 x accum 16", categoría="presupuesto",
+  dict(campo="Batch", fuente_valor="256", aquí="32 por paso = 16 x accum 2 (~1.520 pasos con 780k frames); lr a confirmar en el humo", categoría="presupuesto",
        fuente=f"{GENIE} Tab. 10; micro-batch por la memoria de 12 GB"),
   dict(campo="Grad clip", fuente_valor="no publicado", aquí="1.0", categoría="propio", fuente="Genie no lo publica"),
-  dict(campo="Pasos", fuente_valor="200k", aquí="los que da el presupuesto de 780k frames (~190 pasos de 256 x 16 frames)",
+  dict(campo="Pasos", fuente_valor="200k", aquí="los que da el presupuesto de 780k frames (~1.520 pasos de 32 x 16 frames)",
        categoría="presupuesto", fuente=f"{GENIE} Tab. 10"),
 ]
+
+# Capacidades que expone la CLI (src/cli.py, src/toolkit.py): solo las acciones que este modelo soporta.
+ACCIONES = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo")
+EVALUACION = "video"  # "video": CE + rollouts + LPIPS/FVD; "latente": src.eval_latent
 
 
 def n_masked(s: int, S: int) -> int:
@@ -251,8 +255,9 @@ class Genie(WorldModel):
       name="genie_paper", fuente=f"{GENIE} Tab. 9, 10, App. F.1; schedule y clip: propio", optimizer="adamw",
       betas=(0.9, 0.9), eps=1e-8,
       lr_segs=[S.linear(0.0, 3e-5, frac=0.025, nombre="warmup"), S.cosine(3e-5, 0.1)],
-      wd_ini=1e-4, wd_on="matrices", grad_clip=1.0, amp="bf16", batch=16, accum=16, frames=16, paper_steps=200_000,
-      forzado=[("batch", "256 efectivas como Genie, en 16 micro-batches de 16 por la memoria de 12 GB", "presupuesto"),
+      wd_ini=1e-4, wd_on="matrices", grad_clip=1.0, amp="bf16", batch=16, accum=2, frames=16, paper_steps=200_000, batch_fuente=256,
+      forzado=[("batch", "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos; "
+                         "lr a confirmar en el humo", "presupuesto"),
                ("warmup", "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos", "presupuesto"),
                ("lr_segs", "coseno hasta 3e-6 tras el warmup: Genie no publica la forma para la dinámica", "propio"),
                ("grad_clip", "1.0: Genie no lo publica", "propio")])

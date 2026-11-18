@@ -476,7 +476,7 @@ Sobre las dos arquitecturas que mencionaste, las dos entran:
 - **Planificación con CEM:** busca la secuencia de acciones cuyo embedding final queda más cerca del de una imagen objetivo.
 - **Evaluación física:** probes de magnitudes físicas y "sorpresa" ante eventos imposibles (teletransporte de objetos).
 
-**Utilidad para el proyecto: es la versión más barata de la línea JEPA.** Las poses de commaVQ hacen de acciones. El proyecto la implementó junto a una JEPA estilo V-JEPA, en el experimento E5: ver [`plan-jepa.md`](plan-jepa.md).
+**Utilidad para el proyecto: es la versión más barata de la línea JEPA.** Las poses de commaVQ hacen de acciones. El proyecto la implementó desde píxeles, fiel al código oficial: ver [`modelos/lewm.md`](modelos/lewm.md) (y [`modelos/vjepa2.md`](modelos/vjepa2.md) para V-JEPA 2).
 
 ---
 

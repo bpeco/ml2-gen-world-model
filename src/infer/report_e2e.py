@@ -229,7 +229,7 @@ def main(argv=None):
   data = collect()
   md = ["# Inferencia de punta a punta", "",
         "Video en la CPU → encoder VQ → world model → decoder VQ → video en la CPU, todo residente en el dispositivo "
-        "(fp16 + CUDA graphs), batch 1. Ver `Docs/plan-inferencia.md`. Lo genera `python -m src.infer.report_e2e`.", "",
+        "(fp16 + CUDA graphs), batch 1. Ver `Docs/uso.md`. Lo genera `python -m src.infer.report_e2e`.", "",
         "- **En línea:** llega un frame de cámara, se codifica, entra al estado del modelo y se predice y decodifica "
         "el siguiente.", "- **Imaginación:** el modelo genera a partir de su propia salida; el encoder solo corre "
         "al principio. Es el modo de los rollouts de la tabla principal (FVD).", ""]

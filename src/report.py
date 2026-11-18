@@ -74,7 +74,7 @@ def estado_config(m, registro, base=Path(".")):
   def ruta(p):  # igual que _load: desde el cwd o desde la carpeta del manifiesto
     return Path(p) if Path(p).exists() else base / p
   es = [resultados.estado(ruta(m[k]), registro) for k in ("eval", "video", "bench", "e2e") if m.get(k)]
-  for e in ("pendiente", resultados.SIN_ESTADO, "protocolo anterior"):
+  for e in ("pendiente", "protocolo anterior"):   # un resultado que existe y no está marcado es vigente
     if e in es:
       return e
   return "vigente" if es else resultados.SIN_ESTADO
@@ -86,6 +86,7 @@ def load_configs(manifest, registro=None):
   manifest = Path(manifest)
   registro = resultados.cargar() if registro is None else registro
   cfgs = []
+  pf = _load("piso_fvd.json", manifest.parent)  # piso n contra n (E1)
   for m in json.loads(manifest.read_text(encoding="utf-8")):
     ev, vd, bn, e2e = (_load(m.get(k), manifest.parent) for k in ("eval", "video", "bench", "e2e"))
     c = dict(label=m["label"], estado=estado_config(m, registro, manifest.parent), short=m.get("short", m["label"]), family=m.get("family", "otro"),
@@ -97,6 +98,8 @@ def load_configs(manifest, registro=None):
              lpips1=_get(vd, "lpips", "at", "1", "mean"),
              lpips1_ci=(_get(vd, "lpips", "at", "1", "lo"), _get(vd, "lpips", "at", "1", "hi")),
              fvd={h: _get(vd, "fvd", h) for h in ("1", "2", "3")},
+             piso1=_get(vd, "piso", "1", "value"), piso_n1=_get(pf, "piso", "1", "value"),
+             piso_n1_ci=(_get(pf, "piso", "1", "lo"), _get(pf, "piso", "1", "hi")), fvd1_mitades=_get(vd, "piso", "1", "modelo_mitades"),
              ms=_get(bn, "median_ms"), e2e_p99=_get(e2e, "steady", "p99"))
     c["fvd1"] = _get(c["fvd"]["1"], "value")
     cfgs.append(c)
@@ -423,7 +426,8 @@ def summary(cfgs):
       "label": c["label"], "family": c["family"], "params_M": _r(c["params"] / 1e6 if c["params"] else None, 1),
       "ce_all": _r(c["ce_all"], 3), "ce_last": _r(c["ce_last"], 3), "lpips_1s": _r(c["lpips1"], 3),
       "fvd_1s": _r(c["fvd1"], 1), "fvd_1s_ci": [_r(f1.get("lo"), 1), _r(f1.get("hi"), 1)] if f1 else None,
-      "fvd_3s": _r(_get(f3, "value"), 1), "ms_frame": _r(c["ms"], 2), "e2e_p99_ms": _r(c.get("e2e_p99"), 1),
+      "fvd_3s": _r(_get(f3, "value"), 1),
+      "fvd_piso_1s": _r(c.get("piso_n1"), 1), "fvd_piso_mitades_1s": _r(c.get("piso1"), 1), "fvd_1s_mitades": _r(c.get("fvd1_mitades"), 1), "ms_frame": _r(c["ms"], 2), "e2e_p99_ms": _r(c.get("e2e_p99"), 1),
       "fps": _r(1000 / c["ms"], 1) if c["ms"] else None,
       "realtime": None if c["ms"] is None else bool(c["ms"] < RT_MS),
       "group": c["group"], "estado": c["estado"],
@@ -433,20 +437,25 @@ def summary(cfgs):
 
 def markdown(rows):
   f = lambda v: "–" if v is None else str(v)
+  piso = lambda r: "–" if r.get("fvd_piso_mitades_1s") is None else f"{r['fvd_piso_mitades_1s']}" + (
+    f" ({r['fvd_1s_mitades']})" if r.get("fvd_1s_mitades") is not None else "")
   yn = lambda v: "–" if v is None else ("sí" if v else "no")
-  out = ["| Configuración | Familia | Params (M) | CE | CE último frame | LPIPS@1s | FVD@1s [IC 95%] | FVD@3s "
-         "| ms/frame | FPS | Tiempo real (<50 ms) | Pareto | De punta a punta p99 (ms) | Estado |",
-         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|:-:|:-:|---:|---|"]
+  out = ["| Configuración | Familia | Params (M) | CE | CE último frame | LPIPS@1s | FVD@1s [IC 95% por segmento] | FVD@3s "
+         "| Piso FVD@1s (400 contra 400) | Piso en mitades (modelo en mitades) | ms/frame | FPS | Tiempo real (<50 ms) | Pareto | De punta a punta p99 (ms) | Estado |",
+         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|:-:|:-:|---:|---|"]
   out = ["Pareto: no dominada en (ms/frame, FVD a 1 s) entre las configuraciones principales (100M tokens); las "
          "ablaciones y los extras no compiten. Latencia de los transformers con fp16 + CUDA graphs. De punta a punta: "
          "video → encoder → modelo → decoder → video en la GPU, modo imaginación, p99 de 3000 frames "
          "(results/infer/summary_e2e.md). Estado: solo las filas vigentes entran en la frontera de Pareto y en las figuras "
-         "(results/estado.json).", ""] + out
+         "(results/estado.json). IC del FVD y de LPIPS: bootstrap por segmento (los 4 clips de un segmento no son independientes). "
+         "Piso (400 contra 400): FVD de los clips reales de evaluación contra otros 400 reales de los mismos segmentos "
+         "(results/piso_fvd.json); es el comparable con la columna de FVD. Piso en mitades: real contra real con dos mitades "
+         "disjuntas por segmento (n/2 por lado), y entre paréntesis el FVD del modelo con esas mismas mitades.", ""] + out
   for r in rows:
     ci = r["fvd_1s_ci"]
     fvd = f(r["fvd_1s"]) + (f" [{f(ci[0])}, {f(ci[1])}]" if ci and r["fvd_1s"] is not None else "")
     out.append(f"| {r['label']} | {r['family']} | {f(r['params_M'])} | {f(r['ce_all'])} | {f(r['ce_last'])} | "
-               f"{f(r['lpips_1s'])} | {fvd} | {f(r['fvd_3s'])} | {f(r['ms_frame'])} | {f(r['fps'])} | "
+               f"{f(r['lpips_1s'])} | {fvd} | {f(r['fvd_3s'])} | {f(r.get('fvd_piso_1s'))} | {piso(r)} | {f(r['ms_frame'])} | {f(r['fps'])} | "
                f"{yn(r['realtime'])} | {yn(r['pareto'])} | {f(r.get('e2e_p99_ms'))} | {r['estado']} |")
   return "\n".join(out) + "\n"
 

@@ -4,10 +4,51 @@ World models de manejo sobre [commaVQ](https://github.com/commaai/commavq). Trab
 
 Pregunta del proyecto: ¿cuánto se puede achicar y acelerar un world model de video de manejo sin perder calidad?
 
-- Plan: [`Docs/plan-proyecto.md`](Docs/plan-proyecto.md). Cómo se implementó y validó: [`Docs/plan-implementacion.md`](Docs/plan-implementacion.md).
-- Resultados y conclusiones: [`Docs/resultados.md`](Docs/resultados.md). Tabla de todas las configuraciones: [`results/summary.md`](results/summary.md).
-- World models latentes, JEPA y LeWorldModel (E5): [`Docs/plan-jepa.md`](Docs/plan-jepa.md).
-- Próximas pruebas, inferencia de punta a punta (video → encoder → modelo → decoder → video) en GPU y NPU: [`Docs/plan-inferencia.md`](Docs/plan-inferencia.md).
+- **Qué se hizo y por qué:** [`Docs/resumen.md`](Docs/resumen.md).
+- **Resultados (tabla modelo → performance):** [`Docs/resultados.md`](Docs/resultados.md).
+- **Cómo usar el framework (CLI, cola, bitácora, dispositivos):** [`Docs/uso.md`](Docs/uso.md).
+- **Una guía por modelo (receta, fidelidad, acciones):** [`Docs/modelos/`](Docs/modelos/README.md).
+- **Cómo contribuir:** [`CONTRIBUTING.md`](CONTRIBUTING.md).
+- **Los papers del camino:** [`Docs/world-models-conduccion-papers.md`](Docs/world-models-conduccion-papers.md).
+
+## Estado del proyecto
+
+**Resultados en re-ejecución; el código es el definitivo.** Los modelos se reconstruyeron para ser fieles a su fuente y cada uno entrena con la receta de su paper. La cola de GPU todavía no se corrió: todos los valores de la tabla de resultados están "pendiente", y las conclusiones y las hipótesis están "a evaluar".
+
+**Los checkpoints no se distribuyen:** cada uno entrena lo que necesita con un comando de la CLI (más abajo). Quedan en `checkpoints/<run>/` y se registran en `results/checkpoints.json`.
+
+### Modelos
+
+Una fila por modelo. La performance está en la tabla de resultados, que a su vez lleva a la guía de cada modelo (la acción `entrenar` está a un clic).
+
+| Modelo | Qué es | Performance | Reentrenar |
+|---|---|---|---|
+| `gpt_s_kd` | GPT-S destilado de `gpt2m`, receta de IRIS | [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance): pendiente | [`gpt entrenar`](Docs/modelos/gpt.md#entrenar) |
+| `genie_s` | MaskGIT fiel: la dinámica de Genie, con 1 a 25 pasadas por frame | [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance): pendiente | [`genie entrenar`](Docs/modelos/genie.md#entrenar) |
+| `convlstm_px` | ConvLSTM de Shi sobre píxeles | [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance): pendiente | [`convlstm_px entrenar`](Docs/modelos/convlstm_px.md#entrenar) |
+| `lewm` | LeWorldModel desde píxeles (SIGReg) | [resultados](Docs/resultados.md#2-modelos-latentes-modelo--performance): pendiente | [`lewm entrenar`](Docs/modelos/lewm.md#entrenar) |
+| `vjepa2` | V-JEPA 2: preentrenamiento autosupervisado | [resultados](Docs/resultados.md#2-modelos-latentes-modelo--performance): pendiente | [`vjepa2 entrenar`](Docs/modelos/vjepa2.md#entrenar) |
+| `vjepa2_ac` | V-JEPA 2-AC, con acciones, sobre `vjepa2` | [resultados](Docs/resultados.md#2-modelos-latentes-modelo--performance): pendiente | [`vjepa2_ac entrenar`](Docs/modelos/vjepa2_ac.md#entrenar) |
+| referencias | `gpt2m`, `unigram`, `transicion`, `congelado`, `real` (piso de FVD) y `codec` | [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance): pendiente | [`referencias`](Docs/modelos/referencias.md) |
+
+Implementados y entrenables, fuera de la cola: `gpt_s`, `gpt_m`, `genie_m` y `maskgit_s` (el MaskGIT propio, con sus ablaciones).
+
+## Cómo está armado
+
+```mermaid
+flowchart LR
+  CLI["python -m src.cli<br/>y notebooks"] --> TK["Toolkit"]
+  TK --> EJ["ejecutor<br/>candado de GPU, cola, bitácora"]
+  EJ --> SC["scripts: train, evaluate,<br/>rollouts, eval_latent,<br/>bench, demo, export"]
+  MOD["modelos del registro<br/>con receta y fidelidad"] --> SC
+  DAT["tokens y poses de commaVQ<br/>residentes en el device"] --> SC
+  SC --> RES["checkpoints/ y results/"]
+  RES --> REP["cli reporte"] --> TAB["tabla modelo → performance"]
+  CAM["cámara o video"] --> ENC["encoder VQ"] --> WM["world model<br/>stream"] --> DEC["decoder VQ"] --> OUT["video"]
+  WM -.-> BK["PyTorch: CUDA, ROCm, MPS, CPU<br/>ONNX Runtime: DirectML, NPU, CPU"]
+```
+
+El diagrama completo, de entrenamiento y de inferencia, está en [`Docs/uso.md`](Docs/uso.md#cómo-está-armado).
 
 ## Setup
 
@@ -22,17 +63,28 @@ py -3.12 -m venv .venv
 git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq   # código del VQ-VAE y del GPT de comma
 ```
 
-En el resto del README, `.venv/bin/python` es `.venv\Scripts\python`.
+En el resto del README, `python` es el del entorno virtual (`.venv\Scripts\python` en Windows, `.venv/bin/python` en Linux y Mac). El detalle de cada sistema está en [`Docs/uso.md`](Docs/uso.md#instalación-y-uso-por-sistema).
 
-### Mac
+### Linux
+
+```bash
+python3.12 -m venv .venv && source .venv/bin/activate
+python -m pip install torch torchvision          # el build con CUDA que corresponda a tu driver
+python -m pip install -r requirements.txt -r requirements-metrics.txt
+git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq
+```
+
+### Mac con Apple Silicon
 
 Conviene un Python arm64 nativo: con uno x86_64 (Rosetta) solo se consigue torch 2.2.2.
 
 ```bash
-uv venv --python cpython-3.12-macos-aarch64-none .venv
-uv pip install --python .venv/bin/python -r requirements.txt -r requirements-metrics.txt
+uv venv --python cpython-3.12-macos-aarch64-none .venv && source .venv/bin/activate
+uv pip install -r requirements.txt -r requirements-metrics.txt
 git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq
 ```
+
+La GPU se usa por MPS (se elige sola si está; `--device mps` la pide; `PYTORCH_ENABLE_MPS_FALLBACK=1` hace que las operaciones sin soporte caigan a la CPU). Anda bien la CLI, los notebooks, las demos de clase y la inferencia; entrenar las recetas completas es lento. Los checkpoints no se suben a ningún lado: para correr una demo con modelos entrenados en otra máquina, copiá `checkpoints/<run>/final.pt` y `results/train_<run>.json` y registrá la corrida con `python -m src.store register <run>`.
 
 ### Colab
 
@@ -40,106 +92,75 @@ git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq
 
 ### Laptop con Radeon (ROCm) y NPU
 
-`requirements-rocm.txt` instala el torch de AMD para gfx1152 (antes que `requirements.txt`); ver los comentarios del archivo y la sección 2.5 del plan. `device()` elige `cuda` igual: los builds ROCm usan la API `torch.cuda`. `requirements-npu.txt` es para el extra de ONNX Runtime en la NPU (`src/export_onnx.py`, `src/ort_model.py`).
+`requirements-rocm.txt` instala el torch de AMD para gfx1152 (antes que `requirements.txt`); ver los comentarios del archivo. `device()` elige `cuda` igual: los builds ROCm usan la API `torch.cuda`. `requirements-npu.txt` es para el extra de ONNX Runtime en la NPU (`src/export_onnx.py`, `src/ort_model.py`).
 
-Para medir la inferencia de punta a punta en la laptop (iGPU con ROCm y NPU con ONNX Runtime), ver la sección "Cómo correrlo" de [`Docs/plan-inferencia.md`](Docs/plan-inferencia.md).
+Para medir la inferencia de punta a punta en la laptop (iGPU con ROCm y NPU con ONNX Runtime), ver [`Docs/uso.md`](Docs/uso.md#instalación-y-uso-por-sistema) y [`Docs/uso.md`](Docs/uso.md#dispositivos-e-inferencia).
 
 `device()` ([`src/common.py`](src/common.py)) elige CUDA (NVIDIA o ROCm), MPS o CPU. `ML2_DEVICE=cpu` lo fuerza. Cada `results/*.json` anota el hardware usado.
 
 ## Datos
 
 ```bash
-.venv/bin/python -m src.data   # shard 0 (train), val oficial, decoder y pesos del GPT de comma -> data/
-.venv/bin/python -m src.viz    # frames de val decodificados -> results/
+python -m src.data   # shard 0 (train), val oficial, decoder y pesos del GPT de comma -> data/
+python -m src.viz    # frames de val decodificados -> results/
 ```
 
-- Train: `data-0000.tar.gz`, 2.500 segmentos de 1 min (1200 x 8 x 16 tokens).
-- Val: los 100 segmentos de `val.zip` de una revisión anterior del dataset. La lista queda en `results/val_split.json`. No comparten rutas con el shard de train.
+- Train: `data-0000.tar.gz`, 2.500 segmentos de 1 min (1200 x 8 x 16 tokens) y sus poses.
+- Val: los 100 segmentos de `val.zip`. La lista queda en `results/val_split.json`. No comparten rutas con el shard de train.
 - Si la descarga de Hugging Face se cuelga, probar con `HF_HUB_DISABLE_XET=1`.
 
 ## Código
 
-Todo modelo implementa la interfaz `WorldModel` ([`src/models/base.py`](src/models/base.py)): `logits` (CE con el protocolo de comma), `last_frame_logits`, `next_frame`, `generate` y `rollout`. La evaluación, los rollouts y el bench no saben qué modelo miden. `src.models.load_model(spec)` acepta `gpt2m`, los baselines (`unigram`, `copy`, `copy_mix`), `random:<kind>_<size>` (sin entrenar, para latencia), un nombre de corrida (`gpt_s_kd`) o una ruta `.pt`.
+Todo modelo implementa la interfaz `WorldModel` ([`src/models/base.py`](src/models/base.py)): `logits` (CE con el protocolo de comma), `last_frame_logits`, `next_frame`, `generate` y `rollout`. La evaluación, los rollouts y el bench no saben qué modelo miden. `src.models.load_model(spec)` acepta `gpt2m`, los baselines (`unigram`, `transicion`, `congelado`), `random:<kind>_<size>` (sin entrenar, para latencia), un nombre de corrida (`gpt_s_kd`) o una ruta `.pt`.
 
-| Archivo | Qué hace |
+| Qué | Dónde |
 |---|---|
-| `src/models/baselines.py` | Unigrama, copia (tabla de transición por celda) y `copy_mix` (a temperatura 0, frame congelado). |
-| `src/models/gpt2m.py` | GPT de comma (307M) como `WorldModel`: referencia y maestro. Generación por lotes con KV cache y CUDA graphs. |
-| `src/models/backbone.py` | Transformer propio: KV cache estática, máscara causal o causal por bloques, embedding de posición absoluto o factorizado (frame + celda). |
-| `src/models/gpt.py` | GPT alumno autoregresivo: 128 pasadas por frame, con KV cache y CUDA graphs. |
-| `src/models/maskgit.py` | MaskGIT: causal entre frames, bidireccional dentro del frame, S pasadas por frame con schedule coseno. |
-| `src/models/convlstm.py` | ConvLSTM sobre la grilla 8×16: una pasada recurrente por frame. |
-| `src/train.py`, `src/windows.py` | Entrenamiento con CE o CE + destilación, AMP, checkpoints cada 15 min y resume. |
-| `src/evaluate.py` | CE con el protocolo de comma (`ce_all`, `ce_tok`) y `ce_last` (último frame, comparable con MaskGIT). |
-| `src/rollouts.py` | 400 clips fijos (1 s de contexto + 3 s generados) → `results/rollouts/<nombre>.npy`. |
-| `src/metrics_video.py` | Decodifica y mide LPIPS por horizonte y FVD (I3D) a 1, 2 y 3 s, con intervalos por bootstrap. |
-| `src/bench.py` | Latencia con batch 1: ms por frame (mediana), sin el decoder. |
-| `src/report.py`, `scripts/make_configs.py` | Figuras (Pareto, horizonte, CE vs. FVD) y tabla resumen. |
-| `src/ejemplos.py` | Muestras visuales: decodifica rollouts y arma grillas (modelo × horizonte) y GIF lado a lado → `results/ejemplos/`. |
-| `src/store.py` | Almacén de modelos entrenados para no reentrenar (ver abajo). |
-| `src/export_onnx.py`, `src/ort_model.py` | Extra: una pasada de forma fija en ONNX Runtime (CPU, CUDA, DirectML o NPU). |
-| `src/infer/codec.py` | Encoder y decoder del VQ-VAE de comma en el device: fp16 con el cuantizador en fp32 y un CUDA graph por etapa; entrada y salida uint8. |
-| `src/infer/stream.py` | Estado de inferencia por frame (`observe`, `predict(k)`, `imagine`, `step`) para cada familia: buffer de tokens, MaskGIT con el frame entero en un graph, ConvLSTM con (h, c), y caché de latentes para JEPA y LeWM. |
-| `src/infer/bench_codec.py`, `src/infer/bench_e2e.py` | Fidelidad y latencia del codec; latencia de la cadena completa (p50, p99, frames tarde), en línea e imaginación, en bucle cerrado o a 50 ms. |
-| `src/infer/quality.py`, `src/infer/report_e2e.py` | Calidad a 1 paso en línea y verificación del camino nuevo contra los rollouts; tabla y figura de punta a punta. |
-| `src/infer/demo.py` | Video real y predicho lado a lado en mp4. |
-| `src/infer/export_codec.py`, `src/infer/bench_ort.py` | Codec y paso de ConvLSTM en ONNX, y la cadena en ONNX Runtime eligiendo el dispositivo de cada etapa (NPU, iGPU o CPU). |
+| Modelos | `src/models/` (`gpt`, `genie`, `maskgit`, `convlstm_px`, `lewm`, `vjepa/`, `baselines`, `gpt2m`) y `src/models/_plantilla.py`, el modelo mínimo para copiar |
+| CLI, cola y bitácora | `src/cli.py`, `src/toolkit.py`, `src/ejecutor.py`, `src/cola.py`, `src/bitacora.py`; la cola declarada en `scripts/queue.toml` |
+| Recetas y schedules | `src/recipes.py`, `src/schedules.py`; `python -m src.recipes --table` |
+| Entrenamiento y datos | `src/train.py`, `src/windows.py`, `src/data.py`, `src/pixels.py` |
+| Evaluación | `src/evaluate.py`, `src/rollouts.py`, `src/metrics_video.py`, `src/eval_latent.py`, `src/estadistica.py`, `src/evaluadores.py` |
+| Latencia e inferencia | `src/bench.py`, `src/infer/` (codec, streams, cadena de punta a punta, demo, backends), `src/export_onnx.py`, `src/ort_model.py` |
+| Resultados | `src/resultados.py`, `src/report.py`, `src/configs.py` |
+| Docs | `src/docs_gen.py` (tablas de las guías), `scripts/check_docs.py` |
 
-## Experimentos
+## Cómo entrenar, evaluar y medir un modelo
+
+Todo es `python -m src.cli <modelo> <acción>`; con `--dry-run` imprime lo que ejecutaría sin correr nada. Los números salen de ahí o de la cola, nunca de scripts sueltos.
 
 ```bash
-bash scripts/train_all.sh            # E1, E2, E2b, E3, E5 y ablaciones: 100M tokens cada uno -> checkpoints/
-bash scripts/eval_all.sh quality     # CE + rollouts + LPIPS/FVD de todas las configuraciones -> results/
-bash scripts/eval_all.sh latent      # E5: probes, sorpresa, acciones y CEM de JEPA y LeWM
-bash scripts/eval_all.sh bench       # latencias (con la GPU libre) -> results/bench/
-bash scripts/eval_all.sh bench-latent  # latencias de JEPA y LeWM (con la GPU libre)
-bash scripts/e2e_all.sh all          # inferencia de punta a punta: codec, cadena completa y a ritmo de cámara
-bash scripts/e2e_all.sh quality      # calidad a 1 paso en línea y verificación contra los rollouts
-.venv/bin/python -m src.infer.report_e2e   # results/infer/summary_e2e.md y results/fig_pareto_e2e.png
-.venv/bin/python scripts/make_configs.py && .venv/bin/python -m src.report   # figuras y results/summary.md
+python -m src.cli --help                              # modelos y acciones
+python -m src.cli genie receta --tamaño s             # la receta de la fuente y sus desvíos
+python -m src.cli genie entrenar --tamaño s --humo    # elige el lr con 300 pasos por candidato
+python -m src.cli genie entrenar --tamaño s           # entrena con el presupuesto común de 780.000 frames
+python -m src.cli genie evaluar --tamaño s --pasos 4
+python -m src.cli genie bench --tamaño s --pasos 4 --cadena
+python -m src.cli genie estado --vigilar 30
+python -m src.cli cola correr --dry-run               # toda la cola de GPU (scripts/queue.toml)
+python -m src.cli reporte                             # tablas y figuras desde results/
 ```
 
-Los dos scripts saltan lo que ya existe, así que se pueden cortar y relanzar. Comandos sueltos:
-
-```bash
-.venv/bin/python -m src.evaluate --model gpt2m                      # E0: ce_all = 2,026
-.venv/bin/python -m src.train --kind gpt --size s --run gpt_s_kd --config '{"pos": "frame"}' --kd
-.venv/bin/python -m src.rollouts --model maskgit_s --steps 4 --dtype fp16 --graphs
-.venv/bin/python -m src.metrics_video --name maskgit_s_s4
-.venv/bin/python -m src.bench --model random:maskgit_s --steps 4 --dtype fp16 --graphs
-.venv/bin/python -m src.ejemplos                                     # muestras de 3 clips -> results/ejemplos/
-.venv/bin/python -m src.infer.bench_e2e --model maskgit_s --steps 4    # cadena completa, en línea, 3000 frames
-.venv/bin/python -m src.infer.demo --model maskgit_s --steps 4         # video real y predicho -> results/demo/
-```
-
-`src/evaluate.py` replica el protocolo de `notebooks/eval.ipynb` de commaVQ (commit `a1adab98`): 59 ventanas de 20 frames (2.580 tokens) por segmento, con BOS antes de cada frame. `ce_all` incluye los targets BOS y es comparable con el 2,02 que reporta comma; gpt2m da 2,026 sobre los 100 segmentos.
+Una sola acción de GPU corre a la vez (las demás quedan en la cola), todo queda en `results/bitacora.jsonl` con su comando exacto, y una acción de GPU no corre con cambios sin commitear en `src/` o `scripts/`. Detalles en [`Docs/uso.md`](Docs/uso.md).
 
 ## Notebooks
 
+Hacen lo mismo que la CLI, con barra de progreso y curvas, y lanzan todo por `Toolkit`: sus corridas también quedan en la bitácora.
+
 | Notebook | Para qué |
 |---|---|
-| [`notebooks/resultados.ipynb`](notebooks/resultados.ipynb) | Tabla resumen, hipótesis, figuras, muestras de cualquier clip y modelo, curvas de LPIPS y generación en vivo con un modelo entrenado. No entrena nada. |
-| [`notebooks/entrenamiento.ipynb`](notebooks/entrenamiento.ipynb) | Entrena una configuración (GPT, MaskGIT o ConvLSTM; desde cero o destilada), muestra la curva de aprendizaje y la evalúa: CE, rollouts, muestras y latencia. |
-| [`notebooks/colab.ipynb`](notebooks/colab.ipynb) | Preparación en Colab, E0 y latencias en la T4. |
+| `notebooks/modelos/<modelo>.ipynb` | una guía de modelo en celdas (enlazado desde cada guía de [`Docs/modelos/`](Docs/modelos/README.md)) |
+| [`notebooks/resultados.ipynb`](notebooks/resultados.ipynb) | la tabla modelo → performance, sin entrenar nada |
+| [`notebooks/colab.ipynb`](notebooks/colab.ipynb) | preparación en Colab y latencias en la T4 |
 
-Funcionan localmente y en Colab. Localmente necesitan un kernel en el `.venv`: `.venv/bin/python -m pip install ipykernel` (VS Code) o `jupyter`.
+Funcionan localmente y en Colab. Localmente necesitan un kernel en el entorno: `python -m pip install ipykernel` (VS Code) o `jupyter`.
 
-## Modelos entrenados: almacén compartido
-
-Los checkpoints quedan en `checkpoints/<corrida>/` (`final.pt` es el modelo; `last.pt`, `log.jsonl` y `train.out` son del entrenamiento) y no van a git: GitHub rechaza archivos de más de 100 MB y cada versión quedaría para siempre en el historial. Para no reentrenar, [`src/store.py`](src/store.py) los sube y baja de un repo de Hugging Face o de una carpeta compartida (por ejemplo, Google Drive), y `results/checkpoints.json` (en git) lista cada modelo con su configuración, tokens y sha256.
+## Tests y verificación
 
 ```bash
-.venv/bin/python -m src.store list                                   # qué modelos hay y dónde
-.venv/bin/python -m src.store pull --all --hf <usuario>/<repo>       # o --dir /content/drive/MyDrive/ml2/store
-.venv/bin/python -m src.store push --all --hf <usuario>/<repo> [--create] [--rollouts]
-```
-
-`load_model("gpt_s_kd")` baja el checkpoint solo si no está local (con `ML2_HF_REPO` o `ML2_STORE_DIR` configurados, o el remoto anotado en el manifiesto) y verifica el sha256. Con `--rollouts` también se comparten los rollouts, y `python -m src.metrics_video --name X --from-cache` recalcula las métricas sin decodificar.
-
-## Tests
-
-```bash
-.venv/bin/python -m pytest tests -q
+python -m pytest tests -q
+python -m src.cli verificar        # pytest, bitácora, docs y notebooks
+python -m src.docs_gen --check     # las tablas de las guías están al día
+python scripts/check_docs.py       # links, números sin respaldo y ejemplos con --dry-run
 ```
 
 ## Slides

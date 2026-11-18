@@ -67,8 +67,9 @@ FIDELIDAD_AC = [
   dict(campo="Optimizador / LR", paper="AdamW (0.9, 0.999), wd 0.04, sin clip; warmup 7.5e-5 → 4.25e-4 en 4500 de 94.5k pasos, "
        "constante, decay lineal a 0 en los últimos 4500", aquí="igual con las mismas fracciones (4500/94500)", categoría="fiel",
        fuente=f"{PAPER} §3.1; {YAML_AC} L61-70"),
-  dict(campo="Batch", paper="256", aquí="256 efectivo = 16 x accum 16", categoría="presupuesto", fuente=f"{PAPER} §3.1"),
-  dict(campo="Presupuesto", paper="94.5k pasos", aquí="4x los 780k frames de referencia ≈ 760 pasos de 256 clips de 16 frames",
+  dict(campo="Batch", paper="256", aquí="32 efectivo = 16 x accum 2: con el presupuesto fijo, el batch del paper daría ~190 "
+       "pasos; lr a confirmar en el humo", categoría="presupuesto", fuente=f"{PAPER} §3.1"),
+  dict(campo="Presupuesto", paper="94.5k pasos", aquí="el presupuesto común de 780k frames ≈ 1.5k pasos de 32 clips de 16 frames",
        categoría="presupuesto", fuente=f"{PAPER} §3.1"),
   dict(campo="Planificador CEM", paper="800 muestras, 10 iteraciones, top-10, horizonte 1, N(0, 1), energía L1",
        aquí="igual (plan.py), en el espacio normalizado de acciones", categoría="fiel", fuente=f"{PAPER} §3.2; mpc_utils.py L17-140"),
@@ -115,9 +116,10 @@ class VJEPA2AC(WorldModel):
       lr_segs=[S.linear(7.5e-5, 4.25e-4, frac=WARM_AC, nombre="warmup"), S.constant(4.25e-4, nombre="constante"),
                S.linear(4.25e-4, 0.0, frac=WARM_AC, nombre="decay")],
       wd_ini=0.04, wd_fin=None, wd_on="matrices", ema_segs=None, grad_clip=None, amp="bf16",
-      batch=16, frames=16, frameskip=5, accum=16, presupuesto=4 * 780_000, paper_steps=94_500,
-      forzado=[("batch", "256 efectivo con batch 16 x accum 16 (memoria)", "presupuesto"),
-               ("presupuesto", "≈760 pasos en vez de 94.5k; las fracciones de warmup y decay se conservan", "presupuesto"),
+      batch=16, frames=16, frameskip=5, accum=2, presupuesto=780_000, paper_steps=94_500, batch_fuente=256,
+      forzado=[("batch", "32 efectivo (16 x accum 2) en vez de 256: con el presupuesto común de 780k frames da ~1.5k pasos "
+                "(con 256 serían ~190); lr a confirmar en el humo", "presupuesto"),
+               ("presupuesto", "~1.5k pasos en vez de 94.5k; las fracciones de warmup y decay se conservan", "presupuesto"),
                ("predictor", "12 x 384 en vez de 24 x 1024", "presupuesto"),
                ("frames/frameskip", "16 frames a 4 fps = 1 de cada 5 de los 20 FPS", "datos")])
 
@@ -234,8 +236,131 @@ class VJEPA2AC(WorldModel):
     return estado_norm + accion_norm
 
 
+  # ---- lectura para src/eval_latent.py. Entrada: ventana uint8 (B, F, H, W, 3) ya a 4 Hz y poses crudas (B, F, n_pose).
+  lat_aplica = ("probes", "horizonte", "sorpresa", "plan")
+  lat_frames_por_paso = 1
+  lat_convencion = "pose_del_frame"  # la pose de un paso del plan es la del frame que alcanza (estado + acciones)
+  lat_cem = dict(n_muestras=800, topk=10, iters=10)  # paper §3.2 (energía L1, N(0, 1) cambiado por el desvío de los datos)
+  lat_pooling = "promedio sobre los 128 tokens de cada frame (el encoder congelado codifica un frame por vez)"
+
+  @torch.no_grad()
+  def _codificar_ventana(self, img):
+    """uint8 (B, F, H, W, 3) -> (B, F, N, D), un frame por vez (tubelet duplicado) y con layer_norm."""
+    return self.codificar(normalizar_cthw(img.float().div(255).permute(0, 4, 1, 2, 3)))
+
+  @torch.no_grad()
+  def lat_features(self, img, n=3):
+    """{"obs": tokens de los últimos n frames promediados (B, n·D), "pred": predicción de esos frames desde su pasado}.
+
+    Sin acciones ni estados (ceros): la pose es lo que el probe quiere leer, no lo que se le da al predictor."""
+    z = self._codificar_ventana(img[:, -max(n + 1, 8):]).float()
+    B, T = z.shape[:2]
+    s, a = self.estados_acciones(None, B, T, z.device)
+    pr = self.predecir(z[:, :-1], a, s[:, :-1]).float()
+    return {"obs": z[:, -n:].mean(2).flatten(1), "pred": pr[:, -n:].mean(2).flatten(1)}
+
+  @torch.no_grad()
+  def rollout(self, z, s, a, ctx=3, H=8, accion_nula=False):
+    """Rollout latente autorregresivo de H pasos desde los primeros `ctx` frames de z (B, F, N, D), con los estados s y
+    las acciones a de `estados_acciones` (o acción 0 y estado fijo). Devuelve los frames imaginados (B, H, N, D)."""
+    zt, at, st = z[:, :ctx], a[:, :ctx - 1], s[:, :ctx]
+    for h in range(H):
+      ah = torch.zeros_like(a[:, :1]) if accion_nula else a[:, ctx - 1 + h:ctx + h]
+      at = torch.cat([at, ah], 1)
+      zt = torch.cat([zt, self.predecir(zt, at, st)[:, -1:].float()], 1)
+      st = torch.cat([st, st[:, -1:] + ah], 1)
+    return zt[:, ctx:]
+
+  @torch.no_grad()
+  def lat_horizonte(self, img, poses, ctx=3, H=8, accion_nula=False):
+    """Rollout latente de H pasos desde `ctx` frames reales con los estados y acciones reales (o acción 0 y estado fijo).
+
+    Devuelve errores (B, H): mse y l1 del modelo contra el latente real, y los de copiar el último latente de contexto."""
+    z = self._codificar_ventana(img).float()
+    B, Fr = z.shape[:2]
+    s, a = self.estados_acciones(poses, B, Fr, z.device)
+    tgt = z[:, ctx:ctx + H]
+    d, dc = self.rollout(z, s, a, ctx, H, accion_nula) - tgt, z[:, ctx - 1:ctx] - tgt
+    return {"mse": d.square().mean((2, 3)), "l1": d.abs().mean((2, 3)), "copia_mse": dc.square().mean((2, 3)),
+            "copia_l1": dc.abs().mean((2, 3))}
+
+  @torch.no_grad()
+  def lat_sorpresa(self, img, poses):
+    """Error latente del frame f = 1..F-1 predicho con todos los anteriores (B, F-1) y el de copiar el del anterior."""
+    z = self._codificar_ventana(img).float()
+    B, Fr = z.shape[:2]
+    s, a = self.estados_acciones(poses, B, Fr, z.device)
+    pr = self.predecir(z[:, :-1], a, s[:, :-1]).float()
+    return {"mse": (pr - z[:, 1:]).square().mean((2, 3)), "copia_mse": (z[:, :-1] - z[:, 1:]).square().mean((2, 3))}
+
+  @torch.no_grad()
+  def lat_desvio(self, poses):
+    """Desvío por dimensión de la acción (diferencia de estados normalizados entre pasos) en poses (N, F, n_pose) de train."""
+    A = self.cfg.action_dim
+    s = (poses[..., :A].float() - self.pose_mean[:A].float()) / self.pose_std[:A].float()
+    d = (s[:, 1:] - s[:, :-1]).reshape(-1, A)
+    d = d[torch.isfinite(d).all(-1)]
+    return d.std(0).clamp(min=1e-4)
+
+  @torch.no_grad()
+  def lat_plan(self, img, poses, ctx=3, P=5, init_std=1.0, generator=None):
+    """CEM del paper (800 muestras, top-10, 10 iteraciones, energía L1) desde los primeros `ctx` frames hacia el frame
+    `ctx - 1 + P`. Devuelve la pose (velocidad, giro) de cada paso en unidades crudas (B, P, 2): estado + acciones acumuladas."""
+    B = img.shape[0]
+    z = self._codificar_ventana(img[:, :ctx]).float()
+    goal = self._codificar_ventana(img[:, ctx - 1 + P:ctx + P]).float()[:, 0]
+    s, a = self.estados_acciones(poses[:, :ctx], B, ctx, z.device)
+    with torch.autocast(z.device.type, dtype=torch.bfloat16, enabled=z.device.type == "cuda"):  # como se entrenó
+      plan = self.planear(z, a, s, goal, P, init_std=init_std, generator=generator, chunk=200, **self.lat_cem).float()
+    A = self.cfg.action_dim
+    traj = s[:, -1:] + plan.cumsum(1)
+    return (traj * self.pose_std[:A].float() + self.pose_mean[:A].float())[..., [0, 5]]
+
+
+class _PredictorOnnx(nn.Module):
+  """(z (B, T, N, D), acciones (B, T, A), estados (B, T, A)) -> predicción con layer_norm (B, T, N, D)."""
+
+  def __init__(self, m):
+    super().__init__()
+    self.m = m
+
+  def forward(self, z, acciones, estados):
+    return self.m.predecir(z, acciones, estados)
+
+
+def exportar_onnx(model, parte, ruta, B=1, T=3, opset=17):
+  """Exporta el predictor de acciones (un paso, T frames de contexto de forma fija) de un VJEPA2AC a ONNX, con atención de
+  ops explícitas (sin SDPA). El encoder de este modelo es el de `vjepa2` (se exporta con ese modelo).
+
+  Devuelve {"entradas": {nombre: ndarray}, "salida": ndarray de PyTorch}."""
+  from pathlib import Path
+
+  from src.export_onnx import explicit_attention
+  if parte != "predictor":
+    raise ValueError(f"parte {parte!r}: V-JEPA 2-AC solo exporta el predictor (el encoder es el de vjepa2)")
+  c = model.cfg
+  model = model.eval().float().cpu()
+  model.predictor.grad_ckpt = False
+  N = model.grid[0] * model.grid[1]
+  D = model.encoder.embed_dim
+  g = torch.Generator().manual_seed(0)
+  ej = {"z": torch.randn(B, T, N, D, generator=g), "acciones": torch.randn(B, T, c.action_dim, generator=g) * 0.1,
+        "estados": torch.randn(B, T, c.action_dim, generator=g)}
+  mod = _PredictorOnnx(model).eval()
+  ruta = Path(ruta)
+  ruta.parent.mkdir(parents=True, exist_ok=True)
+  with explicit_attention(), torch.no_grad():
+    ref = mod(*ej.values())
+    torch.onnx.export(mod, tuple(ej.values()), str(ruta), input_names=list(ej), output_names=["salida"],
+                      opset_version=opset, dynamo=False)
+  return {"entradas": {k: v.numpy() for k, v in ej.items()}, "salida": ref.numpy()}
+
+
 def config_dict(model):
   return dataclasses.asdict(model.cfg)
 
 # Tabla de fidelidad completa de este modelo (la que leen src.recipes --fidelidad y las guías).
 FIDELIDAD = FIDELIDAD_AC
+
+ACCIONES = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo", "exportar")
+EVALUACION = "latente"

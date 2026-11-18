@@ -9,7 +9,7 @@ ROOT = Path(__file__).resolve().parents[1]
 MODULOS = ["src.evaluate", "src.rollouts", "src.metrics_video", "src.bench", "src.eval_latent", "src.report",
            "src.ejemplos", "src.export_onnx", "src.infer.bench_codec", "src.infer.bench_e2e", "src.infer.bench_ort",
            "src.infer.quality", "src.infer.demo", "src.infer.export_codec", "src.infer.report_e2e",
-           "scripts.make_configs", "scripts.analysis", "src.resultados"]
+           "src.configs", "scripts.analysis", "src.resultados"]
 
 
 def _mod(name):

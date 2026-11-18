@@ -1,6 +1,6 @@
 """WorldModel sobre ONNX Runtime: una pasada de ventana fija de un MaskGIT exportado (extra D8).
 
-  python -m src.ort_model --onnx checkpoints/onnx/<name>_k5.onnx --provider cpu|cuda|dml|vitisai [--n 100]
+  python -m src.ort_model --onnx checkpoints/onnx/<name>_k5.onnx --provider cpu|cuda|dml|vitisai|npu [--n 100]
 Mide ms por pasada (mediana tras warm-up) y escribe results/bench/ort_<name>_k<K>__<provider>.json.
 
 Sin caché KV: cada pasada recalcula el contexto, que es lo que midió el plan (2.5). La ventana es
@@ -25,18 +25,21 @@ import torch
 
 from src.bench import load_context
 from src.common import BOS, MASK, TPF, device_info, with_bos
+from src.infer import backends
 from src.models.base import WorldModel
 from src.models.maskgit import CODES, decode_frame
 
-PROVIDERS = {"cpu": "CPUExecutionProvider", "cuda": "CUDAExecutionProvider", "dml": "DmlExecutionProvider"}
-VITIS = "VitisAIExecutionProvider"
+VITIS = backends.NOMBRE_VITIS
 OUT = Path("results/bench")
 
 
 def make_session(path, provider="cpu", so=None):
-  """InferenceSession con el provider pedido (cpu|cuda|dml|vitisai); error claro si no está disponible.
+  """InferenceSession con el backend pedido: un nombre de src/infer/backends.py (cpu, cuda, dml, npu...) o su provider
+  corto (vitisai); error claro si no está disponible.
   so: SessionOptions propias (p. ej. con enable_profiling para ver qué nodos caen en la CPU)."""
   so = so or ort.SessionOptions()
+  b = backends.resolver_ort(provider)
+  provider = b.ort_provider
   if provider == "vitisai":  # SIN PROBAR (sin NPU en esta máquina)
     ep_dir = os.environ.get("ML2_VITISAI_EP_DIR")
     if not ep_dir:
@@ -60,11 +63,12 @@ def make_session(path, provider="cpu", so=None):
       raise RuntimeError("vitisai: el EP no expone ningún dispositivo NPU (driver 32.0.203.280+?)")
     so.add_provider_for_devices(npus, {})
     return ort.InferenceSession(str(path), sess_options=so)
-  if provider not in PROVIDERS:
-    raise ValueError(f"provider no soportado: {provider} (cpu|cuda|dml|vitisai)")
-  if PROVIDERS[provider] not in ort.get_available_providers():
-    raise RuntimeError(f"{PROVIDERS[provider]} no está disponible; hay {ort.get_available_providers()}")
-  eps = [PROVIDERS[provider]] + (["CPUExecutionProvider"] if provider != "cpu" else [])
+  if not b.ort_ep:
+    raise ValueError(f"el backend {b.nombre!r} no declara ort_ep (el execution provider de ONNX Runtime)")
+  if b.ort_ep not in ort.get_available_providers():
+    raise RuntimeError(f"{b.ort_ep} no está disponible; hay {ort.get_available_providers()}"
+                       + (f"; instalar: {b.instalar}" if b.instalar else ""))
+  eps = [b.ort_ep] + (["CPUExecutionProvider"] if b.ort_ep != "CPUExecutionProvider" else [])
   return ort.InferenceSession(str(path), sess_options=so, providers=eps)
 
 
@@ -122,7 +126,8 @@ def bench_ort(sess, K, n=100, warmup=20):
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument("--onnx", required=True)
-  ap.add_argument("--provider", default="cpu", choices=[*PROVIDERS, "vitisai"])
+  ap.add_argument("--provider", default="cpu", choices=[*backends.nombres("ort"), *backends.ort_providers()],
+                  help="backend de ONNX Runtime (src/infer/backends.py)")
   ap.add_argument("--n", type=int, default=100)
   ap.add_argument("--warmup", type=int, default=20)
   a = ap.parse_args()

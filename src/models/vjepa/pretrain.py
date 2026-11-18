@@ -44,11 +44,11 @@ FIDELIDAD_PRETRAIN = FIDELIDAD + [
   dict(campo="LR", paper="1e-4 → 5.25e-4 en 12k pasos de 252k, constante, enfriamiento lineal a 1e-6 en los últimos 12k",
        aquí="las mismas fracciones (12k/252k = 0.0476) del total de pasos de la corrida; piso de 100 pasos de warmup",
        categoría="fiel", fuente=f"{PAPER} Tab. 9; {YAML} L91-97"),
-  dict(campo="Batch", paper="3072 clips", aquí="64 clips por paso (estimado para ~11 GB con checkpointing de "
-       "activaciones, sin medir), sin acumulación", categoría="presupuesto", fuente=f"{PAPER} Tab. 9"),
-  dict(campo="Pasos / presupuesto", paper="252k pasos", aquí="el presupuesto de la receta (8x los 780k frames de "
-       "referencia ≈ 6.1k pasos); con tan pocos pasos el EMA de 0.99925 (constante de tiempo ~1.3k pasos) deja al "
-       "target cerca de la inicialización al principio", categoría="presupuesto", fuente=f"{PAPER} Tab. 9"),
+  dict(campo="Batch", paper="3072 clips", aquí="32 clips por paso, sin acumulación: con el presupuesto fijo, el batch del "
+       "paper daría ~16 pasos; lr a confirmar en el humo", categoría="presupuesto", fuente=f"{PAPER} Tab. 9"),
+  dict(campo="Pasos / presupuesto", paper="252k pasos", aquí="el presupuesto común de 780k frames ≈ 1.5k pasos de 32 clips de "
+       "16 frames; con tan pocos pasos el EMA de 0.99925 (constante de tiempo ~1.3k pasos) deja al target cerca de la "
+       "inicialización al principio", categoría="presupuesto", fuente=f"{PAPER} Tab. 9"),
   dict(campo="Precisión", paper="bf16", aquí="bf16 (autocast del entrenador, solo CUDA)", categoría="fiel",
        fuente=f"{YAML} L69"),
   dict(campo="EMA del target", paper="0.99925 constante", aquí="igual, actualizado con _foreach sobre los parámetros "
@@ -112,9 +112,10 @@ class VJEPA2(WorldModel):
       lr_segs=[S.linear(1e-4, 5.25e-4, frac=WARM, nombre="warmup"), S.constant(5.25e-4, nombre="constante"),
                S.linear(5.25e-4, 1e-6, frac=WARM, nombre="decay")],
       wd_ini=0.04, wd_fin=None, wd_on="matrices", ema_segs=None, grad_clip=None, amp="bf16",
-      batch=64, frames=16, frameskip=5, accum=1, presupuesto=8 * 780_000, paper_steps=252_000,
-      forzado=[("batch", "3072 clips es inalcanzable: 64 por paso (estimado para ~11 GB con checkpointing)", "presupuesto"),
-               ("presupuesto", "6.1k pasos en vez de 252k; el warmup y el enfriamiento conservan sus fracciones", "presupuesto"),
+      batch=32, frames=16, frameskip=5, accum=1, presupuesto=780_000, paper_steps=252_000, batch_fuente=3072,
+      forzado=[("batch", "32 clips por paso en vez de 3072: con el presupuesto común de 780k frames da ~1.5k pasos (con 3072 "
+                "serían ~16); lr a confirmar en el humo", "presupuesto"),
+               ("presupuesto", "~1.5k pasos en vez de 252k; el warmup y el enfriamiento conservan sus fracciones", "presupuesto"),
                ("frames/frameskip", "16 frames a 4 fps = 1 de cada 5 de los 20 FPS", "datos"),
                ("encoder", "ViT small (384, 12 capas) en vez de ViT-L", "presupuesto")])
 
@@ -136,6 +137,15 @@ class VJEPA2(WorldModel):
     self.encoder.grad_ckpt = self.predictor.grad_ckpt = cfg.grad_ckpt
     self.grid = (cfg.frames // cfg.tubelet, cfg.height // cfg.patch, cfg.width // cfg.patch)
     self._sampler, self._bank, self._bank_key, self._refills = None, [], None, 0
+    self._quedan = 0  # al reanudar: máscaras del último banco que faltaban usar (ver set_extra_state)
+
+  # ---- reanudación: el estado del banco de máscaras viaja en el checkpoint, así reanudar da las mismas máscaras
+  def get_extra_state(self):
+    return {"refills": self._refills, "quedan": len(self._bank)}
+
+  def set_extra_state(self, state):
+    self._refills, self._quedan = int(state.get("refills", 0)), int(state.get("quedan", 0))
+    self._bank, self._bank_key = [], None
 
   # ---- datos
   def num_params(self):
@@ -164,6 +174,11 @@ class VJEPA2(WorldModel):
       return MultiSeqMasks(self.grid, device=device)(B, g)
     if self._sampler is None or self._bank_key != (B, torch.device(device)):
       self._sampler, self._bank, self._bank_key = MultiSeqMasks(self.grid, device=device), [], (B, torch.device(device))
+    if not self._bank and self._quedan and self._refills:  # reanudado a mitad de un banco: el mismo banco, sin lo ya usado
+      g = torch.Generator(device=device)
+      g.manual_seed(self.cfg.mask_seed * 1_000_003 + self._refills - 1)
+      self._bank = self._sampler.banco(self.cfg.bank, B, g)[::-1][:self._quedan]
+      self._quedan = 0
     if not self._bank:
       g = torch.Generator(device=device)
       g.manual_seed(self.cfg.mask_seed * 1_000_003 + self._refills)
@@ -204,8 +219,63 @@ class VJEPA2(WorldModel):
     return layer_norm_canal((self.target_encoder if target else self.encoder)(clip))
 
 
+  # ---- lectura para src/eval_latent.py (solo probes: V-JEPA 2 no predice el futuro). img (B, F, H, W, 3) uint8 a 4 Hz.
+  lat_aplica = ("probes",)
+  lat_frames_por_paso = 2  # cada paso temporal del encoder es un tubelet de `tubelet` frames
+  lat_pooling = ("promedio sobre los tokens espaciales de cada paso temporal (tubelet) del target_encoder con layer_norm; "
+                 "las features son los últimos n pasos concatenados")
+
+  @torch.no_grad()
+  def lat_features(self, img, n=3):
+    """{"obs": (B, n·D)}: tokens del target encoder (EMA, el que evalúa el paper) del clip, promediados en el espacio por tubelet."""
+    c = self.cfg
+    h = self.features(self.clip(img[:, -c.frames:])).float()  # (B, T'·H'·W', D)
+    B, _, D = h.shape
+    t = self.grid[0]
+    return {"obs": h.view(B, t, -1, D).mean(2)[:, -min(n, t):].flatten(1)}
+
+
+class _EncoderOnnx(nn.Module):
+  """Clip normalizado (B, 3, T, H, W) -> tokens (B, N, D) del target encoder con layer_norm (lo que evalúa el paper)."""
+
+  def __init__(self, m):
+    super().__init__()
+    self.enc = m.target_encoder  # solo el encoder: el modelo entero arrastra el estado del banco de máscaras
+
+  def forward(self, x):
+    return layer_norm_canal(self.enc(x))
+
+
+def exportar_onnx(model, parte, ruta, B=1, opset=17):
+  """Exporta el encoder (target_encoder + layer_norm) de un VJEPA2 a ONNX, con atención de ops explícitas (sin SDPA).
+
+  Devuelve {"entradas": {nombre: ndarray}, "salida": ndarray de PyTorch}. V-JEPA 2 no tiene otra parte exportable:
+  su predictor solo existe para el preentrenamiento."""
+  from pathlib import Path
+
+  from src.export_onnx import explicit_attention
+  if parte != "encoder":
+    raise ValueError(f"parte {parte!r}: V-JEPA 2 solo exporta el encoder")
+  c = model.cfg
+  model = model.eval().float().cpu()
+  model.encoder.grad_ckpt = False
+  model.target_encoder.grad_ckpt = False
+  ej = {"clip": torch.randn(B, 3, c.frames, c.height, c.width, generator=torch.Generator().manual_seed(0))}
+  mod = _EncoderOnnx(model).eval()
+  ruta = Path(ruta)
+  ruta.parent.mkdir(parents=True, exist_ok=True)
+  with explicit_attention(), torch.no_grad():
+    ref = mod(*ej.values())
+    torch.onnx.export(mod, tuple(ej.values()), str(ruta), input_names=list(ej), output_names=["salida"],
+                      opset_version=opset, dynamo=False)
+  return {"entradas": {k: v.numpy() for k, v in ej.items()}, "salida": ref.numpy()}
+
+
 def config_dict(model):
   return dataclasses.asdict(model.cfg)
 
 # Tabla de fidelidad completa de este modelo (la que leen src.recipes --fidelidad y las guías).
 FIDELIDAD = FIDELIDAD_PRETRAIN
+
+ACCIONES = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo", "exportar")
+EVALUACION = "latente"

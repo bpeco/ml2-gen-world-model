@@ -233,11 +233,12 @@ class ViT(nn.Module):
 def cem(cost_fn, batch: int, shape, n_samples: int = 300, n_elites: int = 30, iters: int = 10,
         init_std: float = 1.0, init_mean=None, device=None, generator=None) -> torch.Tensor:
   """Método de entropía cruzada (config/eval/solver/cem.yaml): minimiza cost_fn(cand (n_samples, batch, *shape)) ->
-  costos (n_samples, batch). Arranca en N(init_mean (o 0), init_std²). Devuelve la media final, (batch, *shape)."""
+  costos (n_samples, batch). Arranca en N(init_mean (o 0), init_std²); init_std es un escalar o un tensor que se
+  difunde sobre `shape` (el desvío de cada dimensión de la acción). Devuelve la media final, (batch, *shape)."""
   mean = torch.zeros(batch, *shape, device=device)
   if init_mean is not None:
     mean = mean + init_mean.to(mean)
-  std = torch.full_like(mean, init_std)
+  std = torch.zeros_like(mean) + torch.as_tensor(init_std, dtype=mean.dtype, device=mean.device)  # escalar o por dimensión
   for _ in range(iters):
     eps = torch.randn(n_samples, batch, *shape, device=device, generator=generator)
     cand = mean + std * eps
@@ -304,6 +305,10 @@ FIDELIDAD = [
        aquí="igual: rollout latente de `horizonte` pasos con la historia de 3", categoría="fiel", fuente=f"{REPO} jepa.py criterion"),
   dict(campo="Elites del CEM", fuente_valor="no leído del código del solver (stable-worldmodel)", aquí="media y desvío "
        "de los élites, desvío con piso 1e-4", categoría="propio", fuente="CEM estándar"),
+  dict(campo="Evaluación latente", fuente_valor="el planificador (CEM, arriba); lo demás no está en las fuentes leídas",
+       aquí="src/eval_latent.py: probes de velocidad y giro contra un encoder sin entrenar y contra píxeles; error latente "
+       "por horizonte contra copiar el último latente; sorpresa; recuperación de acciones con CEM contra repetir la última "
+       "acción. Los detalles propios van en el bloque `propio` del JSON", categoría="propio", fuente="src/eval_latent.py"),
   dict(campo="Cosas propias que se quitaron", fuente_valor="no existen", aquí="sin dropout de acción ni acción nula, sin "
        "frame start aprendido, sin rollout de tokens, sin lectura a tokens ni CE", categoría="fiel", fuente=f"{REPO} jepa.py"),
   dict(campo="Streaming", fuente_valor="no existe (evaluación offline en PushT)", aquí="LatentStream: cámara → ViT → "
@@ -367,7 +372,7 @@ class LeWM(LatentWM):
       betas=(0.9, 0.999), eps=1e-8,
       lr_segs=[S.linear(0.0, 5e-5, frac=0.01, nombre="warmup", min_pasos=1), S.cosine(5e-5, 0.0)],
       wd_ini=1e-3, wd_on="todos", grad_clip=1.0, amp="bf16", batch=128, accum=1, frames=4, frameskip=5,
-      presupuesto=780_000, paper_steps=None,
+      presupuesto=780_000, paper_steps=None, batch_fuente=128,
       forzado=[("lr_segs", "el oficial planifica por época (warmup en pasos); acá todo por paso: warmup lineal sobre el 1 % de "
                 "los pasos (piso 1, sin el piso de 100) y coseno a 0", "presupuesto"),
                ("presupuesto", "780k frames renderizados vistos (~1 500 pasos); el oficial son 10-100 épocas de PushT", "presupuesto"),
@@ -510,3 +515,119 @@ class LeWM(LatentWM):
 
     plan = cem(cost, B, (horizon, A), n_samples, n_elites, iters, init_std, device=ctx.device, generator=generator)
     return plan * self.pose_std.float() + self.pose_mean.float()
+
+  # ---- lectura para src/eval_latent.py. Entrada: una ventana de píxeles uint8 (B, F, H, W, 3) ya a 4 Hz (un frame por
+  # paso del modelo) y sus poses crudas (B, F, n_pose) (las `frameskip` poses de cada paso apiladas). Todo en el device.
+  lat_aplica = ("probes", "horizonte", "sorpresa", "plan")
+  lat_frames_por_paso = 1         # frames de la ventana que resume cada paso de las features (para la referencia de píxeles)
+  lat_convencion = "promedio_bloque"  # la pose de un paso del plan es el promedio de sus `frameskip` poses
+  lat_cem = dict(n_samples=300, n_elites=30, iters=10)  # config/eval/solver/cem.yaml (non-PushT)
+  lat_pooling = "CLS proyectado de cada frame (sin pooling: el embedding ya es uno por frame)"
+
+  @torch.no_grad()
+  def lat_features(self, img, n=3):
+    """{"obs": z de los últimos n frames (B, n·D), "pred": ẑ de esos frames predicho desde su historia, sin acciones}.
+
+    Sin acciones: la pose es lo que el probe quiere leer, no lo que se le da al predictor."""
+    z, zh = self.features(img[:, -(n + self.cfg.history):])
+    return {"obs": z[:, -n:].flatten(1), "pred": zh[:, -n:].flatten(1)}
+
+  @torch.no_grad()
+  def lat_horizonte(self, img, poses, ctx=3, H=8, accion_nula=False):
+    """Rollout latente de H pasos desde `ctx` frames reales con las acciones reales (o la acción media si accion_nula).
+
+    Devuelve errores (B, H) contra el latente real: mse y l1 del modelo, y los de "copiar el último latente" (z del
+    último frame de contexto repetido H veces)."""
+    z = self.encode(img).float()
+    B, Fr = z.shape[:2]
+    a = self.action_embed(None if accion_nula else poses, B, Fr, z.device)
+    zh = self.rollout_latent(z[:, :ctx], a[:, :ctx - 1], a[:, ctx - 1:ctx - 1 + H]).float()
+    tgt = z[:, ctx:ctx + H]
+    cop = z[:, ctx - 1:ctx].expand(-1, tgt.shape[1], -1)
+    d, dc = zh - tgt, cop - tgt
+    return {"mse": d.square().mean(-1), "l1": d.abs().mean(-1), "copia_mse": dc.square().mean(-1), "copia_l1": dc.abs().mean(-1)}
+
+  @torch.no_grad()
+  def lat_sorpresa(self, img, poses):
+    """Error latente del frame f = 1..F-1 predicho desde los anteriores (B, F-1) y el de copiar el latente del anterior."""
+    z, zh = self.predict_frames(img, poses)
+    z = z.float()
+    return {"mse": (zh.float() - z[:, 1:]).square().mean(-1), "copia_mse": (z[:, :-1] - z[:, 1:]).square().mean(-1)}
+
+  @torch.no_grad()
+  def lat_desvio(self, poses):
+    """Desvío por dimensión de la acción normalizada (n_pose,), de poses (N, F, n_pose) de train: el desvío de muestreo del CEM."""
+    x = ((poses.float() - self.pose_mean.float()) / self.pose_std.float()).reshape(-1, poses.shape[-1])
+    ok = torch.isfinite(x)
+    n = ok.sum(0).clamp(min=1)
+    x0 = torch.where(ok, x, torch.zeros_like(x))
+    mu = x0.sum(0) / n
+    return ((torch.where(ok, x - mu, torch.zeros_like(x)).square().sum(0) / n).sqrt()).clamp(min=1e-3)
+
+  @torch.no_grad()
+  def lat_plan(self, img, poses, ctx=3, P=5, init_std=1.0, generator=None):
+    """Planifica P pasos hacia el frame `ctx - 1 + P` de la ventana desde sus primeros `ctx`. Devuelve la pose
+    (velocidad, giro) de cada paso, en unidades crudas (B, P, 2): el promedio de las `frameskip` poses apiladas del paso."""
+    pl = self.plan_cem(img[:, :ctx], img[:, ctx - 1 + P], P, ctx_poses=poses[:, :ctx], generator=generator,
+                       init_std=init_std, **self.lat_cem)
+    k = self.cfg.frameskip
+    return pl.view(len(pl), P, k, -1).mean(2)[..., [0, 5]]
+
+
+# ---------------------------------------------------------------- export a ONNX (K5)
+
+class _EncoderOnnx(nn.Module):
+  """Un frame uint8 (B, H, W, 3) -> embedding (B, D): normalización de ImageNet + ViT + projector (BatchNorm en eval)."""
+
+  def __init__(self, m):
+    super().__init__()
+    self.m = m
+
+  def forward(self, img):
+    return self.m.encode(img[:, None])[:, 0]
+
+
+class _PredictorOnnx(nn.Module):
+  """Un paso del predictor: z (B, h, D) y poses (B, h, n_pose) crudas SIN NaN -> ẑ del frame siguiente (B, D).
+
+  La normalización de poses (sin el nan_to_num de normalize_poses: el llamador reemplaza los NaN) y el embedder de la
+  acción van dentro; es lo mismo que `LeWM._next(z, action_embed(poses))`."""
+
+  def __init__(self, m):
+    super().__init__()
+    self.m = m
+
+  def forward(self, z, poses):
+    p = (poses.float() - self.m.pose_mean.float()) / self.m.pose_std.float()
+    return self.m._next(z, self.m.action_encoder(p))
+
+
+def exportar_onnx(model, parte, ruta, B=1, opset=17):
+  """Exporta `encoder` o `predictor` (un paso) de un LeWM a ONNX (atención con ops explícitas, sin SDPA).
+
+  Devuelve {"entradas": {nombre: ndarray}, "salida": ndarray de PyTorch} con una entrada de ejemplo, para comparar con ORT."""
+  from pathlib import Path
+
+  from src.export_onnx import explicit_attention
+  c = model.cfg
+  model = model.eval().float().cpu()
+  g = torch.Generator().manual_seed(0)
+  if parte == "encoder":
+    mod = _EncoderOnnx(model).eval()
+    ej = {"img": torch.randint(0, 256, (B, c.img_h, c.img_w, 3), dtype=torch.uint8, generator=g)}
+  elif parte == "predictor":
+    mod = _PredictorOnnx(model).eval()
+    ej = {"z": torch.randn(B, c.history, c.dim, generator=g), "poses": torch.randn(B, c.history, c.n_pose, generator=g)}
+  else:
+    raise ValueError(f"parte {parte!r}: encoder o predictor")
+  ruta = Path(ruta)
+  ruta.parent.mkdir(parents=True, exist_ok=True)
+  with explicit_attention(), torch.no_grad():
+    ref = mod(*ej.values())
+    torch.onnx.export(mod, tuple(ej.values()), str(ruta), input_names=list(ej), output_names=["salida"],
+                      opset_version=opset, dynamo=False)
+  return {"entradas": {k: v.numpy() for k, v in ej.items()}, "salida": ref.numpy()}
+
+
+ACCIONES = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo", "exportar")
+EVALUACION = "latente"

@@ -9,7 +9,7 @@ Etapas por frame (batch 1): imagen uint8 -> encoder (ORT) -> argmin al codebook 
 lookup del codebook (CPU) -> decoder (ORT) -> uint8. Solo el codec: no hay world model en esta cadena.
 Entre etapas cruzan 128 KB (latentes) o 96 KB (imagen): no hace falta IO binding.
 
-Providers: cpu | dml (DirectML, iGPU) | cuda | vitisai (NPU XDNA 2; ver src/ort_model.make_session y la sección 2.5
+Backends (src/infer/backends.py; --enc/--dec aceptan su nombre o su provider): cpu | dml (DirectML, iGPU) | cuda | npu = vitisai (NPU XDNA 2; ver src/ort_model.make_session y la sección 2.5
 del plan del proyecto: SIN PROBAR en esta máquina). --profile activa el profiler de ORT y cuenta cuántos nodos y
 cuánto tiempo cae en cada provider: lo que la NPU no soporta vuelve a la CPU.
 Para medir el encoder y el decoder a la vez en la misma NPU o iGPU (comparten el ancho de banda de memoria), correr
@@ -25,6 +25,7 @@ from pathlib import Path
 
 import numpy as np
 
+from src.infer import backends
 from src.infer.video import sample_video
 
 ONNX = Path("checkpoints/onnx")
@@ -79,8 +80,9 @@ class OrtChain:
 
 def main(argv=None):
   ap = argparse.ArgumentParser()
-  ap.add_argument("--enc", default="cpu")
-  ap.add_argument("--dec", default="cpu")
+  opciones = [*backends.nombres("ort"), *backends.ort_providers()]   # backends de ONNX Runtime (src/infer/backends.py)
+  ap.add_argument("--enc", default="cpu", choices=opciones)
+  ap.add_argument("--dec", default="cpu", choices=opciones)
   ap.add_argument("--only", choices=["enc", "dec"], help="medir una sola etapa del codec")
   ap.add_argument("--fp16", action="store_true", help="usar los ONNX exportados con --fp16")
   ap.add_argument("--frames", type=int, default=500)

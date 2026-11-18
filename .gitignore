@@ -15,3 +15,7 @@ results/logs/
 results/ejemplos/*.gif
 results/demo/*.mp4
 results/infer/ort_profile_*.json
+
+# estado de la cola y candado de GPU (runtime, no van al repo)
+results/queue.json
+results/.gpu.lock

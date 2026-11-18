@@ -52,6 +52,7 @@ class Recipe:
   presupuesto: int = PRESUPUESTO_DEFAULT   # frames vistos del presupuesto de referencia
   extras: dict = field(default_factory=dict)  # label_smoothing, dropout...
   paper_steps: int | None = None      # pasos del paper (informativo)
+  batch_fuente: int | None = None     # batch efectivo de la fuente en muestras (el humo escala el lr según batch/batch_fuente)
   forzado: list = field(default_factory=list)  # [(campo, motivo, categoría)]
 
   # ---- schedules
@@ -136,6 +137,8 @@ class Recipe:
     d = dataclasses.asdict(self)
     d["betas"] = list(self.betas)
     d["forzado"] = [list(f) for f in self.forzado]
+    if d.get("batch_fuente") is None:  # no cambia el hash (ni el dict) de las recetas que no lo declaran
+      d.pop("batch_fuente", None)
     return json.loads(json.dumps(d))
 
   @classmethod
@@ -196,15 +199,20 @@ NAMED = {"legacy_cosine": legacy_cosine}
 
 # ---------------------------------------------------------------- overrides
 
+ALIAS = {"lr_peak": "con_pico", "warmup": "con_warmup", "min_lr_frac": "con_min_frac"}  # atajos: --set receta.lr_peak=3e-4
+
+
 def apply_override(r, campo, valor):
-  """campo: nombre de un campo de Recipe, o extras.<clave>. Devuelve una receta nueva."""
+  """campo: nombre de un campo de Recipe, un alias de ALIAS (lr_peak, warmup, min_lr_frac) o extras.<clave>. Devuelve una receta nueva."""
+  if campo in ALIAS:
+    return getattr(r, ALIAS[campo])(valor)
   if campo.startswith("extras."):
     ex = dict(r.extras)
     ex[campo[len("extras."):]] = valor
     return r.replace(extras=ex)
   names = {f.name for f in dataclasses.fields(Recipe)}
   if campo not in names:
-    raise SystemExit(f"--set receta.{campo}: la receta no tiene ese campo ({', '.join(sorted(names))})")
+    raise SystemExit(f"--set receta.{campo}: la receta no tiene ese campo ({', '.join(sorted(names | set(ALIAS)))})")
   if campo == "betas":
     valor = tuple(valor)
   if campo == "forzado":
@@ -281,6 +289,8 @@ def main(argv=None):
   p.add_argument("kind", nargs="?")
   p.add_argument("--size", choices=["s", "m", "l"])
   p.add_argument("--table", action="store_true")
+  p.add_argument("--set", action="append", default=[], metavar="receta.campo=valor|config.campo=valor",
+                 help="overrides (JSON): se aplican a la receta o a la Config y se muestran como desvíos")
   p.add_argument("--fidelidad", metavar="KIND", help="tabla de fidelidad en markdown (un kind, 'baselines' o 'gpt2m')")
   a = p.parse_args(argv)
   if hasattr(sys.stdout, "reconfigure"):
@@ -295,10 +305,33 @@ def main(argv=None):
     return
   if not a.kind:
     p.error("indicá un kind o --table")
-  from src.models import model_class
-  r = model_class(a.kind).recipe(a.size)
+  from src.models import SIZES, model_class
+  cls = model_class(a.kind)
+  r = cls.recipe(a.size)
+  cfg_ov, desv = {}, []
+  for item in a.set:
+    k, eq, v = item.partition("=")
+    if not eq or k.split(".")[0] not in ("receta", "config"):
+      p.error(f"--set {item}: usá receta.campo=valor o config.campo=valor")
+    campo, valor = k.split(".", 1)[1], parse_value(v)
+    if k.startswith("receta."):
+      desv.append((k, valor))
+      r = apply_override(r, campo, valor)
+    else:
+      campos = {f.name for f in dataclasses.fields(cls.Config)}
+      if campo not in campos:
+        p.error(f"--set {k}: la Config de {a.kind} no tiene ese campo ({', '.join(sorted(campos))})")
+      desv.append((k, valor))
+      cfg_ov[campo] = valor
   print(json.dumps(r.to_dict(), indent=1, ensure_ascii=False))
   print(r.resumen())
+  sized = "n_layer" in {f.name for f in dataclasses.fields(cls.Config)}
+  cfg = dataclasses.asdict(cls.Config(**{**(SIZES[a.size] if (a.size and sized) else {}), **cfg_ov}))
+  print("config efectiva:", json.dumps(cfg, ensure_ascii=False))
+  for k, v in desv:
+    print(f"desvío: {k} = {v!r}")
+  for campo, motivo, cat in r.forzado:
+    print(f"forzado ({cat}): {campo} - {motivo}")
 
 
 if __name__ == "__main__":
