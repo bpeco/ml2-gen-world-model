@@ -47,6 +47,17 @@ DTYPE_VIDEO = {"gpt": "fp16", "maskgit": "fp16", "genie": "fp16", "gpt2m": "fp16
 PASOS_HUMO = 300                           # pasos de cada entrenamiento del humo
 
 
+def _multiplo(nombre):
+  """'x30' -> 30.0 (candidato del humo: k veces el lr de la fuente); None si el nombre no tiene esa forma o k <= 0."""
+  if not nombre.startswith("x"):
+    return None
+  try:
+    k = float(nombre[1:])
+  except ValueError:
+    return None
+  return k if k > 0 else None
+
+
 class ToolkitError(Exception):
   """Pedido inválido (acción que el modelo no declara, --set con un campo que no existe...). La CLI lo muestra y sale con 2."""
 
@@ -495,10 +506,14 @@ class Toolkit:
     cands += [("x3", pico * 3), ("x10", pico * 10)]
     if o.get("humo_candidatos"):
       pedidos = [c.strip() for c in o["humo_candidatos"].split(",") if c.strip()]
-      malos = [c for c in pedidos if c not in ("fuente", "raiz", "lineal", "x3", "x10")]
+      # x<k>: k veces el lr de la fuente, con cualquier k > 0 (p. ej. x30 si el ganador quedó en el borde de la grilla)
+      mult = {c: _multiplo(c) for c in pedidos if c not in ("fuente", "raiz", "lineal")}
+      malos = [c for c, k in mult.items() if k is None] + [c for c in pedidos if c in ("raiz", "lineal") and not r.batch_fuente]
       if malos or "fuente" not in pedidos:
-        raise ToolkitError(f"--humo-candidatos {o['humo_candidatos']!r}: opciones fuente, raiz, lineal, x3, x10 (fuente siempre)")
-      cands = [c for c in cands if c[0] in pedidos]
+        raise ToolkitError(f"--humo-candidatos {o['humo_candidatos']!r}: opciones fuente, raiz, lineal y x<k> "
+                           "(k veces el lr de la fuente, p. ej. x3, x10, x30); fuente siempre")
+      base = dict(cands)
+      cands = [(c, base[c] if c in base and c not in mult else pico * mult[c]) for c in pedidos]
     unicos, alias = [], {}
     for nombre, lr in cands:   # un solo entrenamiento por lr distinto
       igual = next((n for n, l in unicos if abs(l - lr) <= 1e-9 * abs(lr)), None)

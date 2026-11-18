@@ -757,6 +757,20 @@ def test_humo_candidatos_acota_el_humo():
     Toolkit("genie").plan("entrenar", humo_candidatos="fuente")
 
 
+def test_humo_candidatos_acepta_cualquier_multiplo():
+  """Si el ganador queda en el borde de la grilla, se extiende con x<k> (la cola lo usó con x30)."""
+  p = Toolkit("genie").plan("entrenar", humo=True, humo_candidatos="fuente,x10,x30")
+  train = [c.argv for c in p.comandos if c.argv[2] == "src.train"]
+  assert [a[a.index("--run") + 1] for a in train] == ["genie_humo_fuente", "genie_humo_x10", "genie_humo_x30"]
+  from src import schedules as S
+  from src.models import model_class
+  pico = S.peak(model_class("genie").recipe("s").lr_segs)  # lr de la receta de Genie
+  assert [float(a[a.index("--lr") + 1]) for a in train[1:]] == pytest.approx([pico * 10, pico * 30])
+  for malo in ("fuente,x0", "fuente,xabc", "fuente,y3"):
+    with pytest.raises(ToolkitError, match="x<k>"):
+      Toolkit("genie").plan("entrenar", humo=True, humo_candidatos=malo)
+
+
 def test_exportar_y_demo_de_latentes():
   assert [c.argv[2:] for c in Toolkit("lewm").plan("exportar").comandos] == [
     ["src.export_latente", "--model", "lewm", "--parte", "encoder"], ["src.export_latente", "--model", "lewm", "--parte", "predictor"]]

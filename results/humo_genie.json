@@ -24,26 +24,33 @@
    "lr": 9e-05,
    "monitor_ce": 5.5757951736450195,
    "dispersion": {}
+  },
+  {
+   "nombre": "x10",
+   "run": "genie_humo_x10",
+   "lr": 0.0003,
+   "monitor_ce": 4.454339027404785,
+   "dispersion": {}
   }
  ],
  "alias": {},
- "elegido": "x3",
- "lr_elegido": 9e-05,
+ "elegido": "x10",
+ "lr_elegido": 0.0003,
  "es_la_fuente": false,
  "forzado": {
   "campo": "lr",
   "receta": 3e-05,
-  "elegido": 9e-05,
-  "candidato": "x3",
+  "elegido": 0.0003,
+  "candidato": "x10",
   "categoria": "presupuesto",
-  "motivo": "el humo de 300 pasos elige lr 9e-05 (x3) y no el de la fuente (3e-05): declararlo como forzado por presupuesto en la receta"
+  "motivo": "el humo de 300 pasos elige lr 0.0003 (x10) y no el de la fuente (3e-05): declararlo como forzado por presupuesto en la receta"
  },
  "chequeo_colapso": "no aplica",
  "nota": "",
- "fecha": "2026-11-18T02:18:04",
+ "fecha": "2026-11-18T03:07:52",
  "_bitacora": {
-  "id": "20261118-021359-e8cb",
-  "comando": "python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3",
-  "commit": "2d562f0fb5d13fa3d1a4aa2e0939ae533d0ca924"
+  "id": "20261118-030619-ceb0",
+  "comando": "python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10 --forzar",
+  "commit": "be02b7c1ae9f91352c6a6009fca20cff32d521e8"
  }
 }

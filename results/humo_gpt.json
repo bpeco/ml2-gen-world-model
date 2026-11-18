@@ -24,26 +24,33 @@
    "lr": 0.0003,
    "monitor_ce": 6.616512298583984,
    "dispersion": {}
+  },
+  {
+   "nombre": "x10",
+   "run": "gpt_humo_x10",
+   "lr": 0.001,
+   "monitor_ce": 5.541088104248047,
+   "dispersion": {}
   }
  ],
  "alias": {},
- "elegido": "x3",
- "lr_elegido": 0.0003,
+ "elegido": "x10",
+ "lr_elegido": 0.001,
  "es_la_fuente": false,
  "forzado": {
   "campo": "lr",
   "receta": 0.0001,
-  "elegido": 0.0003,
-  "candidato": "x3",
+  "elegido": 0.001,
+  "candidato": "x10",
   "categoria": "presupuesto",
-  "motivo": "el humo de 300 pasos elige lr 0.0003 (x3) y no el de la fuente (0.0001): declararlo como forzado por presupuesto en la receta"
+  "motivo": "el humo de 300 pasos elige lr 0.001 (x10) y no el de la fuente (0.0001): declararlo como forzado por presupuesto en la receta"
  },
  "chequeo_colapso": "no aplica",
  "nota": "",
- "fecha": "2026-11-18T02:11:00",
+ "fecha": "2026-11-18T03:06:17",
  "_bitacora": {
-  "id": "20261118-020350-6616",
-  "comando": "python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3",
-  "commit": "6ec801dee03cd1235d7c2896a120d2c336ae9632"
+  "id": "20261118-030343-6044",
+  "comando": "python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10 --forzar",
+  "commit": "be02b7c1ae9f91352c6a6009fca20cff32d521e8"
  }
 }

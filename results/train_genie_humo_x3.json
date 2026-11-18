@@ -18,8 +18,8 @@
  "tokens": 19814400,
  "frames": 153600,
  "steps": 300,
- "seconds": 78.44474172592163,
- "tokens_per_s": 252590.54417222258,
+ "seconds": 78.44607090950012,
+ "tokens_per_s": 252586.26429944497,
  "final_monitor_ce": 5.5757951736450195,
  "monitor_history": [
   {
@@ -158,8 +158,8 @@
   "backend_version": "12.8"
  },
  "_bitacora": {
-  "id": "20261118-021359-e8cb",
-  "comando": "python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3",
-  "commit": "2d562f0fb5d13fa3d1a4aa2e0939ae533d0ca924"
+  "id": "20261118-030619-ceb0",
+  "comando": "python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10 --forzar",
+  "commit": "be02b7c1ae9f91352c6a6009fca20cff32d521e8"
  }
 }

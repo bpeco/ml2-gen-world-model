@@ -14,8 +14,8 @@
  "tokens": 12384000,
  "frames": 96000,
  "steps": 300,
- "seconds": 139.50365781784058,
- "tokens_per_s": 88771.86586871171,
+ "seconds": 139.5208601951599,
+ "tokens_per_s": 88760.92064424937,
  "final_monitor_ce": 6.694178581237793,
  "monitor_history": [
   {
@@ -144,8 +144,8 @@
   "backend_version": "12.8"
  },
  "_bitacora": {
-  "id": "20261118-020350-6616",
-  "comando": "python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3",
-  "commit": "6ec801dee03cd1235d7c2896a120d2c336ae9632"
+  "id": "20261118-030343-6044",
+  "comando": "python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10 --forzar",
+  "commit": "be02b7c1ae9f91352c6a6009fca20cff32d521e8"
  }
 }
