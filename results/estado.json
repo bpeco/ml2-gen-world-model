@@ -29,9 +29,19 @@
   "motivo": "bitácora 20261118-093145-47c0: python -m src.cli unigram evaluar",
   "fecha": "2026-11-18"
  },
+ "results/latent_lewm.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-111117-05f1: python -m src.cli lewm evaluar",
+  "fecha": "2026-11-18"
+ },
  "results/train_convlstm_px.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-041132-ab00: python -m src.cli convlstm_px entrenar",
+  "fecha": "2026-11-18"
+ },
+ "results/train_decoder_lewm.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-105625-72de: python -m src.cli lewm demo --entrenar-decoder",
   "fecha": "2026-11-18"
  },
  "results/train_genie_humo_fuente.json": {
@@ -92,6 +102,11 @@
  "results/train_gpt_s_kd.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-032251-a3b0: python -m src.cli gpt entrenar '--tamaño' s --destilar --variante kd",
+  "fecha": "2026-11-18"
+ },
+ "results/train_lewm.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-095802-d31b: python -m src.cli lewm entrenar",
   "fecha": "2026-11-18"
  },
  "results/train_vjepa2_humo_fuente.json": {

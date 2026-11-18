@@ -176,6 +176,22 @@
   "kd": true
  },
  {
+  "label": "lewm",
+  "family": "lewm",
+  "eval": "results/latent_lewm.json",
+  "video": null,
+  "bench": null,
+  "params": 18044662,
+  "autoregressive": false,
+  "horizon": true,
+  "group": "principal",
+  "e2e": null,
+  "short": "lewm",
+  "size": null,
+  "steps": null,
+  "kd": false
+ },
+ {
   "label": "Real (piso)",
   "family": "baseline",
   "eval": null,

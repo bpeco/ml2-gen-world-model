@@ -1,0 +1,78 @@
+{
+ "run": "lewm",
+ "lewm": "lewm",
+ "decoder": {
+  "dim_in": 192,
+  "dec_dim": 384,
+  "layers": 4,
+  "heads": 6,
+  "n_kv": 8,
+  "mlp_ratio": 4,
+  "patch": 16,
+  "img_h": 128,
+  "img_w": 256
+ },
+ "params": 10407936,
+ "steps": 3000,
+ "frames": 192000,
+ "seconds": 887.5852754116058,
+ "holdout_mse": 0.07118622958660126,
+ "history": [
+  {
+   "step": 500,
+   "holdout_mse": 0.0791693702340126
+  },
+  {
+   "step": 1000,
+   "holdout_mse": 0.07540643215179443
+  },
+  {
+   "step": 1500,
+   "holdout_mse": 0.07085262984037399
+  },
+  {
+   "step": 2000,
+   "holdout_mse": 0.07390530407428741
+  },
+  {
+   "step": 2500,
+   "holdout_mse": 0.07167081534862518
+  },
+  {
+   "step": 3000,
+   "holdout_mse": 0.07118622958660126
+  }
+ ],
+ "args": {
+  "run": "lewm",
+  "data": "data/train_tokens.npy",
+  "config": "{}",
+  "steps": 3000,
+  "bs": 64,
+  "lr": 0.0003,
+  "wd": 0.01,
+  "clip": 1.0,
+  "warmup": 100,
+  "amp": "bf16",
+  "seed": 0,
+  "eval_every": 500,
+  "log_every": 50,
+  "ckpt_dir": "checkpoints",
+  "results_dir": "results"
+ },
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "nota": "decoder de visualización post-hoc sobre el LeWM congelado; arquitectura y receta propias (el paper no las publica)",
+ "_bitacora": {
+  "id": "20261118-105625-72de",
+  "comando": "python -m src.cli lewm demo --entrenar-decoder",
+  "commit": "a42dc28884816bcda9f8541ba3b6eb71dafe39e7"
+ }
+}

@@ -255,5 +255,106 @@
   "step": 2438,
   "tokens": 100640640,
   "train_json": "results/train_gpt_s_kd.json"
+ },
+ "lewm": {
+  "bytes": 72309572,
+  "config": {
+   "act_mlp_scale": 4,
+   "act_smooth": 10,
+   "dim": 192,
+   "emb_dropout": 0.0,
+   "enc_heads": 3,
+   "enc_layers": 12,
+   "enc_mlp": 768,
+   "frameskip": 5,
+   "history": 3,
+   "img_h": 128,
+   "img_w": 256,
+   "knots": 17,
+   "lam": 0.09,
+   "n_pose": 30,
+   "num_preds": 1,
+   "num_proj": 1024,
+   "patch": 16,
+   "pred_dim_head": 64,
+   "pred_dropout": 0.1,
+   "pred_heads": 16,
+   "pred_layers": 6,
+   "pred_mlp": 2048,
+   "proj_hidden": 2048
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "lewm",
+  "params": 18044662,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 128,
+   "batch_fuente": 128,
+   "betas": [
+    0.9,
+    0.999
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "lr_segs",
+     "el oficial planifica por \u00e9poca (warmup en pasos); ac\u00e1 todo por paso: warmup lineal sobre el 1 % de los pasos (piso 1, sin el piso de 100) y coseno a 0",
+     "presupuesto"
+    ],
+    [
+     "presupuesto",
+     "780k frames renderizados vistos (~1 500 pasos); el oficial son 10-100 \u00e9pocas de PushT",
+     "presupuesto"
+    ],
+    [
+     "batch",
+     "128 muestras de 4 frames sin acumulaci\u00f3n (BatchNorm y SIGReg dependen del batch); si la GPU no alcanza, bajar bs en vez de acumular",
+     "presupuesto"
+    ],
+    [
+     "frames",
+     "4 por muestra (history 3 + num_preds 1): la unidad de presupuesto son los frames renderizados",
+     "datos"
+    ]
+   ],
+   "frames": 4,
+   "frameskip": 5,
+   "fuente": "LeWM (arXiv 2603.19312); github.com/lucas-maes/le-wm config/train/lewm.yaml, train.py",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 5e-05,
+     "forma": "linear",
+     "frac": 0.01,
+     "ini": 0.0,
+     "min_pasos": 1,
+     "nombre": "warmup"
+    },
+    {
+     "forma": "cosine",
+     "ini": 5e-05,
+     "min_frac": 0.0,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "lewm_paper",
+   "optimizer": "adamw",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.001,
+   "wd_on": "todos"
+  },
+  "receta_hash": "9bae95a09ba4",
+  "sha256": "5752d8cafa45d86e2829e160b14d9fb700f05fd327626448e7936255f2ab89c8",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_lewm.json"
  }
 }
