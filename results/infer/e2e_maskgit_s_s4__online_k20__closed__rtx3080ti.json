@@ -1,0 +1,56 @@
+{
+ "name": "maskgit_s_s4",
+ "model": "maskgit_s",
+ "mode": "online",
+ "k": 20,
+ "steps": 4,
+ "temperature": 1.0,
+ "dtype": "fp16",
+ "codec_dtype": "fp16",
+ "graphs": true,
+ "graphs_error": null,
+ "pace_ms": 0,
+ "budget_ms": 50,
+ "reset_every": null,
+ "opts": null,
+ "params": 11491968,
+ "ctx_frames": 19,
+ "warmup": 50,
+ "first_second": {
+  "p50": 333.1940999487415,
+  "p90": 427.94004001189023,
+  "p99": 873.1106320559048,
+  "max": 967.9630000609905,
+  "mean": 346.97912105873814,
+  "late_pct": 100.0,
+  "n": 19
+ },
+ "steady": {
+  "p50": 189.13989997236058,
+  "p90": 192.711399984546,
+  "p99": 202.8389920317568,
+  "max": 308.2606000825763,
+  "mean": 190.20567636719593,
+  "late_pct": 100.0,
+  "n": 3000
+ },
+ "stages_p50_ms": {
+  "encoder": 3.8623359203338623,
+  "model": 179.02694702148438,
+  "decoder": 6.151167869567871
+ },
+ "fps_p50": 5.287091724940809,
+ "realtime_p99": false,
+ "peak_mem_mb": 280.78125,
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "tag": "rtx3080ti",
+ "timestamp": "2026-11-17T16:39:39"
+}

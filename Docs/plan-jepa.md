@@ -9,7 +9,8 @@ próximo frame** en vez de clasificar sus tokens. Cada una sigue la receta de su
 - **LeWM:** 1,0–1,4 ms por frame y planifica 42 veces más barato, pero su video queda al nivel del unigrama (FVD 1016).
 - **Acciones:** los dos casi no usan la pose, y el CEM no la recupera.
 - **Versiones chicas (E5b):** JEPA-XXS da 1,2 ms y FVD 546; LeWM-XS, 0,8 ms con la misma calidad que LeWM. Ninguna entra en la frontera de Pareto.
-- **Lo que sigue:** medir la cadena entera, video → encoder → modelo → decoder → video ([`plan-inferencia.md`](plan-inferencia.md)).
+- **Cadena entera** (video → encoder → modelo → decoder → video, [`plan-inferencia.md`](plan-inferencia.md)): LeWM-XS tarda 10,8 ms por frame, de los que 3,8 son el encoder de comma y 6,2 el decoder; el modelo, 0,7.
+- **E5c, LeWM desde píxeles:** como en el paper, un ViT sobre parches de 16×16 de la imagen en vez de los vectores del codebook. La calidad de video no cambia (FVD 957 contra 997, dentro del ruido). Sin el encoder de comma, la cámara llega al latente en 0,8 ms, contra 4,5. Su latente detecta mejor las violaciones físicas, pero pierde la velocidad (sección 7 de [`resultados.md`](resultados.md)).
 
 - **`jepa`, estilo V-JEPA / V-JEPA 2-AC** (secciones 10 y 14 de [`world-models-conduccion-papers.md`](world-models-conduccion-papers.md)):
   - Latente **espacial**: 128 celdas × 384 por frame.
@@ -51,7 +52,7 @@ Las dos se diferencian en dos ejes: cuán detallado es el latente y cómo evitan
 
 | Qué | Por qué |
 |---|---|
-| Tokens en vez de píxeles (LeWM) | Decodificar cuesta 16 ms/frame, y pre-decodificar los 3M frames de train ocuparía ≈ 295 GB. El grid de tokens es el de patches de 16 px |
+| Tokens en vez de píxeles (LeWM) | Decodificar cuesta 16 ms/frame, y pre-decodificar los 3M frames de train ocuparía ≈ 295 GB. El grid de tokens es el de patches de 16 px. E5c vuelve a los píxeles: con el decoder en fp16 los frames se generan al vuelo (4,1 ms/frame), sin guardarlos |
 | SIGReg multiplicado por un N de referencia fijo (128, el batch del paper) | El original multiplica por el N de cada llamada. Acá N varía (B·T vectores en LeWM, 2048 celdas muestreadas en JEPA), y así λ = 0,09 significa lo mismo |
 | Predictor de LeWM con D 320 | La sección 3.1 del paper da ~10M; con AdaLN y D 384 (el ViT-S del apéndice) serían 16M |
 | Contexto de 19 frames (LeWM usa 3) | Igual que el resto de la tabla. Con un vector por frame es barato |
@@ -74,6 +75,7 @@ Las dos se diferencian en dos ejes: cuán detallado es el latente y cómo evitan
 | `lewm_s_l003`, `lewm_s_l03` | Vector | SIGReg con λ 0,03 y 0,3 | Sensibilidad al único hiperparámetro |
 | `jepa_xs`, `jepa_xxs` | Por celda | EMA | E5b: 4 capas con D 256 (3,7M) y 3 capas con D 192 (1,7M) |
 | `lewm_xs` | Vector | SIGReg | E5b: ViT de 6 capas y predictor de 4 (10,9M) |
+| `lewm_px_xs`, `lewm_px` | Vector | SIGReg | E5c: como `lewm_xs` y `lewm_s`, pero desde píxeles (parches de 16×16; los frames se generan al vuelo con el decoder de comma) |
 
 ## Evaluación
 

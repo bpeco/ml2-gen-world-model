@@ -33,9 +33,10 @@ VITIS = "VitisAIExecutionProvider"
 OUT = Path("results/bench")
 
 
-def make_session(path, provider="cpu"):
-  """InferenceSession con el provider pedido (cpu|cuda|dml|vitisai); error claro si no está disponible."""
-  so = ort.SessionOptions()
+def make_session(path, provider="cpu", so=None):
+  """InferenceSession con el provider pedido (cpu|cuda|dml|vitisai); error claro si no está disponible.
+  so: SessionOptions propias (p. ej. con enable_profiling para ver qué nodos caen en la CPU)."""
+  so = so or ort.SessionOptions()
   if provider == "vitisai":  # SIN PROBAR (sin NPU en esta máquina)
     ep_dir = os.environ.get("ML2_VITISAI_EP_DIR")
     if not ep_dir:

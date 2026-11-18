@@ -55,3 +55,8 @@ run lewm_s_l03      --kind lewm --lr 3e-4 --wd 1e-3 --config '{"lam": 0.3}'
 run jepa_xs         --kind jepa --lr 1e-3 --config '{"n_layer": 4, "n_head": 4, "dim": 256, "n_enc": 1}'
 run jepa_xxs        --kind jepa --lr 1e-3 --config '{"n_layer": 3, "n_head": 3, "dim": 192, "n_enc": 1}'
 run lewm_xs         --kind lewm --lr 3e-4 --wd 1e-3 --config '{"enc_layers": 6, "proj_hidden": 1024, "pred_dim": 256, "pred_layers": 4, "pred_heads": 8, "pred_mlp": 1024, "dec_layers": 2}'
+# E5c: LeWM desde píxeles, como el paper: ViT sobre parches de 16x16 de la imagen RGB en vez de los vectores del codebook.
+# El dataset solo trae tokens, así que los frames se generan al vuelo con el decoder de comma congelado (fp16). Misma
+# arquitectura que lewm_xs / lewm_s salvo la entrada: compara tokens contra píxeles. En inferencia no necesita el encoder de comma.
+run lewm_px_xs      --kind lewm --lr 3e-4 --wd 1e-3 --config '{"input": "pixels", "enc_layers": 6, "proj_hidden": 1024, "pred_dim": 256, "pred_layers": 4, "pred_heads": 8, "pred_mlp": 1024, "dec_layers": 2}'
+run lewm_px         --kind lewm --lr 3e-4 --wd 1e-3 --config '{"input": "pixels"}'

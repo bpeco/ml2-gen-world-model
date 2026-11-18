@@ -9,6 +9,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "principal",
+  "e2e": null,
   "short": "Unigrama"
  },
  {
@@ -21,6 +22,7 @@
   "autoregressive": true,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_copy__imagine__closed__rtx3080ti.json",
   "short": "Copia"
  },
  {
@@ -33,6 +35,7 @@
   "autoregressive": false,
   "horizon": true,
   "group": "principal",
+  "e2e": null,
   "short": "Frame congelado"
  },
  {
@@ -45,6 +48,7 @@
   "autoregressive": true,
   "horizon": true,
   "group": "principal",
+  "e2e": null,
   "short": "gpt2m (comma)"
  },
  {
@@ -57,6 +61,7 @@
   "autoregressive": true,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_convlstm__imagine__closed__rtx3080ti.json",
   "short": "ConvLSTM"
  },
  {
@@ -69,6 +74,7 @@
   "autoregressive": true,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_gpt_s__imagine__closed__rtx3080ti.json",
   "short": "GPT-S",
   "size": "s",
   "kd": false
@@ -83,6 +89,7 @@
   "autoregressive": true,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_gpt_s__imagine__closed__rtx3080ti.json",
   "short": "GPT-S KD",
   "size": "s",
   "kd": true
@@ -97,6 +104,7 @@
   "autoregressive": true,
   "horizon": true,
   "group": "principal",
+  "e2e": null,
   "short": "GPT-M",
   "size": "m",
   "kd": false
@@ -111,6 +119,7 @@
   "autoregressive": true,
   "horizon": true,
   "group": "principal",
+  "e2e": null,
   "short": "GPT-M KD",
   "size": "m",
   "kd": true
@@ -125,6 +134,7 @@
   "autoregressive": false,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_s_s1__imagine__closed__rtx3080ti.json",
   "short": "MaskGIT-S",
   "size": "s",
   "steps": 1
@@ -139,6 +149,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_s_s2__imagine__closed__rtx3080ti.json",
   "short": "MaskGIT-S",
   "size": "s",
   "steps": 2
@@ -153,6 +164,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_s_s4__imagine__closed__rtx3080ti.json",
   "short": "MaskGIT-S",
   "size": "s",
   "steps": 4
@@ -167,9 +179,25 @@
   "autoregressive": false,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_s_s8__imagine__closed__rtx3080ti.json",
   "short": "MaskGIT-S",
   "size": "s",
   "steps": 8
+ },
+ {
+  "label": "MaskGIT-S 12 pasos",
+  "family": "maskgit",
+  "eval": "results/eval_maskgit_s.json",
+  "video": "results/video_maskgit_s_s12.json",
+  "bench": "results/bench/maskgit_s__fp16_graphs_s12.json",
+  "params": 11491968,
+  "autoregressive": false,
+  "horizon": false,
+  "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_s_s12__imagine__closed__rtx3080ti.json",
+  "short": "MaskGIT-S",
+  "size": "s",
+  "steps": 12
  },
  {
   "label": "MaskGIT-M 1 pasos",
@@ -181,6 +209,7 @@
   "autoregressive": false,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_m_s1__imagine__closed__rtx3080ti.json",
   "short": "MaskGIT-M",
   "size": "m",
   "steps": 1
@@ -195,6 +224,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_m_s2__imagine__closed__rtx3080ti.json",
   "short": "MaskGIT-M",
   "size": "m",
   "steps": 2
@@ -209,6 +239,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_m_s4__imagine__closed__rtx3080ti.json",
   "short": "MaskGIT-M",
   "size": "m",
   "steps": 4
@@ -223,9 +254,25 @@
   "autoregressive": false,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_m_s8__imagine__closed__rtx3080ti.json",
   "short": "MaskGIT-M",
   "size": "m",
   "steps": 8
+ },
+ {
+  "label": "MaskGIT-M 12 pasos",
+  "family": "maskgit",
+  "eval": "results/eval_maskgit_m.json",
+  "video": "results/video_maskgit_m_s12.json",
+  "bench": "results/bench/maskgit_m__fp16_graphs_s12.json",
+  "params": 26345984,
+  "autoregressive": false,
+  "horizon": false,
+  "group": "principal",
+  "e2e": "results/infer/e2e_maskgit_m_s12__imagine__closed__rtx3080ti.json",
+  "short": "MaskGIT-M",
+  "size": "m",
+  "steps": 12
  },
  {
   "label": "GPT-S, posición absoluta",
@@ -236,7 +283,8 @@
   "params": 12425472,
   "autoregressive": true,
   "horizon": false,
-  "group": "ablación"
+  "group": "ablación",
+  "e2e": null
  },
  {
   "label": "MaskGIT-S 8 pasos, posición absoluta",
@@ -247,7 +295,8 @@
   "params": 12425472,
   "autoregressive": false,
   "horizon": false,
-  "group": "ablación"
+  "group": "ablación",
+  "e2e": null
  },
  {
   "label": "MaskGIT-S 8 pasos, máscara Genie",
@@ -258,7 +307,8 @@
   "params": 11491968,
   "autoregressive": false,
   "horizon": false,
-  "group": "ablación"
+  "group": "ablación",
+  "e2e": null
  },
  {
   "label": "MaskGIT-S 8 pasos, sin p_clean",
@@ -269,7 +319,8 @@
   "params": 11491968,
   "autoregressive": false,
   "horizon": false,
-  "group": "ablación"
+  "group": "ablación",
+  "e2e": null
  },
  {
   "label": "ConvLSTM, 1B tokens",
@@ -281,6 +332,7 @@
   "autoregressive": true,
   "horizon": true,
   "group": "extra",
+  "e2e": null,
   "short": "ConvLSTM, 1B tokens"
  },
  {
@@ -292,7 +344,8 @@
   "params": 11491968,
   "autoregressive": false,
   "horizon": false,
-  "group": "extra"
+  "group": "extra",
+  "e2e": null
  },
  {
   "label": "MaskGIT-S 2 pasos, contexto 4",
@@ -303,7 +356,8 @@
   "params": 11491968,
   "autoregressive": false,
   "horizon": false,
-  "group": "extra"
+  "group": "extra",
+  "e2e": null
  },
  {
   "label": "MaskGIT-S 4 pasos, contexto 4",
@@ -314,7 +368,8 @@
   "params": 11491968,
   "autoregressive": false,
   "horizon": false,
-  "group": "extra"
+  "group": "extra",
+  "e2e": null
  },
  {
   "label": "GPT-S, contexto 8",
@@ -325,7 +380,8 @@
   "params": 11491968,
   "autoregressive": false,
   "horizon": false,
-  "group": "extra"
+  "group": "extra",
+  "e2e": null
  },
  {
   "label": "MaskGIT-S 2 pasos, contexto 8",
@@ -336,7 +392,8 @@
   "params": 11491968,
   "autoregressive": false,
   "horizon": false,
-  "group": "extra"
+  "group": "extra",
+  "e2e": null
  },
  {
   "label": "MaskGIT-S 4 pasos, contexto 8",
@@ -347,7 +404,8 @@
   "params": 11491968,
   "autoregressive": false,
   "horizon": false,
-  "group": "extra"
+  "group": "extra",
+  "e2e": null
  },
  {
   "label": "JEPA-S (V-JEPA, latente por celda)",
@@ -359,6 +417,7 @@
   "autoregressive": false,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_jepa_s__imagine__closed__rtx3080ti.json",
   "short": "JEPA-S"
  },
  {
@@ -371,6 +430,7 @@
   "autoregressive": false,
   "horizon": true,
   "group": "principal",
+  "e2e": "results/infer/e2e_lewm_s__imagine__closed__rtx3080ti.json",
   "short": "LeWM"
  },
  {
@@ -383,6 +443,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "principal",
+  "e2e": "results/infer/e2e_jepa_xs__imagine__closed__rtx3080ti.json",
   "short": "JEPA-XS"
  },
  {
@@ -395,6 +456,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "principal",
+  "e2e": "results/infer/e2e_jepa_xxs__imagine__closed__rtx3080ti.json",
   "short": "JEPA-XXS"
  },
  {
@@ -407,7 +469,21 @@
   "autoregressive": false,
   "horizon": false,
   "group": "principal",
+  "e2e": "results/infer/e2e_lewm_xs__imagine__closed__rtx3080ti.json",
   "short": "LeWM-XS"
+ },
+ {
+  "label": "LeWM-XS desde píxeles",
+  "family": "lewm",
+  "eval": "results/eval_lewm_px_xs.json",
+  "video": "results/video_lewm_px_xs.json",
+  "bench": "results/bench/lewm_px_xs__fp16_graphs.json",
+  "params": 11015786,
+  "autoregressive": false,
+  "horizon": false,
+  "group": "principal",
+  "e2e": "results/infer/e2e_lewm_px_xs__imagine__closed__rtx3080ti.json",
+  "short": "LeWM-XS px"
  },
  {
   "label": "JEPA-S, control CE",
@@ -419,6 +495,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "latente",
+  "e2e": null,
   "short": "JEPA-S, control CE"
  },
  {
@@ -431,6 +508,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "latente",
+  "e2e": null,
   "short": "JEPA-S con SIGReg"
  },
  {
@@ -443,6 +521,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "latente",
+  "e2e": null,
   "short": "JEPA-S, target codebook"
  },
  {
@@ -455,6 +534,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "latente",
+  "e2e": null,
   "short": "LeWM, control CE"
  },
  {
@@ -467,6 +547,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "latente",
+  "e2e": null,
   "short": "LeWM con EMA"
  },
  {
@@ -479,6 +560,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "latente",
+  "e2e": null,
   "short": "LeWM, λ = 0,03"
  },
  {
@@ -491,6 +573,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "latente",
+  "e2e": null,
   "short": "LeWM, λ = 0,3"
  },
  {
@@ -503,6 +586,7 @@
   "autoregressive": false,
   "horizon": false,
   "group": "latente",
+  "e2e": null,
   "short": "JEPA-S, rollout latente"
  },
  {
@@ -515,6 +599,20 @@
   "autoregressive": false,
   "horizon": false,
   "group": "latente",
+  "e2e": null,
   "short": "LeWM, rollout latente"
+ },
+ {
+  "label": "LeWM-XS desde píxeles, rollout latente",
+  "family": "lewm",
+  "eval": null,
+  "video": "results/video_lewm_px_xs_latent.json",
+  "bench": "results/bench/lewm_px_xs_latent__fp16_graphs.json",
+  "params": 11015786,
+  "autoregressive": false,
+  "horizon": false,
+  "group": "latente",
+  "e2e": null,
+  "short": "LeWM-XS desde píxeles, rollout latente"
  }
 ]

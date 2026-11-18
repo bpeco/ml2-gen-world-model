@@ -68,13 +68,13 @@ quality() {
     case $r in lewm_s_l003|lewm_s_l03) continue ;; esac  # barrido de λ: alcanza con CE y eval_latent (ahorra ~25 min)
     roll "$r" --model $r --dtype fp16 --graphs
   done
-  for r in jepa_s lewm_s; do  # rollout latente: ẑ entra al contexto sin re-codificar el frame muestreado
+  for r in jepa_s lewm_s lewm_px_xs lewm_px; do  # rollout latente: ẑ entra al contexto sin re-codificar el frame muestreado
     [ -f "$CK/$r/final.pt" ] && roll "${r}_latent" --model $r --dtype fp16 --graphs --opt rollout=latent
   done
   return 0
 }
 
-LATENT="jepa_s jepa_s_ce jepa_s_sigreg jepa_s_codebook lewm_s lewm_s_ce lewm_s_ema lewm_s_l003 lewm_s_l03 jepa_xs jepa_xxs lewm_xs"
+LATENT="jepa_s jepa_s_ce jepa_s_sigreg jepa_s_codebook lewm_s lewm_s_ce lewm_s_ema lewm_s_l003 lewm_s_l03 jepa_xs jepa_xxs lewm_xs lewm_px_xs lewm_px"
 
 latent() {
   # evaluaciones estilo LeWM (probes, sorpresa, rectitud, acciones, CEM) en el holdout separado por ruta
@@ -100,9 +100,13 @@ benchlatent() {
     bench --model $m --dtype fp16 --graphs $W
     bench --model $m --name "${m}_latent" --opt rollout=latent --dtype fp16 --graphs $W
   done
-  for m in jepa_xs jepa_xxs lewm_xs; do  # E5b, versiones chicas: solo la configuración de la tabla
+  for m in jepa_xs jepa_xxs lewm_xs lewm_px_xs lewm_px; do  # E5b y E5c: solo la configuración de la tabla
     [ -f "$CK/$m/final.pt" ] || continue
     [ -f "results/bench/${m}__fp16_graphs.json" ] || bench --model $m --dtype fp16 --graphs $W
+  done
+  for m in lewm_px_xs lewm_px; do  # desde píxeles, imaginando en el latente (sin decodificar y re-codificar cada frame)
+    [ -f "$CK/$m/final.pt" ] || continue
+    [ -f "results/bench/${m}_latent__fp16_graphs.json" ] || bench --model $m --name "${m}_latent" --opt rollout=latent --dtype fp16 --graphs $W
   done
 }
 
@@ -126,6 +130,7 @@ benchall() {
       bench --model $m --steps $s --dtype fp16 --graphs $W
     done
     bench --model $m --steps 8 --dtype fp16 $W
+    bench --model $m --steps 12 --dtype fp16 --graphs $W  # agregado con la inferencia de punta a punta
   done
   bench --model convlstm --dtype fp32 $W
   bench --model convlstm --dtype fp16 $W

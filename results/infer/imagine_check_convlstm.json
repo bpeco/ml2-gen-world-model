@@ -1,0 +1,7 @@
+{
+ "name": "convlstm",
+ "seconds": 1.9907312393188477,
+ "tokens_equal": 0.5320185546875,
+ "first_frame_equal": 0.99880859375,
+ "clips_identical": 0.0
+}

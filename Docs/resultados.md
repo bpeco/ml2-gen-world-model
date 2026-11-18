@@ -15,7 +15,8 @@ Ejecución completa de [`plan-proyecto.md`](plan-proyecto.md): E0–E3, la optim
   - **LeWM:** es lo más rápido después de la copia (1,0–1,4 ms por frame) y planifica 42 veces más barato que JEPA. Pero su vector de 192 por frame no guarda los tokens, y el video queda al nivel del unigrama.
   - **Acciones:** los dos modelos casi no usan la pose, y el CEM no la recupera (sección 7).
   - **Versiones chicas (E5b):** JEPA-XXS (1,7M) baja a 1,2 ms con FVD 546, y LeWM-XS (10,9M) a 0,81 ms con la misma calidad que LeWM. Ninguna entra en la frontera de Pareto.
-- **Próximo paso: inferencia de punta a punta** (video → encoder → world model → decoder → video). Con todo en la GPU en fp16 y CUDA graphs, la cadena con MaskGIT-S baja de 38,5 a 14 ms en la 3080 Ti. Ahora el encoder y el decoder son el 85–90 % del tiempo (sección 10 y [`plan-inferencia.md`](plan-inferencia.md)).
+  - **LeWM desde píxeles (E5c), como en el paper:** misma calidad de video y sin el encoder de comma en inferencia. Con la cámara a la entrada, la cadena con video de salida baja de 10,8 a 7,0 ms, y llegar al latente cuesta 0,8 ms. Su latente detecta mejor las violaciones físicas, pero pierde la velocidad.
+- **Inferencia de punta a punta** (video → encoder → world model → decoder → video, todo en la GPU con fp16 y CUDA graphs): en la 3080 Ti todo entra en 50 ms salvo GPT-S. ConvLSTM, la de mejor calidad, hace la cadena completa en 10,3 ms. El codec de comma es el 85–95 % de ese tiempo (sección 10 y [`plan-inferencia.md`](plan-inferencia.md)).
 - **Dos hallazgos de diseño fueron necesarios para que los modelos chicos funcionen:**
   - embedding de posición factorizado (frame + celda);
   - en MaskGIT, frames de contexto sin máscara al entrenar (`p_clean`). Sin eso los rollouts colapsan.
@@ -253,6 +254,35 @@ Una lectura entrenada aparte convierte ẑ en tokens, así que entran en la mism
 - **Las versiones chicas de JEPA** codifican la pose un poco mejor que JEPA-S (r 0,57 y 0,55 contra 0,52). La pose real baja su error latente un 1,3 %.
 - **Costo:** entrenar cada una tarda 2–3,6 min.
 
+**E5c: LeWM desde píxeles, como en el paper.** El LeWM de E5 recibía los tokens de comma, cada uno como su vector del codebook. Eso lo ataba al encoder de comma en inferencia. `lewm_px_xs` tiene la misma arquitectura que LeWM-XS, salvo la entrada: un ViT sobre parches de 16×16 de la imagen RGB. Como el dataset solo trae tokens, los frames se generan al vuelo con el decoder de comma congelado. Mismo presupuesto, mismos batches y mismo lr.
+
+| | LeWM-XS desde tokens | LeWM-XS desde píxeles |
+|---|---:|---:|
+| Params | 10,9M | 11,0M |
+| CE último frame | 6,683 | 6,681 |
+| FVD 1 s, rollout de tokens [IC 95 %] | 997 [938, 1056] | 957 [905, 1009] |
+| FVD 1 s, rollout latente | – | 952 [895, 1010] |
+| LPIPS 1 s, rollout latente | – | 0,457 |
+| Probe de velocidad (r, latente predicho) | 0,40 | −0,03 |
+| Sorpresa: teletransporte / salto de 2 s | 20,6× / 5,8× | 26,2× / 7,8× |
+| Error de velocidad del CEM (repetir la última pose: 0,13) | 20,6 | 23,3 |
+| Cadena en línea, cámara → video (p50 / p99) | 10,8 / 12,4 ms | 7,0 / 7,1 ms |
+| Cámara → latente | 4,5 ms (encoder de comma 3,8 + modelo) | 0,8 ms |
+| Costo de entrenar | 3 min | 59 min (casi todo, generar los frames: 4,1 ms cada uno) |
+
+- **La entrada desde píxeles no cambia la calidad de video:**
+  - El FVD a 1 s mejora un poco, pero dentro del ruido.
+  - La CE es la misma, cerca de adivinar al azar (6,93).
+  - El límite sigue siendo el vector de 192: la lectura desde el latente del frame real da la misma CE que desde el predicho.
+- **El latente cambia de contenido.**
+  - Detecta mejor lo que viola la física: 26× contra 21× ante un teletransporte.
+  - Pero pierde la velocidad: el probe lineal pasa de r 0,40 a ~0.
+  - Usa la pose un poco más (error latente 0,3 % menor con la pose real, p < 1e-6), pero sigue siendo casi nada.
+- **En inferencia es claramente mejor:**
+  - Sin el encoder de comma, la cámara llega al latente en 0,8 ms, contra 4,5.
+  - La cadena en línea con video de salida baja de 10,8 a 7,0 ms; casi todo lo que queda es el decoder de comma (6,1 ms), que solo hace falta para mostrar video.
+  - Imaginando en el latente, el modelo solo tarda 0,53 ms por frame. Re-codificar cada frame imaginado desde píxeles cuesta 6,9 ms, porque hay que decodificarlo.
+
 **H5: latente vs. tokens con la misma arquitectura. En JEPA, el latente es peor; en LeWM no se puede leer.**
 
 - **JEPA-S contra su control CE** (solo cambia la pérdida):
@@ -330,7 +360,7 @@ Se mide en los 46 segmentos del holdout cuya ruta no aparece en train, con las p
 
 ```bash
 python -m src.data --poses-only                 # poses de train para E5 (del tar local)
-bash scripts/train_all.sh                       # E1, E2, E2b, E3, E5 y ablaciones (~4 h en la 3080 Ti)
+bash scripts/train_all.sh                       # E1, E2, E2b, E3, E5 y ablaciones (~4 h en la 3080 Ti; E5c suma ~2 h)
 bash scripts/eval_all.sh quality                # CE, rollouts, LPIPS y FVD
 bash scripts/eval_all.sh latent                 # E5: probes, sorpresa, acciones y CEM
 bash scripts/extras.sh quality                  # contexto, 1B tokens, control del LR
@@ -338,6 +368,9 @@ bash scripts/eval_all.sh bench && bash scripts/eval_all.sh bench-latent && bash 
 python scripts/make_configs.py && python -m src.report && python scripts/analysis.py
 python scripts/ce_por_posicion.py               # datos de la figura de la sección 3
 python -m src.ejemplos                          # muestras visuales (PNG y GIF) -> results/ejemplos/
+bash scripts/e2e_all.sh all && bash scripts/e2e_all.sh quality   # inferencia de punta a punta (sección 10), con la GPU libre
+python -m src.infer.report_e2e                  # results/infer/summary_e2e.md y results/fig_pareto_e2e.png
+python -m src.infer.demo --model convlstm       # video real y predicho lado a lado -> results/demo/
 ```
 
 Notebooks: [`notebooks/resultados.ipynb`](../notebooks/resultados.ipynb) muestra tablas, figuras y muestras, y genera en vivo con un modelo entrenado. [`notebooks/entrenamiento.ipynb`](../notebooks/entrenamiento.ipynb) entrena una configuración, muestra la curva de aprendizaje y la evalúa.
@@ -346,21 +379,30 @@ Para no reentrenar: `python -m src.store pull --all` baja los checkpoints del al
 
 ![CE por posición](../results/fig_ce_posicion.png)
 
-## 10. Próximas pruebas: inferencia de punta a punta
+## 10. Inferencia de punta a punta
 
-Todo lo anterior mide el world model solo, desde tokens. Lo que importa en uso es la cadena completa: **video de entrada → encoder VQ → world model → decoder VQ → video de salida**, con 50 ms por frame como límite. Plan completo: [`plan-inferencia.md`](plan-inferencia.md).
+Todo lo anterior mide el world model solo, desde tokens. Lo que importa en uso es la cadena completa: **video de entrada → encoder VQ → world model → decoder VQ → video de salida**, con 50 ms por frame como límite. Implementación, métodos y cómo correrlo en otros dispositivos: [`plan-inferencia.md`](plan-inferencia.md). Tablas completas: [`results/infer/summary_e2e.md`](../results/infer/summary_e2e.md).
 
-Primeras mediciones (RTX 3080 Ti, batch 1, pesos del codec de commaVQ):
+![Pareto de punta a punta](../results/fig_pareto_e2e.png)
 
-| Etapa | fp32, pasando por la CPU entre etapas | fp16 + CUDA graph, todo en la GPU |
-|---|---:|---:|
-| Encoder commaVQ (29,6M) | 7,4 ms | 3,4 ms |
-| Decoder commaVQ (42,8M) | 14,2 ms | 5,8 ms (PSNR 61 dB contra fp32) |
-| **Cadena con MaskGIT-S, 1 paso** | **38,5 ms** | **14,0 ms** |
+Medido en la RTX 3080 Ti con batch 1 y 3000 frames por configuración; en ms por frame, p50 / p99:
 
-- **Residente en la GPU es 2,75 veces más rápido, sin reentrenar.**
-  - La cadena da la suma exacta de sus partes, sin overhead entre etapas.
-  - Subir y bajar un frame cuesta menos de 0,1 ms.
-- **El encoder y el decoder pasan a ser el 85–90 % del tiempo** con los modelos rápidos: ConvLSTM, LeWM-XS y JEPA-XXS quedarían en ~10 ms de punta a punta.
-- **En esta GPU sobran ~40 ms para un world model mejor.** Pero la T4 (la GPU de referencia) puede ser 4–5 veces más lenta en convoluciones, y en la iGPU de la laptop el decoder solo podría pasar los 50 ms.
-- **Por eso, lo primero es medir el codec en cada dispositivo.**
+| Configuración | FVD@1s | En línea | Imaginación |
+|---|---:|---:|---:|
+| Solo el codec (encoder 3,8 + decoder 6,2) | – | 10,0 / 10,1 | – |
+| ConvLSTM | 163 | 10,3 / 10,5 | 6,8 / 7,4 |
+| MaskGIT-S, 4 pasos | 220 | 18,9 / 19,0 | 15,3 / 15,5 |
+| MaskGIT-M, 12 pasos | 326 | 39,0 / 39,3 | 39,3 / 44,9 |
+| JEPA-S | 460 | 13,0 / 14,9 | 9,2 / 13,3 |
+| LeWM-XS | 997 | 10,8 / 12,4 | 7,0 / 8,1 |
+| GPT-S | 230 | 167 / 171 | 164 / 171 |
+
+- **Pasar todo a la GPU en fp16 con CUDA graphs es lo que hace la diferencia, sin reentrenar.** El codec baja de 21,9 a 9,9 ms, y fp16 no cambia su calidad: el LPIPS de la reconstrucción se mueve 0,0008.
+- **Con los modelos rápidos, el codec es el 85–95 % de la cadena.** Achicar más el world model casi no cambia el total.
+- **Sobra presupuesto, pero gastarlo en más pasos de MaskGIT empeora el FVD:** 220 con 4 pasos, 307 con 8 y 374 con 12, en MaskGIT-S.
+- **A ritmo de cámara (un frame cada 50 ms), la latencia sube a ~20 ms** porque la GPU baja los relojes entre frames. Sigue entrando en el presupuesto.
+- **Predecir el frame siguiente en línea es difícil de mejorar respecto de repetir el último frame:** 38,9 % de tokens iguales y LPIPS 0,075. A temperatura 0, solo ConvLSTM lo supera apenas (40,0 %, LPIPS 0,073).
+- **ConvLSTM no deriva en streams de 1 minuto:** arrastra el estado sin reinicios.
+- **El camino nuevo da la misma calidad que la tabla:** con MaskGIT-S, los tokens son idénticos en los 400 clips; con ConvLSTM, el FVD da 160 contra 163.
+- **LeWM desde píxeles** (E5c, sección 7): sin el encoder de comma, la cadena en línea de LeWM-XS baja de 10,8 a 7,0 ms y la cámara llega al latente en 0,8 ms. La calidad de video es la misma.
+- **Falta medir en la T4 y en la laptop.** Ahí el codec solo podría ocupar la mayor parte de los 50 ms.

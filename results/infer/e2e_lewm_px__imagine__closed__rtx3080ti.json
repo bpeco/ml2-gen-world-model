@@ -1,0 +1,58 @@
+{
+ "name": "lewm_px",
+ "model": "lewm_px",
+ "mode": "imagine",
+ "k": 1,
+ "steps": null,
+ "temperature": 1.0,
+ "dtype": "fp16",
+ "codec_dtype": "fp16",
+ "graphs": true,
+ "graphs_error": null,
+ "pace_ms": 0.0,
+ "budget_ms": 50,
+ "reset_every": null,
+ "opts": [
+  "rollout=latent"
+ ],
+ "params": 21797290,
+ "ctx_frames": 19,
+ "warmup": 50,
+ "first_second": {
+  "p50": 15.97299997229129,
+  "p90": 22.802479960955665,
+  "p99": 356.99852003715944,
+  "max": 426.57320003490895,
+  "mean": 39.061363167619625,
+  "late_pct": 5.263157894736842,
+  "n": 19
+ },
+ "steady": {
+  "p50": 7.059199968352914,
+  "p90": 7.154209993313998,
+  "p99": 7.2900019807275385,
+  "max": 7.527400040999055,
+  "mean": 7.080253065524933,
+  "late_pct": 0.0,
+  "n": 3000
+ },
+ "stages_p50_ms": {
+  "encoder": 0.018432000651955605,
+  "model": 0.8581119775772095,
+  "decoder": 6.133664131164551
+ },
+ "fps_p50": 141.65911214912427,
+ "realtime_p99": true,
+ "peak_mem_mb": 260.5107421875,
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "tag": "rtx3080ti",
+ "timestamp": "2026-11-17T21:02:33"
+}

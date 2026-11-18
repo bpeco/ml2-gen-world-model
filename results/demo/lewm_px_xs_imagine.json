@@ -1,0 +1,11 @@
+{
+ "model": "lewm_px_xs",
+ "steps": null,
+ "mode": "imagine",
+ "k": 10,
+ "source": "video de cámara de commaVQ",
+ "frames": 240,
+ "ms_per_frame_p50": 6.624249974265695,
+ "ms_per_frame_p99": 7.438695979071783,
+ "note": "latencia por frame generado en la demo (incluye bajar el frame a la CPU), sin la escritura del mp4"
+}

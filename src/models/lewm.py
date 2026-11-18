@@ -1,10 +1,17 @@
-"""LeWorldModel (LeWM) sobre los tokens de comma: un embedding por frame, SIGReg y predictor con AdaLN.
+"""LeWorldModel (LeWM): un embedding por frame, SIGReg y predictor con AdaLN, desde tokens de comma o desde píxeles.
 
 Receta de Maes, Le Lidec, Scieur, LeCun y Balestriero, "LeWorldModel: Stable End-to-End Joint-Embedding
 Predictive Architecture from Pixels" (arXiv 2603.19312; código oficial github.com/lucas-maes/le-wm, MIT):
 - Encoder ViT-Tiny (12 capas, 3 cabezas, dim 192) -> CLS -> projector MLP con BatchNorm -> z (dim 192).
-  Adaptación: en vez de patches de píxeles, cada token (8 x 16) entra con su vector del codebook del VQ-VAE
-  (congelado): decodificar todo train a píxeles cuesta ~16 ms/frame y ~295 GB.
+  cfg.input = "tokens" (E5, adaptación): en vez de patches de píxeles, cada token (8 x 16) entra con su vector del
+  codebook del VQ-VAE (congelado); decodificar todo train a píxeles de antemano costaba ~16 ms/frame y ~295 GB.
+  En inferencia necesita el encoder de comma delante (cámara -> tokens).
+  cfg.input = "pixels" (como el paper): ViT sobre parches de 16x16 de la imagen RGB de 128x256 (la misma grilla de
+  8 x 16). El dataset solo tiene tokens, así que al entrenar los frames se generan al vuelo con el decoder de comma
+  congelado (fp16, sin gradiente; src/infer/codec.py): el modelo ve las reconstrucciones del VQ-VAE, que están a
+  LPIPS 0,10 de la cámara real. encode() acepta imágenes uint8 (B, F, 128, 256, 3) o tokens (B, F, 128), que
+  decodifica primero (así la evaluación, los rollouts y el bench, que trabajan con tokens, no cambian). En
+  inferencia desde la cámara no hace falta el encoder de comma.
 - Predictor: transformer causal en el tiempo (6 capas, 16 cabezas, dropout 0,1) con AdaLN-zero condicionado
   en la acción (pose del frame), y pred_proj MLP con BatchNorm. Ancho 320 para quedar en los ~10M que da la
   sección 3.1 del paper (el apéndice habla de un ViT-S de 384; con AdaLN serían ~16M).
@@ -44,6 +51,48 @@ class FrameEncoder(nn.Module):
     e = self.in_proj(codebook[frames.reshape(B * Fr, C)].to(self.in_proj.weight.dtype))
     x = torch.cat([self.cls.to(e.dtype).expand(B * Fr, 1, -1), e], 1)
     return self.projector(self.net(emb=x)[:, 0]).view(B, Fr, -1)
+
+
+class PixelFrameEncoder(nn.Module):
+  """ViT sobre parches de la imagen RGB (128 x 256 -> 8 x 16 parches de 16 px) -> CLS -> projector: (B, F, dim)."""
+
+  def __init__(self, dim, n_layer, n_head, proj_hidden, patch=16):
+    super().__init__()
+    self.patch = nn.Conv2d(3, dim, patch, stride=patch)
+    self.cls = nn.Parameter(torch.randn(dim) * 0.02)
+    self.net = Backbone(BackboneConfig(n_layer=n_layer, n_head=n_head, dim=dim, block_size=TPF, vocab_in=0,
+                                       vocab_out=0, attn="block", pos="abs"))
+    self.projector = MLP(dim, proj_hidden, dim)
+
+  def forward(self, img, codebook=None):
+    """img (B, F, H, W, 3) uint8 o float en [0, 255]."""
+    B, Fr, H, W, _ = img.shape
+    x = img.reshape(B * Fr, H, W, 3).permute(0, 3, 1, 2).to(self.patch.weight.dtype) / 127.5 - 1
+    e = self.patch(x).flatten(2).transpose(1, 2)                       # (B*F, 128, dim)
+    x = torch.cat([self.cls.to(e.dtype).expand(B * Fr, 1, -1), e], 1)
+    return self.projector(self.net(emb=x)[:, 0]).view(B, Fr, -1)
+
+
+_RENDER = {}
+
+
+@torch.no_grad()
+def render_tokens(tok, chunk=32):
+  """tokens (..., 128) -> imágenes uint8 (..., 128, 256, 3) con el decoder de comma congelado (fp16 en CUDA).
+
+  Es la "cámara" de LeWM desde píxeles al entrenar y al evaluar con tokens. No es un submódulo del modelo: no
+  entra en el checkpoint, ni en los parámetros, ni en el optimizador.
+  """
+  from src.infer.codec import Codec
+  dev = tok.device
+  key = (dev.type, dev.index)
+  if key not in _RENDER:
+    _RENDER[key] = Codec(dev, "fp16" if dev.type == "cuda" else "fp32", graphs=False, encoder=False)
+  codec = _RENDER[key]
+  flat = tok.reshape(-1, tok.shape[-1]).long()
+  with torch.autocast(dev.type, enabled=False):
+    out = torch.cat([codec.decode(flat[i:i + chunk]) for i in range(0, len(flat), chunk)])
+  return out.view(*tok.shape[:-1], *out.shape[1:])
 
 
 class CrossBlock(nn.Module):
@@ -114,13 +163,18 @@ class LeWM(LatentWM):
     p_null: float = 0.25
     rollout: str = "token"     # "token" | "latent"
     n_pose: int = 6
+    input: str = "tokens"      # "tokens" (E5: vectores del codebook) | "pixels" (como el paper: parches de la imagen)
+    patch: int = 16
 
   def __init__(self, cfg: "LeWM.Config"):
     super().__init__()
     assert cfg.objective in ("sigreg", "ema", "ce"), cfg.objective
     self.cfg = cfg
     self._init_common(cfg.n_pose)
-    self.encoder = FrameEncoder(cfg.dim, cfg.enc_layers, cfg.enc_heads, cfg.proj_hidden)
+    assert cfg.input in ("tokens", "pixels"), cfg.input
+    enc = PixelFrameEncoder if cfg.input == "pixels" else FrameEncoder
+    self.encoder = enc(cfg.dim, cfg.enc_layers, cfg.enc_heads, cfg.proj_hidden,
+                       **({"patch": cfg.patch} if cfg.input == "pixels" else {}))
     P = cfg.pred_dim
     self.pred_in = nn.Linear(cfg.dim, P)
     self.pos = nn.Parameter(torch.randn(cfg.frames, P) * 0.02)
@@ -138,7 +192,11 @@ class LeWM(LatentWM):
 
   # ---- interfaz de LatentWM
   def encode(self, frames, target=False):
-    return (self.tgt if target else self.encoder)(frames, self.codebook)
+    """frames: tokens (B, F, 128) o, con input="pixels", también imágenes uint8 (B, F, 128, 256, 3)."""
+    enc = self.tgt if target else self.encoder
+    if self.cfg.input == "pixels":
+      return enc(frames if frames.dim() == 5 else render_tokens(frames))
+    return enc(frames, self.codebook)
 
   def predict(self, z_in, acts):
     T = z_in.shape[1]

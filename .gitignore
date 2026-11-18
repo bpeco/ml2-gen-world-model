@@ -13,3 +13,5 @@ results/cache/
 results/logs/
 
 results/ejemplos/*.gif
+results/demo/*.mp4
+results/infer/ort_profile_*.json

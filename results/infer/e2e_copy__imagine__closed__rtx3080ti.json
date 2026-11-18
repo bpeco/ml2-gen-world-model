@@ -1,0 +1,56 @@
+{
+ "name": "copy",
+ "model": "copy",
+ "mode": "imagine",
+ "k": 1,
+ "steps": null,
+ "temperature": 1.0,
+ "dtype": "fp16",
+ "codec_dtype": "fp16",
+ "graphs": true,
+ "graphs_error": null,
+ "pace_ms": 0.0,
+ "budget_ms": 50,
+ "reset_every": null,
+ "opts": null,
+ "params": 0,
+ "ctx_frames": 19,
+ "warmup": 50,
+ "first_second": {
+  "p50": 11.163000017404556,
+  "p90": 11.179619980975986,
+  "p99": 348.3575119171293,
+  "max": 422.36749990843236,
+  "mean": 32.565089475706614,
+  "late_pct": 5.263157894736842,
+  "n": 19
+ },
+ "steady": {
+  "p50": 6.605200003832579,
+  "p90": 6.8376000272110105,
+  "p99": 7.279916018014774,
+  "max": 7.374400040134788,
+  "mean": 6.675022666730608,
+  "late_pct": 0.0,
+  "n": 3000
+ },
+ "stages_p50_ms": {
+  "encoder": 0.016607999801635742,
+  "model": 0.38942399621009827,
+  "decoder": 6.167359828948975
+ },
+ "fps_p50": 151.39586983282314,
+ "realtime_p99": true,
+ "peak_mem_mb": 208.564453125,
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "tag": "rtx3080ti",
+ "timestamp": "2026-11-17T15:51:33"
+}

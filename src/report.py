@@ -69,7 +69,7 @@ def load_configs(manifest):
   manifest = Path(manifest)
   cfgs = []
   for m in json.loads(manifest.read_text(encoding="utf-8")):
-    ev, vd, bn = (_load(m.get(k), manifest.parent) for k in ("eval", "video", "bench"))
+    ev, vd, bn, e2e = (_load(m.get(k), manifest.parent) for k in ("eval", "video", "bench", "e2e"))
     c = dict(label=m["label"], short=m.get("short", m["label"]), family=m.get("family", "otro"),
              group=m.get("group", "principal"), size=m.get("size"), steps=m.get("steps"), kd=m.get("kd", False),
              params=m.get("params") or _get(bn, "params"),
@@ -79,7 +79,7 @@ def load_configs(manifest):
              lpips1=_get(vd, "lpips", "at", "1", "mean"),
              lpips1_ci=(_get(vd, "lpips", "at", "1", "lo"), _get(vd, "lpips", "at", "1", "hi")),
              fvd={h: _get(vd, "fvd", h) for h in ("1", "2", "3")},
-             ms=_get(bn, "median_ms"))
+             ms=_get(bn, "median_ms"), e2e_p99=_get(e2e, "steady", "p99"))
     c["fvd1"] = _get(c["fvd"]["1"], "value")
     cfgs.append(c)
   return cfgs
@@ -405,7 +405,7 @@ def summary(cfgs):
       "label": c["label"], "family": c["family"], "params_M": _r(c["params"] / 1e6 if c["params"] else None, 1),
       "ce_all": _r(c["ce_all"], 3), "ce_last": _r(c["ce_last"], 3), "lpips_1s": _r(c["lpips1"], 3),
       "fvd_1s": _r(c["fvd1"], 1), "fvd_1s_ci": [_r(f1.get("lo"), 1), _r(f1.get("hi"), 1)] if f1 else None,
-      "fvd_3s": _r(_get(f3, "value"), 1), "ms_frame": _r(c["ms"], 2),
+      "fvd_3s": _r(_get(f3, "value"), 1), "ms_frame": _r(c["ms"], 2), "e2e_p99_ms": _r(c.get("e2e_p99"), 1),
       "fps": _r(1000 / c["ms"], 1) if c["ms"] else None,
       "realtime": None if c["ms"] is None else bool(c["ms"] < RT_MS),
       "group": c["group"],
@@ -417,16 +417,18 @@ def markdown(rows):
   f = lambda v: "–" if v is None else str(v)
   yn = lambda v: "–" if v is None else ("sí" if v else "no")
   out = ["| Configuración | Familia | Params (M) | CE | CE último frame | LPIPS@1s | FVD@1s [IC 95%] | FVD@3s "
-         "| ms/frame | FPS | Tiempo real (<50 ms) | Pareto |",
-         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|:-:|:-:|"]
+         "| ms/frame | FPS | Tiempo real (<50 ms) | Pareto | De punta a punta p99 (ms) |",
+         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|:-:|:-:|---:|"]
   out = ["Pareto: no dominada en (ms/frame, FVD a 1 s) entre las configuraciones principales (100M tokens); las "
-         "ablaciones y los extras no compiten. Latencia de los transformers con fp16 + CUDA graphs.", ""] + out
+         "ablaciones y los extras no compiten. Latencia de los transformers con fp16 + CUDA graphs. De punta a punta: "
+         "video → encoder → modelo → decoder → video en la GPU, modo imaginación, p99 de 3000 frames "
+         "(results/infer/summary_e2e.md).", ""] + out
   for r in rows:
     ci = r["fvd_1s_ci"]
     fvd = f(r["fvd_1s"]) + (f" [{f(ci[0])}, {f(ci[1])}]" if ci and r["fvd_1s"] is not None else "")
     out.append(f"| {r['label']} | {r['family']} | {f(r['params_M'])} | {f(r['ce_all'])} | {f(r['ce_last'])} | "
                f"{f(r['lpips_1s'])} | {fvd} | {f(r['fvd_3s'])} | {f(r['ms_frame'])} | {f(r['fps'])} | "
-               f"{yn(r['realtime'])} | {yn(r['pareto'])} |")
+               f"{yn(r['realtime'])} | {yn(r['pareto'])} | {f(r.get('e2e_p99_ms'))} |")
   return "\n".join(out) + "\n"
 
 

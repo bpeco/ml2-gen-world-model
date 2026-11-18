@@ -42,6 +42,8 @@ git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq
 
 `requirements-rocm.txt` instala el torch de AMD para gfx1152 (antes que `requirements.txt`); ver los comentarios del archivo y la sección 2.5 del plan. `device()` elige `cuda` igual: los builds ROCm usan la API `torch.cuda`. `requirements-npu.txt` es para el extra de ONNX Runtime en la NPU (`src/export_onnx.py`, `src/ort_model.py`).
 
+Para medir la inferencia de punta a punta en la laptop (iGPU con ROCm y NPU con ONNX Runtime), ver la sección "Cómo correrlo" de [`Docs/plan-inferencia.md`](Docs/plan-inferencia.md).
+
 `device()` ([`src/common.py`](src/common.py)) elige CUDA (NVIDIA o ROCm), MPS o CPU. `ML2_DEVICE=cpu` lo fuerza. Cada `results/*.json` anota el hardware usado.
 
 ## Datos
@@ -76,6 +78,12 @@ Todo modelo implementa la interfaz `WorldModel` ([`src/models/base.py`](src/mode
 | `src/ejemplos.py` | Muestras visuales: decodifica rollouts y arma grillas (modelo × horizonte) y GIF lado a lado → `results/ejemplos/`. |
 | `src/store.py` | Almacén de modelos entrenados para no reentrenar (ver abajo). |
 | `src/export_onnx.py`, `src/ort_model.py` | Extra: una pasada de forma fija en ONNX Runtime (CPU, CUDA, DirectML o NPU). |
+| `src/infer/codec.py` | Encoder y decoder del VQ-VAE de comma en el device: fp16 con el cuantizador en fp32 y un CUDA graph por etapa; entrada y salida uint8. |
+| `src/infer/stream.py` | Estado de inferencia por frame (`observe`, `predict(k)`, `imagine`, `step`) para cada familia: buffer de tokens, MaskGIT con el frame entero en un graph, ConvLSTM con (h, c), y caché de latentes para JEPA y LeWM. |
+| `src/infer/bench_codec.py`, `src/infer/bench_e2e.py` | Fidelidad y latencia del codec; latencia de la cadena completa (p50, p99, frames tarde), en línea e imaginación, en bucle cerrado o a 50 ms. |
+| `src/infer/quality.py`, `src/infer/report_e2e.py` | Calidad a 1 paso en línea y verificación del camino nuevo contra los rollouts; tabla y figura de punta a punta. |
+| `src/infer/demo.py` | Video real y predicho lado a lado en mp4. |
+| `src/infer/export_codec.py`, `src/infer/bench_ort.py` | Codec y paso de ConvLSTM en ONNX, y la cadena en ONNX Runtime eligiendo el dispositivo de cada etapa (NPU, iGPU o CPU). |
 
 ## Experimentos
 
@@ -85,6 +93,9 @@ bash scripts/eval_all.sh quality     # CE + rollouts + LPIPS/FVD de todas las co
 bash scripts/eval_all.sh latent      # E5: probes, sorpresa, acciones y CEM de JEPA y LeWM
 bash scripts/eval_all.sh bench       # latencias (con la GPU libre) -> results/bench/
 bash scripts/eval_all.sh bench-latent  # latencias de JEPA y LeWM (con la GPU libre)
+bash scripts/e2e_all.sh all          # inferencia de punta a punta: codec, cadena completa y a ritmo de cámara
+bash scripts/e2e_all.sh quality      # calidad a 1 paso en línea y verificación contra los rollouts
+.venv/bin/python -m src.infer.report_e2e   # results/infer/summary_e2e.md y results/fig_pareto_e2e.png
 .venv/bin/python scripts/make_configs.py && .venv/bin/python -m src.report   # figuras y results/summary.md
 ```
 
@@ -97,6 +108,8 @@ Los dos scripts saltan lo que ya existe, así que se pueden cortar y relanzar. C
 .venv/bin/python -m src.metrics_video --name maskgit_s_s4
 .venv/bin/python -m src.bench --model random:maskgit_s --steps 4 --dtype fp16 --graphs
 .venv/bin/python -m src.ejemplos                                     # muestras de 3 clips -> results/ejemplos/
+.venv/bin/python -m src.infer.bench_e2e --model maskgit_s --steps 4    # cadena completa, en línea, 3000 frames
+.venv/bin/python -m src.infer.demo --model maskgit_s --steps 4         # video real y predicho -> results/demo/
 ```
 
 `src/evaluate.py` replica el protocolo de `notebooks/eval.ipynb` de commaVQ (commit `a1adab98`): 59 ventanas de 20 frames (2.580 tokens) por segmento, con BOS antes de cada frame. `ce_all` incluye los targets BOS y es comparable con el 2,02 que reporta comma; gpt2m da 2,026 sobre los 100 segmentos.

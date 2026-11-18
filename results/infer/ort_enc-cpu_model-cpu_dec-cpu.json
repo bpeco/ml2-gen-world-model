@@ -1,0 +1,62 @@
+{
+ "tag": "enc-cpu_model-cpu_dec-cpu",
+ "providers": {
+  "enc": "cpu",
+  "model": "cpu",
+  "dec": "cpu"
+ },
+ "model": "convlstm",
+ "fp16": false,
+ "only": null,
+ "frames": 20,
+ "latency_ms": {
+  "encoder": {
+   "p50": 167.3318500397727,
+   "p99": 188.23004104429856,
+   "mean": 169.5641699945554
+  },
+  "model": {
+   "p50": 9.26494994200766,
+   "p99": 10.960086015984414,
+   "mean": 9.339624986751005
+  },
+  "decoder": {
+   "p50": 280.5764999939129,
+   "p99": 304.563599023968,
+   "mean": 284.6575000032317
+  },
+  "total": {
+   "p50": 459.9686499568634,
+   "p99": 493.17539902520366,
+   "mean": 463.5612949845381
+  }
+ },
+ "onnxruntime": "1.32.0",
+ "timestamp": "2026-11-17T17:41:42",
+ "device": {
+  "device": "cpu",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD"
+ },
+ "placement": {
+  "encoder": {
+   "CPUExecutionProvider": {
+    "nodes": 301,
+    "ms": 3441.41
+   }
+  },
+  "model": {
+   "CPUExecutionProvider": {
+    "nodes": 34,
+    "ms": 137.9
+   }
+  },
+  "decoder": {
+   "CPUExecutionProvider": {
+    "nodes": 421,
+    "ms": 6468.27
+   }
+  }
+ }
+}

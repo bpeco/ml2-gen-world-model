@@ -5,8 +5,9 @@ Especificaciones que entiende load_model():
   "unigram", "copy"       baselines de conteo (se ajustan sobre train la primera vez); "copy" es la
                           tabla de transición por celda (el de las slides)
   "copy_mix"              mezcla copiar/unigrama: a temperatura 0 repite el último frame (frame congelado)
-  "random:<kind>_<size>"  modelo sin entrenar, para medir latencia (p. ej. random:gpt_s, random:maskgit_m,
-                          random:jepa_s, random:lewm)
+  "random:<kind>_<size>"  modelo sin entrenar, para medir latencia (p. ej. random:gpt_l, random:maskgit_m,
+                          random:lewm). random:<corrida> (p. ej. random:jepa_xs) arma la arquitectura de una
+                          corrida de results/checkpoints.json sin bajar el checkpoint
   "<ruta>.pt"             checkpoint de src/train.py
   "<corrida>"             nombre de una corrida de results/checkpoints.json (p. ej. "gpt_s_kd"): si no está
                           en checkpoints/, src.store la baja del almacén compartido y verifica el sha256
@@ -82,7 +83,14 @@ def load_model(spec: str, dev="cpu") -> WorldModel:
     from src.models.baselines import load_baseline
     return load_baseline(spec, dev)
   if spec.startswith("random:"):
-    kind, _, size = spec[len("random:"):].rpartition("_")
+    run = spec[len("random:"):]
+    from src import store  # random:<corrida registrada>: la misma arquitectura (config del manifiesto), sin pesos
+    man = store.load_manifest()
+    if run in man:
+      m = build(man[run]["kind"], man[run]["config"])
+      m.name = spec.replace(":", "_")
+      return m.to(dev).eval()
+    kind, _, size = run.rpartition("_")
     if kind in ("gpt", "maskgit", "jepa"):
       m = build(kind, size=size)
     else:  # random:convlstm_default, random:lewm
