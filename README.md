@@ -15,7 +15,7 @@ Pregunta del proyecto: ¿cuánto se puede achicar y acelerar un world model de v
 
 **Resultados en re-ejecución; el código es el definitivo.** Los modelos se reconstruyeron para ser fieles a su fuente y cada uno entrena con la receta de su paper. La cola de GPU todavía no se corrió: todos los valores de la tabla de resultados están "pendiente", y las conclusiones y las hipótesis están "a evaluar".
 
-**Los checkpoints no se distribuyen:** cada uno entrena lo que necesita con un comando de la CLI (más abajo). Quedan en `checkpoints/<run>/` y se registran en `results/checkpoints.json`.
+**Los modelos entrenados se comparten por Git LFS.** Los de la tabla y sus decoders están en `checkpoints/<run>/` dentro del repo, registrados con su sha256 en `results/checkpoints.json`. Con `git lfs install` hecho una vez, `git pull` los baja; para bajar solo los que vas a usar, ver [Modelos entrenados](Docs/uso.md#modelos-entrenados-git-lfs). Lo que no está ahí se entrena con un comando de la CLI (más abajo).
 
 ### Modelos
 
@@ -84,7 +84,7 @@ uv pip install -r requirements.txt -r requirements-metrics.txt
 git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq
 ```
 
-La GPU se usa por MPS (se elige sola si está; `--device mps` la pide; `PYTORCH_ENABLE_MPS_FALLBACK=1` hace que las operaciones sin soporte caigan a la CPU). Anda bien la CLI, los notebooks, las demos de clase y la inferencia; entrenar las recetas completas es lento. Los checkpoints no se suben a ningún lado: para correr una demo con modelos entrenados en otra máquina, copiá `checkpoints/<run>/final.pt` y `results/train_<run>.json` y registrá la corrida con `python -m src.store register <run>`.
+La GPU se usa por MPS (se elige sola si está; `--device mps` la pide; `PYTORCH_ENABLE_MPS_FALLBACK=1` hace que las operaciones sin soporte caigan a la CPU). Anda bien la CLI, los notebooks, las demos de clase y la inferencia; entrenar las recetas completas es lento. Los modelos entrenados llegan con el repo por Git LFS ([Modelos entrenados](Docs/uso.md#modelos-entrenados-git-lfs)).
 
 ### Colab
 
