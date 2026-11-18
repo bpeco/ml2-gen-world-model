@@ -1,0 +1,183 @@
+{
+ "run": "genie_s",
+ "kind": "genie",
+ "size": "s",
+ "config": {
+  "n_layer": 6,
+  "n_head": 6,
+  "dim": 384,
+  "mlp_ratio": 4,
+  "frames": 16,
+  "mask_min": 0.5,
+  "mask_max": 1.0,
+  "default_steps": 25,
+  "temperature": 2.0,
+  "choice_temp": 4.5
+ },
+ "params": 15046528,
+ "tokens": 100657152,
+ "frames": 780288,
+ "steps": 1524,
+ "seconds": 395.2375543117523,
+ "tokens_per_s": 254675.0704782584,
+ "final_monitor_ce": 3.94974422454834,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 16512000,
+   "monitor_ce": 4.44597053527832
+  },
+  {
+   "step": 500,
+   "tokens": 33024000,
+   "monitor_ce": 4.276010513305664
+  },
+  {
+   "step": 750,
+   "tokens": 49536000,
+   "monitor_ce": 4.114700794219971
+  },
+  {
+   "step": 1000,
+   "tokens": 66048000,
+   "monitor_ce": 4.028341770172119
+  },
+  {
+   "step": 1250,
+   "tokens": 82560000,
+   "monitor_ce": 3.9815330505371094
+  },
+  {
+   "step": 1500,
+   "tokens": 99072000,
+   "monitor_ce": 3.95082426071167
+  },
+  {
+   "step": 1524,
+   "tokens": 100657152,
+   "monitor_ce": 3.94974422454834
+  }
+ ],
+ "args": {
+  "kind": "genie",
+  "size": "s",
+  "config": "{}",
+  "run": "genie_s",
+  "receta": null,
+  "set": [],
+  "presupuesto": null,
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": null,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [],
+  "receta_hash": "008c979cf9f7",
+  "receta_nombre": "genie_paper"
+ },
+ "receta": {
+  "name": "genie_paper",
+  "fuente": "Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.9
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "warmup",
+    "forma": "linear",
+    "ini": 0.0,
+    "fin": 0.0003,
+    "frac": 0.025
+   },
+   {
+    "nombre": "cosine",
+    "forma": "cosine",
+    "ini": 0.0003,
+    "min_frac": 0.1
+   }
+  ],
+  "wd_ini": 0.0001,
+  "wd_fin": null,
+  "wd_on": "matrices",
+  "ema_segs": null,
+  "grad_clip": 1.0,
+  "amp": "bf16",
+  "batch": 16,
+  "frames": 16,
+  "frameskip": 1,
+  "accum": 2,
+  "presupuesto": 780000,
+  "extras": {},
+  "paper_steps": 200000,
+  "batch_fuente": 256,
+  "forzado": [
+   [
+    "batch",
+    "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos",
+    "presupuesto"
+   ],
+   [
+    "lr",
+    "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligió x10 entre fuente, raíz, x3, x10 y x30 (results/humo_genie.json)",
+    "presupuesto"
+   ],
+   [
+    "warmup",
+    "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos",
+    "presupuesto"
+   ],
+   [
+    "lr_segs",
+    "coseno hasta el 10 % del máximo tras el warmup: Genie no publica la forma para la dinámica",
+    "propio"
+   ],
+   [
+    "grad_clip",
+    "1.0: Genie no lo publica",
+    "propio"
+   ]
+  ]
+ },
+ "receta_hash": "008c979cf9f7",
+ "desviaciones": [],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261118-031610-5f83",
+  "comando": "python -m src.cli genie entrenar '--tamaño' s",
+  "commit": "dd625b1a379496441eb174077e7509d5b61b7a1b"
+ }
+}

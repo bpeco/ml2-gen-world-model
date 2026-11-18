@@ -1,0 +1,184 @@
+{
+ "run": "gpt_s_kd",
+ "kind": "gpt",
+ "size": "s",
+ "config": {
+  "n_layer": 6,
+  "n_head": 6,
+  "dim": 384,
+  "dropout": 0.1,
+  "block_size": 2580,
+  "pos": "abs"
+ },
+ "params": 12425472,
+ "tokens": 100640640,
+ "frames": 780160,
+ "steps": 2438,
+ "seconds": 2892.9758784770966,
+ "tokens_per_s": 34787.92918694457,
+ "final_monitor_ce": 2.900475025177002,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 10320000,
+   "monitor_ce": 6.194453239440918
+  },
+  {
+   "step": 500,
+   "tokens": 20640000,
+   "monitor_ce": 3.9180004596710205
+  },
+  {
+   "step": 750,
+   "tokens": 30960000,
+   "monitor_ce": 3.3609871864318848
+  },
+  {
+   "step": 1000,
+   "tokens": 41280000,
+   "monitor_ce": 3.2205147743225098
+  },
+  {
+   "step": 1250,
+   "tokens": 51600000,
+   "monitor_ce": 3.130098819732666
+  },
+  {
+   "step": 1500,
+   "tokens": 61920000,
+   "monitor_ce": 3.0917766094207764
+  },
+  {
+   "step": 1750,
+   "tokens": 72240000,
+   "monitor_ce": 3.001739025115967
+  },
+  {
+   "step": 2000,
+   "tokens": 82560000,
+   "monitor_ce": 2.95190691947937
+  },
+  {
+   "step": 2250,
+   "tokens": 92880000,
+   "monitor_ce": 2.9197018146514893
+  },
+  {
+   "step": 2438,
+   "tokens": 100640640,
+   "monitor_ce": 2.900475025177002
+  }
+ ],
+ "args": {
+  "kind": "gpt",
+  "size": "s",
+  "config": "{}",
+  "run": "gpt_s_kd",
+  "receta": null,
+  "set": [],
+  "presupuesto": null,
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": null,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": true,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [],
+  "receta_hash": "7c117183649e",
+  "receta_nombre": "gpt_iris"
+ },
+ "receta": {
+  "name": "gpt_iris",
+  "fuente": "IRIS (arXiv 2209.00588; github.com/eloialonso/iris); commaVQ: 'a similar recipe to IRIS'",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "constante",
+    "forma": "constant",
+    "ini": 0.001,
+    "fin": 0.001
+   }
+  ],
+  "wd_ini": 0.01,
+  "wd_fin": null,
+  "wd_on": "lineales",
+  "ema_segs": null,
+  "grad_clip": 10.0,
+  "amp": null,
+  "batch": 16,
+  "frames": 20,
+  "frameskip": 1,
+  "accum": 1,
+  "presupuesto": 780000,
+  "extras": {
+   "dropout": 0.1
+  },
+  "paper_steps": null,
+  "batch_fuente": 64,
+  "forzado": [
+   [
+    "batch",
+    "16 por paso en vez de 64 (IRIS): con el presupuesto fijo de 780k frames da ~2.440 pasos",
+    "presupuesto"
+   ],
+   [
+    "lr",
+    "1e-3 (x10 del 1e-4 de IRIS): con ~2.440 pasos, el humo de 300 pasos eligió x10 entre fuente, raíz, x3, x10 y x30 (results/humo_gpt.json)",
+    "presupuesto"
+   ],
+   [
+    "presupuesto",
+    "780k frames (100M tokens) en vez de lo que haya usado comma (no publicado)",
+    "presupuesto"
+   ],
+   [
+    "tamaño",
+    "6x384 / 8x512 en vez de 24x1024",
+    "presupuesto"
+   ]
+  ]
+ },
+ "receta_hash": "7c117183649e",
+ "desviaciones": [],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261118-032251-a3b0",
+  "comando": "python -m src.cli gpt entrenar '--tamaño' s --destilar --variante kd",
+  "commit": "dd625b1a379496441eb174077e7509d5b61b7a1b"
+ }
+}

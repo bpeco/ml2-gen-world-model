@@ -1,1 +1,172 @@
-{}
+{
+ "genie_s": {
+  "bytes": 60245857,
+  "config": {
+   "choice_temp": 4.5,
+   "default_steps": 25,
+   "dim": 384,
+   "frames": 16,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mlp_ratio": 4,
+   "n_head": 6,
+   "n_layer": 6,
+   "temperature": 2.0
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "genie",
+  "params": 15046528,
+  "receta": {
+   "accum": 2,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 16,
+   "batch_fuente": 256,
+   "betas": [
+    0.9,
+    0.9
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos",
+     "presupuesto"
+    ],
+    [
+     "lr",
+     "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_genie.json)",
+     "presupuesto"
+    ],
+    [
+     "warmup",
+     "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos",
+     "presupuesto"
+    ],
+    [
+     "lr_segs",
+     "coseno hasta el 10 % del m\u00e1ximo tras el warmup: Genie no publica la forma para la din\u00e1mica",
+     "propio"
+    ],
+    [
+     "grad_clip",
+     "1.0: Genie no lo publica",
+     "propio"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 1,
+   "fuente": "Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.0003,
+     "forma": "linear",
+     "frac": 0.025,
+     "ini": 0.0,
+     "nombre": "warmup"
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.0003,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "genie_paper",
+   "optimizer": "adamw",
+   "paper_steps": 200000,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0001,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "008c979cf9f7",
+  "sha256": "765fa4c6a9a1ac3a696cea3254771ad54fe3943e62191c0c2d07a9842debd6c0",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_genie_s.json"
+ },
+ "gpt_s_kd": {
+  "bytes": 49730703,
+  "config": {
+   "block_size": 2580,
+   "dim": 384,
+   "dropout": 0.1,
+   "n_head": 6,
+   "n_layer": 6,
+   "pos": "abs"
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "gpt",
+  "params": 12425472,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.99,
+   "amp": null,
+   "batch": 16,
+   "batch_fuente": 64,
+   "betas": [
+    0.9,
+    0.999
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {
+    "dropout": 0.1
+   },
+   "forzado": [
+    [
+     "batch",
+     "16 por paso en vez de 64 (IRIS): con el presupuesto fijo de 780k frames da ~2.440 pasos",
+     "presupuesto"
+    ],
+    [
+     "lr",
+     "1e-3 (x10 del 1e-4 de IRIS): con ~2.440 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_gpt.json)",
+     "presupuesto"
+    ],
+    [
+     "presupuesto",
+     "780k frames (100M tokens) en vez de lo que haya usado comma (no publicado)",
+     "presupuesto"
+    ],
+    [
+     "tama\u00f1o",
+     "6x384 / 8x512 en vez de 24x1024",
+     "presupuesto"
+    ]
+   ],
+   "frames": 20,
+   "frameskip": 1,
+   "fuente": "IRIS (arXiv 2209.00588; github.com/eloialonso/iris); commaVQ: 'a similar recipe to IRIS'",
+   "grad_clip": 10.0,
+   "lr_segs": [
+    {
+     "fin": 0.001,
+     "forma": "constant",
+     "ini": 0.001,
+     "nombre": "constante"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "gpt_iris",
+   "optimizer": "adamw",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.01,
+   "wd_on": "lineales"
+  },
+  "receta_hash": "7c117183649e",
+  "sha256": "2bdaa331a6e2de1a8f28b7be1bad2117d6d580478de998693c617ecbb661e1d7",
+  "step": 2438,
+  "tokens": 100640640,
+  "train_json": "results/train_gpt_s_kd.json"
+ }
+}
