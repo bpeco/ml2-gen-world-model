@@ -68,7 +68,8 @@ FIDELIDAD_AC = [
        "constante, decay lineal a 0 en los últimos 4500", aquí="igual con las mismas fracciones (4500/94500)", categoría="fiel",
        fuente=f"{PAPER} §3.1; {YAML_AC} L61-70"),
   dict(campo="Batch", paper="256", aquí="32 efectivo = 16 x accum 2: con el presupuesto fijo, el batch del paper daría ~190 "
-       "pasos; lr a confirmar en el humo", categoría="presupuesto", fuente=f"{PAPER} §3.1"),
+       "pasos. El lr queda el del paper: el humo de 300 pasos lo eligió entre fuente, raíz y x3, con diferencias menores al 1 % "
+       "(L1 de monitoreo 0,213 / 0,214 / 0,214; results/humo_vjepa2_ac.json)", categoría="presupuesto", fuente=f"{PAPER} §3.1"),
   dict(campo="Presupuesto", paper="94.5k pasos", aquí="el presupuesto común de 780k frames ≈ 1.5k pasos de 32 clips de 16 frames",
        categoría="presupuesto", fuente=f"{PAPER} §3.1"),
   dict(campo="Planificador CEM", paper="800 muestras, 10 iteraciones, top-10, horizonte 1, N(0, 1), energía L1",
@@ -118,7 +119,8 @@ class VJEPA2AC(WorldModel):
       wd_ini=0.04, wd_fin=None, wd_on="matrices", ema_segs=None, grad_clip=None, amp="bf16",
       batch=16, frames=16, frameskip=5, accum=2, presupuesto=780_000, paper_steps=94_500, batch_fuente=256,
       forzado=[("batch", "32 efectivo (16 x accum 2) en vez de 256: con el presupuesto común de 780k frames da ~1.5k pasos "
-                "(con 256 serían ~190); lr a confirmar en el humo", "presupuesto"),
+                "(con 256 serían ~190). El lr queda el del paper: el humo de 300 pasos lo eligió entre fuente, raíz y x3, "
+                "con diferencias menores al 1 % (results/humo_vjepa2_ac.json)", "presupuesto"),
                ("presupuesto", "~1.5k pasos en vez de 94.5k; las fracciones de warmup y decay se conservan", "presupuesto"),
                ("predictor", "12 x 384 en vez de 24 x 1024", "presupuesto"),
                ("frames/frameskip", "16 frames a 4 fps = 1 de cada 5 de los 20 FPS", "datos")])

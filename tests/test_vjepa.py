@@ -58,6 +58,10 @@ def test_receta_vjepa2():
   assert r.lr(1, 40) < r.lr(2, 40)  # warmup con piso de 100 pasos
   ac = VJEPA2AC.recipe()
   assert ac.lr(T - 1, T) == 0.0 and ac.accum * ac.batch == 32 and ac.batch_fuente == 256 and ac.kind_continuacion() == "wcd"
+  # el humo eligió el lr del paper (4,25e-4 en el tramo constante): queda declarado, sin nada "a confirmar"
+  assert ac.lr(5000, T) == pytest.approx(4.25e-4) and 7.5e-5 < ac.lr(0, T) < 8e-5  # el warmup arranca en 7,5e-5
+  assert any(f[0] == "batch" and "humo" in f[1] and "confirmar" not in f[1] for f in ac.forzado)
+  assert all("confirmar" not in f["aquí"] for f in FIDELIDAD_AC)
 
 
 # ---------------------------------------------------------------- aumentos

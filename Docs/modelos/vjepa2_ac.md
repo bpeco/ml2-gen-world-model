@@ -27,7 +27,7 @@ El predictor con acciones de V-JEPA 2 (V-JEPA 2-AC, arXiv 2506.09985 §3.1; `app
 | Estado y acción | pose del efector (7D) y su cambio entre frames | estado = pose del frame (6 velocidades normalizadas), acción = diferencia de estados entre frames tomados | datos | app/vjepa_droid/train.py L390-394; datos de comma |
 | Aumentos | random-resized-crop de escala [0.9, 1] en DROID | ninguno (el recorte mueve la geometría que las velocidades de pose suponen fija) | propio | configs/train/vitg16/droid-256px-8f.yaml |
 | Optimizador / LR | AdamW (0.9, 0.999), wd 0.04, sin clip; warmup 7.5e-5 → 4.25e-4 en 4500 de 94.5k pasos, constante, decay lineal a 0 en los últimos 4500 | igual con las mismas fracciones (4500/94500) | fiel | V-JEPA 2 (arXiv 2506.09985) §3.1; configs/train/vitg16/droid-256px-8f.yaml L61-70 |
-| Batch | 256 | 32 efectivo = 16 x accum 2: con el presupuesto fijo, el batch del paper daría ~190 pasos; lr a confirmar en el humo | presupuesto | V-JEPA 2 (arXiv 2506.09985) §3.1 |
+| Batch | 256 | 32 efectivo = 16 x accum 2: con el presupuesto fijo, el batch del paper daría ~190 pasos. El lr queda el del paper: el humo de 300 pasos lo eligió entre fuente, raíz y x3, con diferencias menores al 1 % (L1 de monitoreo 0,213 / 0,214 / 0,214; results/humo_vjepa2_ac.json) | presupuesto | V-JEPA 2 (arXiv 2506.09985) §3.1 |
 | Presupuesto | 94.5k pasos | el presupuesto común de 780k frames ≈ 1.5k pasos de 32 clips de 16 frames | presupuesto | V-JEPA 2 (arXiv 2506.09985) §3.1 |
 | Planificador CEM | 800 muestras, 10 iteraciones, top-10, horizonte 1, N(0, 1), energía L1 | igual (plan.py), en el espacio normalizado de acciones | fiel | V-JEPA 2 (arXiv 2506.09985) §3.2; mpc_utils.py L17-140 |
 | Decoder de visualización | ViT-L feedforward por frame, MSE, 150k pasos, batch 1024 | ViT propio chico, mismo objetivo (MSE), batch y pasos menores (train_decoder.py) | presupuesto | V-JEPA 2 (arXiv 2506.09985) Fig. 15, App. |
@@ -42,7 +42,7 @@ El predictor con acciones de V-JEPA 2 (V-JEPA 2-AC, arXiv 2506.09985 §3.1; `app
 
 Valores forzados (campo: motivo, categoría):
 
-- `vjepa2_ac`: batch: 32 efectivo (16 x accum 2) en vez de 256: con el presupuesto común de 780k frames da ~1.5k pasos (con 256 serían ~190); lr a confirmar en el humo (presupuesto)
+- `vjepa2_ac`: batch: 32 efectivo (16 x accum 2) en vez de 256: con el presupuesto común de 780k frames da ~1.5k pasos (con 256 serían ~190). El lr queda el del paper: el humo de 300 pasos lo eligió entre fuente, raíz y x3, con diferencias menores al 1 % (results/humo_vjepa2_ac.json) (presupuesto)
 - `vjepa2_ac`: presupuesto: ~1.5k pasos en vez de 94.5k; las fracciones de warmup y decay se conservan (presupuesto)
 - `vjepa2_ac`: predictor: 12 x 384 en vez de 24 x 1024 (presupuesto)
 - `vjepa2_ac`: frames/frameskip: 16 frames a 4 fps = 1 de cada 5 de los 20 FPS (datos)
