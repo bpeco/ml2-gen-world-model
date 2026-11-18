@@ -1,4 +1,14 @@
 {
+ "results/eval_genie_s.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-18"
+ },
+ "results/eval_gpt_s_kd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-081139-6aef: python -m src.cli gpt evaluar '--tamaño' s --variante kd",
+  "fecha": "2026-11-18"
+ },
  "results/train_convlstm_px.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-041132-ab00: python -m src.cli convlstm_px entrenar",
@@ -77,6 +87,46 @@
  "results/train_vjepa2_humo_x3.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-021806-8c0d: python -m src.cli vjepa2 entrenar --humo --humo-candidatos fuente,raiz,x3",
+  "fecha": "2026-11-18"
+ },
+ "results/video_convlstm_px.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-082005-1a6a: python -m src.cli convlstm_px evaluar",
+  "fecha": "2026-11-18"
+ },
+ "results/video_genie_s_p1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-18"
+ },
+ "results/video_genie_s_p12.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-18"
+ },
+ "results/video_genie_s_p2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-18"
+ },
+ "results/video_genie_s_p25.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-18"
+ },
+ "results/video_genie_s_p4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-18"
+ },
+ "results/video_genie_s_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-18"
+ },
+ "results/video_gpt_s_kd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-081139-6aef: python -m src.cli gpt evaluar '--tamaño' s --variante kd",
   "fecha": "2026-11-18"
  }
 }
