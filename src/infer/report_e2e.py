@@ -9,6 +9,7 @@ Colores: MaskGIT naranja y los latentes (LeWM) violeta, con la forma del marcado
 como segundo canal (validado con el validador de dataviz, --pairs all: ΔE CVD 9,2, normal 27,6). GPT-S queda fuera
 de la figura (~170 ms por frame, fuera de escala) y está en la tabla.
 """
+import argparse
 import json
 import re
 from pathlib import Path
@@ -223,7 +224,8 @@ def figure(tag, block, path):
   plt.close(fig)
 
 
-def main():
+def main(argv=None):
+  argparse.ArgumentParser(description=__doc__.splitlines()[0]).parse_args(argv)
   data = collect()
   md = ["# Inferencia de punta a punta", "",
         "Video en la CPU → encoder VQ → world model → decoder VQ → video en la CPU, todo residente en el dispositivo "
@@ -240,6 +242,7 @@ def main():
   md += online_table()
   (INF / "summary_e2e.md").write_text("\n".join(md), encoding="utf-8")
   print(f"{len(data)} dispositivo(s) -> {INF / 'summary_e2e.md'}")
+  return INF / "summary_e2e.md"
 
 
 if __name__ == "__main__":

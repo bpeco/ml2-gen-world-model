@@ -137,7 +137,7 @@ def run(chain, frames, n_ctx, n_warm, n, pace_ms, budget):
   return res
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--model", required=True, help="spec de load_model, o none (solo codec)")
   ap.add_argument("--name")
@@ -155,7 +155,7 @@ def main():
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent)")
   ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
   ap.add_argument("--tag")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   dev = torch.device(a.device)
   graphs = not a.no_graphs and dev.type == "cuda"
   tag = a.tag or device_tag(dev)
@@ -204,6 +204,7 @@ def main():
   sp = res.get("stages_p50_ms") or {}
   print(f"   p50 {st['p50']:.2f} ms  p99 {st['p99']:.2f}  max {st['max']:.1f}  tarde {st['late_pct']:.2f}%  "
         f"({', '.join(f'{k} {v:.2f}' for k, v in sp.items())}) -> {path}", flush=True)
+  return out
 
 
 if __name__ == "__main__":

@@ -70,7 +70,7 @@ def timed(step_iter, n, dev):
   return ms
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--model", help="spec de load_model (gpt2m, transicion, random:gpt_s, ruta.pt)")
   ap.add_argument("--name")
@@ -84,7 +84,7 @@ def main():
   ap.add_argument("--device", choices=["cuda", "cpu"], default="cuda" if torch.cuda.is_available() else "cpu")
   ap.add_argument("--decoder", action="store_true", help="medir el decoder del VQ-VAE (1 frame por llamada)")
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent); repetible")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   if not a.decoder and not a.model:
     ap.error("falta --model (o --decoder)")
   dev = torch.device(a.device)
@@ -150,6 +150,7 @@ def main():
   path.write_text(json.dumps(res, indent=1))
   print(f"{name} {variant}: mediana {med:.2f} ms (p10 {res['p10_ms']:.2f}, p90 {res['p90_ms']:.2f}) "
         f"{res['fps']:.1f} FPS, tiempo real: {'si' if res['realtime'] else 'no'} -> {path}")
+  return res
 
 
 if __name__ == "__main__":

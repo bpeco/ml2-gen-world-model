@@ -81,13 +81,13 @@ def export(model, K, out, fp16=False):
   return net, out
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--model", required=True, help="spec de load_model (random:maskgit_s, ruta.pt)")
   ap.add_argument("--frames", type=int, default=5, help="K: frames de la ventana (K-1 de contexto + 1 nuevo)")
   ap.add_argument("--out", help="default: checkpoints/onnx/<name>_k<K>.onnx")
   ap.add_argument("--fp16", action="store_true", help="pesos en fp16 (ORT CPU no lo acelera)")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   import onnx
   import onnxruntime as ort
   model = load_model(a.model, "cpu").eval()
@@ -98,7 +98,7 @@ def main():
   print(f"{path}: {path.stat().st_size / 2**20:.1f} MB, onnx.checker ok")
   if not VAL.exists():
     print(f"sin {VAL}: no se compara contra PyTorch")
-    return
+    return path
   x = load_window(a.frames, kind)
   with torch.no_grad():
     ref = net(x).float()
@@ -106,6 +106,7 @@ def main():
   lg = torch.from_numpy(sess.run(None, {"tokens": x.numpy()})[0])
   print(f"ORT CPU vs PyTorch: max abs diff {(lg - ref).abs().max():.2e}, "
         f"acuerdo de argmax {(lg.argmax(-1) == ref.argmax(-1)).float().mean() * 100:.2f} %")
+  return path
 
 
 if __name__ == "__main__":

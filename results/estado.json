@@ -1,0 +1,812 @@
+{
+ "results/bench/copy__fp32.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/decoder__fp16.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/decoder__fp32.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt2m__fp16.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt2m__fp16_graphs.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt2m__fp32.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_m__fp16.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_m__fp16_graphs.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_m__fp32.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_s__fp16.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_s__fp16_graphs.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_s__fp16_graphs_ctx4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_s__fp16_graphs_ctx8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_s__fp32.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_s__fp32_cpu.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/gpt_s__fp32_int8_cpu.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp16_graphs_s1.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp16_graphs_s12.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp16_graphs_s2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp16_graphs_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp16_graphs_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp16_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp32_s1.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp32_s2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp32_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_m__fp32_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_graphs_s1.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_graphs_s12.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_graphs_s2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_graphs_s2_ctx4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_graphs_s2_ctx8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_graphs_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_graphs_s4_ctx4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_graphs_s4_ctx8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_graphs_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp16_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp32_int8_s4_cpu.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp32_s1.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp32_s2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp32_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp32_s4_cpu.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/maskgit_s__fp32_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/ort_maskgit_s_k5__cpu.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_gpt_l__fp16.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_gpt_l__fp16_graphs.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_gpt_l__fp32.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_maskgit_l__fp16_graphs_s1.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_maskgit_l__fp16_graphs_s2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_maskgit_l__fp16_graphs_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_maskgit_l__fp16_graphs_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_maskgit_l__fp16_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_maskgit_l__fp32_s1.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_maskgit_l__fp32_s2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_maskgit_l__fp32_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/bench/random_maskgit_l__fp32_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/ce_por_posicion.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_copy.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_copy_mix.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt2m.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt2m_fp16.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt2m_seg2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt2m_seg2_fp16.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt_m.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt_m_kd.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt_m_lr1e3.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt_s.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt_s_abs.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt_s_fp16.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_gpt_s_kd.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_maskgit_m.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_maskgit_s.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_maskgit_s_abs.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_maskgit_s_fp16.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_maskgit_s_genie.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_maskgit_s_nopc.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/eval_unigram.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/codec_rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_codec__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_codec__online__pace50__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_copy__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_copy__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_gpt_s__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_gpt_s__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s12__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s12__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s1__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s1__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s2__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s2__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s4__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s4__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s8__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s8__imagine__pace50__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_m_s8__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s12__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s12__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s1__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s1__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s2__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s2__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s4__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s4__imagine__pace50__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s4__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s4__online_k20__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s4__online_k5__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s8__imagine__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/e2e_maskgit_s_s8__online__closed__rtx3080ti.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/imagine_check_maskgit_s_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/online_copy.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/online_copy_t0.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/online_maskgit_m_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/online_maskgit_m_s8_t0.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/online_maskgit_s_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/online_maskgit_s_s4_t0.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/ort_enc-cpu_model-cpu_dec-cpu.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/ort_profile_codec_decoder_body_cpu_2026-11-17_17-41-31_054.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/infer/ort_profile_codec_encoder_body_cpu_2026-11-17_17-41-30_876.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/latent_gpt_s.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/latent_maskgit_s.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_gpt_m.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_gpt_m_kd.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_gpt_m_lr1e3.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_gpt_s.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_gpt_s_abs.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_gpt_s_kd.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_maskgit_m.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_maskgit_s.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_maskgit_s_abs.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_maskgit_s_genie.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/train_maskgit_s_nopc.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_copy.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_frozen.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_gpt2m.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_gpt_m.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_gpt_m_kd.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_gpt_s.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_gpt_s_abs.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_gpt_s_ctx4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_gpt_s_ctx8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_gpt_s_fp32.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_gpt_s_kd.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_m_s1.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_m_s12.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_m_s2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_m_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_m_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_abs_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_genie_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_nopc_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s1.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s12.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s2_ctx4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s2_ctx8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s4_ctx4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s4_ctx8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s4_stream.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_maskgit_s_s8_fp32.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_real.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ },
+ "results/video_unigram.json": {
+  "estado": "protocolo anterior",
+  "motivo": "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)",
+  "fecha": "2026-11-17"
+ }
+}

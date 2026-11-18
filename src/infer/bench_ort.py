@@ -77,7 +77,7 @@ class OrtChain:
     return np.clip(y, 0, 255).astype(np.uint8).transpose(1, 2, 0)
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--enc", default="cpu")
   ap.add_argument("--dec", default="cpu")
@@ -87,7 +87,7 @@ def main():
   ap.add_argument("--warmup", type=int, default=20)
   ap.add_argument("--profile", action="store_true")
   ap.add_argument("--tag")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   OUT.mkdir(parents=True, exist_ok=True)
   c = OrtChain(a)
   frames = sample_video()
@@ -124,6 +124,7 @@ def main():
   print(" ".join(f"{k} {v['p50']:.2f}" for k, v in res["latency_ms"].items()), "ms (p50) ->", path)
   if a.profile:
     print("nodos y tiempo por provider:", json.dumps(res["placement"]))
+  return res
 
 
 if __name__ == "__main__":

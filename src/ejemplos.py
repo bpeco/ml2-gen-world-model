@@ -195,13 +195,13 @@ def titulo_clip(c):
           f"3 s generados a temperatura 1\nCambio de la escena real a 3 s: percentil {p} de los 400 clips"), p
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--clips", type=int, nargs="*")
   ap.add_argument("--modelos", nargs="*", default=MODELOS)
   ap.add_argument("--out", default="results/ejemplos")
   ap.add_argument("--gif-fps", type=int, default=10)
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   plt.switch_backend("Agg")
   out = Path(a.out)
   out.mkdir(parents=True, exist_ok=True)
@@ -217,6 +217,7 @@ def main():
     print(f"clip {c}: percentil {p} -> {out / f'clip{c:03d}'}.png, .gif", flush=True)
   (out / "ejemplos.json").write_text(json.dumps({"modelos": a.modelos, "clips": info}, indent=1, ensure_ascii=False),
                                     encoding="utf-8")
+  return {"modelos": a.modelos, "clips": info}
 
 
 if __name__ == "__main__":

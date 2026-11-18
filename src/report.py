@@ -3,6 +3,10 @@
   python -m src.report [--manifest results/configs.json] [--out results]
 Cada entrada: label, family, params, eval, video, bench, autoregressive, horizon (opcional).
 Los JSON que falten se saltan.
+
+Cada configuración lleva el estado de sus resultados (results/estado.json, src/resultados.py): las tablas lo
+muestran en la columna "Estado" y las figuras grafican solo las vigentes. Sin ninguna vigente, cada figura es un
+cartel que lo dice.
 """
 import argparse
 import json
@@ -13,6 +17,8 @@ matplotlib.use("Agg")
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy.stats import spearmanr
+
+from src import resultados
 
 FPS = 20
 RT_MS = 1000 / FPS
@@ -63,13 +69,26 @@ def _get(d, *keys):
   return d
 
 
-def load_configs(manifest):
-  """Une el manifiesto con sus eval/video/bench en una lista de dicts planos."""
+def estado_config(m, registro, base=Path(".")):
+  """Estado de una configuración: el peor entre los archivos que tiene (pendiente < protocolo anterior < vigente)."""
+  def ruta(p):  # igual que _load: desde el cwd o desde la carpeta del manifiesto
+    return Path(p) if Path(p).exists() else base / p
+  es = [resultados.estado(ruta(m[k]), registro) for k in ("eval", "video", "bench", "e2e") if m.get(k)]
+  for e in ("pendiente", resultados.SIN_ESTADO, "protocolo anterior"):
+    if e in es:
+      return e
+  return "vigente" if es else resultados.SIN_ESTADO
+
+
+def load_configs(manifest, registro=None):
+  """Une el manifiesto con sus eval/video/bench en una lista de dicts planos.
+  registro: dict de results/estado.json (por defecto el del repo)."""
   manifest = Path(manifest)
+  registro = resultados.cargar() if registro is None else registro
   cfgs = []
   for m in json.loads(manifest.read_text(encoding="utf-8")):
     ev, vd, bn, e2e = (_load(m.get(k), manifest.parent) for k in ("eval", "video", "bench", "e2e"))
-    c = dict(label=m["label"], short=m.get("short", m["label"]), family=m.get("family", "otro"),
+    c = dict(label=m["label"], estado=estado_config(m, registro, manifest.parent), short=m.get("short", m["label"]), family=m.get("family", "otro"),
              group=m.get("group", "principal"), size=m.get("size"), steps=m.get("steps"), kd=m.get("kd", False),
              params=m.get("params") or _get(bn, "params"),
              autoregressive=bool(m.get("autoregressive", False)), horizon=bool(m.get("horizon", True)),
@@ -326,13 +345,14 @@ LAT = [("gpt2m (307M)", "gpt2m", ["fp32", "fp16", "fp16_graphs"]),
        ("MaskGIT-S, 2 pasos", "maskgit_s", ["fp32_s2", None, "fp16_graphs_s2"])]
 
 
-def fig_latency(bench_dir, path):
+def fig_latency(bench_dir, path, registro=None):
   """H3: ms/frame en fp32, fp16 y fp16 + CUDA graphs (rampa de un tono: más oscuro = más optimizado)."""
   shades = ["#a9c9ef", "#5d9ce3", "#1d5fae"]
   names = ["fp32", "fp16", "fp16 + CUDA graphs"]
   rows = []
   for lab, n, vs in LAT:
-    vals = [_get(_load(Path(bench_dir) / f"{n}__{v}.json", Path(".")), "median_ms") if v else None for v in vs]
+    vals = [_get(_load(Path(bench_dir) / f"{n}__{v}.json", Path(".")), "median_ms")
+            if v and resultados.vigente(Path(bench_dir) / f"{n}__{v}.json", registro) else None for v in vs]
     if any(vals):
       rows.append((lab, vals))
   if not rows:
@@ -358,8 +378,8 @@ def fig_latency(bench_dir, path):
   plt.close(fig)
 
 
-def fig_ce_posicion(path_json, path):
-  d = _load(path_json, Path("."))
+def fig_ce_posicion(path_json, path, registro=None):
+  d = _load(path_json, Path(".")) if resultados.vigente(path_json, registro) else None
   if not d:
     return
   fig, (a, b) = plt.subplots(1, 2, figsize=(11, 4.2))
@@ -394,7 +414,7 @@ def _r(v, nd=2):
 
 
 def summary(cfgs):
-  main = [c["group"] == "principal" for c in cfgs]
+  main = [c["group"] == "principal" and c["estado"] == "vigente" for c in cfgs]  # solo vigentes compiten
   opt = pareto_mask([c["ms"] if m else None for c, m in zip(cfgs, main)], [c["fvd1"] for c in cfgs])
   rows = []
   for c, o, m in zip(cfgs, opt, main):
@@ -406,7 +426,7 @@ def summary(cfgs):
       "fvd_3s": _r(_get(f3, "value"), 1), "ms_frame": _r(c["ms"], 2), "e2e_p99_ms": _r(c.get("e2e_p99"), 1),
       "fps": _r(1000 / c["ms"], 1) if c["ms"] else None,
       "realtime": None if c["ms"] is None else bool(c["ms"] < RT_MS),
-      "group": c["group"],
+      "group": c["group"], "estado": c["estado"],
       "pareto": (bool(o) if c["ms"] is not None and c["fvd1"] is not None else None) if m else None})
   return rows
 
@@ -415,49 +435,71 @@ def markdown(rows):
   f = lambda v: "–" if v is None else str(v)
   yn = lambda v: "–" if v is None else ("sí" if v else "no")
   out = ["| Configuración | Familia | Params (M) | CE | CE último frame | LPIPS@1s | FVD@1s [IC 95%] | FVD@3s "
-         "| ms/frame | FPS | Tiempo real (<50 ms) | Pareto | De punta a punta p99 (ms) |",
-         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|:-:|:-:|---:|"]
+         "| ms/frame | FPS | Tiempo real (<50 ms) | Pareto | De punta a punta p99 (ms) | Estado |",
+         "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|:-:|:-:|---:|---|"]
   out = ["Pareto: no dominada en (ms/frame, FVD a 1 s) entre las configuraciones principales (100M tokens); las "
          "ablaciones y los extras no compiten. Latencia de los transformers con fp16 + CUDA graphs. De punta a punta: "
          "video → encoder → modelo → decoder → video en la GPU, modo imaginación, p99 de 3000 frames "
-         "(results/infer/summary_e2e.md).", ""] + out
+         "(results/infer/summary_e2e.md). Estado: solo las filas vigentes entran en la frontera de Pareto y en las figuras "
+         "(results/estado.json).", ""] + out
   for r in rows:
     ci = r["fvd_1s_ci"]
     fvd = f(r["fvd_1s"]) + (f" [{f(ci[0])}, {f(ci[1])}]" if ci and r["fvd_1s"] is not None else "")
     out.append(f"| {r['label']} | {r['family']} | {f(r['params_M'])} | {f(r['ce_all'])} | {f(r['ce_last'])} | "
                f"{f(r['lpips_1s'])} | {fvd} | {f(r['fvd_3s'])} | {f(r['ms_frame'])} | {f(r['fps'])} | "
-               f"{yn(r['realtime'])} | {yn(r['pareto'])} | {f(r.get('e2e_p99_ms'))} |")
+               f"{yn(r['realtime'])} | {yn(r['pareto'])} | {f(r.get('e2e_p99_ms'))} | {r['estado']} |")
   return "\n".join(out) + "\n"
 
 
-def main():
+def cartel(path, texto="Sin resultados vigentes:" + chr(10) + "todos son de un protocolo anterior o están pendientes" + chr(10) + "(ver results/estado.json)"):
+  """Figura vacía con un texto, para cuando no hay nada vigente que graficar."""
+  fig, ax = plt.subplots(figsize=(6, 2.4))
+  ax.axis("off")
+  ax.text(0.5, 0.5, texto, ha="center", va="center", fontsize=10, color=INK2, transform=ax.transAxes)
+  fig.savefig(path, dpi=100, bbox_inches="tight")
+  plt.close(fig)
+
+
+FIGURAS = ("fig_pareto", "fig_pareto_lpips", "fig_pareto_latente", "fig_pareto_latente_lpips", "fig_horizon",
+           "fig_ce_vs_fvd", "fig_latency", "fig_ce_posicion")
+
+
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--manifest", default="results/configs.json")
   ap.add_argument("--out", default="results")
-  a = ap.parse_args()
+  ap.add_argument("--estados", default=str(resultados.ARCHIVO), help="results/estado.json")
+  a = ap.parse_args(argv)
   out = Path(a.out)
   out.mkdir(parents=True, exist_ok=True)
-  cfgs = load_configs(a.manifest)
-  fig_pareto(cfgs, "fvd1", "FVD a 1 s (menor es mejor)", out / "fig_pareto.png",
-             lambda c: (_get(c["fvd"]["1"], "lo"), _get(c["fvd"]["1"], "hi")))
-  fig_pareto(cfgs, "lpips1", "LPIPS a 1 s (menor es mejor)", out / "fig_pareto_lpips.png", lambda c: c["lpips1_ci"])
-  fig_pareto_latente(cfgs, "fvd1", "FVD a 1 s (menor es mejor)", out / "fig_pareto_latente.png",
-                     lambda c: (_get(c["fvd"]["1"], "lo"), _get(c["fvd"]["1"], "hi")))
-  fig_pareto_latente(cfgs, "lpips1", "LPIPS a 1 s (menor es mejor)", out / "fig_pareto_latente_lpips.png",
-                     lambda c: c["lpips1_ci"])
-  fig_horizon(cfgs, out / "fig_horizon.png")
-  fig_ce_vs_fvd(cfgs, out / "fig_ce_vs_fvd.png")
-  fig_latency(Path(a.manifest).parent / "bench", out / "fig_latency.png")
-  fig_ce_posicion(Path(a.manifest).parent / "ce_por_posicion.json", out / "fig_ce_posicion.png")
+  registro = resultados.cargar(a.estados)
+  cfgs = load_configs(a.manifest, registro)
+  vig = [c for c in cfgs if c["estado"] == "vigente"]
+  if not vig:
+    for f in FIGURAS:
+      cartel(out / f"{f}.png")
+  else:
+    fig_pareto(vig, "fvd1", "FVD a 1 s (menor es mejor)", out / "fig_pareto.png",
+               lambda c: (_get(c["fvd"]["1"], "lo"), _get(c["fvd"]["1"], "hi")))
+    fig_pareto(vig, "lpips1", "LPIPS a 1 s (menor es mejor)", out / "fig_pareto_lpips.png", lambda c: c["lpips1_ci"])
+    fig_pareto_latente(vig, "fvd1", "FVD a 1 s (menor es mejor)", out / "fig_pareto_latente.png",
+                       lambda c: (_get(c["fvd"]["1"], "lo"), _get(c["fvd"]["1"], "hi")))
+    fig_pareto_latente(vig, "lpips1", "LPIPS a 1 s (menor es mejor)", out / "fig_pareto_latente_lpips.png",
+                       lambda c: c["lpips1_ci"])
+    fig_horizon(vig, out / "fig_horizon.png")
+    fig_ce_vs_fvd(vig, out / "fig_ce_vs_fvd.png")
+    fig_latency(Path(a.manifest).parent / "bench", out / "fig_latency.png", registro)
+    fig_ce_posicion(Path(a.manifest).parent / "ce_por_posicion.json", out / "fig_ce_posicion.png", registro)
   rows = summary(cfgs)
-  rho, p, n, _ = correlation(cfgs)
+  rho, p, n, _ = correlation(vig)
   (out / "summary.json").write_text(json.dumps({"configs": rows, "ce_vs_fvd1": {"spearman_rho": rho, "p": p, "n": n}},
                                                indent=1, ensure_ascii=False), encoding="utf-8")
   md = markdown(rows)
   if rho is not None:
-    md += f"\nCE vs. FVD@1s (autoregresivas): Spearman ρ = {rho:.2f}, {_p(p)}, n = {n}.\n"
+    md += f"\nCE vs. FVD@1s (autoregresivas, vigentes): Spearman ρ = {rho:.2f}, {_p(p)}, n = {n}.\n"
   (out / "summary.md").write_text(md, encoding="utf-8")
-  print(f"{len(rows)} configuraciones -> {out}")
+  print(f"{len(rows)} configuraciones ({len(vig)} vigentes) -> {out}")
+  return rows
 
 
 if __name__ == "__main__":

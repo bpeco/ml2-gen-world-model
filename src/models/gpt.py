@@ -7,6 +7,7 @@ from src.common import BLOCK, BOS, TPF, VOCAB, with_bos
 from src.models.backbone import Backbone, BackboneConfig
 from src.models.base import WorldModel, lm_loss, sample_logits
 from src.models.cudagraph import GraphedStep
+from src.recipes import legacy_cosine
 
 
 class GPT(WorldModel):
@@ -22,6 +23,11 @@ class GPT(WorldModel):
     dropout: float = 0.0
     block_size: int = BLOCK
     pos: str = "abs"                # embedding de posición: "abs" | "frame" (frame + celda)
+
+  @classmethod
+  def recipe(cls, size=None):
+    """Receta de entrenamiento. Hoy es la actual del repo (propia); la del paper la reemplaza."""
+    return legacy_cosine(name="gpt_actual", fuente="receta actual del repo")
 
   def __init__(self, cfg: "GPT.Config"):
     super().__init__()

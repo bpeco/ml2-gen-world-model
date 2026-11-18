@@ -10,6 +10,7 @@ sobre segmentos o clips y, cuando aplica, test de Wilcoxon de rangos con signo.
 
 Uso: python scripts/analysis.py  ->  results/hypotheses.json y results/hypotheses.md
 """
+import argparse
 import json
 import sys
 from pathlib import Path
@@ -195,12 +196,14 @@ def md(res):
   return "\n".join(L) + "\n"
 
 
-def main():
+def main(argv=None):
+  argparse.ArgumentParser(description="Pruebas de H1-H4 con los resultados de results/").parse_args(argv)
   res = {"H1": h1(), "H2": h2(), "H3": h3(), "H4": h4()}
   (R / "hypotheses.json").write_text(json.dumps(res, indent=1, ensure_ascii=False, default=float), encoding="utf-8")
   (R / "hypotheses.md").write_text(md(res), encoding="utf-8")
   sys.stdout.reconfigure(encoding="utf-8")  # la consola de Windows es cp1252 y no tiene "−"
   print(md(res))
+  return res
 
 
 if __name__ == "__main__":

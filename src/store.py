@@ -171,6 +171,10 @@ def register(run):
   entry = {"file": "final.pt", "sha256": digest, "bytes": p.stat().st_size, "kind": ck["kind"], "config": ck["config"],
            "tokens": ck["tokens"], "step": ck["step"], "params": params,
            "train_json": f"results/train_{run}.json"}
+  for k in ("receta", "receta_hash", "desviaciones", "parent", "parent_sha256", "parent_file",
+            "continuacion_no_equivalente"):  # de dónde sale el checkpoint: receta, desviaciones y corrida madre
+    if k in tj:
+      entry[k] = tj[k]
   if old.get("sha256") == digest and old.get("remotes"):
     entry["remotes"] = old["remotes"]  # si el archivo cambió, los remotos viejos ya no sirven
   m[run] = entry

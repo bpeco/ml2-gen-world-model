@@ -7,6 +7,8 @@ Salida:
   data/val_tokens.npy    (100, 1200, 128) int16, val oficial viejo (val.zip, sin poses)
 
 Solo las poses, del shard ya bajado (sin descargar): python -m src.data --poses-only
+Val con poses: python -m src.data --val-poses  (baja data-0001.tar.gz y deja data/valp_tokens.npy, valp_poses.npy,
+  valp_keys.json con los segmentos cuya ruta no está en train ni en el val oficial)
   data/raw/              decoder del VQ-VAE y pesos de gpt2m (commaai/commavq-gpt2m)
   results/val_split.json nombres de los segmentos de val (fijos para el benchmark)
 """
@@ -87,12 +89,61 @@ def route_of(key: str) -> str:
   return Path(key).name.rsplit("_", 1)[0]
 
 
+VALP_SHARD = "data-0001.tar.gz"
+
+
+def official_val_keys() -> list:
+  """Nombres de los segmentos del val oficial: results/val_split.json o, si no está, data/raw/val.zip."""
+  p = Path("results/val_split.json")
+  if p.exists():
+    return json.loads(p.read_text())["segments"]
+  with zipfile.ZipFile(RAW / "val.zip") as z:
+    return sorted(n[:-4] for n in z.namelist() if n.endswith(".npy"))
+
+
+def build_val_poses(shard: Path, out_dir="data"):
+  """Extrae un shard no usado y guarda valp_{tokens,poses}.npy + valp_keys.json, solo con rutas ausentes de
+  train y del val oficial. Falla si queda alguna ruta compartida. Devuelve (keys, tokens, poses)."""
+  out_dir = Path(out_dir)
+  train_routes = {route_of(k) for k in json.loads((out_dir / "train_keys.json").read_text())}
+  val_routes = {route_of(k) for k in official_val_keys()}
+  keys, tokens, poses = extract_shard(shard, with_poses=True)
+  keep = [i for i, k in enumerate(keys) if route_of(k) not in train_routes and route_of(k) not in val_routes
+          and not np.isnan(poses[i, :-1]).any()]  # el último frame no tiene pose (NaN) en todos los segmentos
+  print(f"shard {shard.name}: {len(keys)} segmentos, {len(keys) - len(keep)} descartados "
+        f"(ruta en train/val oficial o sin pose completa)")
+  keys, tokens, poses = [keys[i] for i in keep], tokens[keep], poses[keep]
+  if not keys:
+    raise SystemExit("ERROR: no quedó ningún segmento")
+  shared = {route_of(k) for k in keys} & (train_routes | val_routes)
+  if shared:
+    raise SystemExit(f"ERROR: {len(shared)} rutas compartidas con train/val oficial")
+  np.save(out_dir / "valp_tokens.npy", tokens)
+  np.save(out_dir / "valp_poses.npy", poses)
+  (out_dir / "valp_keys.json").write_text(json.dumps(keys, indent=0))
+  print(f"valp: {len(keys)} segmentos mantenidos ({len(set(map(route_of, keys)))} rutas), tokens {tokens.shape}, "
+        f"poses {poses.shape}")
+  print("0 rutas compartidas")
+  return keys, tokens, poses
+
+
 if __name__ == "__main__":
   ap = argparse.ArgumentParser()
   ap.add_argument("--shard", default="data-0000.tar.gz")
+  ap.add_argument("--val-poses", action="store_true",
+                  help=f"baja {VALP_SHARD} (sin hf_hub_download) y arma data/valp_* sin rutas de train ni del val oficial")
   ap.add_argument("--poses-only", action="store_true",
                   help="solo extrae las poses del shard ya bajado en data/raw (no descarga nada)")
   args = ap.parse_args()
+
+  if args.val_poses:
+    import time
+    from src.hf_fetch import fetch
+    t0 = time.time()
+    shard = fetch("commaai/commavq", VALP_SHARD, RAW, repo_type="dataset")
+    print(f"{shard}: {shard.stat().st_size / 1e6:.0f} MB en {time.time() - t0:.0f} s")
+    build_val_poses(shard)
+    raise SystemExit(0)
 
   if args.poses_only:
     keys, tokens, poses = extract_shard(RAW / args.shard, with_poses=True)

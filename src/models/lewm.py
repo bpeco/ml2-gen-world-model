@@ -27,6 +27,8 @@ from src.common import CTX_FRAMES, TPF
 from src.models.backbone import Backbone, BackboneConfig
 from src.models.base import lm_loss
 from src.models.latent import MLP, ConditionalBlock, Embedder, LatentWM, SIGReg
+from src.pixels import render
+from src.recipes import legacy_cosine
 
 CELLS = TPF - 1
 
@@ -51,26 +53,8 @@ class PixelFrameEncoder(nn.Module):
     return self.projector(self.net(emb=x)[:, 0]).view(B, Fr, -1)
 
 
-_RENDER = {}
-
-
-@torch.no_grad()
-def render_tokens(tok, chunk=32):
-  """tokens (..., 128) -> imágenes uint8 (..., 128, 256, 3) con el decoder de comma congelado (fp16 en CUDA).
-
-  Es la "cámara" de LeWM desde píxeles al entrenar y al evaluar con tokens. No es un submódulo del modelo: no
-  entra en el checkpoint, ni en los parámetros, ni en el optimizador.
-  """
-  from src.infer.codec import Codec
-  dev = tok.device
-  key = (dev.type, dev.index)
-  if key not in _RENDER:
-    _RENDER[key] = Codec(dev, "fp16" if dev.type == "cuda" else "fp32", graphs=False, encoder=False)
-  codec = _RENDER[key]
-  flat = tok.reshape(-1, tok.shape[-1]).long()
-  with torch.autocast(dev.type, enabled=False):
-    out = torch.cat([codec.decode(flat[i:i + chunk]) for i in range(0, len(flat), chunk)])
-  return out.view(*tok.shape[:-1], *out.shape[1:])
+# El render con el decoder de comma congelado vive en src/pixels.py (compartido); alias por compatibilidad.
+render_tokens = render
 
 
 class CrossBlock(nn.Module):
@@ -140,6 +124,11 @@ class LeWM(LatentWM):
     rollout: str = "token"     # "token" | "latent"
     n_pose: int = 6
     patch: int = 16
+
+  @classmethod
+  def recipe(cls, size=None):
+    """Receta de entrenamiento. Hoy es la actual del repo (propia); la del paper la reemplaza."""
+    return legacy_cosine(name="lewm_actual", fuente="receta actual del repo")
 
   def __init__(self, cfg: "LeWM.Config"):
     super().__init__()

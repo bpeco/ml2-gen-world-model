@@ -76,14 +76,14 @@ def evaluate(model, val, dev, bs=10, segments=None, log=True):
   return res
 
 
-if __name__ == "__main__":
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--model", required=True)
   ap.add_argument("--name", default=None)
   ap.add_argument("--segments", type=int, default=None)
   ap.add_argument("--bs", type=int, default=10)
   ap.add_argument("--dtype", default="fp32", choices=list(DTYPES))
-  args = ap.parse_args()
+  args = ap.parse_args(argv)
   dev = device()
   log_device(dev)
   model = load_model(args.model, dev).to(DTYPES[args.dtype]).eval()
@@ -95,3 +95,8 @@ if __name__ == "__main__":
   out.parent.mkdir(exist_ok=True)
   out.write_text(json.dumps(res, indent=1))
   print(json.dumps(res, indent=1))
+  return res
+
+
+if __name__ == "__main__":
+  main()

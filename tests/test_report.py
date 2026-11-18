@@ -40,13 +40,17 @@ def manifest(tmp_path):
   (tmp_path / "eval_maskgit.json").write_text(json.dumps({"ce_all": None, "ce_last": 3.6}))
   p = tmp_path / "configs.json"
   p.write_text(json.dumps(cfgs))
+  from src import resultados
+  for f in tmp_path.glob("*.json"):  # todos vigentes, salvo el estado que cada test cambie
+    if f != p:
+      resultados.marcar(f, "vigente", "fixture", tmp_path / "estado.json")
   return p
 
 
 def test_report_runs(manifest, tmp_path):
   out = tmp_path / "out"
-  subprocess.run([sys.executable, "-m", "src.report", "--manifest", str(manifest), "--out", str(out)],
-                 cwd=ROOT, check=True)
+  subprocess.run([sys.executable, "-m", "src.report", "--manifest", str(manifest), "--out", str(out),
+                  "--estados", str(manifest.parent / "estado.json")], cwd=ROOT, check=True)
   for f in ("fig_pareto.png", "fig_pareto_lpips.png", "fig_horizon.png", "fig_ce_vs_fvd.png",
             "summary.json", "summary.md"):
     assert (out / f).stat().st_size > 0
@@ -57,6 +61,20 @@ def test_report_runs(manifest, tmp_path):
   assert rows["maskgit"]["ce_all"] is None and s["ce_vs_fvd1"]["n"] == 4  # gpt_s, gpt_kd, gpt_l, gpt2m
   assert rows["copy"]["realtime"] and not rows["gpt2m"]["realtime"]
   assert "| copy |" in (out / "summary.md").read_text(encoding="utf-8")
+  assert "| Estado |" in (out / "summary.md").read_text(encoding="utf-8") and rows["copy"]["estado"] == "vigente"
+
+
+def test_report_sin_vigentes(manifest, tmp_path):
+  from src import resultados
+  for f in tmp_path.glob("*_*.json"):
+    resultados.marcar(f, "protocolo anterior", "x", tmp_path / "estado.json")
+  out = tmp_path / "out"
+  rows = report.main(["--manifest", str(manifest), "--out", str(out), "--estados", str(tmp_path / "estado.json")])
+  assert len(rows) == 7 and {r["estado"] for r in rows} == {"protocolo anterior"}
+  assert all(r["pareto"] is None for r in rows)
+  for f in ("fig_pareto", "fig_horizon", "fig_ce_vs_fvd", "fig_latency"):
+    assert (out / f"{f}.png").stat().st_size > 0
+  assert "protocolo anterior" in (out / "summary.md").read_text(encoding="utf-8")
 
 
 def test_pareto_hand_made():

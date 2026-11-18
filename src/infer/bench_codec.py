@@ -179,7 +179,7 @@ def fidelity(dev, frames, ref_tok, n):
   return res
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--device", default="cuda" if torch.cuda.is_available() else "cpu")
   ap.add_argument("--frames", type=int, default=500, help="llamadas medidas por etapa")
@@ -187,7 +187,7 @@ def main():
   ap.add_argument("--no-check", action="store_true")
   ap.add_argument("--n-check", type=int, default=200)
   ap.add_argument("--tag", help="nombre del dispositivo en el archivo (default: el de la GPU)")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   dev = torch.device(a.device)
   tag = a.tag or device_tag(dev)
   if dev.type == "cpu":
@@ -205,6 +205,7 @@ def main():
   path = OUT / f"codec_{tag}.json"
   path.write_text(json.dumps(res, indent=1))
   print("->", path)
+  return res
 
 
 if __name__ == "__main__":

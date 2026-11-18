@@ -82,11 +82,11 @@ def check(module, inputs, path, names_in, atol):
   return err
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--out", default=str(OUT))
   ap.add_argument("--fp16", action="store_true")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   out = Path(a.out)
   sfx = "_fp16" if a.fp16 else ""
   ensure_weights()
@@ -104,6 +104,7 @@ def main():
   check(dec, (z,), p, ["emb"], atol=2.0 if a.fp16 else 1e-1)
 
   print("->", out)
+  return out
 
 
 if __name__ == "__main__":

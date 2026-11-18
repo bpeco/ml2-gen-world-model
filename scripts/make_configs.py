@@ -7,6 +7,7 @@ fp16 + CUDA graphs para los transformers, la más rápida de las medidas para el
 
 Uso: python scripts/make_configs.py
 """
+import argparse
 import json
 from pathlib import Path
 
@@ -45,7 +46,8 @@ def entry(label, family, eval_=None, video=None, bench=None, params_=None, autor
   return e if (e["eval"] or e["video"]) else None
 
 
-def main():
+def main(argv=None):
+  argparse.ArgumentParser(description="Arma results/configs.json con los resultados que existen").parse_args(argv)
   C = []
   add = lambda e: e and C.append(e)
   # referencias
@@ -94,6 +96,7 @@ def main():
                 group="extra"))
   (R / "configs.json").write_text(json.dumps(C, indent=1, ensure_ascii=False), encoding="utf-8")
   print(f"{len(C)} configuraciones -> {R / 'configs.json'}")
+  return C
 
 
 if __name__ == "__main__":

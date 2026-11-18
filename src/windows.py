@@ -14,6 +14,10 @@ class Windows:
   poses (opcional): (N, T, 6) del mismo shard y en el mismo orden (data/train_poses.npy). Con
   with_poses=True, sample() devuelve también las poses de los mismos frames, crudas (con NaN); el
   modelo las normaliza con pose_stats() y trata los NaN como acción nula.
+
+  frameskip k: se toma 1 de cada k frames crudos (t, t+k, ...). La acción de cada frame tomado son las k
+  poses crudas desde ese frame hasta antes del siguiente tomado, apiladas (6·k dimensiones, como en LeWM).
+  Con k = 1 todo es idéntico a antes.
   """
 
   def __init__(self, tokens="data/train_tokens.npy", holdout: int = 50, seed: int = 0, poses=None):
@@ -26,46 +30,51 @@ class Windows:
       self.poses = poses if isinstance(poses, np.ndarray) else np.load(poses)
       assert self.poses.shape[:2] == self.tokens.shape[:2], "poses y tokens no coinciden"
 
-  def _gather(self, segs, starts, n_frames):
-    out = np.stack([self.tokens[s, t:t + n_frames] for s, t in zip(segs, starts)])
+  def _gather(self, segs, starts, n_frames, k=1):
+    out = np.stack([self.tokens[s, t:t + (n_frames - 1) * k + 1:k] for s, t in zip(segs, starts)])
     return torch.from_numpy(out.astype(np.int64))
 
-  def _gather_poses(self, segs, starts, n_frames):
-    out = np.stack([self.poses[s, t:t + n_frames] for s, t in zip(segs, starts)])
+  def _gather_poses(self, segs, starts, n_frames, k=1):
+    out = np.stack([self.poses[s, t:t + n_frames * k].reshape(n_frames, -1) for s, t in zip(segs, starts)])
     return torch.from_numpy(out.astype(np.float32))
 
-  def _draw(self, rng, n, lo, hi, n_frames):
+  def _draw(self, rng, n, lo, hi, n_frames, k=1):
     T = self.tokens.shape[1]
-    return rng.integers(lo, hi, n), rng.integers(0, T - n_frames + 1, n)
+    span = n_frames * k  # frames crudos que cubre la ventana (incluye las k poses del último frame)
+    return rng.integers(lo, hi, n), rng.integers(0, T - span + 1, n)
 
-  def sample(self, step: int, batch_size: int, n_frames: int = 20, with_poses: bool = False):
+  def sample(self, step: int, batch_size: int, n_frames: int = 20, with_poses: bool = False, frameskip: int = 1):
     """(B, n_frames, 128) LongTensor en CPU; depende solo de (seed, step).
 
-    with_poses: devuelve (tokens, poses (B, n_frames, 6)) con los mismos segmentos y frames; los
+    with_poses: devuelve (tokens, poses (B, n_frames, 6·frameskip)) con los mismos segmentos y frames; los
     tokens son idénticos a los de with_poses=False (mismas extracciones del RNG).
     """
     rng = np.random.default_rng([self.seed, step])
-    segs, starts = self._draw(rng, batch_size, 0, self.n_train, n_frames)
-    x = self._gather(segs, starts, n_frames)
+    segs, starts = self._draw(rng, batch_size, 0, self.n_train, n_frames, frameskip)
+    x = self._gather(segs, starts, n_frames, frameskip)
     pin = torch.cuda.is_available()
     x = x.pin_memory() if pin else x
     if not with_poses:
       return x
     assert self.poses is not None, "Windows sin poses"
-    p = self._gather_poses(segs, starts, n_frames)
+    p = self._gather_poses(segs, starts, n_frames, frameskip)
     return x, (p.pin_memory() if pin else p)
 
-  def monitor(self, n_windows: int = 32, n_frames: int = 20) -> torch.Tensor:
+  def monitor(self, n_windows: int = 32, n_frames: int = 20, frameskip: int = 1) -> torch.Tensor:
     """Ventanas fijas del holdout (seed fija, no depende de self.seed)."""
     rng = np.random.default_rng([12345, 0])
-    segs, starts = self._draw(rng, n_windows, self.n_train, len(self.tokens), n_frames)
-    return self._gather(segs, starts, n_frames)
+    n_frames = min(n_frames, self.tokens.shape[1] // frameskip)  # con frameskip la ventana cubre n_frames * k crudos
+    segs, starts = self._draw(rng, n_windows, self.n_train, len(self.tokens), n_frames, frameskip)
+    return self._gather(segs, starts, n_frames, frameskip)
 
-  def pose_stats(self):
-    """(media, desvío) por dimensión sobre los segmentos de train (sin holdout), ignorando NaN."""
+  def pose_stats(self, frameskip: int = 1):
+    """(media, desvío) por dimensión sobre los segmentos de train (sin holdout), ignorando NaN.
+
+    Con frameskip k se repiten k veces (las acciones apiladas tienen 6·k dimensiones)."""
     assert self.poses is not None, "Windows sin poses"
     p = self.poses[:self.n_train].reshape(-1, self.poses.shape[-1])
-    return np.nanmean(p, 0).astype(np.float32), np.maximum(np.nanstd(p, 0), 1e-6).astype(np.float32)
+    mean, std = np.nanmean(p, 0).astype(np.float32), np.maximum(np.nanstd(p, 0), 1e-6).astype(np.float32)
+    return np.tile(mean, frameskip), np.tile(std, frameskip)
 
 
 def disjoint_holdout(keys="data/train_keys.json", holdout: int = 50):

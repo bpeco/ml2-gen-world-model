@@ -13,6 +13,7 @@ from src.common import BOS, MASK, TPF, with_bos
 from src.models.backbone import Backbone, BackboneConfig
 from src.models.base import WorldModel, lm_loss
 from src.models.cudagraph import GraphedStep
+from src.recipes import legacy_cosine
 
 CODES = TPF - 1
 
@@ -76,6 +77,11 @@ class MaskGIT(WorldModel):
     choice_temp: float = 1.0        # ruido Gumbel sobre la confianza, baja linealmente a 0
     pos: str = "abs"                # embedding de posición: "abs" | "frame" (frame + celda)
     p_clean: float = 0.0            # prob. de dejar un frame entero sin máscara al entrenar (contexto limpio, como en inferencia)
+
+  @classmethod
+  def recipe(cls, size=None):
+    """Receta de entrenamiento. Hoy es la actual del repo (propia); la del paper la reemplaza."""
+    return legacy_cosine(name="maskgit_actual", fuente="receta actual del repo")
 
   def __init__(self, cfg: "MaskGIT.Config"):
     super().__init__()

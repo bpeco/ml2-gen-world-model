@@ -82,7 +82,7 @@ def window_feats(fn, frames, bs=8):
   return {k: feats(fn, frames[:, a:b], bs) for k, (a, b) in WINDOWS.items()}
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--name", required=True)
   ap.add_argument("--rollouts")
@@ -92,7 +92,7 @@ def main():
   ap.add_argument("--fvd-model", default="i3d", choices=["i3d"])
   ap.add_argument("--from-cache", action="store_true",
                   help="recalcula las estadísticas desde results/cache (LPIPS por clip y features I3D), sin decodificar")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   if a.from_cache:
     return stats_from_cache(a)
 
@@ -164,7 +164,7 @@ def main():
   # por clip, para comparaciones pareadas entre modelos (mismos clips): LPIPS (N, 60) y features I3D
   np.save(CACHE / f"lpips_{a.name}.npy", lpm.astype(np.float32))
   np.savez(CACHE / f"fvd_fake_{a.fvd_model}_{a.name}.npz", **ff)
-  write_stats(a, lpm, ff, real_feats, h, dev, t0)
+  return write_stats(a, lpm, ff, real_feats, h, dev, t0)
 
 
 def write_stats(a, lpm, ff, real_feats, h, dev, t0):
@@ -188,6 +188,7 @@ def write_stats(a, lpm, ff, real_feats, h, dev, t0):
   (RESULTS / f"video_{a.name}.json").write_text(json.dumps(res, indent=1))
   print("LPIPS:", {k: round(v["mean"], 4) for k, v in lpips_res["at"].items()})
   print("FVD  :", {k: round(v["value"], 2) for k, v in fvd.items()}, f"({res['seconds']:.0f} s)")
+  return res
 
 
 def stats_from_cache(a):
@@ -195,7 +196,7 @@ def stats_from_cache(a):
   lpm = np.load(CACHE / f"lpips_{a.name}.npy").astype(np.float64)
   z = np.load(CACHE / f"fvd_fake_{a.fvd_model}_{a.name}.npz")
   zr = np.load(CACHE / f"fvd_real_{a.fvd_model}_{h}.npz")
-  write_stats(a, lpm, {k: z[k] for k in WINDOWS}, {k: zr[k] for k in WINDOWS}, h, torch.device("cpu"), t0)
+  return write_stats(a, lpm, {k: z[k] for k in WINDOWS}, {k: zr[k] for k in WINDOWS}, h, torch.device("cpu"), t0)
 
 
 if __name__ == "__main__":

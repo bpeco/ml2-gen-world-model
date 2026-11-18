@@ -104,6 +104,7 @@ def online(a, dev):
   print(f"{name} k={a.k}: acierto {m['token_acc']:.4f} (congelado {f['token_acc']:.4f})  "
         f"LPIPS {m['lpips']:.4f} (congelado {f['lpips']:.4f})  por tramo {m['token_acc_by_window']}  "
         f"{sec:.0f} s -> {path}", flush=True)
+  return res
 
 
 @torch.no_grad()
@@ -142,9 +143,10 @@ def imagine(a, dev):
   OUT.mkdir(parents=True, exist_ok=True)
   (OUT / f"imagine_check_{name}.json").write_text(json.dumps(res, indent=1))
   print(res, f"-> {ROLL / name}_stream.npy (medir con: python -m src.metrics_video --name {name}_stream)", flush=True)
+  return res
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("what", choices=["online", "imagine"])
   ap.add_argument("--model", required=True)
@@ -159,9 +161,9 @@ def main():
   ap.add_argument("--bs", type=int, default=50)
   ap.add_argument("--seed", type=int, default=0)
   ap.add_argument("--opt", action="append")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-  online(a, dev) if a.what == "online" else imagine(a, dev)
+  return online(a, dev) if a.what == "online" else imagine(a, dev)
 
 
 if __name__ == "__main__":

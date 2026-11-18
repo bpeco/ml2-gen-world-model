@@ -49,7 +49,7 @@ def label(img, text):
   return out
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--model", required=True)
   ap.add_argument("--steps", type=int)
@@ -68,7 +68,7 @@ def main():
   ap.add_argument("--seed", type=int, default=0)
   ap.add_argument("--out")
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent)")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
   dev = torch.device("cuda" if torch.cuda.is_available() else "cpu")
   from src.models import apply_opts, load_model
   model = apply_opts(load_model(a.model, "cpu"), a.opt).eval().to(dev, DTYPES[a.dtype])
@@ -144,6 +144,7 @@ def main():
           "note": "latencia por frame generado en la demo (incluye bajar el frame a la CPU), sin la escritura del mp4"}
   out.with_suffix(".json").write_text(json.dumps(info, indent=1, ensure_ascii=False), encoding="utf-8")
   print(f"{out}  ({n} frames, {info['ms_per_frame_p50'] or 0:.1f} ms por frame generado, mediana)")
+  return info
 
 
 if __name__ == "__main__":

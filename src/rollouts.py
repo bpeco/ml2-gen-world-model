@@ -76,7 +76,7 @@ def default_name(base, steps=None, dtype="fp32", ctx_frames=CTX_FRAMES, temperat
   return name
 
 
-def main():
+def main(argv=None):
   ap = argparse.ArgumentParser()
   ap.add_argument("--make-clips", action="store_true")
   ap.add_argument("--model")
@@ -90,13 +90,13 @@ def main():
   ap.add_argument("--seed", type=int, default=0)
   ap.add_argument("--graphs", action="store_true", help="CUDA graphs en el decode (mismos tokens, más rápido)")
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent); repetible")
-  a = ap.parse_args()
+  a = ap.parse_args(argv)
 
   if a.make_clips:
     d = make_clips()
     print(f"{CLIPS}: {len(d['clips'])} clips, hash {clips_hash()}")
     if not a.model:
-      return
+      return CLIPS
   assert a.model, "falta --model SPEC (o --make-clips)"
 
   clips = load_clips()
@@ -143,6 +143,7 @@ def main():
           "device_info": info, "clips_hash": clips_hash()}
   (OUT / f"{name}.json").write_text(json.dumps(meta, indent=1))
   print(f"{OUT / name}.npy {out.shape}  {sec:.1f} s")
+  return OUT / f"{name}.npy"
 
 
 if __name__ == "__main__":
