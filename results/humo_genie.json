@@ -1,0 +1,49 @@
+{
+ "kind": "genie",
+ "pasos": 300,
+ "batch_efectivo": 32,
+ "batch_fuente": 256,
+ "candidatos": [
+  {
+   "nombre": "fuente",
+   "run": "genie_humo_fuente",
+   "lr": 3e-05,
+   "monitor_ce": 6.583919525146484,
+   "dispersion": {}
+  },
+  {
+   "nombre": "raiz",
+   "run": "genie_humo_raiz",
+   "lr": 1.06066e-05,
+   "monitor_ce": 6.842209339141846,
+   "dispersion": {}
+  },
+  {
+   "nombre": "x3",
+   "run": "genie_humo_x3",
+   "lr": 9e-05,
+   "monitor_ce": 5.5757951736450195,
+   "dispersion": {}
+  }
+ ],
+ "alias": {},
+ "elegido": "x3",
+ "lr_elegido": 9e-05,
+ "es_la_fuente": false,
+ "forzado": {
+  "campo": "lr",
+  "receta": 3e-05,
+  "elegido": 9e-05,
+  "candidato": "x3",
+  "categoria": "presupuesto",
+  "motivo": "el humo de 300 pasos elige lr 9e-05 (x3) y no el de la fuente (3e-05): declararlo como forzado por presupuesto en la receta"
+ },
+ "chequeo_colapso": "no aplica",
+ "nota": "",
+ "fecha": "2026-11-18T02:18:04",
+ "_bitacora": {
+  "id": "20261118-021359-e8cb",
+  "comando": "python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3",
+  "commit": "2d562f0fb5d13fa3d1a4aa2e0939ae533d0ca924"
+ }
+}

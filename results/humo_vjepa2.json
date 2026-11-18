@@ -1,0 +1,61 @@
+{
+ "kind": "vjepa2",
+ "pasos": 300,
+ "batch_efectivo": 32,
+ "batch_fuente": 3072,
+ "candidatos": [
+  {
+   "nombre": "fuente",
+   "run": "vjepa2_humo_fuente",
+   "lr": 0.000525,
+   "monitor_ce": 0.29059290885925293,
+   "dispersion": {
+    "target_std": 0.5144575881958008,
+    "pred_std": 0.3560561752319336
+   },
+   "colapsado": false
+  },
+  {
+   "nombre": "raiz",
+   "run": "vjepa2_humo_raiz",
+   "lr": 5.35826e-05,
+   "monitor_ce": 0.39527979493141174,
+   "dispersion": {
+    "target_std": 0.6288884735107422,
+    "pred_std": 0.38785369873046877
+   },
+   "colapsado": false
+  },
+  {
+   "nombre": "x3",
+   "run": "vjepa2_humo_x3",
+   "lr": 0.001575,
+   "monitor_ce": 0.25520119071006775,
+   "dispersion": {
+    "target_std": 0.4723964309692383,
+    "pred_std": 0.3387773132324219
+   },
+   "colapsado": false
+  }
+ ],
+ "alias": {},
+ "elegido": "x3",
+ "lr_elegido": 0.001575,
+ "es_la_fuente": false,
+ "forzado": {
+  "campo": "lr",
+  "receta": 0.000525,
+  "elegido": 0.001575,
+  "candidato": "x3",
+  "categoria": "presupuesto",
+  "motivo": "el humo de 300 pasos elige lr 0.00158 (x3) y no el de la fuente (0.000525): declararlo como forzado por presupuesto en la receta"
+ },
+ "chequeo_colapso": true,
+ "nota": "",
+ "fecha": "2026-11-18T03:03:06",
+ "_bitacora": {
+  "id": "20261118-021806-8c0d",
+  "comando": "python -m src.cli vjepa2 entrenar --humo --humo-candidatos fuente,raiz,x3",
+  "commit": "2d562f0fb5d13fa3d1a4aa2e0939ae533d0ca924"
+ }
+}
