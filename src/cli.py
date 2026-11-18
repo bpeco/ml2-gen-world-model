@@ -142,6 +142,12 @@ def cargar_toml(archivo):
   return trabajos
 
 
+def _con_dry_run(args):
+  """args con --dry-run para la CLI: antes del `--`, si lo hay; después iría al script envuelto y correría de verdad."""
+  antes, extra = _partir(args)
+  return [*antes, "--dry-run", *(["--", *extra] if "--" in args else [])]
+
+
 def _expandir(cmd):
   """Líneas que ejecutaría un comando de la cola (su --dry-run), o una nota si lo resuelve otro paquete."""
   args = shlex.split(cmd)
@@ -150,7 +156,7 @@ def _expandir(cmd):
   buf = io.StringIO()
   with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
     try:
-      rc = main([*args, "--dry-run"], _anidado=True)
+      rc = main(_con_dry_run(args), _anidado=True)
     except SystemExit as e:
       rc = e.code or 0
   return rc, buf.getvalue().rstrip().splitlines()
@@ -252,6 +258,7 @@ def comando_bitacora(argv):
   v = sub.add_parser("ver")
   v.add_argument("-n", type=int, default=20)
   sub.add_parser("verificar", help="cada resultado vigente: entrada con salida 0, árbol limpio y commit en main")
+  sub.add_parser("vigentes", help="marca vigente cada resultado sin estado que escribió una entrada válida")
   r = sub.add_parser("repetir")
   r.add_argument("id")
   r.add_argument("--dry-run", action="store_true")
@@ -264,6 +271,14 @@ def comando_bitacora(argv):
     for arch, motivo in problemas:
       print(f"{arch}: {motivo}")
     print("bitácora: todos los resultados vigentes tienen su comando" if not problemas else f"{len(problemas)} problemas")
+    return 1 if problemas else 0
+  if ns.sub == "vigentes":
+    marcados, problemas = bitacora.marcar_vigentes()
+    for arch in marcados:
+      print(f"vigente: {arch}")
+    for arch, motivo in problemas:
+      print(f"sin marcar: {arch}: {motivo}")
+    print(f"{len(marcados)} marcados vigentes, {len(problemas)} sin marcar")
     return 1 if problemas else 0
   try:
     av = bitacora.repetir(ns.id)

@@ -8,6 +8,8 @@ A cada JSON de resultados que la acción escribió se le agrega "_bitacora": {id
   python -m src.cli bitacora ver [-n 20]
   python -m src.cli bitacora verificar          cada resultado `vigente` tiene entrada con salida 0, árbol limpio y commit en main
   python -m src.cli bitacora repetir ID [--dry-run]
+  python -m src.cli bitacora vigentes           marca `vigente` (results/estado.json) los resultados sin estado que
+                                                escribió una entrada válida; lista los que no puede marcar
 """
 import json
 import os
@@ -168,26 +170,58 @@ def repetir(id_, dry_run=False):
 
 # ---------------------------------------------------------------- verificar
 
+def _escritores(entradas):
+  """{resultado: la última entrada que lo escribió}."""
+  esc = {}
+  for e in entradas:
+    for f in e.get("escribio", []):
+      esc[_relativa(f)] = e
+  return esc
+
+
+def _problema(e):
+  """Por qué la entrada `e` no respalda un resultado vigente (None si lo respalda)."""
+  if e is None:
+    return "ninguna entrada de la bitácora lo escribió"
+  if e.get("salida") != 0:
+    return f"la entrada {e['id']} terminó con salida {e.get('salida')}"
+  if not e.get("limpio") or e.get("permitir_sucio"):
+    return f"la entrada {e['id']} corrió con el árbol sucio"
+  if not es_ancestro_de_main(e.get("commit")):
+    return f"el commit {str(e.get('commit'))[:10]} de la entrada {e['id']} no está en main"
+  return None
+
+
 def verificar(estado_file=None):
   """Problemas de la bitácora respecto de los resultados `vigente` (lista de (archivo, motivo)); vacía = todo bien."""
   reg = resultados.cargar(estado_file or resultados.ARCHIVO)
-  entradas = leer()
-  escritores = {}
-  for e in entradas:
-    for f in e.get("escribio", []):
-      escritores[_relativa(f)] = e  # la última que lo escribió
-  problemas = []
+  escritores = _escritores(leer())
   # un resultado que existe y no está marcado de otro modo es vigente: todos necesitan su entrada
   vigentes = {k for k, v in reg.items() if v.get("estado") == "vigente"}
   vigentes |= {k for k in resultados.existentes(rutas.results()) if k not in reg}
+  problemas = []
   for k in sorted(vigentes):
-    e = escritores.get(k)
-    if e is None:
-      problemas.append((k, "ninguna entrada de la bitácora lo escribió"))
-    elif e.get("salida") != 0:
-      problemas.append((k, f"la entrada {e['id']} terminó con salida {e.get('salida')}"))
-    elif not e.get("limpio") or e.get("permitir_sucio"):
-      problemas.append((k, f"la entrada {e['id']} corrió con el árbol sucio"))
-    elif not es_ancestro_de_main(e.get("commit")):
-      problemas.append((k, f"el commit {str(e.get('commit'))[:10]} de la entrada {e['id']} no está en main"))
+    m = _problema(escritores.get(k))
+    if m:
+      problemas.append((k, m))
   return problemas
+
+
+def marcar_vigentes(estado_file=None):
+  """Marca `vigente` cada resultado existente sin estado cuya última escritura es una entrada válida (salida 0, árbol
+  limpio, commit en main): el paso de cierre de cada bloque de la cola. Devuelve (marcados, [(archivo, motivo)])."""
+  archivo = estado_file or resultados.ARCHIVO
+  reg = resultados.cargar(archivo)
+  escritores = _escritores(leer())
+  marcados, problemas = [], []
+  for k in resultados.existentes(rutas.results()):
+    if k in reg:
+      continue
+    e = escritores.get(k)
+    m = _problema(e)
+    if m:
+      problemas.append((k, m))
+    else:
+      resultados.marcar(k, "vigente", f"bitácora {e['id']}: {e.get('argv_texto', '')}".strip(), archivo)
+      marcados.append(k)
+  return marcados, problemas

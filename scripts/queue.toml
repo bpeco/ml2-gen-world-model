@@ -65,10 +65,12 @@ comandos = [
 [[trabajo]]
 id = 4
 nombre = "Barrido de temperatura en el holdout, por familia (gpt_s_kd, genie_s)"
-horas = 0.7
+horas = 1.0
+# genie: la grilla por defecto (2 x 0,7..1,1) dejó el óptimo en el borde (1,4); se extiende hacia abajo hasta que
+# quede interior, como en el humo. El default (2) se agrega siempre.
 comandos = [
   "gpt evaluar --tamaño s --variante kd --barrer-temperatura",
-  "genie evaluar --tamaño s --barrer-temperatura",
+  "genie evaluar --tamaño s --barrer-temperatura -- --temperaturas 0.8,1.0,1.2,1.4",
 ]
 
 [[trabajo]]

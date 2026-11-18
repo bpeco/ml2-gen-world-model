@@ -407,6 +407,16 @@ def test_la_cola_de_un_toml_frena_ante_una_falla(entorno, monkeypatch, tmp_path)
   assert vistos == [["a", "x"], ["b", "y"]]
 
 
+def test_dry_run_de_la_cola_va_antes_del_separador(monkeypatch):
+  # regresión: con `--` en el comando, el --dry-run agregado al final iba al script envuelto y la acción corría de verdad
+  vistos = []
+  monkeypatch.setattr(cli, "main", lambda argv, **kw: vistos.append(argv) or 0)
+  cli._expandir("genie evaluar --barrer-temperatura -- --temperaturas 0.8,1.0")
+  cli._expandir("gpt entrenar --tamaño s")
+  assert vistos == [["genie", "evaluar", "--barrer-temperatura", "--dry-run", "--", "--temperaturas", "0.8,1.0"],
+                    ["gpt", "entrenar", "--tamaño", "s", "--dry-run"]]
+
+
 def test_cola_correr_dry_run_lista_toda_la_cola(capsys):
   trabajos = cli.cargar_toml(ROOT / "scripts/queue.toml")
   assert [t["id"] for t in trabajos] == list(range(len(trabajos)))
@@ -539,6 +549,29 @@ def test_bitacora_verificar_por_cli(entorno, capsys, monkeypatch, tmp_path):
   monkeypatch.setattr(resultados, "ARCHIVO", estado)
   assert cli.main(["bitacora", "verificar"]) == 1
   assert "eval_x.json" in capsys.readouterr().out
+
+
+def test_bitacora_vigentes_marca_solo_lo_respaldado(entorno, capsys, monkeypatch, tmp_path):
+  estado = tmp_path / "estado.json"
+  monkeypatch.setattr(resultados, "ARCHIVO", estado)
+  res = rutas.results()
+  res.mkdir(parents=True)
+  for n in ("train_a.json", "train_b.json", "train_c.json", "eval_viejo.json"):
+    (res / n).write_text("{}")
+  resultados.marcar(res / "eval_viejo.json", "protocolo anterior", "test", estado)
+  base = {"fecha": "hoy", "argv": ["gpt", "entrenar"], "argv_texto": "python -m src.cli gpt entrenar", "salida": 0,
+          "limpio": True, "commit": "abc123", "permitir_sucio": False}
+  bitacora.registrar({**base, "id": "ok", "escribio": [str(res / "train_a.json")]})
+  bitacora.registrar({**base, "id": "sucia", "limpio": False, "escribio": [str(res / "train_b.json")]})
+  assert cli.main(["bitacora", "vigentes"]) == 1          # train_b (árbol sucio) y train_c (sin entrada) no se marcan
+  out = capsys.readouterr().out
+  reg = resultados.cargar(estado)
+  ka, kb, kc = (resultados.clave(res / n) for n in ("train_a.json", "train_b.json", "train_c.json"))
+  assert reg[ka]["estado"] == "vigente" and "bitácora ok" in reg[ka]["motivo"]
+  assert kb not in reg and kc not in reg and "sucio" in out and "ninguna entrada" in out
+  assert reg[resultados.clave(res / "eval_viejo.json")]["estado"] == "protocolo anterior"   # lo ya marcado no se toca
+  bitacora.registrar({**base, "id": "ok2", "escribio": [str(res / "train_b.json"), str(res / "train_c.json")]})
+  assert cli.main(["bitacora", "vigentes"]) == 0 and resultados.listar(estado, res)["sin estado"] == []
 
 
 def test_accion_real_por_la_cli_queda_en_la_bitacora(entorno, capsys):
