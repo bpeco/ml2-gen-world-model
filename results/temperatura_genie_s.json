@@ -1,0 +1,95 @@
+{
+ "model": "genie_s",
+ "name": "genie_s",
+ "default": 2.0,
+ "temperaturas": [
+  0.8,
+  1.0,
+  1.2,
+  1.4,
+  2.0
+ ],
+ "elegida": 1.0,
+ "tabla": [
+  {
+   "T": 0.8,
+   "fvd": 695.4312679230316,
+   "fvd_lo": 607.1679096269236,
+   "fvd_hi": 783.6946262191395,
+   "lpips": 0.3197343130409718,
+   "lpips_lo": 0.30327238913532345,
+   "lpips_hi": 0.33993514883331954,
+   "seconds": 355.90895986557007
+  },
+  {
+   "T": 1.0,
+   "fvd": 532.7000200710959,
+   "fvd_lo": 447.27614237109685,
+   "fvd_hi": 618.1238977710949,
+   "lpips": 0.3348627529293299,
+   "lpips_lo": 0.32096052609197795,
+   "lpips_hi": 0.35383636340871455,
+   "seconds": 357.2169539928436
+  },
+  {
+   "T": 1.2,
+   "fvd": 536.311439765745,
+   "fvd_lo": 443.730397005035,
+   "fvd_hi": 628.8924825264551,
+   "lpips": 0.35882473744452,
+   "lpips_lo": 0.3436716743018478,
+   "lpips_hi": 0.37862072621285914,
+   "seconds": 357.4176895618439
+  },
+  {
+   "T": 1.4,
+   "fvd": 597.5677442233409,
+   "fvd_lo": 473.50022907292987,
+   "fvd_hi": 721.635259373752,
+   "lpips": 0.405916774906218,
+   "lpips_lo": 0.39029091477766636,
+   "lpips_hi": 0.4230893940255046,
+   "seconds": 357.2996492385864
+  },
+  {
+   "T": 2.0,
+   "fvd": 1739.2393633523634,
+   "fvd_lo": 1412.6360965759843,
+   "fvd_hi": 2065.8426301287427,
+   "lpips": 0.5959625305235385,
+   "lpips_lo": 0.5771487319208681,
+   "lpips_hi": 0.619700993668288,
+   "seconds": 357.77363562583923
+  }
+ ],
+ "criterio": "menor FVD a 3 s; empate (FVD <= 1.02 x el mejor) por menor LPIPS a 3 s, luego cercanía al default",
+ "tol": 0.02,
+ "ventana": [
+  44,
+  60
+ ],
+ "frame_lpips": 59,
+ "fvd_ci": "normal, bootstrap por segmento",
+ "clips": "holdout",
+ "n_clips": 200,
+ "n_segmentos": 50,
+ "clips_hash": "e17c702485",
+ "steps": null,
+ "dtype": "fp32",
+ "seed": 0,
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "seconds": 1785.6178901195526,
+ "_bitacora": {
+  "id": "20261118-065932-705e",
+  "comando": "python -m src.cli genie evaluar '--tamaño' s --barrer-temperatura -- --temperaturas 0.8,1.0,1.2,1.4",
+  "commit": "6efc402803597ff3d96f33b8dc04405831dc9372"
+ }
+}
