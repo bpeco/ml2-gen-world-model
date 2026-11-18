@@ -1,0 +1,42 @@
+{
+ "kind": "vjepa2_ac",
+ "pasos": 300,
+ "batch_efectivo": 32,
+ "batch_fuente": 256,
+ "candidatos": [
+  {
+   "nombre": "fuente",
+   "run": "vjepa2_ac_humo_fuente",
+   "lr": 0.000425,
+   "monitor_ce": 0.21262593567371368,
+   "dispersion": {}
+  },
+  {
+   "nombre": "raiz",
+   "run": "vjepa2_ac_humo_raiz",
+   "lr": 0.00015026,
+   "monitor_ce": 0.21443408727645874,
+   "dispersion": {}
+  },
+  {
+   "nombre": "x3",
+   "run": "vjepa2_ac_humo_x3",
+   "lr": 0.001275,
+   "monitor_ce": 0.21378833055496216,
+   "dispersion": {}
+  }
+ ],
+ "alias": {},
+ "elegido": "fuente",
+ "lr_elegido": 0.000425,
+ "es_la_fuente": true,
+ "forzado": null,
+ "chequeo_colapso": false,
+ "nota": "sin chequeo de colapso: los logs de las corridas no traen ninguna medida de dispersión de los embeddings (*_std)",
+ "fecha": "2026-11-18T14:44:07",
+ "_bitacora": {
+  "id": "20261118-134633-962c",
+  "comando": "python -m src.cli vjepa2_ac entrenar --encoder vjepa2_s --humo --humo-candidatos fuente,raiz,x3",
+  "commit": "87b5536276cb1de4856960975f098fee0a57c4de"
+ }
+}

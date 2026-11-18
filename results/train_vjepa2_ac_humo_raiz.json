@@ -1,0 +1,181 @@
+{
+ "run": "vjepa2_ac_humo_raiz",
+ "kind": "vjepa2_ac",
+ "size": null,
+ "config": {
+  "encoder_run": "vjepa2_s",
+  "cargar_encoder": false,
+  "encoder": "small",
+  "embed_dim": 0,
+  "depth": 0,
+  "num_heads": 0,
+  "patch": 16,
+  "tubelet": 2,
+  "pred_dim": 384,
+  "pred_depth": 12,
+  "pred_heads": 12,
+  "frames": 16,
+  "height": 128,
+  "width": 256,
+  "n_pose": 30,
+  "action_dim": 6,
+  "auto_steps": 2,
+  "oficial_rope": true,
+  "grad_ckpt": true
+ },
+ "params": 21595392,
+ "tokens": 19814400,
+ "frames": 153600,
+ "steps": 300,
+ "seconds": 1150.9559185504913,
+ "tokens_per_s": 17215.602857278987,
+ "final_monitor_ce": 0.21443408727645874,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 16512000,
+   "monitor_ce": 0.22896550595760345
+  },
+  {
+   "step": 300,
+   "tokens": 19814400,
+   "monitor_ce": 0.21443408727645874
+  }
+ ],
+ "args": {
+  "kind": "vjepa2_ac",
+  "size": null,
+  "config": "{\"encoder_run\":\"vjepa2_s\"}",
+  "run": "vjepa2_ac_humo_raiz",
+  "receta": null,
+  "set": [],
+  "presupuesto": "153600",
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": 0.00015026,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [
+   {
+    "campo": "lr",
+    "receta": 0.000425,
+    "valor": 0.00015026
+   }
+  ],
+  "receta_hash": "44ba40323e90",
+  "receta_nombre": "vjepa2_ac_oficial"
+ },
+ "receta": {
+  "name": "vjepa2_ac_oficial",
+  "fuente": "V-JEPA 2 (arXiv 2506.09985) §3.1; configs/train/vitg16/droid-256px-8f.yaml",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "warmup",
+    "forma": "linear",
+    "ini": 2.6516470588235292e-05,
+    "fin": 0.00015026,
+    "frac": 0.047619047619047616
+   },
+   {
+    "nombre": "constante",
+    "forma": "constant",
+    "ini": 0.00015026,
+    "fin": 0.00015026
+   },
+   {
+    "nombre": "decay",
+    "forma": "linear",
+    "ini": 0.00015026,
+    "fin": 0.0,
+    "frac": 0.047619047619047616
+   }
+  ],
+  "wd_ini": 0.04,
+  "wd_fin": null,
+  "wd_on": "matrices",
+  "ema_segs": null,
+  "grad_clip": null,
+  "amp": "bf16",
+  "batch": 16,
+  "frames": 16,
+  "frameskip": 5,
+  "accum": 2,
+  "presupuesto": 780000,
+  "extras": {},
+  "paper_steps": 94500,
+  "batch_fuente": 256,
+  "forzado": [
+   [
+    "batch",
+    "32 efectivo (16 x accum 2) en vez de 256: con el presupuesto común de 780k frames da ~1.5k pasos (con 256 serían ~190); lr a confirmar en el humo",
+    "presupuesto"
+   ],
+   [
+    "presupuesto",
+    "~1.5k pasos en vez de 94.5k; las fracciones de warmup y decay se conservan",
+    "presupuesto"
+   ],
+   [
+    "predictor",
+    "12 x 384 en vez de 24 x 1024",
+    "presupuesto"
+   ],
+   [
+    "frames/frameskip",
+    "16 frames a 4 fps = 1 de cada 5 de los 20 FPS",
+    "datos"
+   ]
+  ]
+ },
+ "receta_hash": "44ba40323e90",
+ "desviaciones": [
+  {
+   "campo": "lr",
+   "receta": 0.000425,
+   "valor": 0.00015026
+  }
+ ],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261118-134633-962c",
+  "comando": "python -m src.cli vjepa2_ac entrenar --encoder vjepa2_s --humo --humo-candidatos fuente,raiz,x3",
+  "commit": "87b5536276cb1de4856960975f098fee0a57c4de"
+ }
+}
