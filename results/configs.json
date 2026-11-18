@@ -192,6 +192,22 @@
   "kd": false
  },
  {
+  "label": "real_eval_b",
+  "family": "otro",
+  "eval": null,
+  "video": "results/video_real_eval_b.json",
+  "bench": null,
+  "params": null,
+  "autoregressive": false,
+  "horizon": true,
+  "group": "principal",
+  "e2e": null,
+  "short": "real_eval_b",
+  "size": null,
+  "steps": null,
+  "kd": false
+ },
+ {
   "label": "Transición por celda",
   "family": "baseline",
   "eval": "results/eval_transicion.json",

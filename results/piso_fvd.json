@@ -1,0 +1,73 @@
+{
+ "n_clips": 400,
+ "mitades": {
+  "1": {
+   "value": 316.8089223846299,
+   "sd": 19.478981803329056,
+   "min": 274.3960539800564,
+   "max": 349.9722950441692,
+   "reps": 20,
+   "n_a": 200.0,
+   "n_b": 200.0,
+   "metodo": "real contra real, dos mitades disjuntas por segmento (n/2 clips por lado), media de las repeticiones"
+  },
+  "2": {
+   "value": 320.2455152986523,
+   "sd": 18.648844496908875,
+   "min": 289.52296777629226,
+   "max": 363.55699805940367,
+   "reps": 20,
+   "n_a": 200.0,
+   "n_b": 200.0,
+   "metodo": "real contra real, dos mitades disjuntas por segmento (n/2 clips por lado), media de las repeticiones"
+  },
+  "3": {
+   "value": 323.13352857119327,
+   "sd": 15.78783859148749,
+   "min": 296.7371152003843,
+   "max": 349.8398409261067,
+   "reps": 20,
+   "n_a": 200.0,
+   "n_b": 200.0,
+   "metodo": "real contra real, dos mitades disjuntas por segmento (n/2 clips por lado), media de las repeticiones"
+  }
+ },
+ "piso": {
+  "1": {
+   "value": 103.27508194499569,
+   "lo": 74.56027052987983,
+   "hi": 131.98989336011155,
+   "sd": 14.65041398730401,
+   "reps": 200,
+   "metodo": "real (clips_eval) contra real (clips_eval_b), n contra n; normal (valor ± 1,96 · desvío), bootstrap por segmento",
+   "n_a": 400,
+   "n_b": 400
+  },
+  "2": {
+   "value": 121.00618193189075,
+   "lo": 91.77999805554703,
+   "hi": 150.23236580823448,
+   "sd": 14.911318304257007,
+   "reps": 200,
+   "metodo": "real (clips_eval) contra real (clips_eval_b), n contra n; normal (valor ± 1,96 · desvío), bootstrap por segmento",
+   "n_a": 400,
+   "n_b": 400
+  },
+  "3": {
+   "value": 110.73698956624185,
+   "lo": 79.64021978856766,
+   "hi": 141.83375934391603,
+   "sd": 15.865698866160301,
+   "reps": 200,
+   "metodo": "real (clips_eval) contra real (clips_eval_b), n contra n; normal (valor ± 1,96 · desvío), bootstrap por segmento",
+   "n_a": 400,
+   "n_b": 400
+  }
+ },
+ "b": "real_eval_b",
+ "_bitacora": {
+  "id": "20261118-095655-6c04",
+  "comando": "python -m src.cli estadistica piso --b real_eval_b",
+  "commit": "97b8116be2b109b242eaf8278bc2936be1c149d7"
+ }
+}

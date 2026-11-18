@@ -164,6 +164,11 @@
   "motivo": "bitácora 20261118-094446-cc2b: python -m src.cli real evaluar",
   "fecha": "2026-11-18"
  },
+ "results/video_real_eval_b.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-094924-ee61: python -m src.cli real evaluar --clips eval_b",
+  "fecha": "2026-11-18"
+ },
  "results/video_transicion.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-093608-2f96: python -m src.cli transicion evaluar",
