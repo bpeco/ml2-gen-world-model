@@ -10,7 +10,7 @@ Pregunta del proyecto: **¿cuánto se puede achicar y acelerar un world model de
 4. **Cola de GPU.** Cada modelo se entrena y se evalúa solo con `python -m src.cli` o con la cola (`scripts/queue.toml`), y cada corrida queda en la bitácora con su comando exacto. Es la etapa que llena la tabla de resultados.
 5. **Al final:** las corridas 10x de `vjepa2` y `lewm`, solo con todo lo anterior verificado.
 
-Hasta que la cola termine, todo resultado figura como `pendiente` en [`resultados.md`](resultados.md); el código es el definitivo.
+La cola de GPU terminó (trabajos 0 a 16): todos los resultados de [`resultados.md`](resultados.md) son `vigente`, con su comando en la bitácora. Las corridas 10× y los trabajos opcionales no se hicieron.
 
 ## Decisiones
 
@@ -60,14 +60,13 @@ La cola incluye además las semillas 1 y 2 de `genie_s` y `convlstm_px`. Las cor
 | El comando y el commit que produjo cada resultado | dentro de cada JSON y en `results/bitacora.jsonl` |
 | Estado de cada archivo de resultados | `results/estado.json` (`python -m src.cli resultados`) |
 | Tablas y figuras generadas | `python -m src.cli reporte` (`results/summary.md` y figuras) |
-| Los checkpoints | `checkpoints/<run>/`, locales: no se distribuyen. Cada uno entrena lo que necesita; las corridas se registran en `results/checkpoints.json` |
+| Los checkpoints | `checkpoints/<run>/` y el repo público de Hugging Face [`KevinSoulier/ml2-gen-world-model`](https://huggingface.co/KevinSoulier/ml2-gen-world-model): el código baja solo lo que falte y verifica el sha256 de `results/checkpoints.json` ([Modelos entrenados](uso.md#modelos-entrenados-hugging-face)) |
 | Cómo reentrenar un modelo | [`modelos/README.md`](modelos/README.md) y [`uso.md`](uso.md) |
 | Los papers del camino de la investigación | [`world-models-conduccion-papers.md`](world-models-conduccion-papers.md) |
 | La presentación de avance | [`../pre-entrega/index.html`](../pre-entrega/index.html) |
 
 ## Qué falta
 
-- Correr la cola de GPU y pasar los resultados a `vigente`.
-- Escribir las conclusiones y re-evaluar las hipótesis con los datos nuevos: hoy figuran como "a evaluar".
+- Los trabajos opcionales de la cola (17 a 20): los GPT de cero, que cierran H1 y H4, `genie_m` y el MaskGIT propio con sus ablaciones.
 - Medir la inferencia en la T4 y en la laptop (iGPU y NPU).
 - Las corridas 10x de `vjepa2` y `lewm`.
