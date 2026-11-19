@@ -276,7 +276,7 @@ python -m src.cli cola correr --incluir-opcionales
 python -m src.cli cola ver                        # GPU, items encolados y su estado
 ```
 
-Los trabajos marcados `opcional = true` (los modelos implementados que no entran en el presupuesto: `gpt_s`, `gpt_m`, `genie_m` y el `maskgit` propio con sus ablaciones) corren solo con `--trabajo N` o `--incluir-opcionales`. El humo (`entrenar --humo`) se corre donde cambió el batch respecto de la fuente, con los lr de la fuente, por raíz y x3 (`--humo-candidatos`); el lr elegido entra a la receta con un commit. Las corridas 10x de `vjepa2` y `lewm` no están en la cola: van al final, con todo lo demás verificado.
+Los trabajos marcados `opcional = true` (los modelos implementados que no entran en la cola principal: `gpt_s`, `gpt_m`, `genie_m` y el `maskgit` propio con sus ablaciones) corren solo con `--trabajo N` o `--incluir-opcionales`. El humo (`entrenar --humo`) se corre donde cambió el batch respecto de la fuente, con los lr de la fuente, por raíz y x3 (`--humo-candidatos`); el lr elegido entra a la receta con un commit. Las corridas 10x de `vjepa2` y `lewm` no están en la cola: van al final, con todo lo demás verificado.
 
 Si un trabajo falla por un bug: la cola frena y la entrada fallada queda en la bitácora; el arreglo va por el camino normal (código, test, `verificar` en verde, commit) y se repite el mismo comando con `bitacora repetir <id>`.
 

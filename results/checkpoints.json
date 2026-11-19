@@ -269,6 +269,101 @@
   "tokens": 100620000,
   "train_json": "results/train_convlstm_px_s2.json"
  },
+ "genie_m": {
+  "bytes": 139122797,
+  "config": {
+   "choice_temp": 4.5,
+   "default_steps": 25,
+   "dim": 512,
+   "frames": 16,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mlp_ratio": 4,
+   "n_head": 8,
+   "n_layer": 8,
+   "temperature": 2.0
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "genie",
+  "params": 34761216,
+  "receta": {
+   "accum": 2,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 16,
+   "batch_fuente": 256,
+   "betas": [
+    0.9,
+    0.9
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos",
+     "presupuesto"
+    ],
+    [
+     "lr",
+     "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_genie.json)",
+     "presupuesto"
+    ],
+    [
+     "warmup",
+     "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos",
+     "presupuesto"
+    ],
+    [
+     "lr_segs",
+     "coseno hasta el 10 % del m\u00e1ximo tras el warmup: Genie no publica la forma para la din\u00e1mica",
+     "propio"
+    ],
+    [
+     "grad_clip",
+     "1.0: Genie no lo publica",
+     "propio"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 1,
+   "fuente": "Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.0003,
+     "forma": "linear",
+     "frac": 0.025,
+     "ini": 0.0,
+     "nombre": "warmup"
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.0003,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "genie_paper",
+   "optimizer": "adamw",
+   "paper_steps": 200000,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0001,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "008c979cf9f7",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "cd70d0efe790297e252c8522735efa34407e03e9b64dffc0e39187a66cc6b0e1",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_genie_m.json"
+ },
  "genie_s": {
   "bytes": 60245857,
   "config": {

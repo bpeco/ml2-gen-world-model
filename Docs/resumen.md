@@ -10,7 +10,7 @@ Pregunta del proyecto: **¿cuánto se puede achicar y acelerar un world model de
 4. **Cola de GPU.** Cada modelo se entrena y se evalúa solo con `python -m src.cli` o con la cola (`scripts/queue.toml`), y cada corrida queda en la bitácora con su comando exacto. Es la etapa que llena la tabla de resultados.
 5. **Al final:** las corridas 10x de `vjepa2` y `lewm`, solo con todo lo anterior verificado.
 
-La cola de GPU terminó (trabajos 0 a 16): todos los resultados de [`resultados.md`](resultados.md) son `vigente`, con su comando en la bitácora. Las corridas 10× y los trabajos opcionales no se hicieron.
+La cola de GPU terminó (trabajos 0 a 16): todos los resultados de [`resultados.md`](resultados.md) son `vigente`, con su comando en la bitácora. De los opcionales se corrió el 19 (`genie_m`); los demás y las corridas 10× no se hicieron.
 
 ## Decisiones
 
@@ -44,10 +44,10 @@ La cola de GPU terminó (trabajos 0 a 16): todos los resultados de [`resultados.
 |---|---|---|
 | `gpt2m`, `unigram`, `transicion`, `congelado`, `real` | referencias; `real` es el piso de FVD (400 contra 400) | [`referencias.md`](modelos/referencias.md) |
 | `gpt` (`gpt_s_kd`) | GPT-S destilado, receta de IRIS | [`gpt.md`](modelos/gpt.md) |
-| `genie` (`genie_s`) | MaskGIT fiel (Genie), con 1, 2, 4, 8, 12 y 25 pasadas | [`genie.md`](modelos/genie.md) |
+| `genie` (`genie_s`, y `genie_m` como opcional) | MaskGIT fiel (Genie), con 1, 2, 4, 8, 12 y 25 pasadas | [`genie.md`](modelos/genie.md) |
 | `convlstm_px` | ConvLSTM de Shi sobre píxeles | [`convlstm_px.md`](modelos/convlstm_px.md) |
 | `lewm`, `vjepa2`, `vjepa2_ac` | modelos latentes | [`lewm.md`](modelos/lewm.md), [`vjepa2.md`](modelos/vjepa2.md), [`vjepa2_ac.md`](modelos/vjepa2_ac.md) |
-| `gpt_s`, `gpt_m`, `genie_m`, `maskgit_s` | implementados y entrenables, fuera de la cola (opcionales) | [`gpt.md`](modelos/gpt.md), [`genie.md`](modelos/genie.md), [`maskgit.md`](modelos/maskgit.md) |
+| `gpt_s`, `gpt_m`, `maskgit_s` | implementados y entrenables, fuera de la cola (opcionales) | [`gpt.md`](modelos/gpt.md), [`genie.md`](modelos/genie.md), [`maskgit.md`](modelos/maskgit.md) |
 
 La cola incluye además las semillas 1 y 2 de `genie_s` y `convlstm_px`. Las corridas 10x de `vjepa2` y `lewm` van al final.
 
@@ -85,7 +85,7 @@ Toda la cola (trabajos 0 a 16) corrió con `python -m src.cli` y quedó en la bi
 
 ## Qué falta
 
-- **Trabajos opcionales de la cola (17 a 20):** los GPT de cero, que cierran H1 y H4; `genie_m`; y el MaskGIT propio con sus ablaciones.
+- **Trabajos opcionales de la cola (17, 18 y 20):** los GPT de cero, que cierran H1 y H4, y el MaskGIT propio con sus ablaciones. El 19 (`genie_m`) ya se corrió.
 - **H3:** medir los transformers en fp32 y comparar calidad y latencia con fp16 y CUDA graphs.
 - **Otros dispositivos:** medir la inferencia en CPU (todas las latencias de `results/bench/` y `results/infer/` son de la RTX 3080 Ti), en la T4 y en la laptop (iGPU y NPU).
 - **Corridas 10×** de `vjepa2` y `lewm`.

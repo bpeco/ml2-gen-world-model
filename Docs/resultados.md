@@ -9,6 +9,7 @@ Todos los números de este documento salen de un JSON `vigente` de `results/`. C
   - a 2 s, empatan;
   - a 3 s, Genie es mejor.
 - **Velocidad.** Genie S tarda 5,7 ms por frame ([bench](../results/bench/genie_s_p4__fp16_graphs_s4.json)) y GPT-S destilado 158 ms ([bench](../results/bench/gpt_s_kd__fp16_graphs.json)), porque genera los 128 tokens de a uno. Entre los modelos chicos generativos, solo Genie y el ConvLSTM sostienen 20 FPS con la cadena completa, cámara → encoder → modelo → decoder; el ConvLSTM, con 0,2 % de frames tarde ([sección 3](#3-latencia-modelo--performance)).
+- **Más grande no mejora con este presupuesto.** Genie M (35M, 2,3 veces Genie S) empata con Genie S a 4 pasadas en los tres horizontes: a 3 s, el FVD queda 7,2 abajo con p = 0,62 ([diferencia](../results/diferencia_genie_m_p4_vs_genie_s_p4.json)). Sigue en tiempo real, con la cadena a p99 de 20,6 ms ([cadena](../results/infer/latencia_genie_m_p4__rtx3080ti.json)).
 - **El ConvLSTM** es rápido pero borroso: una predicción determinista en píxeles promedia los futuros posibles. Su FVD queda peor que el de repetir el último frame.
 - **Las semillas mueven poco.** El desvío entre 3 semillas es chico frente a la distancia entre modelos.
 - **Los latentes no aprendieron un modelo del mundo útil con este presupuesto.**
@@ -27,7 +28,7 @@ Todos los números de este documento salen de un JSON `vigente` de `results/`. C
   - Es una referencia, no una cota. Un modelo condicionado en el contexto real genera continuaciones que comparten escena con el clip real, así que a 1 s puede quedar por debajo: `gpt2m` lo hace.
   - El "piso en mitades" que imprime `metrics_video` (unos 317 a 1 s) es otra cosa. Compara dos mitades disjuntas de segmentos, con 200 clips por lado, y no se compara con la columna de FVD.
 - **La temperatura** de cada familia salió del barrido en el holdout, nunca de val: GPT-S destilado usa T = 0,9 ([barrido](../results/temperatura_gpt_s_kd.json)) y Genie S, T = 1,0 ([barrido](../results/temperatura_genie_s.json)).
-- **Semillas:** `genie_s` y `convlstm_px` se entrenaron con 3 semillas (0, 1 y 2); la fila de semillas es media ± desvío.
+- **Semillas:** `genie_s` y `convlstm_px` se entrenaron con 3 semillas (0, 1 y 2); la fila de semillas es media ± desvío. `genie_m` tiene una sola, y usa la temperatura de su familia (T = 1,0).
 - **Los modelos latentes** no se miden con FVD: tienen su tabla, con sus referencias al lado.
 
 ## Estado de cada modelo
@@ -36,12 +37,13 @@ Todos los números de este documento salen de un JSON `vigente` de `results/`. C
 |---|---|---|---|---|
 | `gpt_s_kd` | hecho | video y CE | modelo y cadena | vigente |
 | `genie_s` | hecho, 3 semillas | video con 1 a 25 pasadas; calidad en línea | modelo y cadena | vigente |
+| `genie_m` | hecho (trabajo opcional 19) | video con 1 a 25 pasadas | modelo y cadena | vigente |
 | `convlstm_px` | hecho, 3 semillas | video | modelo y cadena | vigente |
 | `lewm` y `lewm_lrx3` | hecho | latente | por paso | vigente |
 | `vjepa2` | hecho (`vjepa2_s`) | latente | encoder | vigente |
 | `vjepa2_ac` | hecho, sobre `vjepa2_s` | latente y CEM | por paso | vigente |
 | referencias (`unigram`, `transicion`, `congelado`, `gpt2m`, `real`) | no se entrenan | video y CE | modelo; `transicion` también la cadena | vigente |
-| opcionales (`gpt_s`, `gpt_m`, `genie_m`, `maskgit_s` y sus ablaciones) | no se corrieron (trabajos 17 a 20 de la cola) | no | no | sin correr |
+| opcionales (`gpt_s`, `gpt_m`, `maskgit_s` y sus ablaciones) | no se corrieron (trabajos 17, 18 y 20 de la cola) | no | no | sin correr |
 | corridas 10× de `vjepa2` y `lewm` | no se corrieron (etapa D) | no | no | sin correr |
 
 ## 1. Modelos de video: modelo → performance
@@ -62,6 +64,12 @@ Todos los números de este documento salen de un JSON `vigente` de `results/`. C
 | genie_s | 12 pasadas, 15M, T = 1,0 | no aplica | 0,259 | 0,344 | 302,0 [258,9; 345,1] | 425,3 | `genie_s_p12` · [eval](../results/eval_genie_s.json) · [video](../results/video_genie_s_p12.json) | [guía](modelos/genie.md#entrenar) |
 | genie_s | 25 pasadas, 15M, T = 1,0 | no aplica | 0,255 | 0,335 | 325,8 [281,5; 370,0] | 444,1 | `genie_s_p25` · [eval](../results/eval_genie_s.json) · [video](../results/video_genie_s_p25.json) | [guía](modelos/genie.md#entrenar) |
 | genie_s | 8 pasadas, 3 semillas: media ± desvío | no aplica | 0,267 ± 0,002 | 0,354 ± 0,001 | 260,0 ± 14,4 | 402,5 ± 19,6 | `genie_s_p8, genie_s_s1_p8, genie_s_s2_p8` · [semillas](../results/semillas_genie_s_p8.json) | [guía](modelos/genie.md#entrenar) |
+| genie_m | 1 pasada, 35M, T = 1,0 | no aplica | 0,332 | 0,502 | 245,6 [200,9; 290,4] | 729,8 | `genie_m_p1` · [eval](../results/eval_genie_m.json) · [video](../results/video_genie_m_p1.json) | [guía](modelos/genie.md#entrenar) |
+| genie_m | 2 pasadas, 35M, T = 1,0 | no aplica | 0,304 | 0,439 | 218,6 [181,9; 255,3] | 504,2 | `genie_m_p2` · [eval](../results/eval_genie_m.json) · [video](../results/video_genie_m_p2.json) | [guía](modelos/genie.md#entrenar) |
+| genie_m | 4 pasadas, 35M, T = 1,0 | no aplica | 0,277 | 0,380 | 244,4 [207,6; 281,2] | 405,8 | `genie_m_p4` · [eval](../results/eval_genie_m.json) · [video](../results/video_genie_m_p4.json) | [guía](modelos/genie.md#entrenar) |
+| genie_m | 8 pasadas, 35M, T = 1,0 | no aplica | 0,266 | 0,356 | 277,0 [236,7; 317,3] | 402,6 | `genie_m_p8` · [eval](../results/eval_genie_m.json) · [video](../results/video_genie_m_p8.json) | [guía](modelos/genie.md#entrenar) |
+| genie_m | 12 pasadas, 35M, T = 1,0 | no aplica | 0,259 | 0,346 | 312,3 [271,7; 353,0] | 409,0 | `genie_m_p12` · [eval](../results/eval_genie_m.json) · [video](../results/video_genie_m_p12.json) | [guía](modelos/genie.md#entrenar) |
+| genie_m | 25 pasadas, 35M, T = 1,0 | no aplica | 0,255 | 0,338 | 331,5 [289,3; 373,6] | 452,9 | `genie_m_p25` · [eval](../results/eval_genie_m.json) · [video](../results/video_genie_m_p25.json) | [guía](modelos/genie.md#entrenar) |
 | convlstm_px | 8M, determinista | no aplica | 0,447 | 0,544 | 1789,9 [1629,7; 1950,2] | 2400,2 | `convlstm_px` · [video](../results/video_convlstm_px.json) | [guía](modelos/convlstm_px.md#entrenar) |
 | convlstm_px | 3 semillas: media ± desvío | no aplica | 0,452 ± 0,005 | 0,553 ± 0,008 | 1680,1 ± 118,3 | 2392,7 ± 14,3 | `convlstm_px, convlstm_px_s1, convlstm_px_s2` · [semillas](../results/semillas_convlstm_px.json) | [guía](modelos/convlstm_px.md#entrenar) |
 <!-- /tabla -->
@@ -71,6 +79,7 @@ Todos los números de este documento salen de un JSON `vigente` de `results/`. C
   - Con 1 y 2 pasadas el video se degrada rápido: a 3 s, el FVD es 3 y 1,7 veces el de 4 pasadas ([1 pasada](../results/video_genie_s_p1.json), [2](../results/video_genie_s_p2.json), [4](../results/video_genie_s_p4.json)).
   - De 4 a 25 pasadas el FVD a 3 s queda igual dentro del IC. A 1 s empeora, de 232 a 326 ([4 pasadas](../results/video_genie_s_p4.json), [25](../results/video_genie_s_p25.json)).
   - Cuatro pasadas alcanzan; el paper usa 25 (ver H2).
+- **Genie M** (35M) repite el patrón de Genie S con las pasadas. Donde más se nota el tamaño es con pocas pasadas: con 1 pasada, el FVD a 3 s baja de 1307 a 730 ([M con 1 pasada](../results/video_genie_m_p1.json), [S con 1 pasada](../results/video_genie_s_p1.json)). Con 4 o más, queda igual que Genie S dentro del IC: a 4 pasadas, 406 contra 413 a 3 s ([M con 4](../results/video_genie_m_p4.json), [S con 4](../results/video_genie_s_p4.json)), y la diferencia pareada no es significativa en ningún horizonte ([diferencia](../results/diferencia_genie_m_p4_vs_genie_s_p4.json)). Su CE del último frame es 3,04, contra 3,03 de Genie S ([eval de M](../results/eval_genie_m.json), [eval de S](../results/eval_genie_s.json)).
 - **LPIPS premia el frame quieto.** El congelado tiene mejor LPIPS a 1 s que cualquier modelo chico, pero un FVD mucho peor ([video](../results/video_congelado.json)). Por eso LPIPS se lee junto con el FVD.
 - **El ConvLSTM** queda peor que repetir el último frame en FVD ([video](../results/video_convlstm_px.json)): predice el promedio de los futuros posibles y el video sale borroso. Es lo esperado de un modelo determinista entrenado con una pérdida por píxel, como el de Shi et al.
 
@@ -89,6 +98,9 @@ La diferencia de FVD entre dos modelos se estima sobre los mismos 400 clips, con
 | `convlstm_px` − `genie_s_p8` | 1 s | +1513,8 [1375,9; 1651,7] | < 0,01 | gana `genie_s_p8` | [diferencia](../results/diferencia_convlstm_px_vs_genie_s_p8.json) |
 | `convlstm_px` − `genie_s_p8` | 2 s | +1800,0 [1635,7; 1964,4] | < 0,01 | gana `genie_s_p8` | [diferencia](../results/diferencia_convlstm_px_vs_genie_s_p8.json) |
 | `convlstm_px` − `genie_s_p8` | 3 s | +1975,2 [1792,6; 2157,8] | < 0,01 | gana `genie_s_p8` | [diferencia](../results/diferencia_convlstm_px_vs_genie_s_p8.json) |
+| `genie_m_p4` − `genie_s_p4` | 1 s | +12,0 [−10,6; 34,7] | 0,33 | empate | [diferencia](../results/diferencia_genie_m_p4_vs_genie_s_p4.json) |
+| `genie_m_p4` − `genie_s_p4` | 2 s | +5,6 [−21,5; 32,7] | 0,77 | empate | [diferencia](../results/diferencia_genie_m_p4_vs_genie_s_p4.json) |
+| `genie_m_p4` − `genie_s_p4` | 3 s | −7,2 [−44,0; 29,5] | 0,62 | empate | [diferencia](../results/diferencia_genie_m_p4_vs_genie_s_p4.json) |
 <!-- /tabla -->
 
 ## 2. Modelos latentes: modelo → performance
@@ -143,6 +155,7 @@ Un solo protocolo: batch 1, un paso por stream, p50 y p99, con la GPU libre. Los
 | `gpt2m` | RTX 3080 Ti | 732,9 ms | 734,4 ms | no aplica | no aplica | no aplica | no aplica | [bench](../results/bench/gpt2m__fp16_graphs.json) | [guía](modelos/referencias.md#gpt2m-bench) |
 | `gpt_s_kd` | RTX 3080 Ti | 159,0 ms | 163,5 ms | 168,1 ms | 166,8 ms | 171,4 ms | 100,0 % | [bench](../results/bench/gpt_s_kd__fp16_graphs.json) · [cadena](../results/infer/latencia_gpt_s_kd__rtx3080ti.json) | [guía](modelos/gpt.md#bench) |
 | `genie_s` (4 pasadas) | RTX 3080 Ti | 5,7 ms | 6,0 ms | 15,6 ms | 18,2 ms | 21,7 ms | 0,0 % | [bench](../results/bench/genie_s_p4__fp16_graphs_s4.json) · [cadena](../results/infer/latencia_genie_s_p4__rtx3080ti.json) | [guía](modelos/genie.md#bench) |
+| `genie_m` (4 pasadas) | RTX 3080 Ti | 9,4 ms | 10,0 ms | 19,4 ms | 20,1 ms | 20,6 ms | 0,0 % | [bench](../results/bench/genie_m_p4__fp16_graphs_s4.json) · [cadena](../results/infer/latencia_genie_m_p4__rtx3080ti.json) | [guía](modelos/genie.md#bench) |
 | `convlstm_px` | RTX 3080 Ti | 11,8 ms | 12,2 ms | 12,0 ms | 19,5 ms | 32,2 ms | 0,2 % | [bench](../results/bench/convlstm_px__fp32.json) · [cadena](../results/infer/latencia_convlstm_px__rtx3080ti.json) | [guía](modelos/convlstm_px.md#bench) |
 | `lewm` (por paso de 250 ms) | RTX 3080 Ti | 9,0 ms | 9,2 ms | no aplica | no aplica | no aplica | no aplica | [bench](../results/bench/lewm__fp32.json) | [guía](modelos/lewm.md#bench) |
 | `vjepa2` (encoder, por clip) | RTX 3080 Ti | 46,1 ms | 96,0 ms | no aplica | no aplica | no aplica | no aplica | [bench](../results/bench/vjepa2_s__fp32.json) | [guía](modelos/vjepa2.md#bench) |
@@ -186,9 +199,10 @@ Otros dispositivos (T4 de Colab, CPU, laptop con ROCm, DirectML y NPU) serían o
 
 **Conclusiones**
 
-1. **Para tiempo real en esta GPU, el modelo es Genie S.** Tiene el mejor FVD a 3 s entre los modelos chicos, y con 4 pasadas ya llega a ese nivel ([4 pasadas](../results/video_genie_s_p4.json), [semillas](../results/semillas_genie_s_p8.json)). Su cadena completa entra en 20 FPS con margen: p99 de 21,7 ms y 0 % de frames tarde ([cadena](../results/infer/latencia_genie_s_p4__rtx3080ti.json)).
+1. **Para tiempo real en esta GPU, el modelo es Genie S.** Tiene el mejor FVD a 3 s entre los modelos chicos, y con 4 pasadas ya llega a ese nivel ([4 pasadas](../results/video_genie_s_p4.json), [semillas](../results/semillas_genie_s_p8.json)). Su cadena completa entra en 20 FPS con margen: p99 de 21,7 ms y 0 % de frames tarde ([cadena](../results/infer/latencia_genie_s_p4__rtx3080ti.json)). Genie M también entra (p99 de 20,6 ms, [cadena](../results/infer/latencia_genie_m_p4__rtx3080ti.json)), pero no mejora la calidad y el modelo solo tarda 9,4 ms en vez de 5,7 ([bench de Genie M](../results/bench/genie_m_p4__fp16_graphs_s4.json)).
 2. **GPT-S destilado gana a 1 s (contra Genie con 8 pasadas) pero no llega a tiempo real.** Su cadena tarda 171,4 ms por frame en el p99 ([cadena](../results/infer/latencia_gpt_s_kd__rtx3080ti.json)). El cuello es generar los 128 tokens de a uno; para tiempo real hace falta decodificar en paralelo, como Genie.
 3. **Achicar cuesta calidad con este presupuesto.** `gpt2m` (307M) llega al piso a 3 s, y los modelos chicos (12–15M) quedan unas 4 veces arriba ([gpt2m](../results/video_gpt2m.json), [Genie S](../results/video_genie_s_p4.json), [piso](../results/piso_fvd.json)). Respondiendo la pregunta del proyecto con estos números: 20 veces menos parámetros y 130 veces menos latencia (de 733 a 5,7 ms por frame) llevan el FVD a 3 s de 105 a 413 ([bench de gpt2m](../results/bench/gpt2m__fp16_graphs.json), [bench de Genie S](../results/bench/genie_s_p4__fp16_graphs_s4.json)).
+   - Volver a agrandar no recupera esa calidad con el mismo presupuesto: Genie M, con 2,3 veces los parámetros, empata con Genie S a 4 pasadas en los tres horizontes ([diferencia](../results/diferencia_genie_m_p4_vs_genie_s_p4.json)). Con 780.000 frames, lo que separa a los chicos de `gpt2m` no es solo el tamaño: comma lo entrenó con 3.000.000 de minutos de video, unas 30 veces el dataset público ([papers](world-models-conduccion-papers.md)).
 4. **El ConvLSTM de píxeles no sirve como generador.** Es rápido, pero su video promedia los futuros y queda peor que repetir el último frame ([semillas](../results/semillas_convlstm_px.json), [congelado](../results/video_congelado.json)). Rápido no alcanza: el modelo tiene que poder elegir un futuro.
 5. **Los latentes no aprendieron un modelo del mundo útil con 780.000 frames.**
    - LeWM queda casi empatado con copiar el último latente.
