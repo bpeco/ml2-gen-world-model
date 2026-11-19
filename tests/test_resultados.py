@@ -38,3 +38,21 @@ def test_los_derivados_tienen_estado_y_los_manifiestos_no(tmp_path):
   for n in derivados + ["checkpoints.json", "configs.json", "estado.json", "val_split.json", "clips_eval.json"]:
     (tmp_path / n).write_text("{}")
   assert sorted(resultados.existentes(tmp_path)) == sorted((tmp_path / n).as_posix() for n in derivados)
+
+
+def test_quitar_solo_lo_que_ya_no_existe(tmp_path, monkeypatch):
+  """Un resultado renombrado deja su entrada vieja en el registro: --quitar la saca, pero nunca la de un archivo vivo."""
+  monkeypatch.chdir(tmp_path)
+  est = tmp_path / "estado.json"
+  (tmp_path / "results").mkdir()
+  vivo = tmp_path / "results/eval_vivo.json"
+  vivo.write_text("{}")
+  resultados.marcar("results/eval_vivo.json", "vigente", "", est)
+  resultados.marcar("results/eval_viejo.json", "vigente", "", est)
+  resultados.main(["--estado-file", str(est), "--quitar", "results/eval_viejo.json"])
+  assert set(resultados.cargar(est)) == {"results/eval_vivo.json"}
+  import pytest
+  with pytest.raises(ValueError, match="existe"):
+    resultados.quitar("results/eval_vivo.json", est)
+  with pytest.raises(KeyError):
+    resultados.quitar("results/eval_viejo.json", est)

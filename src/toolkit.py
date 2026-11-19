@@ -762,6 +762,11 @@ class Toolkit:
     spec = self._spec(o)
     pasos = _lista_csv(o["pasos"]) if o.get("pasos") else [None]
     dt = o.get("dtype") or (DTYPE_VIDEO.get(self.modelo, "fp32") if dev != "cpu" else "fp32")
+    d = o.get("device")
+    if d and not backends.obtener(d).torch_device:   # dml y npu: ONNX Runtime, sin world model en la cadena
+      raise ToolkitError(
+        f"{d} corre con ONNX Runtime y el bench del world model (con o sin --cadena) corre con torch. Con {d} se mide la "
+        f"cadena del codec: `python -m src.infer.bench_ort --enc {d} --dec {d}` (exportarlo antes con `codec exportar`)")
     cmds = []
     for s in pasos:
       if o.get("cadena") and not o.get("modo"):   # protocolo único (D15): un JSON con modelo solo, cadena cerrada y cadena a ritmo
@@ -795,8 +800,8 @@ class Toolkit:
             a += ["--device", _dev_torch(o["device"])]
           cmds.append(self._cmd("src.infer.bench_e2e", *a, *extra, o=o))
         continue
-      if o.get("device") in ("dml", "npu", "mps"):
-        raise ToolkitError(f"src.bench solo mide en cuda o cpu; para {o['device']} usá `bench --cadena` o src.infer.bench_ort con `--`")
+      if o.get("device") == "mps":
+        raise ToolkitError("src.bench solo mide en cuda o cpu; para mps usá `bench --cadena`")
       nombre = run + (f"_p{s}" if s else "")
       a = ["--model", spec, "--name", nombre, "--dtype", dt]
       if dt == "fp16" and (self.modelo in DTYPE_VIDEO or self.modelo in CON_PASOS):

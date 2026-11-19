@@ -9,8 +9,9 @@ src.report solo grafica los vigentes y rotula cada fila de la tabla con su estad
   python -m src.resultados                          # lista agrupado por estado (y avisa de archivos sin estado)
   python -m src.resultados --init                   # registra como "protocolo anterior" los resultados sin estado
   python -m src.resultados --set ARCHIVO ESTADO --motivo TEXTO
+  python -m src.resultados --quitar ARCHIVO                # saca la entrada de un archivo que ya no existe
 
-API para otros scripts: estado(ruta), marcar(ruta, estado, motivo), pendiente(nombre, motivo), vigente(ruta).
+API para otros scripts: estado(ruta), marcar(ruta, estado, motivo), pendiente(nombre, motivo), vigente(ruta), quitar(ruta).
 """
 import argparse
 import json
@@ -70,6 +71,17 @@ def marcar(ruta, nuevo, motivo="", archivo=ARCHIVO) -> dict:
   return e
 
 
+def quitar(ruta, archivo=ARCHIVO, raiz=Path(".")):
+  """Saca del registro la entrada de un archivo que ya no existe (se renombró o se apartó fuera del repo).
+  Un archivo que existe no se quita: su estado se cambia con marcar()."""
+  if (Path(raiz) / clave(ruta)).exists():
+    raise ValueError(f"{clave(ruta)} existe: para cambiar su estado, usá --set")
+  d = cargar(archivo)
+  if d.pop(clave(ruta), None) is None:
+    raise KeyError(f"{clave(ruta)} no está en {archivo}")
+  guardar(d, archivo)
+
+
 def pendiente(nombre, motivo="", archivo=ARCHIVO) -> dict:
   """Anota un resultado esperado que todavía no existe (nombre o ruta); lo llaman los paquetes que lo van a medir.
   Cuando se mida, marcar(ruta, "vigente", ...) reemplaza la entrada."""
@@ -106,8 +118,13 @@ def main(argv=None):
   ap.add_argument("--set", nargs=2, metavar=("ARCHIVO", "ESTADO"), help=f"cambia el estado; uno de {ESTADOS}")
   ap.add_argument("--motivo", default="", help="motivo del cambio (con --set)")
   ap.add_argument("--init", action="store_true", help='registra los resultados sin estado como "protocolo anterior"')
+  ap.add_argument("--quitar", metavar="ARCHIVO", action="append", default=[],
+                  help="saca la entrada de un archivo que ya no existe (se puede repetir)")
   ap.add_argument("--estado-file", default=str(ARCHIVO))
   a = ap.parse_args(argv)
+  for arch in a.quitar:
+    quitar(arch, a.estado_file)
+    print(f"{clave(arch)}: fuera del registro")
   if a.set:
     arch, nuevo = a.set
     marcar(arch, nuevo, a.motivo, a.estado_file)

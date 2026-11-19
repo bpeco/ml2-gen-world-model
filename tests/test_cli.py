@@ -911,3 +911,15 @@ def test_la_cadena_nombra_las_pasadas_con_p():
   assert c[2:4] == ["src.infer.quality", "online"] and c[c.index("--name") + 1] == "genie_s_p4"
   c = Toolkit("convlstm_px").plan("bench", cadena=True).comandos[0].argv
   assert c[c.index("--name") + 1] == "convlstm_px"
+
+
+def test_bench_con_npu_o_dml_falla_al_planear():
+  """El dry-run de `bench --cadena --device npu` pasaba y la corrida real fallaba: bench_e2e corre con torch, y con
+  npu y dml solo se mide la cadena del codec con ONNX Runtime (src.infer.bench_ort)."""
+  for d in ("npu", "dml"):
+    for kw in ({"cadena": True}, {}):
+      with pytest.raises(ToolkitError, match="bench_ort --enc " + d):
+        Toolkit("genie").plan("bench", pasos="4", device=d, **kw)
+  assert Toolkit("genie").plan("bench", pasos="4", cadena=True, device="cpu").comandos
+  with pytest.raises(ToolkitError, match="bench --cadena"):
+    Toolkit("genie").plan("bench", pasos="4", device="mps")

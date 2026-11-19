@@ -79,7 +79,7 @@ def entrada(nombre):
   etiqueta = BASELINES.get(run, nombre)
   return {"label": etiqueta, "family": fam, "eval": ev, "video": vd, "bench": bench, "params": params(run),
           "autoregressive": fam in AUTOREG or run in AUTOREG, "horizon": True,
-          "group": "ablación" if fam == "maskgit" else "principal", "e2e": exists(e2e), "short": etiqueta, "size": size,
+          "group": "ablación" if fam == "maskgit" else ("semilla" if re.search(r"_s\d+$", run) else "principal"), "e2e": exists(e2e), "short": etiqueta, "size": size,
           "steps": int(m.group(1)) if m else None, "kd": run.endswith("_kd")}
 
 

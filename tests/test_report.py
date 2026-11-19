@@ -123,3 +123,13 @@ def test_de_punta_a_punta_lee_el_protocolo_unico(manifest):
   manifest.write_text(json.dumps(cfgs))
   rows = {c["label"]: c for c in report.load_configs(manifest, {})}
   assert rows["gpt_s"]["e2e_p99"] == 48.5 and rows["gpt_l"]["e2e_p99"] == 33.0 and rows["copy"]["e2e_p99"] is None
+
+
+def test_las_semillas_no_compiten_en_el_pareto(tmp_path, monkeypatch):
+  """Las semillas 1 y 2 van en su grupo: no entran en la frontera de Pareto ni en la figura (la principal es la 0)."""
+  from src import configs
+  monkeypatch.setattr(configs, "R", tmp_path)
+  for n in ("video_convlstm_px.json", "video_convlstm_px_s1.json"):
+    (tmp_path / n).write_text("{}")
+  grupos = {configs.entrada(n)["label"]: configs.entrada(n)["group"] for n in ("convlstm_px", "convlstm_px_s1")}
+  assert grupos == {"convlstm_px": "principal", "convlstm_px_s1": "semilla"}
