@@ -87,5 +87,5 @@ Toda la cola (trabajos 0 a 16) corrió con `python -m src.cli` y quedó en la bi
 
 - **Trabajos opcionales de la cola (17 a 20):** los GPT de cero, que cierran H1 y H4; `genie_m`; y el MaskGIT propio con sus ablaciones.
 - **H3:** medir los transformers en fp32 y comparar calidad y latencia con fp16 y CUDA graphs.
-- **Otros dispositivos:** medir la inferencia en la T4 y en la laptop (iGPU y NPU).
+- **Otros dispositivos:** medir la inferencia en CPU (todas las latencias de `results/bench/` y `results/infer/` son de la RTX 3080 Ti), en la T4 y en la laptop (iGPU y NPU).
 - **Corridas 10×** de `vjepa2` y `lewm`.
