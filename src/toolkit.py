@@ -707,7 +707,7 @@ class Toolkit:
         base = ["--model", spec, "--dtype", qdt] + (["--steps", s] if s else []) + (
           ["--temperature", temperatura] if temperatura is not None else [])
         lim = ["--segments", o["limite"]] if o.get("limite") else []
-        cmds.append(self._cmd("src.infer.quality", "online", *base, *lim, *extra, o=o))
+        cmds.append(self._cmd("src.infer.quality", "online", *base, "--name", nombre, *lim, *extra, o=o))
         cmds.append(self._cmd("src.infer.quality", "imagine", *base, "--name", nombre, *extra, o=o))
         cmds.append(self._cmd("src.metrics_video", "--name", f"{nombre}_stream", o=o))
       return cmds
@@ -765,7 +765,8 @@ class Toolkit:
     cmds = []
     for s in pasos:
       if o.get("cadena") and not o.get("modo"):   # protocolo único (D15): un JSON con modelo solo, cadena cerrada y cadena a ritmo
-        a = ["--model", spec, "--name", run, "--dtype", dt, "--diagnostico" if o.get("diagnostico") else "--protocolo"]
+        a = ["--model", spec, "--name", run + (f"_p{s}" if s else ""), "--dtype", dt,
+             "--diagnostico" if o.get("diagnostico") else "--protocolo"]
         if s:
           a += ["--steps", s]
         if o.get("temperatura") is not None:
@@ -781,7 +782,7 @@ class Toolkit:
       if o.get("cadena"):
         modos = [o["modo"]]
         for modo in modos:
-          a = ["--model", spec, "--name", run, "--mode", modo, "--dtype", dt]
+          a = ["--model", spec, "--name", run + (f"_p{s}" if s else ""), "--mode", modo, "--dtype", dt]
           if s:
             a += ["--steps", s]
           if o.get("temperatura") is not None:

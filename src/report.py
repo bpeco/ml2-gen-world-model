@@ -100,7 +100,8 @@ def load_configs(manifest, registro=None):
              fvd={h: _get(vd, "fvd", h) for h in ("1", "2", "3")},
              piso1=_get(vd, "piso", "1", "value"), piso_n1=_get(pf, "piso", "1", "value"),
              piso_n1_ci=(_get(pf, "piso", "1", "lo"), _get(pf, "piso", "1", "hi")), fvd1_mitades=_get(vd, "piso", "1", "modelo_mitades"),
-             ms=_get(bn, "median_ms"), e2e_p99=_get(e2e, "steady", "p99"))
+             ms=_get(bn, "median_ms"),
+             e2e_p99=_get(e2e, "cadena_ritmo", "p99") or _get(e2e, "steady", "p99"))   # protocolo único (D15), o el e2e viejo
     c["fvd1"] = _get(c["fvd"]["1"], "value")
     cfgs.append(c)
   return cfgs
@@ -445,8 +446,8 @@ def markdown(rows):
          "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|:-:|:-:|---:|---|"]
   out = ["Pareto: no dominada en (ms/frame, FVD a 1 s) entre las configuraciones principales (100M tokens); las "
          "ablaciones y los extras no compiten. Latencia de los transformers con fp16 + CUDA graphs. De punta a punta: "
-         "video → encoder → modelo → decoder → video en la GPU, modo imaginación, p99 de 3000 frames "
-         "(results/infer/summary_e2e.md). Estado: solo las filas vigentes entran en la frontera de Pareto y en las figuras "
+         "cámara → encoder → modelo → decoder → frame en la GPU, a ritmo de cámara (un frame cada 50 ms), p99 de 3000 "
+         "frames (results/infer/latencia_*.json). Estado: solo las filas vigentes entran en la frontera de Pareto y en las figuras "
          "(results/estado.json). IC del FVD y de LPIPS: bootstrap por segmento (los 4 clips de un segmento no son independientes). "
          "Piso (400 contra 400): FVD de los clips reales de evaluación contra otros 400 reales de los mismos segmentos "
          "(results/piso_fvd.json); es el comparable con la columna de FVD. Piso en mitades: real contra real con dos mitades "

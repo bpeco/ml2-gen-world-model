@@ -366,8 +366,9 @@ def main(argv=None):
     a.frames = 600 if a.diagnostico else 3000
   if a.budget is None:
     a.budget = 250.0 if latent else 50.0
+  # --name va tal cual (la CLI pasa <run>_p<pasadas>); sin --name, el nombre viejo <modelo>_s<pasadas>
   base = a.name or ("codec" if model is None else model.name)
-  name = base + (f"_s{a.steps}" if a.steps else "")
+  name = a.name or (base + (f"_s{a.steps}" if a.steps else ""))
   frames = sample_video()
   OUT.mkdir(parents=True, exist_ok=True)
   comun = {"name": name, "model": a.model, "mode": a.mode, "k": a.k, "steps": a.steps, "temperature": a.temperature,

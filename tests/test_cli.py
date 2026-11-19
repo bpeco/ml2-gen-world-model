@@ -899,3 +899,15 @@ def test_verificar_exige_entrada_a_la_estadistica(entorno):
   vacio = rutas.results() / "estado.json"
   vacio.write_text("{}")
   assert [k for k, _ in bitacora.verificar(vacio)] == [resultados.clave(rutas.results() / "semillas_x.json")]
+
+
+def test_la_cadena_nombra_las_pasadas_con_p():
+  """Trabajo 14: el bench de cadena y la calidad en línea de Genie con 4 pasadas salían como genie_s_s4 (se lee como la
+  semilla 4) y el reporte no los encontraba para genie_s_p4."""
+  for kw in ({}, {"diagnostico": True}, {"modo": "imagine"}):
+    c = Toolkit("genie").plan("bench", pasos="4", cadena=True, **kw).comandos[0].argv
+    assert c[2] == "src.infer.bench_e2e" and c[c.index("--name") + 1] == "genie_s_p4"
+  c = Toolkit("genie").plan("evaluar", pasos="4", cadena=True).comandos[0].argv
+  assert c[2:4] == ["src.infer.quality", "online"] and c[c.index("--name") + 1] == "genie_s_p4"
+  c = Toolkit("convlstm_px").plan("bench", cadena=True).comandos[0].argv
+  assert c[c.index("--name") + 1] == "convlstm_px"
