@@ -34,6 +34,11 @@
   "motivo": "bitácora 20261118-111117-05f1: python -m src.cli lewm evaluar",
   "fecha": "2026-11-18"
  },
+ "results/latent_vjepa2_ac.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-200312-e905: python -m src.cli vjepa2_ac evaluar",
+  "fecha": "2026-11-18"
+ },
  "results/latent_vjepa2_s.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-124832-5bd9: python -m src.cli vjepa2 evaluar",

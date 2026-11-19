@@ -256,6 +256,22 @@
   "kd": false
  },
  {
+  "label": "vjepa2_ac",
+  "family": "vjepa2",
+  "eval": "results/latent_vjepa2_ac.json",
+  "video": null,
+  "bench": null,
+  "params": 21595392,
+  "autoregressive": false,
+  "horizon": true,
+  "group": "principal",
+  "e2e": null,
+  "short": "vjepa2_ac",
+  "size": null,
+  "steps": null,
+  "kd": false
+ },
+ {
   "label": "vjepa2_s",
   "family": "vjepa2",
   "eval": "results/latent_vjepa2_s.json",

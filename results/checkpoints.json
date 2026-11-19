@@ -284,6 +284,12 @@
    "proj_hidden": 2048
   },
   "desviaciones": [],
+  "extras": {
+   "lewm/decoder.pt": {
+    "bytes": 41663430,
+    "sha256": "49702eef56e9caf15547cc61145dd33cd1f09d315acfd684834e729c47e500f2"
+   }
+  },
   "file": "final.pt",
   "kind": "lewm",
   "params": 18044662,
@@ -303,17 +309,17 @@
    "forzado": [
     [
      "lr_segs",
-     "el oficial planifica por \u00e9poca (warmup en pasos); ac\u00e1 todo por paso: warmup lineal sobre el 1 % de los pasos (piso 1, sin el piso de 100) y coseno a 0",
+     "el oficial planifica por \u00c3\u00a9poca (warmup en pasos); ac\u00c3\u00a1 todo por paso: warmup lineal sobre el 1 % de los pasos (piso 1, sin el piso de 100) y coseno a 0",
      "presupuesto"
     ],
     [
      "presupuesto",
-     "780k frames renderizados vistos (~1 500 pasos); el oficial son 10-100 \u00e9pocas de PushT",
+     "780k frames renderizados vistos (~1 500 pasos); el oficial son 10-100 \u00c3\u00a9pocas de PushT",
      "presupuesto"
     ],
     [
      "batch",
-     "128 muestras de 4 frames sin acumulaci\u00f3n (BatchNorm y SIGReg dependen del batch); si la GPU no alcanza, bajar bs en vez de acumular",
+     "128 muestras de 4 frames sin acumulaci\u00c3\u00b3n (BatchNorm y SIGReg dependen del batch); si la GPU no alcanza, bajar bs en vez de acumular",
      "presupuesto"
     ],
     [
@@ -491,6 +497,12 @@
    "width": 256
   },
   "desviaciones": [],
+  "extras": {
+   "vjepa2_s_viz/decoder.pt": {
+    "bytes": 20166329,
+    "sha256": "555f7fedf91e7493d5373d9d00ee5609125e1e66e006e3319de4cecb2d775f11"
+   }
+  },
   "file": "final.pt",
   "kind": "vjepa2",
   "params": 43474944,
@@ -510,7 +522,7 @@
    "forzado": [
     [
      "batch",
-     "32 clips por paso en vez de 3072: con el presupuesto com\u00fan de 780k frames da ~1.5k pasos (con 3072 ser\u00edan ~16). El lr queda el del paper: el humo eligi\u00f3 x3 por menor L1 (0,255 contra 0,291), pero con menos dispersi\u00f3n del target entre parches (0,47 contra 0,51); en un JEPA un L1 menor no implica una representaci\u00f3n mejor (results/humo_vjepa2.json)",
+     "32 clips por paso en vez de 3072: con el presupuesto com\u00c3\u00ban de 780k frames da ~1.5k pasos (con 3072 ser\u00c3\u00adan ~16). El lr queda el del paper: el humo eligi\u00c3\u00b3 x3 por menor L1 (0,255 contra 0,291), pero con menos dispersi\u00c3\u00b3n del target entre parches (0,47 contra 0,51); en un JEPA un L1 menor no implica una representaci\u00c3\u00b3n mejor (results/humo_vjepa2.json)",
      "presupuesto"
     ],
     [
