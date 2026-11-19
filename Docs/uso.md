@@ -180,7 +180,7 @@ Para la NPU hay que exportar el codec a ONNX (`python -m src.cli codec exportar`
 
 ## Modelos entrenados (Hugging Face)
 
-Los modelos de la tabla de resultados y sus decoders están en un repo público de Hugging Face, el del equipo (`HF_REPO` en [`src/store.py`](../src/store.py)). `results/checkpoints.json`, que va en git, dice qué hay y el sha256 de cada archivo.
+Los modelos de la tabla de resultados y sus decoders están en un repo público de Hugging Face, [KevinSoulier/ml2-gen-world-model](https://huggingface.co/KevinSoulier/ml2-gen-world-model) (`HF_REPO` en [`src/store.py`](../src/store.py)). `results/checkpoints.json`, que va en git, dice qué hay y el sha256 de cada archivo.
 
 - **Bajar no pide nada:** `load_model("<run>")`, `evaluar`, `bench` y `demo` bajan el `final.pt` que falte, y la demo también el decoder, sin cuenta ni login. El archivo queda solo si el sha256 coincide con el manifiesto.
 - **Lo local no se pisa:** si un archivo local no coincide con el manifiesto, queda al lado como `<nombre>.local-<sha>` antes de bajar el del repo.

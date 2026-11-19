@@ -36,7 +36,7 @@ RESULTS = Path("results")
 MANIFEST = RESULTS / "checkpoints.json"
 ROLL_DIR = RESULTS / "rollouts"
 ROLL = "_rollouts"
-HF_REPO = None  # repo público del equipo en Hugging Face; lo pisan ML2_HF_REPO y --hf
+HF_REPO = "KevinSoulier/ml2-gen-world-model"  # repo público del equipo en Hugging Face; lo pisan ML2_HF_REPO y --hf
 
 
 def sha256(path, chunk=1 << 22):
