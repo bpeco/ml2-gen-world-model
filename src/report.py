@@ -168,6 +168,18 @@ def _repel(ax, items, points=()):
     ax.annotate(it["t"], (it["x"], it["y"]), textcoords="offset points", xytext=(dx, dy), ha=ha, va="center",
                 fontsize=it["size"], color=it["col"], arrowprops=guide)
 
+CON_PASADAS = ("maskgit", "genie")   # familias que se grafican de 1 a N pasadas por frame
+_NOMBRE_PASADAS = {"maskgit": "MaskGIT", "genie": "Genie"}
+
+
+def leyenda_tamano_m(cfgs):
+  """Entradas de leyenda para las familias con pasadas que tienen tamaño M (hueco y punteado en el Pareto)."""
+  from matplotlib.lines import Line2D
+  return [Line2D([], [], c=color(f), ls=":", lw=1, marker=MARKERS[f], ms=5, mfc=SURF, mec=color(f), mew=1.4,
+                 label=f"{_NOMBRE_PASADAS[f]} M (hueco, punteado)")
+          for f in CON_PASADAS if any(c["family"] == f and c["size"] == "m" and c["steps"] for c in cfgs)]
+
+
 def fig_pareto(cfgs, key, ylabel, path, ci):
   """Figura central: calidad vs. ms/frame. Pareto sobre el grupo principal (mismo presupuesto de tokens)."""
   from matplotlib.lines import Line2D
@@ -187,7 +199,8 @@ def fig_pareto(cfgs, key, ylabel, path, ci):
   if front:
     ax.step([p[0] for p in front] + [2000], [p[1] for p in front] + [front[-1][1]], where="post", c=MUTED, lw=1,
             zorder=1)
-  CON_PASADAS = ("maskgit", "genie")   # una línea por familia y tamaño, de 1 a N pasadas, rotuladas con su número
+  # una línea por familia y tamaño, de 1 a N pasadas. Solo el tamaño S lleva el número de pasadas y el nombre junto a
+  # los puntos: el M cae encima (mismas latencias de 5 a 35 ms) y se identifica en la leyenda, hueco y punteado
   for fam in CON_PASADAS:
     for size in ("s", "m"):
       mg = sorted([c for c in main if c["family"] == fam and c["size"] == size and c["steps"]], key=lambda c: c["steps"])
@@ -197,11 +210,10 @@ def fig_pareto(cfgs, key, ylabel, path, ci):
               ls="-" if size == "s" else ":", zorder=2)
       for c in mg:
         _mark(ax, c["ms"], c[key], c, _err(c, c[key], *ci(c)), ms=6 if size == "s" else 5, hollow=size == "m")
-        _txt(ax, c["ms"], c[key], str(c["steps"]), dx=0 if size == "s" else 8, dy=-12 if size == "s" else 0,
-             ha="center" if size == "s" else "left", size=7, col=INK)
-      last = mg[-1]
-      _txt(ax, last["ms"], last[key], f"{'MaskGIT' if fam == 'maskgit' else 'Genie'}-{size.upper()}",
-           dx=10 if size == "s" else 12, dy=8 if size == "s" else -16)
+        if size == "s":
+          _txt(ax, c["ms"], c[key], str(c["steps"]), dx=0, dy=-12, ha="center", size=7, col=INK)
+      if size == "s":
+        _txt(ax, mg[-1]["ms"], mg[-1][key], f"{_NOMBRE_PASADAS[fam]}-S", dx=0, dy=16, ha="center")
   for c in pts:
     if c["family"] not in CON_PASADAS:
       _mark(ax, c["ms"], c[key], c, _err(c, c[key], *ci(c)), hollow=c.get("kd") or c["group"] == "extra")
@@ -214,7 +226,7 @@ def fig_pareto(cfgs, key, ylabel, path, ci):
       _txt(ax, c["ms"], c[key], name, dx=dx, dy=dy, ha=ha)
   fams = [f for f in ("gpt", "gpt_kd", "genie", "maskgit", "convlstm", "gpt2m", "baseline") if any(c["family"] == f for c in pts)]
   _legend(ax, fams, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=3, frameon=False,
-          extra=[Line2D([], [], c=MUTED, lw=1, label="frontera de Pareto (780.000 frames)")])
+          extra=leyenda_tamano_m(main) + [Line2D([], [], c=MUTED, lw=1, label="frontera de Pareto (780.000 frames)")])
   ax.set_xlim(0.3, 2000)
   ax.set_ylim(0, None)
   ax.set_xlabel("latencia por frame generado (ms, mediana, batch 1, RTX 3080 Ti; escala log)")

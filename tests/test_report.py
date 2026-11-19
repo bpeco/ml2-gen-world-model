@@ -137,6 +137,14 @@ def test_las_semillas_no_compiten_en_el_pareto(tmp_path, monkeypatch):
   assert grupos == {"convlstm_px": "principal", "convlstm_px_s1": "semilla"}
 
 
+def test_genie_m_tiene_su_entrada_en_la_leyenda_del_pareto():
+  """Con genie_m, el Pareto encimaba los números de pasadas de S y M y la leyenda no decía qué eran los huecos."""
+  base = dict(family="genie", steps=4)
+  assert report.leyenda_tamano_m([dict(base, size="s")]) == []
+  [h] = report.leyenda_tamano_m([dict(base, size="s"), dict(base, size="m")])
+  assert h.get_label() == "Genie M (hueco, punteado)" and h.get_linestyle() == ":"
+
+
 def test_fig_latency_modelo_y_cadena(manifest, tmp_path):
   """La figura de latencia esperaba las variantes fp32/fp16/graphs de la tanda vieja y salía con una sola barra."""
   cfgs = report.load_configs(manifest, {})
