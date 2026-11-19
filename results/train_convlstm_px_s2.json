@@ -1,0 +1,338 @@
+{
+ "run": "convlstm_px_s2",
+ "kind": "convlstm_px",
+ "size": null,
+ "config": {
+  "in_ch": 3,
+  "height": 128,
+  "width": 256,
+  "patch": 4,
+  "hidden": [
+   128,
+   64,
+   64
+  ],
+  "kernel": 5,
+  "n_in": 10,
+  "n_out": 10
+ },
+ "params": 8003120,
+ "tokens": 100620000,
+ "frames": 780000,
+ "steps": 9750,
+ "seconds": 5219.742994070053,
+ "tokens_per_s": 19276.811159919267,
+ "final_monitor_ce": 0.5014094710350037,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 2580000,
+   "monitor_ce": 0.52556312084198
+  },
+  {
+   "step": 500,
+   "tokens": 5160000,
+   "monitor_ce": 0.5321294069290161
+  },
+  {
+   "step": 750,
+   "tokens": 7740000,
+   "monitor_ce": 0.51482754945755
+  },
+  {
+   "step": 1000,
+   "tokens": 10320000,
+   "monitor_ce": 0.5078843832015991
+  },
+  {
+   "step": 1250,
+   "tokens": 12900000,
+   "monitor_ce": 0.5076082944869995
+  },
+  {
+   "step": 1500,
+   "tokens": 15480000,
+   "monitor_ce": 0.5104165077209473
+  },
+  {
+   "step": 1750,
+   "tokens": 18060000,
+   "monitor_ce": 0.5065902471542358
+  },
+  {
+   "step": 2000,
+   "tokens": 20640000,
+   "monitor_ce": 0.5063931941986084
+  },
+  {
+   "step": 2250,
+   "tokens": 23220000,
+   "monitor_ce": 0.5058133006095886
+  },
+  {
+   "step": 2500,
+   "tokens": 25800000,
+   "monitor_ce": 0.5048480033874512
+  },
+  {
+   "step": 2750,
+   "tokens": 28380000,
+   "monitor_ce": 0.5055137872695923
+  },
+  {
+   "step": 3000,
+   "tokens": 30960000,
+   "monitor_ce": 0.5040298104286194
+  },
+  {
+   "step": 3250,
+   "tokens": 33540000,
+   "monitor_ce": 0.504220724105835
+  },
+  {
+   "step": 3500,
+   "tokens": 36120000,
+   "monitor_ce": 0.5065041780471802
+  },
+  {
+   "step": 3750,
+   "tokens": 38700000,
+   "monitor_ce": 0.5047441124916077
+  },
+  {
+   "step": 4000,
+   "tokens": 41280000,
+   "monitor_ce": 0.5034365653991699
+  },
+  {
+   "step": 4250,
+   "tokens": 43860000,
+   "monitor_ce": 0.5032476186752319
+  },
+  {
+   "step": 4500,
+   "tokens": 46440000,
+   "monitor_ce": 0.5039488673210144
+  },
+  {
+   "step": 4750,
+   "tokens": 49020000,
+   "monitor_ce": 0.5029533505439758
+  },
+  {
+   "step": 5000,
+   "tokens": 51600000,
+   "monitor_ce": 0.502822995185852
+  },
+  {
+   "step": 5250,
+   "tokens": 54180000,
+   "monitor_ce": 0.5031601190567017
+  },
+  {
+   "step": 5500,
+   "tokens": 56760000,
+   "monitor_ce": 0.50227290391922
+  },
+  {
+   "step": 5750,
+   "tokens": 59340000,
+   "monitor_ce": 0.5020033717155457
+  },
+  {
+   "step": 6000,
+   "tokens": 61920000,
+   "monitor_ce": 0.5018855333328247
+  },
+  {
+   "step": 6250,
+   "tokens": 64500000,
+   "monitor_ce": 0.501861035823822
+  },
+  {
+   "step": 6500,
+   "tokens": 67080000,
+   "monitor_ce": 0.5024162530899048
+  },
+  {
+   "step": 6750,
+   "tokens": 69660000,
+   "monitor_ce": 0.5022457838058472
+  },
+  {
+   "step": 7000,
+   "tokens": 72240000,
+   "monitor_ce": 0.5021395683288574
+  },
+  {
+   "step": 7250,
+   "tokens": 74820000,
+   "monitor_ce": 0.5014925599098206
+  },
+  {
+   "step": 7500,
+   "tokens": 77400000,
+   "monitor_ce": 0.5032321810722351
+  },
+  {
+   "step": 7750,
+   "tokens": 79980000,
+   "monitor_ce": 0.5016198754310608
+  },
+  {
+   "step": 8000,
+   "tokens": 82560000,
+   "monitor_ce": 0.5014402866363525
+  },
+  {
+   "step": 8250,
+   "tokens": 85140000,
+   "monitor_ce": 0.5026818513870239
+  },
+  {
+   "step": 8500,
+   "tokens": 87720000,
+   "monitor_ce": 0.5016381740570068
+  },
+  {
+   "step": 8750,
+   "tokens": 90300000,
+   "monitor_ce": 0.5012189149856567
+  },
+  {
+   "step": 9000,
+   "tokens": 92880000,
+   "monitor_ce": 0.5030916333198547
+  },
+  {
+   "step": 9250,
+   "tokens": 95460000,
+   "monitor_ce": 0.501473069190979
+  },
+  {
+   "step": 9500,
+   "tokens": 98040000,
+   "monitor_ce": 0.5027124285697937
+  },
+  {
+   "step": 9750,
+   "tokens": 100620000,
+   "monitor_ce": 0.5014094710350037
+  }
+ ],
+ "args": {
+  "kind": "convlstm_px",
+  "size": null,
+  "config": "{}",
+  "run": "convlstm_px_s2",
+  "receta": null,
+  "set": [],
+  "presupuesto": null,
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": null,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 2,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [],
+  "receta_hash": "c23ba4babe55",
+  "receta_nombre": "convlstm_px_shi2015"
+ },
+ "receta": {
+  "name": "convlstm_px_shi2015",
+  "fuente": "Shi et al. 2015 (arXiv 1506.04214) §4.1",
+  "optimizer": "rmsprop",
+  "betas": [
+   0.9,
+   0.95
+  ],
+  "eps": 1e-08,
+  "alpha": 0.9,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "constante",
+    "forma": "constant",
+    "ini": 0.001,
+    "fin": 0.001
+   }
+  ],
+  "wd_ini": 0.0,
+  "wd_fin": null,
+  "wd_on": "todos",
+  "ema_segs": null,
+  "grad_clip": 1.0,
+  "amp": null,
+  "batch": 4,
+  "frames": 20,
+  "frameskip": 1,
+  "accum": 1,
+  "presupuesto": 780000,
+  "extras": {},
+  "paper_steps": null,
+  "batch_fuente": 4,
+  "forzado": [
+   [
+    "batch 4, clip 1.0, eps 1e-8",
+    "el paper no los publica; batch por la memoria de 12 GB",
+    "propio"
+   ],
+   [
+    "batch_fuente 4",
+    "Shi 2015 no publica su batch: sin batch de referencia, el lr de la fuente no se escala",
+    "propio"
+   ],
+   [
+    "early stopping",
+    "se entrena el presupuesto completo; train.py guarda el último estado",
+    "presupuesto"
+   ],
+   [
+    "RGB 128x256, 20 FPS, parches 4x4 -> 32x64x48",
+    "el dato de comma obliga",
+    "datos"
+   ],
+   [
+    "fp32",
+    "el paper no publica la precisión",
+    "propio"
+   ]
+  ]
+ },
+ "receta_hash": "c23ba4babe55",
+ "desviaciones": [],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261119-022511-73f8",
+  "comando": "python -m src.cli convlstm_px entrenar --semilla 2",
+  "commit": "85c9b440e85c132dae09198bb2bc3ad2636a0ffb"
+ }
+}

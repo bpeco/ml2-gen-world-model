@@ -89,6 +89,186 @@
   "tokens": 100620000,
   "train_json": "results/train_convlstm_px.json"
  },
+ "convlstm_px_s1": {
+  "bytes": 32024873,
+  "config": {
+   "height": 128,
+   "hidden": [
+    128,
+    64,
+    64
+   ],
+   "in_ch": 3,
+   "kernel": 5,
+   "n_in": 10,
+   "n_out": 10,
+   "patch": 4,
+   "width": 256
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "convlstm_px",
+  "params": 8003120,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.9,
+   "amp": null,
+   "batch": 4,
+   "batch_fuente": 4,
+   "betas": [
+    0.9,
+    0.95
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch 4, clip 1.0, eps 1e-8",
+     "el paper no los publica; batch por la memoria de 12 GB",
+     "propio"
+    ],
+    [
+     "batch_fuente 4",
+     "Shi 2015 no publica su batch: sin batch de referencia, el lr de la fuente no se escala",
+     "propio"
+    ],
+    [
+     "early stopping",
+     "se entrena el presupuesto completo; train.py guarda el \u00faltimo estado",
+     "presupuesto"
+    ],
+    [
+     "RGB 128x256, 20 FPS, parches 4x4 -> 32x64x48",
+     "el dato de comma obliga",
+     "datos"
+    ],
+    [
+     "fp32",
+     "el paper no publica la precisi\u00f3n",
+     "propio"
+    ]
+   ],
+   "frames": 20,
+   "frameskip": 1,
+   "fuente": "Shi et al. 2015 (arXiv 1506.04214) \u00a74.1",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.001,
+     "forma": "constant",
+     "ini": 0.001,
+     "nombre": "constante"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "convlstm_px_shi2015",
+   "optimizer": "rmsprop",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0,
+   "wd_on": "todos"
+  },
+  "receta_hash": "c23ba4babe55",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "301055217e340a22ad093e8c654eb9e1f895a08e4bfb02021240577971088312",
+  "step": 9750,
+  "tokens": 100620000,
+  "train_json": "results/train_convlstm_px_s1.json"
+ },
+ "convlstm_px_s2": {
+  "bytes": 32024873,
+  "config": {
+   "height": 128,
+   "hidden": [
+    128,
+    64,
+    64
+   ],
+   "in_ch": 3,
+   "kernel": 5,
+   "n_in": 10,
+   "n_out": 10,
+   "patch": 4,
+   "width": 256
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "convlstm_px",
+  "params": 8003120,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.9,
+   "amp": null,
+   "batch": 4,
+   "batch_fuente": 4,
+   "betas": [
+    0.9,
+    0.95
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch 4, clip 1.0, eps 1e-8",
+     "el paper no los publica; batch por la memoria de 12 GB",
+     "propio"
+    ],
+    [
+     "batch_fuente 4",
+     "Shi 2015 no publica su batch: sin batch de referencia, el lr de la fuente no se escala",
+     "propio"
+    ],
+    [
+     "early stopping",
+     "se entrena el presupuesto completo; train.py guarda el \u00faltimo estado",
+     "presupuesto"
+    ],
+    [
+     "RGB 128x256, 20 FPS, parches 4x4 -> 32x64x48",
+     "el dato de comma obliga",
+     "datos"
+    ],
+    [
+     "fp32",
+     "el paper no publica la precisi\u00f3n",
+     "propio"
+    ]
+   ],
+   "frames": 20,
+   "frameskip": 1,
+   "fuente": "Shi et al. 2015 (arXiv 1506.04214) \u00a74.1",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.001,
+     "forma": "constant",
+     "ini": 0.001,
+     "nombre": "constante"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "convlstm_px_shi2015",
+   "optimizer": "rmsprop",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0,
+   "wd_on": "todos"
+  },
+  "receta_hash": "c23ba4babe55",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "7c0d402d577c1ac2f32db695a9066892679cafa12b8eba29161f208157b23676",
+  "step": 9750,
+  "tokens": 100620000,
+  "train_json": "results/train_convlstm_px_s2.json"
+ },
  "genie_s": {
   "bytes": 60245857,
   "config": {
@@ -183,6 +363,196 @@
   "step": 1524,
   "tokens": 100657152,
   "train_json": "results/train_genie_s.json"
+ },
+ "genie_s_s1": {
+  "bytes": 60245857,
+  "config": {
+   "choice_temp": 4.5,
+   "default_steps": 25,
+   "dim": 384,
+   "frames": 16,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mlp_ratio": 4,
+   "n_head": 6,
+   "n_layer": 6,
+   "temperature": 2.0
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "genie",
+  "params": 15046528,
+  "receta": {
+   "accum": 2,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 16,
+   "batch_fuente": 256,
+   "betas": [
+    0.9,
+    0.9
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos",
+     "presupuesto"
+    ],
+    [
+     "lr",
+     "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_genie.json)",
+     "presupuesto"
+    ],
+    [
+     "warmup",
+     "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos",
+     "presupuesto"
+    ],
+    [
+     "lr_segs",
+     "coseno hasta el 10 % del m\u00e1ximo tras el warmup: Genie no publica la forma para la din\u00e1mica",
+     "propio"
+    ],
+    [
+     "grad_clip",
+     "1.0: Genie no lo publica",
+     "propio"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 1,
+   "fuente": "Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.0003,
+     "forma": "linear",
+     "frac": 0.025,
+     "ini": 0.0,
+     "nombre": "warmup"
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.0003,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "genie_paper",
+   "optimizer": "adamw",
+   "paper_steps": 200000,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0001,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "008c979cf9f7",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "353ffc996acfef23fb48ca094bc65c58de1201ead431f756db0c2ef873460703",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_genie_s_s1.json"
+ },
+ "genie_s_s2": {
+  "bytes": 60245857,
+  "config": {
+   "choice_temp": 4.5,
+   "default_steps": 25,
+   "dim": 384,
+   "frames": 16,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mlp_ratio": 4,
+   "n_head": 6,
+   "n_layer": 6,
+   "temperature": 2.0
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "genie",
+  "params": 15046528,
+  "receta": {
+   "accum": 2,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 16,
+   "batch_fuente": 256,
+   "betas": [
+    0.9,
+    0.9
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos",
+     "presupuesto"
+    ],
+    [
+     "lr",
+     "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_genie.json)",
+     "presupuesto"
+    ],
+    [
+     "warmup",
+     "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos",
+     "presupuesto"
+    ],
+    [
+     "lr_segs",
+     "coseno hasta el 10 % del m\u00e1ximo tras el warmup: Genie no publica la forma para la din\u00e1mica",
+     "propio"
+    ],
+    [
+     "grad_clip",
+     "1.0: Genie no lo publica",
+     "propio"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 1,
+   "fuente": "Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.0003,
+     "forma": "linear",
+     "frac": 0.025,
+     "ini": 0.0,
+     "nombre": "warmup"
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.0003,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "genie_paper",
+   "optimizer": "adamw",
+   "paper_steps": 200000,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0001,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "008c979cf9f7",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "93d1972908a8a49bbdb4cf6eaeed3d24ad554071c32400c4b88099d49590a365",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_genie_s_s2.json"
  },
  "gpt_s_kd": {
   "bytes": 49730703,

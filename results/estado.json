@@ -84,6 +84,16 @@
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-18"
  },
+ "results/eval_genie_s_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-035227-5b15: python -m src.cli genie evaluar '--tamaño' s --semilla 1 --pasos 8",
+  "fecha": "2026-11-19"
+ },
+ "results/eval_genie_s_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-035951-1c31: python -m src.cli genie evaluar '--tamaño' s --semilla 2 --pasos 8",
+  "fecha": "2026-11-19"
+ },
  "results/eval_gpt2m.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-082302-5342: python -m src.cli gpt2m evaluar",
@@ -179,6 +189,16 @@
   "motivo": "bitácora 20261118-041132-ab00: python -m src.cli convlstm_px entrenar",
   "fecha": "2026-11-18"
  },
+ "results/train_convlstm_px_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-005501-6c5e: python -m src.cli convlstm_px entrenar --semilla 1",
+  "fecha": "2026-11-19"
+ },
+ "results/train_convlstm_px_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-022511-73f8: python -m src.cli convlstm_px entrenar --semilla 2",
+  "fecha": "2026-11-19"
+ },
  "results/train_decoder_lewm.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-105625-72de: python -m src.cli lewm demo --entrenar-decoder",
@@ -218,6 +238,16 @@
   "estado": "vigente",
   "motivo": "bitácora 20261118-031610-5f83: python -m src.cli genie entrenar '--tamaño' s",
   "fecha": "2026-11-18"
+ },
+ "results/train_genie_s_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-004056-976b: python -m src.cli genie entrenar '--tamaño' s --semilla 1",
+  "fecha": "2026-11-19"
+ },
+ "results/train_genie_s_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-004757-9b63: python -m src.cli genie entrenar '--tamaño' s --semilla 2",
+  "fecha": "2026-11-19"
  },
  "results/train_gpt_humo_fuente.json": {
   "estado": "vigente",
@@ -329,6 +359,16 @@
   "motivo": "bitácora 20261118-082005-1a6a: python -m src.cli convlstm_px evaluar",
   "fecha": "2026-11-18"
  },
+ "results/video_convlstm_px_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-040708-76af: python -m src.cli convlstm_px evaluar --semilla 1",
+  "fecha": "2026-11-19"
+ },
+ "results/video_convlstm_px_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-040959-d426: python -m src.cli convlstm_px evaluar --semilla 2",
+  "fecha": "2026-11-19"
+ },
  "results/video_genie_s_p1.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
@@ -363,6 +403,16 @@
   "estado": "vigente",
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-18"
+ },
+ "results/video_genie_s_s1_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-035227-5b15: python -m src.cli genie evaluar '--tamaño' s --semilla 1 --pasos 8",
+  "fecha": "2026-11-19"
+ },
+ "results/video_genie_s_s2_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-035951-1c31: python -m src.cli genie evaluar '--tamaño' s --semilla 2 --pasos 8",
+  "fecha": "2026-11-19"
  },
  "results/video_gpt2m.json": {
   "estado": "vigente",
