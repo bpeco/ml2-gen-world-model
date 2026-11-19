@@ -45,7 +45,7 @@
     ],
     [
      "early stopping",
-     "se entrena el presupuesto completo; train.py guarda el \u00faltimo estado",
+     "se entrena el presupuesto completo; train.py guarda el \u00c3\u00baltimo estado",
      "presupuesto"
     ],
     [
@@ -55,13 +55,13 @@
     ],
     [
      "fp32",
-     "el paper no publica la precisi\u00f3n",
+     "el paper no publica la precisi\u00c3\u00b3n",
      "propio"
     ]
    ],
    "frames": 20,
    "frameskip": 1,
-   "fuente": "Shi et al. 2015 (arXiv 1506.04214) \u00a74.1",
+   "fuente": "Shi et al. 2015 (arXiv 1506.04214) \u00c2\u00a74.1",
    "grad_clip": 1.0,
    "lr_segs": [
     {
@@ -81,6 +81,9 @@
    "wd_on": "todos"
   },
   "receta_hash": "c23ba4babe55",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
   "sha256": "7021f53d216cc1f96400a4073da65b72e37283d8dc323b2eec1852f0316ed725",
   "step": 9750,
   "tokens": 100620000,
@@ -125,7 +128,7 @@
     ],
     [
      "lr",
-     "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_genie.json)",
+     "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligi\u00c3\u00b3 x10 entre fuente, ra\u00c3\u00adz, x3, x10 y x30 (results/humo_genie.json)",
      "presupuesto"
     ],
     [
@@ -135,7 +138,7 @@
     ],
     [
      "lr_segs",
-     "coseno hasta el 10 % del m\u00e1ximo tras el warmup: Genie no publica la forma para la din\u00e1mica",
+     "coseno hasta el 10 % del m\u00c3\u00a1ximo tras el warmup: Genie no publica la forma para la din\u00c3\u00a1mica",
      "propio"
     ],
     [
@@ -173,6 +176,9 @@
    "wd_on": "matrices"
   },
   "receta_hash": "008c979cf9f7",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
   "sha256": "765fa4c6a9a1ac3a696cea3254771ad54fe3943e62191c0c2d07a9842debd6c0",
   "step": 1524,
   "tokens": 100657152,
@@ -215,7 +221,7 @@
     ],
     [
      "lr",
-     "1e-3 (x10 del 1e-4 de IRIS): con ~2.440 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_gpt.json)",
+     "1e-3 (x10 del 1e-4 de IRIS): con ~2.440 pasos, el humo de 300 pasos eligi\u00c3\u00b3 x10 entre fuente, ra\u00c3\u00adz, x3, x10 y x30 (results/humo_gpt.json)",
      "presupuesto"
     ],
     [
@@ -224,7 +230,7 @@
      "presupuesto"
     ],
     [
-     "tama\u00f1o",
+     "tama\u00c3\u00b1o",
      "6x384 / 8x512 en vez de 24x1024",
      "presupuesto"
     ]
@@ -251,6 +257,9 @@
    "wd_on": "lineales"
   },
   "receta_hash": "7c117183649e",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
   "sha256": "2bdaa331a6e2de1a8f28b7be1bad2117d6d580478de998693c617ecbb661e1d7",
   "step": 2438,
   "tokens": 100640640,
@@ -287,6 +296,9 @@
   "extras": {
    "lewm/decoder.pt": {
     "bytes": 41663430,
+    "remotes": {
+     "hf": "KevinSoulier/ml2-gen-world-model"
+    },
     "sha256": "49702eef56e9caf15547cc61145dd33cd1f09d315acfd684834e729c47e500f2"
    }
   },
@@ -358,6 +370,9 @@
    "wd_on": "todos"
   },
   "receta_hash": "9bae95a09ba4",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
   "sha256": "5752d8cafa45d86e2829e160b14d9fb700f05fd327626448e7936255f2ab89c8",
   "step": 1524,
   "tokens": 100657152,
@@ -406,7 +421,7 @@
    "forzado": [
     [
      "batch",
-     "32 efectivo (16 x accum 2) en vez de 256: con el presupuesto com\u00fan de 780k frames da ~1.5k pasos (con 256 ser\u00edan ~190). El lr queda el del paper: el humo de 300 pasos lo eligi\u00f3 entre fuente, ra\u00edz y x3, con diferencias menores al 1 % (results/humo_vjepa2_ac.json)",
+     "32 efectivo (16 x accum 2) en vez de 256: con el presupuesto com\u00c3\u00ban de 780k frames da ~1.5k pasos (con 256 ser\u00c3\u00adan ~190). El lr queda el del paper: el humo de 300 pasos lo eligi\u00c3\u00b3 entre fuente, ra\u00c3\u00adz y x3, con diferencias menores al 1 % (results/humo_vjepa2_ac.json)",
      "presupuesto"
     ],
     [
@@ -427,7 +442,7 @@
    ],
    "frames": 16,
    "frameskip": 5,
-   "fuente": "V-JEPA 2 (arXiv 2506.09985) \u00a73.1; configs/train/vitg16/droid-256px-8f.yaml",
+   "fuente": "V-JEPA 2 (arXiv 2506.09985) \u00c2\u00a73.1; configs/train/vitg16/droid-256px-8f.yaml",
    "grad_clip": null,
    "lr_segs": [
     {
@@ -461,6 +476,9 @@
    "wd_on": "matrices"
   },
   "receta_hash": "fc9176850076",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
   "sha256": "5bbad490571b7493807f6abd737429e991cbe44b391bb3d8bd5cf4f50dcff6a8",
   "step": 1524,
   "tokens": 100657152,
@@ -500,6 +518,9 @@
   "extras": {
    "vjepa2_s_viz/decoder.pt": {
     "bytes": 20166329,
+    "remotes": {
+     "hf": "KevinSoulier/ml2-gen-world-model"
+    },
     "sha256": "555f7fedf91e7493d5373d9d00ee5609125e1e66e006e3319de4cecb2d775f11"
    }
   },
@@ -577,6 +598,9 @@
    "wd_on": "matrices"
   },
   "receta_hash": "1cf2f40f3096",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
   "sha256": "2cfdd73d62a79ab07624a39afa318c339981beab4eb18942310ba8ee44fc7e99",
   "step": 1524,
   "tokens": 100657152,
