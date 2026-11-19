@@ -428,6 +428,12 @@ class Toolkit:
   def _cmd(self, modulo, *args, o=None, env=True):
     return Cmd([PY, "-m", modulo, *[str(a) for a in args]], self._env(o or {}) if env else {})
 
+  def _registrar(self, run, *extras):
+    """Anota la corrida (y sus extras, p. ej. un decoder) en results/checkpoints.json y la sube al almacén del equipo
+    (Hugging Face). Sin sesión de HF, o si la subida falla, el push avisa y sale con 0: nunca corta la cola."""
+    reg = ["register", run] + [x for e in extras for x in ("--extra", e)]
+    return [self._cmd("src.store", *reg, env=False), self._cmd("src.store", "push", run, "--si-hay-sesion", env=False)]
+
   def _plan_receta(self, o, extra, avisos):
     sets, config = parsear_set(self.modelo, o.get("set"), "receta")
     args = [self.modelo]
@@ -476,7 +482,7 @@ class Toolkit:
       a += ["--presupuesto", o["presupuesto"]]
     cmds = [self._cmd("src.train", *a, *extra, o=o)]
     if not o.get("limite"):  # una corrida completa se anota en results/checkpoints.json (se carga después por nombre)
-      cmds.append(self._cmd("src.store", "register", run, env=False))
+      cmds += self._registrar(run)
     return cmds
 
   def _chequear_existente(self, runs, o):
@@ -581,7 +587,7 @@ class Toolkit:
       nueva = self._nombre_extension(run, o["presupuesto"], rec)
       cmds = [self._cmd("src.train", *a, *extra, o=o)]
       if not o.get("limite"):
-        cmds.append(self._cmd("src.store", "register", nueva, env=False))
+        cmds += self._registrar(nueva)
       return cmds
     if o.get("restart"):
       raise ToolkitError("--restart necesita --presupuesto (es la forma de extender una receta coseno)")
@@ -608,7 +614,7 @@ class Toolkit:
       a += ["--max-steps", o["limite"]]
     cmds = [self._cmd("src.train", *a, *extra, o=o)]
     if not o.get("limite"):
-      cmds.append(self._cmd("src.store", "register", run, env=False))
+      cmds += self._registrar(run)
     return cmds
 
   def _nombre_extension(self, run, presupuesto, rec):
@@ -814,6 +820,7 @@ class Toolkit:
       if self.modelo == "lewm":
         a = ["--run", run]
         mod = "src.train_decoder"
+        dueño, dec = run, rutas.ckpt() / run / "decoder.pt"
       else:
         enc = o.get("encoder") or (run if self.modelo == "vjepa2" else self._encoder_guardado(run))
         if not enc:
@@ -821,11 +828,15 @@ class Toolkit:
                              f"(no lo encuentro en {rutas.ckpt() / run})")
         a = ["--run", enc]
         mod = "src.models.vjepa.train_decoder"
+        dueño, dec = enc, rutas.ckpt() / f"{enc}_viz" / "decoder.pt"
       if o.get("limite"):
         a += ["--steps", o["limite"]]
       if o.get("semilla") is not None:
         a += ["--seed", o["semilla"]]
-      return [self._cmd(mod, *a, *extra, o=o)]
+      cmds = [self._cmd(mod, *a, *extra, o=o)]
+      if not o.get("limite"):  # el decoder completo queda como extra de su corrida, con su sha256, y se sube con ella
+        cmds += self._registrar(dueño, dec.as_posix())
+      return cmds
     if self.evaluacion == "latente":  # decodificación, máscaras y curva de error: --segment, --start, --decoder, --mp4 van después de `--`
       return [self._cmd("src.infer.demo_latente", "--model", self._spec(o), *extra, o=o)]
     pasos = _lista_csv(o["pasos"]) if o.get("pasos") else [None]

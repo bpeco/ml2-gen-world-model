@@ -6,16 +6,17 @@ Cómo entrenar, evaluar, medir y mostrar cualquier modelo del repo con las misma
 
 1. [Cómo está armado](#cómo-está-armado)
 2. [Instalación y uso por sistema](#instalación-y-uso-por-sistema)
-3. [Datos](#datos)
-4. [La CLI](#la-cli)
-5. [La cola](#la-cola)
-6. [Bitácora](#bitácora)
-7. [Seguimiento](#seguimiento)
-8. [Continuar un entrenamiento](#continuar-un-entrenamiento)
-9. [Notebooks](#notebooks)
-10. [Dispositivos e inferencia](#dispositivos-e-inferencia)
-11. [Resultados y reporte](#resultados-y-reporte)
-12. [Verificar el repo](#verificar-el-repo)
+3. [Modelos entrenados (Hugging Face)](#modelos-entrenados-hugging-face)
+4. [Datos](#datos)
+5. [La CLI](#la-cli)
+6. [La cola](#la-cola)
+7. [Bitácora](#bitácora)
+8. [Seguimiento](#seguimiento)
+9. [Continuar un entrenamiento](#continuar-un-entrenamiento)
+10. [Notebooks](#notebooks)
+11. [Dispositivos e inferencia](#dispositivos-e-inferencia)
+12. [Resultados y reporte](#resultados-y-reporte)
+13. [Verificar el repo](#verificar-el-repo)
 
 ## Cómo está armado
 
@@ -156,10 +157,9 @@ git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq
 - **Operaciones sin soporte en MPS:** `export PYTORCH_ENABLE_MPS_FALLBACK=1` hace que caigan a la CPU en vez de fallar.
 - **Qué anda bien:** la CLI (`receta`, `estado`, `--dry-run`), los notebooks, las demos de clase, la evaluación y la inferencia de los modelos ya entrenados (con `--limite` para probar rápido) y el bench de latencia.
 - **Qué es lento:** entrenar las recetas completas (780.000 frames por modelo): están pensadas para una GPU NVIDIA de 12 GB. Los CUDA graphs y el fp16 con graphs de la inferencia son de CUDA; en Mac la latencia no es comparable con la de las tablas. Para probar, usá `--limite`.
-- **Los checkpoints no se suben a ningún lado.** Para correr una demo con modelos entrenados en otra máquina, copiá `checkpoints/<run>/final.pt` y `results/train_<run>.json` a las mismas carpetas del repo del Mac y registrá la corrida:
+- **Los modelos entrenados se bajan solos de Hugging Face** ([Modelos entrenados](#modelos-entrenados-hugging-face)). La demo corre igual que en cualquier máquina:
 
 ```bash
-python -m src.store register genie_s
 python -m src.cli genie demo --tamaño s --pasos 4 --limite 100
 ```
 
@@ -177,6 +177,22 @@ python -m src.cli genie bench --tamaño s --pasos 4 --cadena --aleatorio --devic
 ```
 
 Para la NPU hay que exportar el codec a ONNX (`python -m src.cli codec exportar`) y medir con `python -m src.infer.bench_ort` eligiendo el provider de cada etapa (`--enc vitisai`, `--dec dml`); `--profile` dice cuántos nodos caen en la CPU. La NPU está sin probar en la máquina de desarrollo.
+
+## Modelos entrenados (Hugging Face)
+
+Los modelos de la tabla de resultados y sus decoders están en un repo público de Hugging Face, el del equipo (`HF_REPO` en [`src/store.py`](../src/store.py)). `results/checkpoints.json`, que va en git, dice qué hay y el sha256 de cada archivo.
+
+- **Bajar no pide nada:** `load_model("<run>")`, `evaluar`, `bench` y `demo` bajan el `final.pt` que falte, y la demo también el decoder, sin cuenta ni login. El archivo queda solo si el sha256 coincide con el manifiesto.
+- **Lo local no se pisa:** si un archivo local no coincide con el manifiesto, queda al lado como `<nombre>.local-<sha>` antes de bajar el del repo.
+- **Subir pide sesión:** `hf auth login`, con permiso de escritura en el repo. Con la sesión iniciada, `entrenar` sube la corrida al terminar y `demo --entrenar-decoder` sube el decoder; sin sesión, avisan y la cola sigue.
+- **Qué se sube:** solo lo registrado en el manifiesto, o sea las corridas completas y sus decoders. Los humos, las pruebas con `--limite`, `last.pt` y `pre_decay.pt` quedan locales.
+
+```bash
+python -m src.store pull --all        # baja todos los modelos y decoders de una vez
+python -m src.store push lewm_lrx3    # sube a mano una corrida registrada (y sus decoders)
+python -m src.store list              # qué hay, si está local y dónde está subido
+python -m src.store verify            # compara cada archivo local con su sha256
+```
 
 ## Datos
 

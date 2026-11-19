@@ -47,7 +47,8 @@ def buscar_decoder(model, spec, explicito=None):
   else:  # vjepa2: <run>_viz; vjepa2_ac: el del encoder vjepa2 en el que se apoya, o el propio
     enc = getattr(model.cfg, "encoder_run", "") or ""
     cand = [CKPT / f"{run_name(enc)}_viz" / "decoder.pt"] * bool(enc) + [CKPT / f"{run}_viz" / "decoder.pt"]
-  return next((c for c in cand if c.exists()), None)
+  from src import store  # si está anotado en el manifiesto y falta acá, lo baja del almacén (Hugging Face)
+  return next((c for c in cand if store.ensure_file(c) is not None), None)
 
 
 def cargar_decoder(model, ruta, dev):

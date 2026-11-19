@@ -17,6 +17,7 @@ def env(tmp_path, monkeypatch):
   monkeypatch.setattr(store, "ROLL_DIR", tmp_path / "results" / "rollouts")
   monkeypatch.delenv("ML2_STORE_DIR", raising=False)
   monkeypatch.delenv("ML2_HF_REPO", raising=False)
+  monkeypatch.setattr(store, "HF_REPO", None)  # sin el repo del equipo: los tests no salen a la red
   (tmp_path / "results").mkdir()
   return tmp_path
 
@@ -70,6 +71,7 @@ def test_roundtrip_dir(env):
 
 def test_pull_cli_y_skip(env, capsys):
   p = make_run(env, "a")
+  store.register("a")  # push --all sube lo registrado en el manifiesto
   remote = env / "remote"
   store.main(["push", "--all", "--dir", str(remote)])
   p.unlink()
@@ -110,8 +112,11 @@ def test_corrupto(env, monkeypatch, capsys):
   with pytest.raises(SystemExit):
     store.main(["verify"])
   monkeypatch.setenv("ML2_STORE_DIR", str(remote))
+  malo = p.read_bytes()
   store.ensure_local("a")
   assert p.read_bytes() == good and store.verify() == []
+  apartes = list(p.parent.glob("final.pt.local-*"))  # la copia local distinta no se pisa: queda al lado
+  assert len(apartes) == 1 and apartes[0].read_bytes() == malo
 
 
 def test_fetch_rechaza_hash_malo(env):
@@ -198,6 +203,11 @@ def test_hf_mock(env, monkeypatch):
   import huggingface_hub
   monkeypatch.setattr(huggingface_hub, "HfApi", FakeApi)
   monkeypatch.setattr(huggingface_hub, "hf_hub_download", fake_download)
+
+  def sin_red(repo, rel, dest):  # la bajada por partes falla: queda hf_hub_download
+    raise OSError("sin red")
+
+  monkeypatch.setattr(store, "bajar_hf", sin_red)
   p = make_run(env, "a")
   want = p.read_bytes()
   store.main(["push", "a", "--hf", "user/repo", "--create"])
@@ -221,3 +231,165 @@ def test_hf_sin_sesion(env, monkeypatch):
   make_run(env, "a")
   with pytest.raises(SystemExit, match="hf auth login"):
     store.main(["push", "a", "--hf", "user/repo"])
+
+
+@pytest.fixture
+def servidor():
+  """Servidor HTTP local que respeta (o no) los pedidos Range."""
+  import http.server
+  import threading
+
+  class H(http.server.BaseHTTPRequestHandler):
+    datos, respeta = b"", True
+
+    def do_GET(self):
+      rng, d = self.headers.get("Range"), H.datos
+      if rng and H.respeta:
+        ini, fin = (int(x) for x in rng.split("=")[1].split("-"))
+        cuerpo = d[ini:fin + 1]
+        self.send_response(206)
+        self.send_header("Content-Range", f"bytes {ini}-{fin}/{len(d)}")
+      else:
+        cuerpo = d
+        self.send_response(200)
+      self.send_header("Content-Length", str(len(cuerpo)))
+      self.end_headers()
+      self.wfile.write(cuerpo)
+
+    def log_message(self, *a):
+      pass
+
+  srv = http.server.ThreadingHTTPServer(("127.0.0.1", 0), H)
+  threading.Thread(target=srv.serve_forever, daemon=True).start()
+  yield H, f"http://127.0.0.1:{srv.server_address[1]}/f"
+  srv.shutdown()
+  srv.server_close()
+
+
+def test_bajar_por_partes(servidor, tmp_path):
+  H, url = servidor
+  H.datos = bytes(range(256)) * 400
+  dest = tmp_path / "f.bin"
+  store.bajar_por_partes(url, len(H.datos), dest, partes=7, min_parte=1000)
+  assert dest.read_bytes() == H.datos
+  H.respeta = False  # un servidor que ignora el Range: error, no un archivo armado con pedazos repetidos
+  with pytest.raises(RuntimeError, match="Range"):
+    store.bajar_por_partes(url, len(H.datos), tmp_path / "g.bin", partes=4, min_parte=1000)
+
+
+def test_hf_baja_sin_login_y_el_token_no_va_al_cdn(env, monkeypatch):
+  import huggingface_hub
+
+  class SinSesion:
+    def whoami(self):
+      raise OSError("401")
+
+  class Meta:
+    pass
+
+  loc, vistos, pedidos = ["https://cas-bridge.xethub.hf.co/x?firma=1"], [], []
+
+  def meta(url, **kw):
+    m = Meta()
+    m.location, m.size = loc[0], 10
+    vistos.append(url)
+    return m
+
+  monkeypatch.setattr(huggingface_hub, "HfApi", SinSesion)
+  monkeypatch.setattr(huggingface_hub, "get_hf_file_metadata", meta)
+  monkeypatch.setattr(huggingface_hub, "get_token", lambda: "tok")
+  monkeypatch.setattr(store, "bajar_por_partes", lambda url, size, dest, headers=None: pedidos.append((url, size, headers)))
+  s = store.HfStore("user/repo")
+  s.get("checkpoints/a/final.pt", env / "x")  # no llama a whoami: un repo público se baja sin sesión
+  assert vistos == ["https://huggingface.co/user/repo/resolve/main/checkpoints/a/final.pt"]
+  assert pedidos[-1] == (loc[0], 10, {})  # la URL firmada del CDN no recibe el token
+  loc[0] = "https://huggingface.co/user/repo/resolve/main/chico.json"
+  s.get("chico.json", env / "y")
+  assert pedidos[-1][2] == {"Authorization": "Bearer tok"}
+
+
+def test_hf_crea_publico(env, monkeypatch):
+  import huggingface_hub
+  creados = []
+
+  class Api:
+    def whoami(self):
+      return {"name": "x"}
+
+    def create_repo(self, repo, **kw):
+      creados.append(kw["private"])
+
+    def upload_file(self, **kw):
+      pass
+
+  monkeypatch.setattr(huggingface_hub, "HfApi", Api)
+  make_run(env, "a")
+  store.main(["push", "a", "--hf", "user/repo", "--create", "--publico"])
+  assert creados == [False]
+
+
+def test_extras_decoder_se_suben_y_se_bajan(env):
+  make_run(env, "a")
+  dec = env / "checkpoints" / "a_viz" / "decoder.pt"
+  dec.parent.mkdir(parents=True)
+  dec.write_bytes(b"decoder" * 100)
+  store.register("a")
+  store.main(["register", "a", "--extra", str(dec)])
+  x = store.load_manifest()["a"]["extras"]["a_viz/decoder.pt"]
+  assert x == {"sha256": store.sha256(dec), "bytes": 700}
+  remote = env / "remote"
+  store.push(["a"], [store.DirStore(remote)])
+  assert (remote / "checkpoints" / "a_viz" / "decoder.pt").read_bytes() == dec.read_bytes()
+  assert store.load_manifest()["a"]["extras"]["a_viz/decoder.pt"]["remotes"] == {"dir": str(remote)}
+  store.register("a")  # re-registrar la corrida no pierde sus extras ni sus remotos
+  assert store.load_manifest()["a"]["extras"]["a_viz/decoder.pt"]["remotes"] == {"dir": str(remote)}
+  want = dec.read_bytes()
+  dec.unlink()
+  assert store.ensure_file(dec) == dec and dec.read_bytes() == want  # lo baja del remoto anotado
+  assert store.ensure_file(env / "checkpoints" / "otro.pt") is None  # ni anotado ni local
+  assert store.verify() == [] and "a_viz/decoder.pt" in store.list_runs()
+  with pytest.raises(KeyError):
+    store.register_extra("nadie", dec)
+
+
+def test_push_si_hay_sesion_nunca_corta(env, monkeypatch, capsys):
+  import huggingface_hub
+  make_run(env, "a")
+  store.main(["push", "a", "--si-hay-sesion"])
+  assert "no hay almacén" in capsys.readouterr().out
+  monkeypatch.setattr(huggingface_hub, "get_token", lambda: None)
+  store.main(["push", "a", "--si-hay-sesion", "--hf", "user/repo"])
+  assert "no hay sesión" in capsys.readouterr().out
+
+  class Falla(store.DirStore):
+    def put(self, local, rel):
+      raise PermissionError("403")
+
+  assert store.push_si_se_puede(["a"], [Falla(env / "r")]) is False
+  assert "no pude subir a" in capsys.readouterr().out and "remotes" not in store.load_manifest()["a"]
+
+
+def test_push_all_sube_solo_lo_registrado(env):
+  make_run(env, "a")
+  make_run(env, "a_humo_x3")  # terminado pero sin registrar, como los humos
+  store.register("a")
+  remote = env / "remote"
+  store.main(["push", "--all", "--dir", str(remote)])
+  assert (remote / "checkpoints" / "a" / "final.pt").exists() and not (remote / "checkpoints" / "a_humo_x3").exists()
+
+
+def test_cli_registra_y_sube_al_terminar(tmp_path, monkeypatch):
+  from src import rutas
+  from src.toolkit import Toolkit
+  monkeypatch.setattr(rutas, "CKPT", tmp_path / "checkpoints")
+  monkeypatch.setattr(rutas, "RESULTS", tmp_path / "results")
+  cola = [c.argv[2:] for c in Toolkit("lewm").plan("entrenar").comandos][-2:]
+  assert cola == [["src.store", "register", "lewm"], ["src.store", "push", "lewm", "--si-hay-sesion"]]
+  dec = [c.argv[2:] for c in Toolkit("lewm").plan("demo", entrenar_decoder=True).comandos]
+  ruta = (tmp_path / "checkpoints" / "lewm" / "decoder.pt").as_posix()
+  assert dec[1:] == [["src.store", "register", "lewm", "--extra", ruta], ["src.store", "push", "lewm", "--si-hay-sesion"]]
+  vj = [c.argv[2:] for c in Toolkit("vjepa2_ac").plan("demo", entrenar_decoder=True, encoder="vjepa2_s").comandos]
+  assert vj[1] == ["src.store", "register", "vjepa2_s", "--extra",
+                   (tmp_path / "checkpoints" / "vjepa2_s_viz" / "decoder.pt").as_posix()]
+  assert len(Toolkit("lewm").plan("demo", entrenar_decoder=True, limite=10).comandos) == 1  # una prueba corta no se sube
+  assert not any("src.store" in c.argv for c in Toolkit("lewm").plan("entrenar", humo=True).comandos)

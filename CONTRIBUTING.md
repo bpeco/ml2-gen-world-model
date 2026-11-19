@@ -26,7 +26,7 @@ Todo resultado que entra al repo sale de `python -m src.cli ...` o de la cola (`
 - Un hiperparámetro se cambia con `--set` (queda como desvío) o con un commit a la receta; nunca editando un archivo a mano.
 - Un bug se arregla por el camino normal: un test que lo reproduce, el arreglo, `python -m src.cli verificar` en verde y un commit; después se repite el mismo comando con `python -m src.cli bitacora repetir <id>`.
 - Las acciones de GPU no corren con cambios sin commitear en `src/` o `scripts/`; `--permitir-sucio` deja pasar la acción, pero el resultado no cuenta como `vigente`.
-- No se commitean checkpoints (`checkpoints/` queda local); cada uno entrena lo que necesita.
+- Los checkpoints de la tabla y sus decoders se comparten por Hugging Face: la CLI los sube al terminar de entrenar (con `hf auth login`) y los baja cuando faltan ([`Docs/uso.md`](Docs/uso.md#modelos-entrenados-hugging-face)). Nunca entran a git; los humos, `last.pt` y `pre_decay.pt` quedan locales.
 
 ### Reglas de experimentos
 
@@ -93,4 +93,4 @@ Todos los `--device` del repo salen de ese registro: el backend nuevo aparece en
 - [ ] Los resultados tienen su intervalo por segmento, su referencia y su entrada en la bitácora, con el árbol limpio.
 - [ ] No quedan huérfanos en `results/` ni en `checkpoints.json`.
 - [ ] Los docs no tienen números escritos a mano: `python scripts/check_docs.py` da 0 problemas.
-- [ ] Ningún checkpoint ni dato pesado entró al commit.
+- [ ] Ningún checkpoint ni dato pesado entró al commit: los modelos van a Hugging Face.
