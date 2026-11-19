@@ -853,7 +853,9 @@ def test_accion_concurrente_no_se_queda_con_el_resultado(entorno, monkeypatch, t
   d = json.loads(f.read_text())
   assert d["x"] == 1 and d["_bitacora"]["id"] == "eval" and "x evaluar" in d["_bitacora"]["comando"]   # sello corregido
   assert bitacora.verificar(estado) == []
-  bitacora.registrar({**ev, "id": "eval2", "fecha": "2026-11-18T22:00:00"})  # en secuencia manda la última, como siempre
+  bitacora.registrar({**ev, "id": "eval2", "fecha": "2026-11-18T22:00:00"})  # una corrida posterior en secuencia
+  assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "eval"   # no lo reescribió: manda el sello
+  bitacora.anotar_json([f], {**ev, "id": "eval2"})                                    # sí lo escribió (el ejecutor lo sella)
   assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "eval2"
 
 
@@ -864,3 +866,28 @@ def test_el_ejecutor_no_reclama_lo_de_otra_accion(entorno, monkeypatch):
   ejecutor.ejecutar(juguete(escribe=(destino, {"x": 1})), salida=lambda s: None)
   e = bitacora.leer()[-1]
   assert not any(f.endswith("eval_toy.json") for f in e["escribio"]) and "_bitacora" not in json.loads(destino.read_text())
+
+
+def test_cambiar_solo_el_sello_no_es_escribir(entorno):
+  """Trabajo 13: `lewm entrenar` (una hora) se quedó con latent_vjepa2_ac.json porque `vigentes` le corrigió el sello
+  mientras corría."""
+  rutas.results().mkdir(parents=True)
+  f = rutas.results() / "eval_x.json"
+  f.write_text(json.dumps({"x": 1}))
+  antes = bitacora.instantanea()
+  bitacora.anotar_json([f], {"id": "otra", "argv_texto": "x", "commit": "abc123"})
+  assert bitacora.archivos_escritos(antes, bitacora.instantanea()) == []
+  f.write_text(json.dumps({"x": 2, "_bitacora": json.loads(f.read_text())["_bitacora"]}))
+  assert [Path(p).name for p in bitacora.archivos_escritos(antes, bitacora.instantanea())] == ["eval_x.json"]
+
+
+def test_manda_el_sello_del_json(entorno):
+  rutas.results().mkdir(parents=True)
+  f = rutas.results() / "latent_x.json"
+  base = {"limpio": True, "commit": "abc123", "permitir_sucio": False, "salida": 0, "argv": ["x"], "escribio": [str(f)]}
+  bitacora.registrar({**base, "id": "eval", "fecha": "2026-11-18T20:03:12", "duracion_s": 4325.1, "argv_texto": "x evaluar"})
+  bitacora.registrar({**base, "id": "train", "fecha": "2026-11-18T21:15:20", "duracion_s": 3538.0, "argv_texto": "y entrenar"})
+  f.write_text(json.dumps({"x": 1, "_bitacora": {"id": "eval"}}))
+  assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "eval"
+  f.write_text(json.dumps({"x": 1}))  # sin sello: la última que lo reclamó, como antes
+  assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "train"

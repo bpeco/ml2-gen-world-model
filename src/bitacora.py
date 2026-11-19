@@ -11,6 +11,7 @@ A cada JSON de resultados que la acción escribió se le agrega "_bitacora": {id
   python -m src.cli bitacora vigentes           marca `vigente` (results/estado.json) los resultados sin estado que
                                                 escribió una entrada válida; lista los que no puede marcar
 """
+import hashlib
 import json
 import os
 import subprocess
@@ -70,9 +71,29 @@ def _recorrer(raiz):
   return out
 
 
+def _huella_json(p):
+  """Hash del contenido de un JSON sin su "_bitacora", o None si no se puede leer."""
+  try:
+    d = json.loads(Path(p).read_text(encoding="utf-8"))
+  except (OSError, ValueError):
+    return None
+  if isinstance(d, dict):
+    d.pop("_bitacora", None)
+  return hashlib.sha256(json.dumps(d, sort_keys=True, ensure_ascii=False).encode()).hexdigest()
+
+
 def instantanea(run=None):
-  """{ruta: (mtime, tamaño)} de results/ y de checkpoints/<run>/."""
-  snap = {k: v for k, v in _recorrer(rutas.results()).items() if Path(k).name not in SIN_RASTREAR}
+  """{ruta: huella} de results/ y de checkpoints/<run>/: (mtime, tamaño), y para los JSON de results/ el hash de su
+  contenido sin "_bitacora". Así corregir o pisar solo el sello de un resultado no cuenta como escribirlo: una acción
+  larga no se queda con un resultado ajeno porque `vigentes` o la entrada de otra acción le tocó el sello."""
+  snap = {}
+  for k, v in _recorrer(rutas.results()).items():
+    if Path(k).name in SIN_RASTREAR:
+      continue
+    if k.endswith(".json"):
+      h = _huella_json(k)
+      v = ("json", h) if h is not None else v
+    snap[k] = v
   if run:
     snap.update(_recorrer(rutas.ckpt() / run))
   return snap
@@ -208,9 +229,23 @@ def _escritores(entradas):
       reclamos.setdefault(_relativa(f), []).append(i)
   esc = {}
   for f, idx in reclamos.items():
-    propios = [i for i in idx if not any(_concurrente(ventanas[j], ventanas[i]) for j in idx if j != i)]
-    esc[f] = entradas[(propios or idx)[-1]]
+    propios = [i for i in idx if not any(_concurrente(ventanas[j], ventanas[i]) for j in idx if j != i)] or idx
+    sello = _sello(f)  # el JSON dice qué entrada lo escribió: manda si es una de las que lo reclaman
+    esc[f] = entradas[next((i for i in reversed(propios) if sello and entradas[i].get("id") == sello), propios[-1])]
   return esc
+
+
+def _sello(f):
+  """El id de "_bitacora" de un JSON de resultados, o None."""
+  p = Path(f)
+  if p.suffix != ".json" or not p.exists():
+    return None
+  try:
+    d = json.loads(p.read_text(encoding="utf-8"))
+  except (OSError, ValueError):
+    return None
+  b = d.get("_bitacora") if isinstance(d, dict) else None
+  return b.get("id") if isinstance(b, dict) else None
 
 
 def _resellar(k, e):
