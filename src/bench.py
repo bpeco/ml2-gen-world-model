@@ -73,11 +73,27 @@ def es_latente(model):
   return type(model).__name__ in ("LeWM", "VJEPA2", "VJEPA2AC")
 
 
+def es_encoder_solo(model):
+  """V-JEPA 2 sin acciones no predice en línea: su bench es el target encoder sobre un clip (Docs/modelos/vjepa2.md)."""
+  return type(model).__name__ == "VJEPA2"
+
+
+def unidad(model):
+  if es_encoder_solo(model):
+    return f"clip del encoder ({model.cfg.frames} frames a 4 Hz, uno por paso de modelo de 250 ms)"
+  return "paso de modelo (250 ms de video)" if es_latente(model) else "frame"
+
+
 def preparar_stream(model, ctx, dev, graphs, steps=None, ctx_frames=None):
   """(stream, paso) con el contexto lleno; paso() es la unidad del protocolo y devuelve su salida."""
   from src.infer.stream import make_stream
   from src.pixels import render
   kw = dict(graphs=graphs)
+  if es_encoder_solo(model):                             # el clip se arma una vez en el device; se mide el encoder
+    cam = render(ctx)[0]
+    img = cam[torch.arange(model.cfg.frames, device=cam.device) % len(cam)][None]
+    clip = model.clip(img)
+    return None, lambda: model.features(clip)
   if getattr(model, "output", "tokens") == "pixels":    # convlstm_px: entra un frame de cámara y sale el predicho
     cam = render(ctx)[0]
     stream, i = make_stream(model, **kw), [0]
@@ -214,7 +230,7 @@ def main(argv=None):
   res = {
     "name": name, "model": "decoder" if a.decoder else a.model, "variant": variant, "decoder": a.decoder,
     "median_ms": med, "p50_ms": med, "p99_ms": pc["p99"], "p10_ms": pc["p10"], "p90_ms": pc["p90"], "max_ms": pc["max"],
-    "mean_ms": pc["mean"], "fps": 1000 / med, "realtime": med < (250 if es_latente(model) else 50), "unidad": "paso de modelo (250 ms de video)" if es_latente(model) else "frame",
+    "mean_ms": pc["mean"], "fps": 1000 / med, "realtime": med < (250 if es_latente(model) else 50), "unidad": unidad(model),
     "params": sum(p.numel() for p in model.parameters()),
     "peak_mem_mb": torch.cuda.max_memory_allocated() / 2**20 if dev.type == "cuda" else None,
     "dtype": a.dtype, "graphs": a.graphs, "graphs_usados": info["graphs_usados"], "graphs_error": info["graphs_error"], "int8": a.int8, "int8_method": method, "steps": a.steps,
