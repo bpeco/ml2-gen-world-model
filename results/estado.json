@@ -34,6 +34,11 @@
   "motivo": "bitácora 20261118-111117-05f1: python -m src.cli lewm evaluar",
   "fecha": "2026-11-18"
  },
+ "results/latent_lewm_lrx3.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-222920-f8dd: python -m src.cli lewm evaluar --variante lrx3",
+  "fecha": "2026-11-18"
+ },
  "results/latent_vjepa2_ac.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-200312-e905: python -m src.cli vjepa2_ac evaluar",
@@ -52,6 +57,11 @@
  "results/train_decoder_lewm.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-105625-72de: python -m src.cli lewm demo --entrenar-decoder",
+  "fecha": "2026-11-18"
+ },
+ "results/train_decoder_lewm_lrx3.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-221418-cd86: python -m src.cli lewm demo --entrenar-decoder --variante lrx3",
   "fecha": "2026-11-18"
  },
  "results/train_genie_humo_fuente.json": {
@@ -137,6 +147,11 @@
  "results/train_lewm_humo_x30.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-125920-0cb9: python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
+  "fecha": "2026-11-18"
+ },
+ "results/train_lewm_lrx3.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-211520-fd8a: python -m src.cli lewm entrenar --variante lrx3 --set receta.lr_peak=1.5e-4",
   "fecha": "2026-11-18"
  },
  "results/train_vjepa2_ac.json": {

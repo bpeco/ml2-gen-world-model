@@ -192,6 +192,22 @@
   "kd": false
  },
  {
+  "label": "lewm_lrx3",
+  "family": "lewm",
+  "eval": "results/latent_lewm_lrx3.json",
+  "video": null,
+  "bench": null,
+  "params": 18044662,
+  "autoregressive": false,
+  "horizon": true,
+  "group": "principal",
+  "e2e": null,
+  "short": "lewm_lrx3",
+  "size": null,
+  "steps": null,
+  "kd": false
+ },
+ {
   "label": "Real (piso)",
   "family": "baseline",
   "eval": null,
