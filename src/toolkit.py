@@ -765,10 +765,10 @@ class Toolkit:
         return self._plan_bench_ort(o, extra, d or "cpu")
       _exigir_tag(dev, o)
       tag = ["--tag", o["tag"]] if o.get("tag") else []
-      a = (["--device", _dev_torch(d)] if d else []) + (["--frames", o["limite"]] if o.get("limite") else []) + tag
+      a = (["--device", d] if d else []) + (["--frames", o["limite"]] if o.get("limite") else []) + tag
       cmds = [self._cmd("src.infer.bench_codec", *a, *extra, o=o)]
       for dt in (["fp32", "fp16"] if dev != "cpu" else ["fp32"]):  # el decoder del VQ-VAE solo (src.bench --decoder)
-        cmds.append(self._cmd("src.bench", "--decoder", "--dtype", dt, *(["--device", _dev_torch(d)] if d else []), *tag, o=o))
+        cmds.append(self._cmd("src.bench", "--decoder", "--dtype", dt, *(["--device", d] if d else []), *tag, o=o))
       return cmds
     spec = self._spec(o)
     pasos = _lista_csv(o["pasos"]) if o.get("pasos") else [None]
@@ -793,7 +793,7 @@ class Toolkit:
         if o.get("limite"):
           a += ["--frames", o["limite"]]
         if o.get("device"):
-          a += ["--device", _dev_torch(o["device"])]
+          a += ["--device", o["device"]]
         if o.get("tag"):
           a += ["--tag", o["tag"]]
         cmds.append(self._cmd("src.infer.bench_e2e", *a, *extra, o=o))
@@ -811,7 +811,7 @@ class Toolkit:
           if o.get("limite"):
             a += ["--frames", o["limite"]]
           if o.get("device"):
-            a += ["--device", _dev_torch(o["device"])]
+            a += ["--device", o["device"]]
           if o.get("tag"):
             a += ["--tag", o["tag"]]
           cmds.append(self._cmd("src.infer.bench_e2e", *a, *extra, o=o))
@@ -830,7 +830,7 @@ class Toolkit:
       if o.get("int8"):
         a += ["--int8"]
       if o.get("device"):
-        a += ["--device", _dev_torch(o["device"])]
+        a += ["--device", o["device"]]
       if o.get("limite"):
         a += ["--frames", o["limite"]]
       if o.get("tag"):
@@ -925,7 +925,9 @@ def _exigir_tag(dev, o):
 
 
 def _dev_torch(d):
-  """El nombre que entiende torch.device (rocm -> cuda); dml y npu no son de torch: pasan tal cual (ONNX Runtime)."""
+  """El nombre que entiende torch.device (rocm -> cuda), para ML2_DEVICE; dml y npu no son de torch: pasan tal cual (ONNX Runtime).
+  Los --device de src.bench, bench_codec y bench_e2e llevan el nombre del backend (rocm), no este: con `--device cuda` esos
+  scripts exigen una GPU NVIDIA y fallan en una Radeon."""
   try:
     return backends.torch_device(d)
   except ValueError:

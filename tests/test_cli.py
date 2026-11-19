@@ -941,6 +941,12 @@ def test_bench_en_rocm_exige_tag_para_no_pisar_los_de_la_rtx():
   assert a[2] == "src.infer.bench_e2e" and "--tag" not in a
   a = Toolkit("genie").plan("bench", pasos="4", cadena=True, device="rocm", tag="radeon860m").comandos[0].argv
   assert a[a.index("--tag") + 1] == "radeon860m"
+  # el --device de los scripts es el backend (rocm): con `--device cuda` exigen una GPU NVIDIA y fallaban en la Radeon;
+  # ML2_DEVICE sí lleva el nombre de torch (cuda)
+  for c in (*cmds, Toolkit("lewm").plan("bench", device="rocm", tag="x").comandos[0],
+            Toolkit("genie").plan("bench", pasos="4", cadena=True, device="rocm").comandos[0],
+            Toolkit("genie").plan("bench", pasos="4", cadena=True, modo="online", device="rocm").comandos[0]):
+    assert c.argv[c.argv.index("--device") + 1] == "rocm" and c.env == {"ML2_DEVICE": "cuda"}
   assert Toolkit("lewm").plan("bench", device="cpu").comandos     # cpu ya lleva _cpu en el nombre: no lo exige
   assert "--tag" not in Toolkit("lewm").plan("bench", device="cpu").comandos[0].argv
 
