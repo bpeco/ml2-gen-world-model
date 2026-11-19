@@ -87,11 +87,13 @@ def test_pareto_hand_made():
 
 
 def test_spearman_monotone():
-  cfgs = [dict(autoregressive=True, ce_all=c, fvd1=f) for c, f in [(1, 10), (2, 20), (3, 35), (4, 90)]]
+  cfgs = [dict(autoregressive=True, ce_all=c, fvd1=f) for c, f in [(1, 10), (2, 20), (3, 35), (4, 90), (5, 95)]]
   cfgs.append(dict(autoregressive=False, ce_all=9, fvd1=0))     # se ignora
   cfgs.append(dict(autoregressive=True, ce_all=None, fvd1=5))   # se ignora
   rho, p, n, _ = report.correlation(cfgs)
-  assert rho == pytest.approx(1.0) and n == 4
+  assert rho == pytest.approx(1.0) and n == 5
+  # con 3 puntos scipy daba ρ = 1 y p = 0, que no dice nada: por debajo de 5 no se informa
+  assert report.correlation(cfgs[:3])[:3] == (None, None, 3)
 
 
 def test_bench_smoke_cpu(tmp_path):
@@ -133,3 +135,20 @@ def test_las_semillas_no_compiten_en_el_pareto(tmp_path, monkeypatch):
     (tmp_path / n).write_text("{}")
   grupos = {configs.entrada(n)["label"]: configs.entrada(n)["group"] for n in ("convlstm_px", "convlstm_px_s1")}
   assert grupos == {"convlstm_px": "principal", "convlstm_px_s1": "semilla"}
+
+
+def test_fig_latency_modelo_y_cadena(manifest, tmp_path):
+  """La figura de latencia esperaba las variantes fp32/fp16/graphs de la tanda vieja y salía con una sola barra."""
+  cfgs = report.load_configs(manifest, {})
+  for c in cfgs:
+    c["estado"], c["e2e_p99"] = "vigente", (c["ms"] * 1.5 if c["label"] == "gpt_s" else None)
+  report.fig_latency(cfgs, tmp_path / "lat.png")
+  assert (tmp_path / "lat.png").stat().st_size > 0
+
+
+def test_el_destilado_es_autorregresivo(tmp_path, monkeypatch):
+  """gpt_s_kd quedaba fuera de CE contra FVD (H4) porque su familia, gpt_kd, no figuraba como autorregresiva."""
+  from src import configs
+  monkeypatch.setattr(configs, "R", tmp_path)
+  (tmp_path / "eval_gpt_s_kd.json").write_text("{}")
+  assert configs.entrada("gpt_s_kd")["autoregressive"] is True

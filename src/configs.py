@@ -16,7 +16,7 @@ from pathlib import Path
 R = Path("results")
 SUF = re.compile(r"(_p\d+)?(_ctx\d+)?(_t[\d.]+)?(_fp(?:16|32))?(_stream)?$")
 BASELINES = {"unigram": "Unigrama", "transicion": "Transición por celda", "congelado": "Frame congelado", "real": "Real (piso)"}
-AUTOREG = ("gpt", "gpt2m", "transicion")
+AUTOREG = ("gpt", "gpt_kd", "gpt2m", "transicion")   # el destilado también genera de a un token
 
 
 def exists(p):

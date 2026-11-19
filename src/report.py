@@ -40,7 +40,7 @@ FAMILY_NAMES = {"baseline": "baselines de conteo", "gpt": "GPT de cero",
                 "genie": "Genie S (número = pasadas)", "convlstm": "ConvLSTM de píxeles", "gpt2m": "gpt2m de comma (307M)",
                 "ablación": "ablación", "contexto": "contexto",
                 "lewm": "LeWorldModel (un vector por frame)"}
-LATENT_FAMS = ("lewm",)
+LATENT_FAMS = ("lewm", "vjepa2")   # su latencia es por paso de 250 ms o por clip: no va con la de video
 
 plt.rcParams.update({"font.size": 9, "axes.spines.top": False, "axes.spines.right": False,
                      "axes.edgecolor": MUTED, "axes.labelcolor": INK2, "xtick.color": INK2, "ytick.color": INK2,
@@ -206,7 +206,7 @@ def fig_pareto(cfgs, key, ylabel, path, ci):
     if c["family"] not in CON_PASADAS:
       _mark(ax, c["ms"], c[key], c, _err(c, c[key], *ci(c)), hollow=c.get("kd") or c["group"] == "extra")
   lab = {c["short"]: c for c in pts if c["family"] not in CON_PASADAS}
-  pos = {"Transición por celda": (9, 0, "left"), "gpt2m": (-9, 9, "right"), "gpt_s_kd": (-9, 9, "right"),
+  pos = {"Transición por celda": (9, 10, "left"), "gpt2m": (-9, 9, "right"), "gpt_s_kd": (-9, 9, "right"),
          "convlstm_px": (9, 0, "left"), "gpt_s": (-9, -7, "right"), "gpt_m": (9, 7, "left")}
   for name, (dx, dy, ha) in pos.items():
     if name in lab:
@@ -308,10 +308,14 @@ def fig_horizon(cfgs, path):
   plt.close(fig)
 
 
+MIN_N_CORR = 5   # con menos de 5 puntos ni una permutación exacta llega a p < 0,05 (con 3, scipy da ρ = 1 y p = 0)
+
+
 def correlation(cfgs):
-  """Spearman entre CE (ce_all) y FVD a 1 s de las configuraciones autoregresivas. -> (rho, p, n, puntos)."""
+  """Spearman entre CE (ce_all) y FVD a 1 s de las configuraciones autoregresivas. -> (rho, p, n, puntos); rho y p son
+  None con menos de MIN_N_CORR puntos."""
   pts = [c for c in cfgs if c["autoregressive"] and c["ce_all"] is not None and c["fvd1"] is not None]
-  if len(pts) < 3:
+  if len(pts) < MIN_N_CORR:
     return None, None, len(pts), pts
   r = spearmanr([c["ce_all"] for c in pts], [c["fvd1"] for c in pts])
   return float(r.statistic), float(r.pvalue), len(pts), pts
@@ -346,43 +350,32 @@ def fig_ce_vs_fvd(cfgs, path):
   plt.close(fig)
 
 
-LAT = [("gpt2m (307M)", "gpt2m", ["fp32", "fp16", "fp16_graphs"]),
-       ("GPT-L (88M, sin entrenar)", "random_gpt_l", ["fp32", "fp16", "fp16_graphs"]),
-       ("GPT-M (26M)", "gpt_m", ["fp32", "fp16", "fp16_graphs"]), ("GPT-S (11M)", "gpt_s", ["fp32", "fp16", "fp16_graphs"]),
-       ("MaskGIT-M, 8 pasos", "maskgit_m", ["fp32_s8", "fp16_s8", "fp16_graphs_s8"]),
-       ("MaskGIT-S, 8 pasos", "maskgit_s", ["fp32_s8", "fp16_s8", "fp16_graphs_s8"]),
-       ("MaskGIT-S, 2 pasos", "maskgit_s", ["fp32_s2", None, "fp16_graphs_s2"])]
-
-
-def fig_latency(bench_dir, path, registro=None):
-  """H3: ms/frame en fp32, fp16 y fp16 + CUDA graphs (rampa de un tono: más oscuro = más optimizado)."""
-  shades = ["#a9c9ef", "#5d9ce3", "#1d5fae"]
-  names = ["fp32", "fp16", "fp16 + CUDA graphs"]
-  rows = []
-  for lab, n, vs in LAT:
-    vals = [_get(_load(Path(bench_dir) / f"{n}__{v}.json", Path(".")), "median_ms")
-            if v and resultados.vigente(Path(bench_dir) / f"{n}__{v}.json", registro) else None for v in vs]
-    if any(vals):
-      rows.append((lab, vals))
+def fig_latency(cfgs, path):
+  """Latencia por frame de los modelos de video: el modelo solo (p50) y la cadena completa a ritmo de cámara (p99,
+  cámara -> encoder -> modelo -> decoder). Un tono: más oscuro = la cadena completa."""
+  rows = sorted([c for c in cfgs if c["group"] == "principal" and c["ms"] and c["family"] not in LATENT_FAMS + ("contexto",)],
+                key=lambda c: c["ms"])
   if not rows:
     return
-  fig, ax = plt.subplots(figsize=(8, 4.8))
-  h = 0.26
-  for i, (lab, vals) in enumerate(rows):
-    for j, v in enumerate(vals):
+  shades, names = ["#a9c9ef", "#1d5fae"], ["modelo solo (p50)", "cadena a 20 FPS (p99)"]
+  fig, ax = plt.subplots(figsize=(8, 0.45 * len(rows) + 1.4))
+  h, usados = 0.38, set()
+  for i, c in enumerate(rows):
+    for j, v in enumerate((c["ms"], c.get("e2e_p99"))):
       if v:
-        y = i + (j - 1) * h
-        ax.barh(y, v, height=h * 0.88, color=shades[j], label=names[j] if i == 0 else None)
-        ax.text(v * 1.08, y, f"{v:.0f}" if v >= 10 else f"{v:.1f}", va="center", fontsize=7, color=INK2)
-  ax.set_yticks(range(len(rows)), [r[0] for r in rows])
+        y = i + (j - 0.5) * h
+        ax.barh(y, v, height=h * 0.88, color=shades[j], label=None if j in usados else names[j])
+        usados.add(j)
+        ax.text(v * 1.08, y, f"{v:.0f}" if v >= 10 else f"{v:.1f}".replace(".", ","), va="center", fontsize=7, color=INK2)
+  ax.set_yticks(range(len(rows)), [c["short"] for c in rows])
   ax.invert_yaxis()
   ax.set_xscale("log")
-  ax.set_xlim(0.5, 6000)
+  ax.set_xlim(0.2, 3000)
   ax.axvline(RT_MS, ls="--", c=INK2, lw=0.9)
-  ax.text(RT_MS * 1.06, -0.62, f"{RT_MS:.0f} ms (20 FPS)", fontsize=8, color=INK2)
-  ax.set_xlabel("ms por frame generado (mediana, batch 1, RTX 3080 Ti; escala log)")
+  ax.text(RT_MS * 1.06, -0.75, f"{RT_MS:.0f} ms (20 FPS)", fontsize=8, color=INK2)
+  ax.set_xlabel("ms por frame (batch 1, RTX 3080 Ti; escala log)")
   ax.grid(axis="y", visible=False)
-  ax.legend(loc="lower right", fontsize=8)
+  ax.legend(loc="upper right", fontsize=8)
   fig.savefig(path, dpi=200, bbox_inches="tight")
   plt.close(fig)
 
@@ -503,7 +496,7 @@ def main(argv=None):
                        lambda c: c["lpips1_ci"])
     fig_horizon(vig, out / "fig_horizon.png")
     fig_ce_vs_fvd(vig, out / "fig_ce_vs_fvd.png")
-    fig_latency(Path(a.manifest).parent / "bench", out / "fig_latency.png", registro)
+    fig_latency(vig, out / "fig_latency.png")
     fig_ce_posicion(Path(a.manifest).parent / "ce_por_posicion.json", out / "fig_ce_posicion.png", registro)
   rows = summary(cfgs)
   rho, p, n, _ = correlation(vig)
