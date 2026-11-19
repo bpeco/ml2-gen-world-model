@@ -2,7 +2,8 @@
 
   python -m src.bench --model random:gpt_s --dtype fp16 --graphs
   python -m src.bench --decoder --dtype fp16
-Escribe results/bench/<name>__<variante>.json
+Escribe results/bench/<name>__<variante>.json, o <name>__<variante>__<tag>.json con --tag <dispositivo> (otra máquina:
+sin el tag, el nombre es el mismo y el resultado pisa el de la RTX 3080 Ti).
 
 Protocolo (el mismo que usa src/infer/bench_e2e.py, que agrega las columnas de la cadena):
 - Unidad: un paso del stream (src/infer/stream.py) con batch 1 y el contexto lleno: step() para los tokens, el
@@ -175,6 +176,7 @@ def main(argv=None):
   ap.add_argument("--warmup", type=int, default=20)
   ap.add_argument("--frames", type=int, default=100)
   backends.agregar_device(ap, "torch+ort")  # cuda, cpu, rocm...: lo que registra src/infer/backends.py
+  ap.add_argument("--tag", help="nombre del dispositivo (radeon860m...): se agrega al nombre del JSON para no pisar el de otra máquina")
   ap.add_argument("--decoder", action="store_true", help="medir el decoder del VQ-VAE (1 frame por llamada)")
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent); repetible")
   a = ap.parse_args(argv)
@@ -236,10 +238,10 @@ def main(argv=None):
     "dtype": a.dtype, "graphs": a.graphs, "graphs_usados": info["graphs_usados"], "graphs_error": info["graphs_error"], "int8": a.int8, "int8_method": method, "steps": a.steps,
     "ctx_frames": ctx_frames, "warmup": a.warmup, "frames": a.frames,
     "tf32_matmul": torch.backends.cuda.matmul.allow_tf32, "tf32_cudnn": torch.backends.cudnn.allow_tf32,
-    "device": device_info(dev), "torch": torch.__version__, "timestamp": datetime.now().isoformat(timespec="seconds"),
+    "device": device_info(dev), "tag": a.tag, "torch": torch.__version__, "timestamp": datetime.now().isoformat(timespec="seconds"),
   }
   OUT.mkdir(parents=True, exist_ok=True)
-  path = OUT / f"{name}__{variant}.json"
+  path = OUT / f"{name}__{variant}{f'__{a.tag}' if a.tag else ''}.json"
   path.write_text(json.dumps(res, indent=1))
   print(f"{name} {variant}: p50 {med:.2f} ms (p99 {res['p99_ms']:.2f}, p10 {res['p10_ms']:.2f}) "
         f"{res['fps']:.1f} FPS, tiempo real: {'si' if res['realtime'] else 'no'} -> {path}")

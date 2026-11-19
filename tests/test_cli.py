@@ -923,3 +923,59 @@ def test_bench_con_npu_o_dml_falla_al_planear():
   assert Toolkit("genie").plan("bench", pasos="4", cadena=True, device="cpu").comandos
   with pytest.raises(ToolkitError, match="bench --cadena"):
     Toolkit("genie").plan("bench", pasos="4", device="mps")
+
+
+def test_bench_en_rocm_exige_tag_para_no_pisar_los_de_la_rtx():
+  """src.bench nombra el JSON <name>__<variante>.json sin el dispositivo: `codec bench --device rocm` pisaba
+  results/bench/decoder__fp32.json (y `lewm bench`, lewm__fp32.json) de la RTX 3080 Ti."""
+  for modelo in ("codec", "lewm", "convlstm_px"):
+    with pytest.raises(ToolkitError, match="--tag"):
+      Toolkit(modelo).plan("bench", device="rocm")
+  cmds = Toolkit("codec").plan("bench", device="rocm", tag="radeon860m").comandos
+  assert [c.argv[2] for c in cmds] == ["src.infer.bench_codec", "src.bench", "src.bench"]
+  assert all(c.argv[c.argv.index("--tag") + 1] == "radeon860m" for c in cmds)
+  a = Toolkit("lewm").plan("bench", device="rocm", tag="radeon860m").comandos[0].argv
+  assert a[2] == "src.bench" and a[a.index("--tag") + 1] == "radeon860m"
+  # la cadena (bench_e2e) ya nombra el JSON con el dispositivo: no lo exige, pero lo reenvía si viene
+  a = Toolkit("genie").plan("bench", pasos="4", cadena=True, device="rocm").comandos[0].argv
+  assert a[2] == "src.infer.bench_e2e" and "--tag" not in a
+  a = Toolkit("genie").plan("bench", pasos="4", cadena=True, device="rocm", tag="radeon860m").comandos[0].argv
+  assert a[a.index("--tag") + 1] == "radeon860m"
+  assert Toolkit("lewm").plan("bench", device="cpu").comandos     # cpu ya lleva _cpu en el nombre: no lo exige
+  assert "--tag" not in Toolkit("lewm").plan("bench", device="cpu").comandos[0].argv
+
+
+def test_bench_con_tag_pone_el_dispositivo_en_el_nombre():
+  r = subprocess.run([sys.executable, "-m", "src.bench", "--model", "random:gpt_s", "--device", "cpu", "--warmup", "2",
+                      "--frames", "5", "--name", "pytest_tag", "--tag", "laptop"], cwd=ROOT, capture_output=True, text=True)
+  if r.returncode != 0:
+    pytest.skip(f"bench no corrió: {r.stderr[-300:]}")
+  p = ROOT / "results/bench/pytest_tag__fp32_cpu__laptop.json"
+  try:
+    assert json.loads(p.read_text())["tag"] == "laptop"
+    assert not (ROOT / "results/bench/pytest_tag__fp32_cpu.json").exists()
+  finally:
+    p.unlink(missing_ok=True)
+
+
+def test_codec_bench_con_npu_dml_u_ort_corre_bench_ort():
+  """`codec bench --device npu` pasaba el dry-run con `bench_codec --device npu` y fallaba al correr (bench_codec solo
+  acepta backends de torch). Con dml y npu (o --ort) se mide el codec exportado con src.infer.bench_ort."""
+  for d, prov in (("npu", "vitisai"), ("dml", "dml")):
+    p = Toolkit("codec").plan("bench", device=d)
+    assert [c.argv[2] for c in p.comandos] == ["src.infer.bench_ort"] and p.device == d
+    a = p.comandos[0].argv
+    assert a[a.index("--enc") + 1] == prov and a[a.index("--dec") + 1] == prov
+    assert "ML2_DEVICE" not in p.comandos[0].env       # dml y npu no son devices de torch
+  p = Toolkit("codec").plan("bench", ort=True, dtype="fp16", limite=100, tag="laptop")   # la CPU de ONNX Runtime, de referencia
+  a = p.comandos[0].argv
+  assert p.device == "cpu" and "--fp16" in a and a[a.index("--frames") + 1] == "100" and a[a.index("--tag") + 1] == "laptop"
+  a = Toolkit("codec").plan("bench", device="npu", extra=["--profile", "--dec", "dml"]).comandos[0].argv
+  assert a[-3:] == ["--profile", "--dec", "dml"]                                         # lo de después de -- pasa tal cual
+  with pytest.raises(ToolkitError, match="fp32 o fp16"):
+    Toolkit("codec").plan("bench", device="npu", dtype="bf16")
+  with pytest.raises(ToolkitError, match="no corre con ONNX Runtime"):
+    Toolkit("codec").plan("bench", device="rocm", ort=True)
+  with pytest.raises(ToolkitError, match="--ort solo aplica a `codec bench`"):
+    Toolkit("genie").plan("bench", ort=True)
+  assert Toolkit("codec").plan("bench", device="cpu").comandos[0].argv[2] == "src.infer.bench_codec"   # sin --ort, torch

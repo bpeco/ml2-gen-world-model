@@ -112,6 +112,10 @@ OPCIONES = [
          choices=("eval", "holdout", "eval_b")),
   Opcion("modo", ("--modo",), "str", "con --cadena: online o imagine (default: los dos)", ("bench",), choices=("online", "imagine")),
   Opcion("ritmo", ("--ritmo",), "float", "con --cadena: milisegundos entre frames (0 = bucle cerrado)", ("bench",)),
+  Opcion("tag", ("--tag",), "str", "nombre del dispositivo (radeon860m...) en los JSON, para no pisar los de otra máquina; con rocm es obligatorio "
+         "en los benchs que escriben results/bench/", ("bench",)),
+  Opcion("ort", ("--ort",), "bool", "codec bench: mide el codec exportado con ONNX Runtime (src.infer.bench_ort); con dml y npu es lo único que hay",
+         ("bench",)),
   Opcion("entrenar_decoder", ("--entrenar-decoder",), "bool", "entrena el decoder de píxeles (encoder congelado) en vez del demo",
          ("demo",)),
   Opcion("vigilar", ("--vigilar",), "float", "estado: repite cada N segundos (default 10)", ("estado",), const=10.0),
@@ -325,6 +329,8 @@ class Toolkit:
       raise ToolkitError("--modo, --ritmo y --diagnostico solo con --cadena")
     if opts.get("clips") and self.modelo != "real":
       raise ToolkitError("--clips solo aplica a `real evaluar` (el piso de FVD)")
+    if opts.get("ort") and self.modelo != "codec":
+      raise ToolkitError("--ort solo aplica a `codec bench` (la cadena del codec con ONNX Runtime)")
 
   # ---- nombres
   def nombre_run(self, o):
@@ -754,10 +760,15 @@ class Toolkit:
     if self.modelo == "codec":
       if o.get("cadena"):
         raise ToolkitError("codec bench no tiene --cadena: mide el codec solo (src.infer.bench_codec)")
-      a = (["--device", _dev_torch(o["device"])] if o.get("device") else []) + (["--frames", o["limite"]] if o.get("limite") else [])
+      d = o.get("device")
+      if o.get("ort") or (d and not backends.obtener(d).torch_device):   # dml y npu: el codec exportado, con ONNX Runtime
+        return self._plan_bench_ort(o, extra, d or "cpu")
+      _exigir_tag(dev, o)
+      tag = ["--tag", o["tag"]] if o.get("tag") else []
+      a = (["--device", _dev_torch(d)] if d else []) + (["--frames", o["limite"]] if o.get("limite") else []) + tag
       cmds = [self._cmd("src.infer.bench_codec", *a, *extra, o=o)]
       for dt in (["fp32", "fp16"] if dev != "cpu" else ["fp32"]):  # el decoder del VQ-VAE solo (src.bench --decoder)
-        cmds.append(self._cmd("src.bench", "--decoder", "--dtype", dt, *(["--device", _dev_torch(o["device"])] if o.get("device") else []), o=o))
+        cmds.append(self._cmd("src.bench", "--decoder", "--dtype", dt, *(["--device", _dev_torch(d)] if d else []), *tag, o=o))
       return cmds
     spec = self._spec(o)
     pasos = _lista_csv(o["pasos"]) if o.get("pasos") else [None]
@@ -766,7 +777,8 @@ class Toolkit:
     if d and not backends.obtener(d).torch_device:   # dml y npu: ONNX Runtime, sin world model en la cadena
       raise ToolkitError(
         f"{d} corre con ONNX Runtime y el bench del world model (con o sin --cadena) corre con torch. Con {d} se mide la "
-        f"cadena del codec: `python -m src.infer.bench_ort --enc {d} --dec {d}` (exportarlo antes con `codec exportar`)")
+        f"cadena del codec: `codec bench --device {d}`, que corre `python -m src.infer.bench_ort --enc {d} --dec {d}` "
+        "(exportarlo antes con `codec exportar`)")
     cmds = []
     for s in pasos:
       if o.get("cadena") and not o.get("modo"):   # protocolo único (D15): un JSON con modelo solo, cadena cerrada y cadena a ritmo
@@ -782,6 +794,8 @@ class Toolkit:
           a += ["--frames", o["limite"]]
         if o.get("device"):
           a += ["--device", _dev_torch(o["device"])]
+        if o.get("tag"):
+          a += ["--tag", o["tag"]]
         cmds.append(self._cmd("src.infer.bench_e2e", *a, *extra, o=o))
         continue
       if o.get("cadena"):
@@ -798,10 +812,13 @@ class Toolkit:
             a += ["--frames", o["limite"]]
           if o.get("device"):
             a += ["--device", _dev_torch(o["device"])]
+          if o.get("tag"):
+            a += ["--tag", o["tag"]]
           cmds.append(self._cmd("src.infer.bench_e2e", *a, *extra, o=o))
         continue
       if o.get("device") == "mps":
         raise ToolkitError("src.bench solo mide en cuda o cpu; para mps usá `bench --cadena`")
+      _exigir_tag(dev, o)
       nombre = run + (f"_p{s}" if s else "")
       a = ["--model", spec, "--name", nombre, "--dtype", dt]
       if dt == "fp16" and (self.modelo in DTYPE_VIDEO or self.modelo in CON_PASOS):
@@ -816,8 +833,25 @@ class Toolkit:
         a += ["--device", _dev_torch(o["device"])]
       if o.get("limite"):
         a += ["--frames", o["limite"]]
+      if o.get("tag"):
+        a += ["--tag", o["tag"]]
       cmds.append(self._cmd("src.bench", *a, *extra, o=o))
     return cmds
+
+  def _plan_bench_ort(self, o, extra, d):
+    """codec bench con ONNX Runtime (dml, npu, o cpu/cuda con --ort): src.infer.bench_ort con el provider del backend en
+    las dos etapas. Lo que se quiera distinto (--only enc, --profile, --dec dml) va después de `--`."""
+    try:
+      b = backends.resolver_ort(d)
+    except ValueError as e:
+      raise ToolkitError(f"codec bench --device {d}: {e}") from None
+    dt = o.get("dtype") or "fp32"
+    if dt not in ("fp32", "fp16"):
+      raise ToolkitError(f"codec bench con ONNX Runtime mide fp32 o fp16, no {dt} (fp16 usa los ONNX de `codec exportar --dtype fp16`)")
+    a = ["--enc", b.ort_provider, "--dec", b.ort_provider] + (["--fp16"] if dt == "fp16" else [])
+    a += (["--frames", o["limite"]] if o.get("limite") else []) + (["--tag", o["tag"]] if o.get("tag") else [])
+    self._dev_forzado = b.nombre   # el dispositivo de la bitácora y del candado es el del provider, no el de torch
+    return [self._cmd("src.infer.bench_ort", *a, *extra, o=o, env=False)]   # sin ML2_DEVICE: dml y npu no son de torch
 
   # ---- demo
   def _plan_demo(self, o, extra, avisos):
@@ -880,6 +914,14 @@ class Toolkit:
       return [self._cmd("src.export_latente", "--model", self._spec(o), "--parte", parte, *extra, o=o) for parte in partes]
     a = ["--model", self._spec(o)] + (["--fp16"] if o.get("dtype") == "fp16" else [])
     return [self._cmd("src.export_onnx", *a, *extra, o=o)]
+
+
+def _exigir_tag(dev, o):
+  """src.bench nombra el JSON <name>__<variante>.json, sin el dispositivo: en rocm (el device resuelto, pedido o no)
+  se llamaría igual que el de la RTX 3080 Ti y lo pisaría."""
+  if dev == "rocm" and not o.get("tag"):
+    raise ToolkitError("con rocm, src.bench escribiría results/bench/<name>__<variante>.json, el mismo nombre que el de la "
+                       "RTX 3080 Ti, y lo pisaría: agregá --tag <dispositivo> (p. ej. --tag radeon860m)")
 
 
 def _dev_torch(d):

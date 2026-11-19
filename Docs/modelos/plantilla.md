@@ -121,6 +121,7 @@ python -m src.cli plantilla evaluar --variante prueba --limite 5 --device cpu
 - `--diagnostico`: con --cadena: el piso de ~20 ms a ritmo de cámara (bench_e2e --diagnostico)
 - `--modo`: con --cadena: online o imagine (default: los dos)
 - `--ritmo`: con --cadena: milisegundos entre frames (0 = bucle cerrado)
+- `--tag`: nombre del dispositivo (radeon860m...) en los JSON, para no pisar los de otra máquina; con rocm es obligatorio en los benchs que escriben results/bench/
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->

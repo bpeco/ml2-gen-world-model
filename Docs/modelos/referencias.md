@@ -104,6 +104,7 @@ Latencia por frame con batch 1 (fp16 con CUDA graphs en CUDA).
 - `--diagnostico`: con --cadena: el piso de ~20 ms a ritmo de cámara (bench_e2e --diagnostico)
 - `--modo`: con --cadena: online o imagine (default: los dos)
 - `--ritmo`: con --cadena: milisegundos entre frames (0 = bucle cerrado)
+- `--tag`: nombre del dispositivo (radeon860m...) en los JSON, para no pisar los de otra máquina; con rocm es obligatorio en los benchs que escriben results/bench/
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->
@@ -142,6 +143,7 @@ python -m src.cli unigram evaluar
 - `--diagnostico`: con --cadena: el piso de ~20 ms a ritmo de cámara (bench_e2e --diagnostico)
 - `--modo`: con --cadena: online o imagine (default: los dos)
 - `--ritmo`: con --cadena: milisegundos entre frames (0 = bucle cerrado)
+- `--tag`: nombre del dispositivo (radeon860m...) en los JSON, para no pisar los de otra máquina; con rocm es obligatorio en los benchs que escriben results/bench/
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->
@@ -182,6 +184,7 @@ python -m src.cli transicion evaluar --cadena
 - `--diagnostico`: con --cadena: el piso de ~20 ms a ritmo de cámara (bench_e2e --diagnostico)
 - `--modo`: con --cadena: online o imagine (default: los dos)
 - `--ritmo`: con --cadena: milisegundos entre frames (0 = bucle cerrado)
+- `--tag`: nombre del dispositivo (radeon860m...) en los JSON, para no pisar los de otra máquina; con rocm es obligatorio en los benchs que escriben results/bench/
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->
@@ -222,6 +225,7 @@ python -m src.cli congelado evaluar
 - `--diagnostico`: con --cadena: el piso de ~20 ms a ritmo de cámara (bench_e2e --diagnostico)
 - `--modo`: con --cadena: online o imagine (default: los dos)
 - `--ritmo`: con --cadena: milisegundos entre frames (0 = bucle cerrado)
+- `--tag`: nombre del dispositivo (radeon860m...) en los JSON, para no pisar los de otra máquina; con rocm es obligatorio en los benchs que escriben results/bench/
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->
@@ -266,6 +270,8 @@ Latencia y fidelidad del VQ-VAE de comma en el dispositivo (encoder y decoder; f
 - `--diagnostico`: con --cadena: el piso de ~20 ms a ritmo de cámara (bench_e2e --diagnostico)
 - `--modo`: con --cadena: online o imagine (default: los dos)
 - `--ritmo`: con --cadena: milisegundos entre frames (0 = bucle cerrado)
+- `--tag`: nombre del dispositivo (radeon860m...) en los JSON, para no pisar los de otra máquina; con rocm es obligatorio en los benchs que escriben results/bench/
+- `--ort`: codec bench: mide el codec exportado con ONNX Runtime (src.infer.bench_ort); con dml y npu es lo único que hay
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->
@@ -273,7 +279,11 @@ Más las [opciones comunes](README.md#opciones-comunes).
 ```bash
 python -m src.cli codec bench
 python -m src.cli codec bench --device cpu --limite 20
+python -m src.cli codec bench --device rocm --tag radeon860m
+python -m src.cli codec bench --device npu --limite 100
 ```
+
+Con `--device dml` o `--device npu` (o `--ort`, para la CPU de ONNX Runtime) mide el codec exportado con `src.infer.bench_ort`: hay que correr antes `codec exportar`. Lo que se quiera pasar al script va después de `--`: `-- --profile` cuenta los nodos por provider, `-- --only enc` mide una etapa y `-- --dec dml` pone el decoder en otro provider.
 
 ### codec exportar
 
@@ -298,7 +308,7 @@ python -m src.cli codec exportar --dtype fp16
 | `real evaluar` | `results/rollouts/real.npy`, `results/video_real.json`; con `--clips eval_b`, `results/rollouts/real_eval_b.npy` y `results/video_real_eval_b.json`. |
 | `estadistica piso` | `results/piso_fvd.json`. |
 | `<modelo> bench` | `results/bench/<modelo>__<dtype>[_graphs].json`; con `--cadena`, `results/infer/latencia_<modelo>__<dispositivo>.json`. |
-| `codec bench` | `results/infer/codec_<tag>.json` y `results/bench/decoder__<dtype>.json`. |
+| `codec bench` | `results/infer/codec_<tag>.json` y `results/bench/decoder__<dtype>[__<tag>].json`; con `--device dml`, `--device npu` o `--ort`, `results/infer/ort_<tag>.json`. |
 | `codec exportar` | `checkpoints/onnx/` (encoder y decoder). |
 
 ## 5. Problemas frecuentes

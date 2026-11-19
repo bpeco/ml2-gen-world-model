@@ -172,11 +172,11 @@ python -m src.cli genie demo --tamaño s --pasos 4 --limite 100
 `requirements-rocm.txt` instala el torch de AMD para gfx1152 (antes que `requirements.txt`; ver los comentarios del archivo). Los builds ROCm usan la API `torch.cuda`, así que `device()` elige `cuda` igual. `requirements-npu.txt` es para el extra de ONNX Runtime en la NPU (`src/export_onnx.py`, `src/ort_model.py`), con la variable `ML2_VITISAI_EP_DIR`.
 
 ```bash
-python -m src.infer.bench_codec --tag radeon860m
+python -m src.cli codec bench --device rocm --tag radeon860m
 python -m src.cli genie bench --tamaño s --pasos 4 --cadena --aleatorio --device rocm
 ```
 
-Para la NPU hay que exportar el codec a ONNX (`python -m src.cli codec exportar`) y medir con `python -m src.infer.bench_ort` eligiendo el provider de cada etapa (`--enc vitisai`, `--dec dml`); `--profile` dice cuántos nodos caen en la CPU. La NPU está sin probar en la máquina de desarrollo.
+Con `--device rocm`, los benchs que escriben `results/bench/` (el decoder del codec y el modelo solo) piden `--tag <dispositivo>`: sin él el JSON se llamaría igual que el de la RTX 3080 Ti y lo pisaría. Para la NPU hay que exportar el codec a ONNX (`python -m src.cli codec exportar`) y medir con `codec bench --device npu` (o `--device dml`, o `--ort` para la CPU de ONNX Runtime), que corre `src.infer.bench_ort`. Lo que venga después de `--` va al script: `-- --profile` dice cuántos nodos caen en la CPU, y `-- --dec dml` pone el decoder en otro provider. La NPU está sin probar en la máquina de desarrollo.
 
 ## Modelos entrenados (Hugging Face)
 
