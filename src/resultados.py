@@ -21,9 +21,11 @@ ESTADOS = ("vigente", "protocolo anterior", "pendiente")
 SIN_ESTADO = "sin estado"
 ARCHIVO = Path("results/estado.json")
 MOTIVO_ANTERIOR = "medido antes de la revisión de fidelidad (protocolo y/o receta anteriores)"
-# lo que se registra al inicializar: JSON de resultados medidos (no manifiestos, figuras ni cachés)
+# los JSON de resultados: medidos y derivados (estadística, piso, temperatura, humo), no manifiestos (checkpoints,
+# configs, estado, val_split, clips_*), figuras ni cachés. Todo lo que matchea tiene estado y pasa por `bitacora verificar`
 PATRONES = ("eval_*.json", "video_*.json", "latent_*.json", "bench/*.json", "infer/*.json", "train_*.json",
-            "ce_por_posicion.json")
+            "ce_por_posicion.json", "semillas_*.json", "diferencia_*.json", "piso_*.json", "temperatura_*.json",
+            "humo_*.json")
 
 
 def clave(ruta) -> str:

@@ -74,6 +74,16 @@
   "motivo": "bitácora 20261118-230903-e307: python -m src.cli vjepa2 bench",
   "fecha": "2026-11-19"
  },
+ "results/diferencia_convlstm_px_vs_genie_s_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-063417-f720: python -m src.cli estadistica diferencia --a convlstm_px --b genie_s_p8",
+  "fecha": "2026-11-19"
+ },
+ "results/diferencia_genie_s_p8_vs_gpt_s_kd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-063224-64c7: python -m src.cli estadistica diferencia --a genie_s_p8 --b gpt_s_kd",
+  "fecha": "2026-11-19"
+ },
  "results/eval_congelado.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-094028-7f09: python -m src.cli congelado evaluar",
@@ -113,6 +123,31 @@
   "estado": "vigente",
   "motivo": "bitácora 20261118-093145-47c0: python -m src.cli unigram evaluar",
   "fecha": "2026-11-18"
+ },
+ "results/humo_genie.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-031151-9faf: python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10,x30 --forzar",
+  "fecha": "2026-11-19"
+ },
+ "results/humo_gpt.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-030912-5d3b: python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10,x30 --forzar",
+  "fecha": "2026-11-19"
+ },
+ "results/humo_lewm.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-125920-0cb9: python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
+  "fecha": "2026-11-19"
+ },
+ "results/humo_vjepa2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-021806-8c0d: python -m src.cli vjepa2 entrenar --humo --humo-candidatos fuente,raiz,x3",
+  "fecha": "2026-11-19"
+ },
+ "results/humo_vjepa2_ac.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-134633-962c: python -m src.cli vjepa2_ac entrenar --encoder vjepa2_s --humo --humo-candidatos fuente,raiz,x3",
+  "fecha": "2026-11-19"
  },
  "results/infer/codec_rtx3080ti.json": {
   "estado": "vigente",
@@ -183,6 +218,31 @@
   "estado": "vigente",
   "motivo": "bitácora 20261118-124832-5bd9: python -m src.cli vjepa2 evaluar",
   "fecha": "2026-11-18"
+ },
+ "results/piso_fvd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-095655-6c04: python -m src.cli estadistica piso --b real_eval_b",
+  "fecha": "2026-11-19"
+ },
+ "results/semillas_convlstm_px.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-063224-aa3e: python -m src.cli estadistica semillas --nombre convlstm_px --runs convlstm_px,convlstm_px_s1,convlstm_px_s2",
+  "fecha": "2026-11-19"
+ },
+ "results/semillas_genie_s_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-063223-1723: python -m src.cli estadistica semillas --nombre genie_s_p8 --runs genie_s_p8,genie_s_s1_p8,genie_s_s2_p8",
+  "fecha": "2026-11-19"
+ },
+ "results/temperatura_genie_s.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-065932-705e: python -m src.cli genie evaluar '--tamaño' s --barrer-temperatura -- --temperaturas 0.8,1.0,1.2,1.4",
+  "fecha": "2026-11-19"
+ },
+ "results/temperatura_gpt_s_kd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-053837-423e: python -m src.cli gpt evaluar '--tamaño' s --variante kd --barrer-temperatura",
+  "fecha": "2026-11-19"
  },
  "results/train_convlstm_px.json": {
   "estado": "vigente",

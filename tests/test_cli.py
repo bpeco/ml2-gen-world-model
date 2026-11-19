@@ -891,3 +891,11 @@ def test_manda_el_sello_del_json(entorno):
   assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "eval"
   f.write_text(json.dumps({"x": 1}))  # sin sello: la última que lo reclamó, como antes
   assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "train"
+
+
+def test_verificar_exige_entrada_a_la_estadistica(entorno):
+  rutas.results().mkdir(parents=True)
+  (rutas.results() / "semillas_x.json").write_text("{}")
+  vacio = rutas.results() / "estado.json"
+  vacio.write_text("{}")
+  assert [k for k, _ in bitacora.verificar(vacio)] == [resultados.clave(rutas.results() / "semillas_x.json")]
