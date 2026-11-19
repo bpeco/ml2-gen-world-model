@@ -65,8 +65,27 @@ La cola incluye además las semillas 1 y 2 de `genie_s` y `convlstm_px`. Las cor
 | Los papers del camino de la investigación | [`world-models-conduccion-papers.md`](world-models-conduccion-papers.md) |
 | La presentación de avance | [`../pre-entrega/index.html`](../pre-entrega/index.html) |
 
+## Lo que encontró correr todo por la CLI
+
+Toda la cola (trabajos 0 a 16) corrió con `python -m src.cli` y quedó en la bitácora. Cada vez que algo falló o dio un resultado raro, el arreglo fue cambio de código, test que lo reproduce y commit. Después se repitió el mismo comando con `bitacora repetir`. Estas fueron las fricciones:
+
+| fricción | arreglo | commit |
+|---|---|---|
+| El monitor del entrenamiento usaba ventanas de un largo distinto al de la receta, y el humo de Genie hubo que repetirlo | el monitor usa el largo de la receta | `2d562f0` |
+| El humo aceptaba solo algunos múltiplos del lr, y el óptimo quedaba en el borde de la grilla | `--humo-candidatos` acepta cualquier `x<k>` | `9251f61` |
+| `cola correr --dry-run` agregaba `--dry-run` al final de cada comando: con un `--` en el comando iba al script y la acción corría de verdad. Además faltaba un paso para pasar a `vigente` lo que cerraba cada bloque | el `--dry-run` va antes del `--`; `bitacora vigentes` cierra cada bloque | `6efc402` |
+| El decoder de visualización del trabajo 12 (`vjepa2_ac demo --entrenar-decoder`) se quedó sin memoria: el historial de la loss retenía el buffer del MSE, unos 24 MiB por paso | el historial es un buffer en el device | `3211f38` |
+| La bitácora le atribuía a una acción larga resultados que había escrito otra, concurrente, o que `vigentes` solo había re-sellado | una acción no reclama lo de otra; tocar solo el sello no es escribir; manda el sello del JSON | `5405b87`, `ec563b9` |
+| `vjepa2 bench` caía en el stream de tokens (V-JEPA 2 sin acciones no tiene stream) | mide el encoder sobre un clip | `8d866e0` |
+| La estadística, el piso, la temperatura y el humo no tenían estado: `bitacora verificar` no los revisaba y los docs no podían citarlos | entran en el estado de resultados | `8623b9a` |
+| La cadena de Genie con 4 pasadas se guardaba como `genie_s_s4`, que se lee como la semilla 4, y el reporte no la encontraba | las pasadas se nombran `_p<n>`; los archivos viejos se apartaron con `resultados --quitar` | `0d80802`, `4df35c8`, `a0ecc4d` |
+| `bench --device npu` pasaba el dry-run y fallaba al correr | falla al planear y dice cómo medir la cadena del codec con ONNX Runtime | `4df35c8` |
+| Las figuras del reporte eran de las familias viejas; el destilado no figuraba como autorregresivo; la correlación de H4 se informaba con 3 puntos | figuras con Genie y ConvLSTM, el destilado autorregresivo, correlación solo con 5 puntos o más | `4df35c8`, `3881107` |
+| Compartir los modelos entrenados: Git LFS gastaba la cuota del dueño del repo | Hugging Face, con bajada sin login y subida automática al terminar de entrenar | `a957766`, `b3e602f` |
+
 ## Qué falta
 
-- Los trabajos opcionales de la cola (17 a 20): los GPT de cero, que cierran H1 y H4, `genie_m` y el MaskGIT propio con sus ablaciones.
-- Medir la inferencia en la T4 y en la laptop (iGPU y NPU).
-- Las corridas 10x de `vjepa2` y `lewm`.
+- **Trabajos opcionales de la cola (17 a 20):** los GPT de cero, que cierran H1 y H4; `genie_m`; y el MaskGIT propio con sus ablaciones.
+- **H3:** medir los transformers en fp32 y comparar calidad y latencia con fp16 y CUDA graphs.
+- **Otros dispositivos:** medir la inferencia en la T4 y en la laptop (iGPU y NPU).
+- **Corridas 10×** de `vjepa2` y `lewm`.
