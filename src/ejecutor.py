@@ -205,7 +205,8 @@ def ejecutar(plan, esperar=False, encolar=False, permitir_sucio=False, dry_run=F
     if codigo == 0 and plan.accion in ("entrenar", "evaluar", "bench") and rutas.results() == Path("results"):
       actualizar_configs(salida)   # results/configs.json (lo que lee el reporte) se deriva de lo que hay en results/
     despues = bitacora.instantanea(plan.run)
-    escritos = bitacora.archivos_escritos(antes, despues)
+    ajenos = bitacora.ajenos(t0)  # lo que escribió otra acción que terminó mientras corría esta no es de esta
+    escritos = [f for f in bitacora.archivos_escritos(antes, despues) if bitacora._relativa(f) not in ajenos]
     entrada = {**base, "comandos": [{"argv": c.argv, "env": c.env, "salida": s}
                                     for c, s in zip(plan.comandos, salidas + [None] * len(plan.comandos))],
                "duracion_s": round(dur, 2), "salida": codigo, "escribio": escritos,

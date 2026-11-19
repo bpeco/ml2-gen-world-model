@@ -170,13 +170,62 @@ def repetir(id_, dry_run=False):
 
 # ---------------------------------------------------------------- verificar
 
+def _ventana(e):
+  """(inicio, fin) de una entrada en segundos, o None si su fecha no se puede leer."""
+  try:
+    ini = datetime.fromisoformat(str(e.get("fecha"))).timestamp()
+  except ValueError:
+    return None
+  return ini, ini + float(e.get("duracion_s") or 0)
+
+
+def _concurrente(otra, esta, tolerancia=2.0):
+  """La otra acción empezó antes que esta y terminó mientras esta corría (la fecha tiene resolución de segundos)."""
+  return bool(otra and esta) and otra[0] < esta[0] and esta[0] - tolerancia <= otra[1] <= esta[1] + tolerancia
+
+
+def ajenos(inicio, entradas=None, tolerancia=2.0):
+  """Archivos que reclamaron entradas terminadas desde `inicio`: los escribió una acción concurrente que terminó
+  mientras corría esta (p. ej. la evaluación de GPU que termina durante un `verificar`), no esta acción."""
+  out = set()
+  for e in leer() if entradas is None else entradas:
+    v = _ventana(e)
+    if v and v[1] >= inicio - tolerancia:
+      out |= {_relativa(f) for f in e.get("escribio", [])}
+  return out
+
+
 def _escritores(entradas):
-  """{resultado: la última entrada que lo escribió}."""
-  esc = {}
-  for e in entradas:
+  """{resultado: la última entrada que lo escribió}.
+
+  Una entrada no cuenta para un archivo que también reclamó otra que empezó antes y terminó durante su ventana: lo
+  escribió esa acción concurrente. Así se leen bien las bitácoras anteriores al arreglo del ejecutor (`ajenos`).
+  """
+  ventanas = [_ventana(e) for e in entradas]
+  reclamos = {}
+  for i, e in enumerate(entradas):
     for f in e.get("escribio", []):
-      esc[_relativa(f)] = e
+      reclamos.setdefault(_relativa(f), []).append(i)
+  esc = {}
+  for f, idx in reclamos.items():
+    propios = [i for i in idx if not any(_concurrente(ventanas[j], ventanas[i]) for j in idx if j != i)]
+    esc[f] = entradas[(propios or idx)[-1]]
   return esc
+
+
+def _resellar(k, e):
+  """Si el sello "_bitacora" de un JSON no es el de la entrada que lo escribió (lo pisó una acción concurrente antes
+  del arreglo del ejecutor), lo corrige. Solo toca ese sello, no los datos."""
+  p = Path(k)
+  if p.suffix != ".json" or not p.exists():
+    return False
+  try:
+    d = json.loads(p.read_text(encoding="utf-8"))
+  except (OSError, json.JSONDecodeError):
+    return False
+  if isinstance(d, dict) and isinstance(d.get("_bitacora"), dict) and d["_bitacora"].get("id") != e.get("id"):
+    return bool(anotar_json([p], e))
+  return False
 
 
 def _problema(e):
@@ -222,6 +271,7 @@ def marcar_vigentes(estado_file=None):
     if m:
       problemas.append((k, m))
     else:
+      _resellar(k, e)
       resultados.marcar(k, "vigente", f"bitácora {e['id']}: {e.get('argv_texto', '')}".strip(), archivo)
       marcados.append(k)
   return marcados, problemas

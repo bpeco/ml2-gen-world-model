@@ -826,3 +826,41 @@ def test_mps_es_una_accion_de_gpu(entorno, monkeypatch):
   cola.liberar_candado()
   with pytest.raises(ToolkitError, match="solo mide en cuda o cpu"):
     Toolkit("gpt").plan("bench", device="mps")
+
+
+def test_accion_concurrente_no_se_queda_con_el_resultado(entorno, monkeypatch, tmp_path):
+  """Trabajo 12: `verificar` corrió en CPU mientras terminaba `vjepa2_ac evaluar`, se atribuyó su JSON y le pisó el
+  sello; `vigentes` no lo marcaba porque `verificar` salió con 1."""
+  from datetime import datetime
+  estado = tmp_path / "estado.json"
+  monkeypatch.setattr(resultados, "ARCHIVO", estado)
+  res = rutas.results()
+  res.mkdir(parents=True)
+  f = res / "latent_x.json"
+  base = {"limpio": True, "commit": "abc123", "permitir_sucio": False}
+  ev = {**base, "id": "eval", "fecha": "2026-11-18T20:03:12", "duracion_s": 4325.1, "salida": 0, "argv": ["x", "evaluar"],
+        "argv_texto": "python -m src.cli x evaluar", "escribio": [str(f)]}
+  ve = {**base, "id": "verif", "fecha": "2026-11-18T21:14:21", "duracion_s": 159.8, "salida": 1, "argv": ["verificar"],
+        "argv_texto": "python -m src.cli verificar", "escribio": [str(f)]}
+  bitacora.registrar(ev)
+  bitacora.registrar(ve)
+  f.write_text(json.dumps({"x": 1, "_bitacora": {"id": "verif", "comando": "python -m src.cli verificar", "commit": "abc123"}}))
+  inicio_verif = datetime.fromisoformat("2026-11-18T21:14:21").timestamp()
+  assert bitacora._relativa(f) in bitacora.ajenos(inicio_verif)          # al registrar: la evaluación terminó en su ventana
+  assert bitacora.ajenos(inicio_verif + 3600) == set()
+  marcados, problemas = bitacora.marcar_vigentes(estado)
+  assert problemas == [] and [Path(m).name for m in marcados] == ["latent_x.json"]
+  d = json.loads(f.read_text())
+  assert d["x"] == 1 and d["_bitacora"]["id"] == "eval" and "x evaluar" in d["_bitacora"]["comando"]   # sello corregido
+  assert bitacora.verificar(estado) == []
+  bitacora.registrar({**ev, "id": "eval2", "fecha": "2026-11-18T22:00:00"})  # en secuencia manda la última, como siempre
+  assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "eval2"
+
+
+def test_el_ejecutor_no_reclama_lo_de_otra_accion(entorno, monkeypatch):
+  rutas.results().mkdir(parents=True)
+  destino = rutas.results() / "eval_toy.json"
+  monkeypatch.setattr(bitacora, "ajenos", lambda inicio, entradas=None: {bitacora._relativa(destino)})
+  ejecutor.ejecutar(juguete(escribe=(destino, {"x": 1})), salida=lambda s: None)
+  e = bitacora.leer()[-1]
+  assert not any(f.endswith("eval_toy.json") for f in e["escribio"]) and "_bitacora" not in json.loads(destino.read_text())
