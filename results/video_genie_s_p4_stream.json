@@ -160,7 +160,7 @@
   "seed": 0,
   "opt": null,
   "n_clips": 400,
-  "seconds": 89.28007936477661,
+  "seconds": 88.34474968910217,
   "device_info": {
    "device": "cuda",
    "torch": "2.11.0+cu128",
@@ -181,11 +181,11 @@
   "backend": "cuda",
   "backend_version": "12.8"
  },
- "seconds": 255.5821385383606,
+ "seconds": 270.7635681629181,
  "_bitacora": {
-  "id": "20261119-002256-2364",
+  "id": "20261119-070121-d385",
   "comando": "python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
-  "commit": "8d866e0098ff3449e23c9a181be5b4c670c55c70",
+  "commit": "0d80802bf534ada9e05c203dac66cd67542e227f",
   "meta": {
    "temperatura": {
     "valor": 1.0,

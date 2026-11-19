@@ -154,9 +154,9 @@
   "motivo": "bitácora 20261118-225846-2283: python -m src.cli codec bench",
   "fecha": "2026-11-19"
  },
- "results/infer/diagnostico_genie_s_s4__online__pace50__rtx3080ti.json": {
+ "results/infer/diagnostico_genie_s_p4__online__pace50__rtx3080ti.json": {
   "estado": "vigente",
-  "motivo": "bitácora 20261119-001840-a03b: python -m src.cli genie bench '--tamaño' s --pasos 4 --cadena --ritmo 50 --diagnostico",
+  "motivo": "bitácora 20261119-065705-bdf1: python -m src.cli genie bench '--tamaño' s --pasos 4 --cadena --ritmo 50 --diagnostico",
   "fecha": "2026-11-19"
  },
  "results/infer/imagine_check_genie_s_p4.json": {
@@ -174,9 +174,9 @@
   "motivo": "bitácora 20261119-001445-2f47: python -m src.cli convlstm_px bench --cadena --ritmo 50",
   "fecha": "2026-11-19"
  },
- "results/infer/latencia_genie_s_s4__rtx3080ti.json": {
+ "results/infer/latencia_genie_s_p4__rtx3080ti.json": {
   "estado": "vigente",
-  "motivo": "bitácora 20261119-001055-3892: python -m src.cli genie bench '--tamaño' s --pasos 4 --cadena --ritmo 50",
+  "motivo": "bitácora 20261119-065318-8192: python -m src.cli genie bench '--tamaño' s --pasos 4 --cadena --ritmo 50",
   "fecha": "2026-11-19"
  },
  "results/infer/latencia_gpt_s_kd__rtx3080ti.json": {
@@ -189,9 +189,9 @@
   "motivo": "bitácora 20261118-230930-47af: python -m src.cli transicion bench --cadena",
   "fecha": "2026-11-19"
  },
- "results/infer/online_genie_s_s4.json": {
+ "results/infer/online_genie_s_p4.json": {
   "estado": "vigente",
-  "motivo": "bitácora 20261119-002256-2364: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
+  "motivo": "bitácora 20261119-070121-d385: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
   "fecha": "2026-11-19"
  },
  "results/infer/online_transicion.json": {

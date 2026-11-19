@@ -1,5 +1,5 @@
 {
- "name": "genie_s_s4",
+ "name": "genie_s_p4",
  "model": "genie_s",
  "steps": 4,
  "k": 1,
@@ -429,7 +429,7 @@
   0.2428125
  ],
  "curve_start": 14,
- "seconds": 152.04752016067505,
+ "seconds": 149.34230399131775,
  "device": {
   "device": "cuda",
   "torch": "2.11.0+cu128",
@@ -439,11 +439,11 @@
   "backend": "cuda",
   "backend_version": "12.8"
  },
- "timestamp": "2026-11-19T00:25:33",
+ "timestamp": "2026-11-19T07:03:55",
  "_bitacora": {
-  "id": "20261119-002256-2364",
+  "id": "20261119-070121-d385",
   "comando": "python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
-  "commit": "8d866e0098ff3449e23c9a181be5b4c670c55c70",
+  "commit": "0d80802bf534ada9e05c203dac66cd67542e227f",
   "meta": {
    "temperatura": {
     "valor": 1.0,
