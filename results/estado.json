@@ -1,4 +1,79 @@
 {
+ "results/bench/convlstm_px__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230306-fa45: python -m src.cli convlstm_px bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/decoder__fp16.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-225846-2283: python -m src.cli codec bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/decoder__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-225846-2283: python -m src.cli codec bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p12__fp16_graphs_s12.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p1__fp16_graphs_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p25__fp16_graphs_s25.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p2__fp16_graphs_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p4__fp16_graphs_s4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p8__fp16_graphs_s8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/gpt2m__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230043-6b72: python -m src.cli gpt2m bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/gpt_s_kd__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230217-89d2: python -m src.cli gpt bench '--tamaño' s --variante kd",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/lewm__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230312-66d4: python -m src.cli lewm bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/transicion__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230041-e4af: python -m src.cli transicion bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/vjepa2_ac__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230915-430b: python -m src.cli vjepa2_ac bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/vjepa2_s__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230903-e307: python -m src.cli vjepa2 bench",
+  "fecha": "2026-11-19"
+ },
  "results/eval_congelado.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-094028-7f09: python -m src.cli congelado evaluar",
@@ -28,6 +103,56 @@
   "estado": "vigente",
   "motivo": "bitácora 20261118-093145-47c0: python -m src.cli unigram evaluar",
   "fecha": "2026-11-18"
+ },
+ "results/infer/codec_rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-225846-2283: python -m src.cli codec bench",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/diagnostico_genie_s_s4__online__pace50__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-001840-a03b: python -m src.cli genie bench '--tamaño' s --pasos 4 --cadena --ritmo 50 --diagnostico",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/imagine_check_genie_s_p4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-002256-2364: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/imagine_check_transicion.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-003129-76d3: python -m src.cli transicion evaluar --cadena",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/latencia_convlstm_px__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-001445-2f47: python -m src.cli convlstm_px bench --cadena --ritmo 50",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/latencia_genie_s_s4__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-001055-3892: python -m src.cli genie bench '--tamaño' s --pasos 4 --cadena --ritmo 50",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/latencia_gpt_s_kd__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-234537-0b29: python -m src.cli gpt bench '--tamaño' s --variante kd --cadena --ritmo 50",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/latencia_transicion__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230930-47af: python -m src.cli transicion bench --cadena",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/online_genie_s_s4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-002256-2364: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/online_transicion.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-003129-76d3: python -m src.cli transicion evaluar --cadena",
+  "fecha": "2026-11-19"
  },
  "results/latent_lewm.json": {
   "estado": "vigente",
@@ -229,6 +354,11 @@
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-18"
  },
+ "results/video_genie_s_p4_stream.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-002256-2364: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
+  "fecha": "2026-11-19"
+ },
  "results/video_genie_s_p8.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
@@ -258,6 +388,11 @@
   "estado": "vigente",
   "motivo": "bitácora 20261118-093608-2f96: python -m src.cli transicion evaluar",
   "fecha": "2026-11-18"
+ },
+ "results/video_transicion_stream.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-003129-76d3: python -m src.cli transicion evaluar --cadena",
+  "fecha": "2026-11-19"
  },
  "results/video_unigram.json": {
   "estado": "vigente",

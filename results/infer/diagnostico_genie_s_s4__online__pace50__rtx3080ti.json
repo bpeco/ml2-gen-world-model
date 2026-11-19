@@ -1,0 +1,218 @@
+{
+ "name": "genie_s_s4",
+ "model": "genie_s",
+ "mode": "online",
+ "k": 1,
+ "steps": 4,
+ "temperature": 1.0,
+ "dtype": "fp16",
+ "codec_dtype": "fp16",
+ "dtype_pedido": {
+  "dtype": "fp16",
+  "codec_dtype": "fp16"
+ },
+ "budget_ms": 50.0,
+ "opts": null,
+ "params": 15046528,
+ "unidad": "frame",
+ "warmup": 50,
+ "frames": 600,
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "tag": "rtx3080ti",
+ "timestamp": "2026-11-19T00:18:42",
+ "pace_ms": 50.0,
+ "timer": {
+  "sistema": "Windows",
+  "perf_counter": {
+   "resolution_s": 1e-07,
+   "monotonic": true
+  },
+  "sleep_1ms": {
+   "p50_ms": 1.5059500001370907,
+   "p99_ms": 1.5719920932315288,
+   "max_ms": 1.5916000120341778,
+   "n": 200
+  },
+  "sleep_1ms_con_timeBeginPeriod_1": {
+   "p50_ms": 1.506350003182888,
+   "p99_ms": 1.5736449894029645,
+   "max_ms": 1.6087000258266926,
+   "n": 200,
+   "aplica": true
+  }
+ },
+ "filas": [
+  {
+   "nombre": "cerrado",
+   "pace_ms": 0,
+   "p50": 16.150750045198947,
+   "p99": 16.733824944822118,
+   "max": 16.957700019702315,
+   "late_pct": 0.0,
+   "n": 600,
+   "stages_p50_ms": {
+    "encoder": 3.9511040449142456,
+    "model": 5.794816017150879,
+    "decoder": 6.341631889343262
+   },
+   "graphs_usados": true,
+   "graphs_error": null,
+   "seconds": 12.635164499981329
+  },
+  {
+   "nombre": "sleep",
+   "pace_ms": 50.0,
+   "espera": "sleep",
+   "keepalive": false,
+   "sync": "event",
+   "p50": 32.658500014804304,
+   "p99": 41.54520203941502,
+   "max": 42.383700027130544,
+   "late_pct": 0.0,
+   "n": 600,
+   "stages_p50_ms": {
+    "encoder": 7.507967948913574,
+    "model": 12.387839794158936,
+    "decoder": 12.473855972290039
+   },
+   "graphs_usados": true,
+   "graphs_error": null,
+   "seconds": 34.07401940005366
+  },
+  {
+   "nombre": "sleep_timer_1ms",
+   "pace_ms": 50.0,
+   "espera": "sleep",
+   "keepalive": false,
+   "sync": "event",
+   "p50": 32.410149986390024,
+   "p99": 34.108647988177836,
+   "max": 34.98410002794117,
+   "late_pct": 0.0,
+   "n": 600,
+   "stages_p50_ms": {
+    "encoder": 7.50489616394043,
+    "model": 12.247551918029785,
+    "decoder": 12.376063823699951
+   },
+   "graphs_usados": true,
+   "graphs_error": null,
+   "seconds": 34.168897600029595,
+   "timer_1ms_aplicado": true
+  },
+  {
+   "nombre": "espera_activa",
+   "pace_ms": 50.0,
+   "espera": "spin",
+   "keepalive": false,
+   "sync": "event",
+   "p50": 31.464200001209974,
+   "p99": 34.271648958092555,
+   "max": 35.190399968996644,
+   "late_pct": 0.0,
+   "n": 600,
+   "stages_p50_ms": {
+    "encoder": 7.391232013702393,
+    "model": 11.941887855529785,
+    "decoder": 12.013567924499512
+   },
+   "graphs_usados": true,
+   "graphs_error": null,
+   "seconds": 33.94669390004128
+  },
+  {
+   "nombre": "sleep_keepalive",
+   "pace_ms": 50.0,
+   "espera": "sleep",
+   "keepalive": true,
+   "sync": "event",
+   "p50": 30.894249968696386,
+   "p99": 33.75942299258895,
+   "max": 34.92250002454966,
+   "late_pct": 0.0,
+   "n": 600,
+   "stages_p50_ms": {
+    "encoder": 7.258111953735352,
+    "model": 11.734016418457031,
+    "decoder": 11.825152397155762
+   },
+   "graphs_usados": true,
+   "graphs_error": null,
+   "seconds": 34.018593000015244
+  },
+  {
+   "nombre": "espera_activa_keepalive",
+   "pace_ms": 50.0,
+   "espera": "spin",
+   "keepalive": true,
+   "sync": "event",
+   "p50": 15.370249981060624,
+   "p99": 34.08571205451153,
+   "max": 35.26949998922646,
+   "late_pct": 0.0,
+   "n": 600,
+   "stages_p50_ms": {
+    "encoder": 3.775887966156006,
+    "model": 5.469183921813965,
+    "decoder": 6.040064096450806
+   },
+   "graphs_usados": true,
+   "graphs_error": null,
+   "seconds": 33.833794100093655
+  },
+  {
+   "nombre": "sleep_sync_device",
+   "pace_ms": 50.0,
+   "espera": "sleep",
+   "keepalive": false,
+   "sync": "device",
+   "p50": 18.264300073496997,
+   "p99": 34.282421038951725,
+   "max": 35.62790004070848,
+   "late_pct": 0.0,
+   "n": 600,
+   "stages_p50_ms": {
+    "encoder": 4.502384185791016,
+    "model": 6.573056221008301,
+    "decoder": 7.0655999183654785
+   },
+   "graphs_usados": true,
+   "graphs_error": null,
+   "seconds": 34.04522359999828
+  },
+  {
+   "nombre": "espera_activa_sync_poll",
+   "pace_ms": 50.0,
+   "espera": "spin",
+   "keepalive": false,
+   "sync": "poll",
+   "p50": 18.032149993814528,
+   "p99": 21.38166105840355,
+   "max": 21.972599904984236,
+   "late_pct": 0.0,
+   "n": 600,
+   "stages_p50_ms": {
+    "encoder": 4.356095790863037,
+    "model": 6.552576065063477,
+    "decoder": 7.053311824798584
+   },
+   "graphs_usados": true,
+   "graphs_error": null,
+   "seconds": 33.80935239989776
+  }
+ ],
+ "lectura": "comparar p50/p99 de las filas con ritmo contra 'cerrado': la diferencia es el piso a ritmo de cámara",
+ "_bitacora": {
+  "id": "20261119-001840-a03b",
+  "comando": "python -m src.cli genie bench '--tamaño' s --pasos 4 --cadena --ritmo 50 --diagnostico",
+  "commit": "8d866e0098ff3449e23c9a181be5b4c670c55c70"
+ }
+}

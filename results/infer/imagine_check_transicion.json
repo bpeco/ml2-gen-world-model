@@ -1,0 +1,18 @@
+{
+ "name": "transicion",
+ "seconds": 1.6117780208587646,
+ "tokens_equal": 0.99402734375,
+ "first_frame_equal": 0.999609375,
+ "clips_identical": 0.035,
+ "_bitacora": {
+  "id": "20261119-003129-76d3",
+  "comando": "python -m src.cli transicion evaluar --cadena",
+  "commit": "8d866e0098ff3449e23c9a181be5b4c670c55c70",
+  "meta": {
+   "temperatura": {
+    "valor": null,
+    "origen": "default del modelo"
+   }
+  }
+ }
+}

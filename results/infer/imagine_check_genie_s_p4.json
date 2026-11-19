@@ -1,0 +1,18 @@
+{
+ "name": "genie_s_p4",
+ "seconds": 89.28007936477661,
+ "tokens_equal": 1.0,
+ "first_frame_equal": 1.0,
+ "clips_identical": 1.0,
+ "_bitacora": {
+  "id": "20261119-002256-2364",
+  "comando": "python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
+  "commit": "8d866e0098ff3449e23c9a181be5b4c670c55c70",
+  "meta": {
+   "temperatura": {
+    "valor": 1.0,
+    "origen": "results/temperatura_genie_s.json (barrido en el holdout, corrida de referencia de la familia genie)"
+   }
+  }
+ }
+}
