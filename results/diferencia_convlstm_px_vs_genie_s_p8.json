@@ -1,0 +1,45 @@
+{
+ "a": "convlstm_px",
+ "b": "genie_s_p8",
+ "n_clips": 400,
+ "fvd": {
+  "1": {
+   "fvd_a": 1789.9249121171447,
+   "fvd_b": 276.1258063908449,
+   "diff": 1513.7991057262998,
+   "lo": 1375.8703798842043,
+   "hi": 1651.7278315683952,
+   "sd": 70.37179889902832,
+   "p": 0.009950248756218905,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "2": {
+   "fvd_a": 2150.5133041305417,
+   "fvd_b": 350.483239775092,
+   "diff": 1800.0300643554497,
+   "lo": 1635.7049894725747,
+   "hi": 1964.3551392383247,
+   "sd": 83.83932391983417,
+   "p": 0.009950248756218905,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "3": {
+   "fvd_a": 2400.224912015051,
+   "fvd_b": 425.0369702750472,
+   "diff": 1975.1879417400037,
+   "lo": 1792.5685172022884,
+   "hi": 2157.8073662777188,
+   "sd": 93.17317578454858,
+   "p": 0.009950248756218905,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  }
+ },
+ "_bitacora": {
+  "id": "20261119-063417-f720",
+  "comando": "python -m src.cli estadistica diferencia --a convlstm_px --b genie_s_p8",
+  "commit": "160356917c3695c5542824d3ea2001eb5070b048"
+ }
+}
