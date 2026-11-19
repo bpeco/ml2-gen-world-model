@@ -1,0 +1,163 @@
+{
+ "run": "gpt_s_d025",
+ "kind": "gpt",
+ "size": "s",
+ "config": {
+  "n_layer": 6,
+  "n_head": 6,
+  "dim": 384,
+  "dropout": 0.1,
+  "block_size": 2580,
+  "pos": "abs"
+ },
+ "params": 12425472,
+ "tokens": 25180800,
+ "frames": 195200,
+ "steps": 610,
+ "seconds": 702.3527512550354,
+ "tokens_per_s": 35852.06999617269,
+ "final_monitor_ce": 3.8688745498657227,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 10320000,
+   "monitor_ce": 6.615405082702637
+  },
+  {
+   "step": 500,
+   "tokens": 20640000,
+   "monitor_ce": 4.47906494140625
+  },
+  {
+   "step": 610,
+   "tokens": 25180800,
+   "monitor_ce": 3.8688745498657227
+  }
+ ],
+ "args": {
+  "kind": "gpt",
+  "size": "s",
+  "config": "{}",
+  "run": "gpt_s_d025",
+  "receta": null,
+  "set": [
+   "receta.presupuesto=195000"
+  ],
+  "presupuesto": null,
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": null,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [
+   {
+    "campo": "receta.presupuesto",
+    "receta": 780000,
+    "valor": 195000
+   }
+  ],
+  "receta_hash": "9a028e8fb737",
+  "receta_nombre": "gpt_iris"
+ },
+ "receta": {
+  "name": "gpt_iris",
+  "fuente": "IRIS (arXiv 2209.00588; github.com/eloialonso/iris); commaVQ: 'a similar recipe to IRIS'",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "constante",
+    "forma": "constant",
+    "ini": 0.001,
+    "fin": 0.001
+   }
+  ],
+  "wd_ini": 0.01,
+  "wd_fin": null,
+  "wd_on": "lineales",
+  "ema_segs": null,
+  "grad_clip": 10.0,
+  "amp": null,
+  "batch": 16,
+  "frames": 20,
+  "frameskip": 1,
+  "accum": 1,
+  "presupuesto": 195000,
+  "extras": {
+   "dropout": 0.1
+  },
+  "paper_steps": null,
+  "batch_fuente": 64,
+  "forzado": [
+   [
+    "batch",
+    "16 por paso en vez de 64 (IRIS): con el presupuesto fijo de 780k frames da ~2.440 pasos",
+    "presupuesto"
+   ],
+   [
+    "lr",
+    "1e-3 (x10 del 1e-4 de IRIS): con ~2.440 pasos, el humo de 300 pasos eligió x10 entre fuente, raíz, x3, x10 y x30 (results/humo_gpt.json)",
+    "presupuesto"
+   ],
+   [
+    "presupuesto",
+    "780k frames (100M tokens) en vez de lo que haya usado comma (no publicado)",
+    "presupuesto"
+   ],
+   [
+    "tamaño",
+    "6x384 / 8x512 en vez de 24x1024",
+    "presupuesto"
+   ]
+  ]
+ },
+ "receta_hash": "9a028e8fb737",
+ "desviaciones": [
+  {
+   "campo": "receta.presupuesto",
+   "receta": 780000,
+   "valor": 195000
+  }
+ ],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261118-210739-e6e1",
+  "comando": "python -m src.cli gpt entrenar '--tamaño' s --variante d025 --set receta.presupuesto=195000",
+  "commit": "5cb3a48bfe4b468fbf8f425495b8e0a40756f02a"
+ }
+}

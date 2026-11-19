@@ -1,0 +1,95 @@
+{
+ "model": "maskgit_s_abs",
+ "name": "maskgit_s_abs",
+ "default": 1.0,
+ "temperaturas": [
+  0.7,
+  0.8,
+  0.9,
+  1.0,
+  1.1
+ ],
+ "elegida": 0.8,
+ "tabla": [
+  {
+   "T": 0.7,
+   "fvd": 524.4401306067707,
+   "fvd_lo": 446.4624306228012,
+   "fvd_hi": 602.4178305907402,
+   "lpips": 0.35827289063483475,
+   "lpips_lo": 0.3437555569112301,
+   "lpips_hi": 0.37771590397600086,
+   "seconds": 574.6310303211212
+  },
+  {
+   "T": 0.8,
+   "fvd": 492.8349994210457,
+   "fvd_lo": 415.11250078954515,
+   "fvd_hi": 570.5574980525463,
+   "lpips": 0.3779476021230221,
+   "lpips_lo": 0.36211555908247833,
+   "lpips_hi": 0.397598368190229,
+   "seconds": 574.1467595100403
+  },
+  {
+   "T": 0.9,
+   "fvd": 489.4145739535534,
+   "fvd_lo": 395.51551533808373,
+   "fvd_hi": 583.313632569023,
+   "lpips": 0.3998525470867753,
+   "lpips_lo": 0.38393658392410723,
+   "lpips_hi": 0.41818491057958457,
+   "seconds": 576.4878561496735
+  },
+  {
+   "T": 1.0,
+   "fvd": 535.5141599179633,
+   "fvd_lo": 426.0287052835725,
+   "fvd_hi": 644.9996145523542,
+   "lpips": 0.43364148993045093,
+   "lpips_lo": 0.4150944750029594,
+   "lpips_hi": 0.4557107015401125,
+   "seconds": 733.7168085575104
+  },
+  {
+   "T": 1.1,
+   "fvd": 594.1325391310506,
+   "fvd_lo": 463.6431163239122,
+   "fvd_hi": 724.6219619381891,
+   "lpips": 0.47691794112324715,
+   "lpips_lo": 0.45498651259392503,
+   "lpips_hi": 0.49984299635887147,
+   "seconds": 3291.5720734596252
+  }
+ ],
+ "criterio": "menor FVD a 3 s; empate (FVD <= 1.02 x el mejor) por menor LPIPS a 3 s, luego cercanía al default",
+ "tol": 0.02,
+ "ventana": [
+  44,
+  60
+ ],
+ "frame_lpips": 59,
+ "fvd_ci": "normal, bootstrap por segmento",
+ "clips": "holdout",
+ "n_clips": 200,
+ "n_segmentos": 50,
+ "clips_hash": "e17c702485",
+ "steps": null,
+ "dtype": "fp32",
+ "seed": 0,
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26200-SP0",
+  "cpu": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "seconds": 5750.565782785416,
+ "_bitacora": {
+  "id": "20261118-180156-2795",
+  "comando": "python -m src.cli maskgit evaluar '--tamaño' s --variante abs --barrer-temperatura",
+  "commit": "32742df0745e59a332cd2d47f64037f4454fad27"
+ }
+}
