@@ -1323,7 +1323,7 @@
     const n = NOTAS[i], trans = inicio ? (performance.now() - inicio) / 1000 : 0;
     if (!n) { notas.innerHTML = `<div class="meta"><span>${current.dataset.name}</span><span>Transcurrido ${mmss(trans)}</span></div><p><i>Slide de respaldo, para las preguntas.</i></p>`; return; }
     const tarde = inicio && trans > acum[i] + 15;
-    notas.innerHTML = `<div class="meta"><span>Slide ${i} de ${NMAIN - 1}</span><span>${n.quien}</span><span>Objetivo ${n.seg} s · hasta ${mmss(acum[i])}</span>`
+    notas.innerHTML = `<div class="meta"><span>Slide ${i} de ${NMAIN - 1}</span><span>${n.titulo}</span><span>Objetivo ${n.seg} s · hasta ${mmss(acum[i])}</span>`
       + `<span class="${tarde ? 'tarde' : ''}">Transcurrido ${mmss(trans)} de ${mmss(acum[acum.length - 1] || 0)}</span></div>${n.html}`;
   }
   setInterval(pintarNotas, 1000);

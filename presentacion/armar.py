@@ -16,11 +16,11 @@ from pathlib import Path
 
 AQUI = Path(__file__).resolve().parent
 RAIZ = AQUI.parent
-CABEZA = re.compile(r"^## (\d+) · (.+?) \(([^,]+), (\d+) s\)\s*$", re.M)
+CABEZA = re.compile(r"^## (\d+) · (.+?) \((\d+) s\)\s*$", re.M)
 
 
 def notas():
-  """guion.md -> notas.js: una entrada por slide principal, con quién la dice, los segundos y el texto en HTML."""
+  """guion.md -> notas.js: una entrada por slide principal, con los segundos y el texto en HTML."""
   t = (AQUI / "guion.md").read_text(encoding="utf-8").split("\n---\n")[1]   # entre la tabla y el respaldo
   heads = list(CABEZA.finditer(t))
   out = []
@@ -34,8 +34,8 @@ def notas():
         ps.append(f"<p><i>{html.escape(par.strip('*'))}</i></p>")
       else:
         ps.append(f"<p>{html.escape(par)}</p>")
-    n, titulo, quien, seg = m.groups()
-    out.append({"slide": int(n), "titulo": titulo, "quien": quien, "seg": int(seg), "html": "".join(ps)})
+    n, titulo, seg = m.groups()
+    out.append({"slide": int(n), "titulo": titulo, "seg": int(seg), "html": "".join(ps)})
   assert [x["slide"] for x in out] == list(range(len(out))), "guion.md: faltan slides o están desordenadas"
   (AQUI / "notas.js").write_text("// Generado por presentacion/armar.py desde guion.md. No editar a mano.\nwindow.NOTAS = "
                                  + json.dumps(out, ensure_ascii=False) + ";\n", encoding="utf-8")
