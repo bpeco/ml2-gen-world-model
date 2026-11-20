@@ -826,3 +826,100 @@ def test_mps_es_una_accion_de_gpu(entorno, monkeypatch):
   cola.liberar_candado()
   with pytest.raises(ToolkitError, match="solo mide en cuda o cpu"):
     Toolkit("gpt").plan("bench", device="mps")
+
+
+def test_accion_concurrente_no_se_queda_con_el_resultado(entorno, monkeypatch, tmp_path):
+  """Trabajo 12: `verificar` corrió en CPU mientras terminaba `vjepa2_ac evaluar`, se atribuyó su JSON y le pisó el
+  sello; `vigentes` no lo marcaba porque `verificar` salió con 1."""
+  from datetime import datetime
+  estado = tmp_path / "estado.json"
+  monkeypatch.setattr(resultados, "ARCHIVO", estado)
+  res = rutas.results()
+  res.mkdir(parents=True)
+  f = res / "latent_x.json"
+  base = {"limpio": True, "commit": "abc123", "permitir_sucio": False}
+  ev = {**base, "id": "eval", "fecha": "2026-11-18T20:03:12", "duracion_s": 4325.1, "salida": 0, "argv": ["x", "evaluar"],
+        "argv_texto": "python -m src.cli x evaluar", "escribio": [str(f)]}
+  ve = {**base, "id": "verif", "fecha": "2026-11-18T21:14:21", "duracion_s": 159.8, "salida": 1, "argv": ["verificar"],
+        "argv_texto": "python -m src.cli verificar", "escribio": [str(f)]}
+  bitacora.registrar(ev)
+  bitacora.registrar(ve)
+  f.write_text(json.dumps({"x": 1, "_bitacora": {"id": "verif", "comando": "python -m src.cli verificar", "commit": "abc123"}}))
+  inicio_verif = datetime.fromisoformat("2026-11-18T21:14:21").timestamp()
+  assert bitacora._relativa(f) in bitacora.ajenos(inicio_verif)          # al registrar: la evaluación terminó en su ventana
+  assert bitacora.ajenos(inicio_verif + 3600) == set()
+  marcados, problemas = bitacora.marcar_vigentes(estado)
+  assert problemas == [] and [Path(m).name for m in marcados] == ["latent_x.json"]
+  d = json.loads(f.read_text())
+  assert d["x"] == 1 and d["_bitacora"]["id"] == "eval" and "x evaluar" in d["_bitacora"]["comando"]   # sello corregido
+  assert bitacora.verificar(estado) == []
+  bitacora.registrar({**ev, "id": "eval2", "fecha": "2026-11-18T22:00:00"})  # una corrida posterior en secuencia
+  assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "eval"   # no lo reescribió: manda el sello
+  bitacora.anotar_json([f], {**ev, "id": "eval2"})                                    # sí lo escribió (el ejecutor lo sella)
+  assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "eval2"
+
+
+def test_el_ejecutor_no_reclama_lo_de_otra_accion(entorno, monkeypatch):
+  rutas.results().mkdir(parents=True)
+  destino = rutas.results() / "eval_toy.json"
+  monkeypatch.setattr(bitacora, "ajenos", lambda inicio, entradas=None: {bitacora._relativa(destino)})
+  ejecutor.ejecutar(juguete(escribe=(destino, {"x": 1})), salida=lambda s: None)
+  e = bitacora.leer()[-1]
+  assert not any(f.endswith("eval_toy.json") for f in e["escribio"]) and "_bitacora" not in json.loads(destino.read_text())
+
+
+def test_cambiar_solo_el_sello_no_es_escribir(entorno):
+  """Trabajo 13: `lewm entrenar` (una hora) se quedó con latent_vjepa2_ac.json porque `vigentes` le corrigió el sello
+  mientras corría."""
+  rutas.results().mkdir(parents=True)
+  f = rutas.results() / "eval_x.json"
+  f.write_text(json.dumps({"x": 1}))
+  antes = bitacora.instantanea()
+  bitacora.anotar_json([f], {"id": "otra", "argv_texto": "x", "commit": "abc123"})
+  assert bitacora.archivos_escritos(antes, bitacora.instantanea()) == []
+  f.write_text(json.dumps({"x": 2, "_bitacora": json.loads(f.read_text())["_bitacora"]}))
+  assert [Path(p).name for p in bitacora.archivos_escritos(antes, bitacora.instantanea())] == ["eval_x.json"]
+
+
+def test_manda_el_sello_del_json(entorno):
+  rutas.results().mkdir(parents=True)
+  f = rutas.results() / "latent_x.json"
+  base = {"limpio": True, "commit": "abc123", "permitir_sucio": False, "salida": 0, "argv": ["x"], "escribio": [str(f)]}
+  bitacora.registrar({**base, "id": "eval", "fecha": "2026-11-18T20:03:12", "duracion_s": 4325.1, "argv_texto": "x evaluar"})
+  bitacora.registrar({**base, "id": "train", "fecha": "2026-11-18T21:15:20", "duracion_s": 3538.0, "argv_texto": "y entrenar"})
+  f.write_text(json.dumps({"x": 1, "_bitacora": {"id": "eval"}}))
+  assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "eval"
+  f.write_text(json.dumps({"x": 1}))  # sin sello: la última que lo reclamó, como antes
+  assert bitacora._escritores(bitacora.leer())[bitacora._relativa(f)]["id"] == "train"
+
+
+def test_verificar_exige_entrada_a_la_estadistica(entorno):
+  rutas.results().mkdir(parents=True)
+  (rutas.results() / "semillas_x.json").write_text("{}")
+  vacio = rutas.results() / "estado.json"
+  vacio.write_text("{}")
+  assert [k for k, _ in bitacora.verificar(vacio)] == [resultados.clave(rutas.results() / "semillas_x.json")]
+
+
+def test_la_cadena_nombra_las_pasadas_con_p():
+  """Trabajo 14: el bench de cadena y la calidad en línea de Genie con 4 pasadas salían como genie_s_s4 (se lee como la
+  semilla 4) y el reporte no los encontraba para genie_s_p4."""
+  for kw in ({}, {"diagnostico": True}, {"modo": "imagine"}):
+    c = Toolkit("genie").plan("bench", pasos="4", cadena=True, **kw).comandos[0].argv
+    assert c[2] == "src.infer.bench_e2e" and c[c.index("--name") + 1] == "genie_s_p4"
+  c = Toolkit("genie").plan("evaluar", pasos="4", cadena=True).comandos[0].argv
+  assert c[2:4] == ["src.infer.quality", "online"] and c[c.index("--name") + 1] == "genie_s_p4"
+  c = Toolkit("convlstm_px").plan("bench", cadena=True).comandos[0].argv
+  assert c[c.index("--name") + 1] == "convlstm_px"
+
+
+def test_bench_con_npu_o_dml_falla_al_planear():
+  """El dry-run de `bench --cadena --device npu` pasaba y la corrida real fallaba: bench_e2e corre con torch, y con
+  npu y dml solo se mide la cadena del codec con ONNX Runtime (src.infer.bench_ort)."""
+  for d in ("npu", "dml"):
+    for kw in ({"cadena": True}, {}):
+      with pytest.raises(ToolkitError, match="bench_ort --enc " + d):
+        Toolkit("genie").plan("bench", pasos="4", device=d, **kw)
+  assert Toolkit("genie").plan("bench", pasos="4", cadena=True, device="cpu").comandos
+  with pytest.raises(ToolkitError, match="bench --cadena"):
+    Toolkit("genie").plan("bench", pasos="4", device="mps")

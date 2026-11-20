@@ -243,11 +243,14 @@ comandos = [
 [[trabajo]]
 id = 19
 opcional = true
-nombre = "OPCIONAL: genie_m (entrenar, evaluar a 1, 2, 4, 8, 12 y 25 pasos)"
-horas = 1.5
+nombre = "OPCIONAL: genie_m (entrenar, evaluar a 1, 2, 4, 8, 12 y 25 pasos, latencia y cadena a 4 pasos como genie_s)"
+horas = 1.8
 comandos = [
   "genie entrenar --tamaño m",
   "genie evaluar --tamaño m --pasos 1,2,4,8,12,25",
+  "genie bench --tamaño m --pasos 1,2,4,8,12,25",
+  "genie bench --tamaño m --pasos 4 --cadena",
+  "genie bench --tamaño m --pasos 4 --cadena --ritmo 50",
 ]
 
 [[trabajo]]

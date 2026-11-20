@@ -339,6 +339,27 @@ def test_decoder_forma_y_aprende():
   assert hist[-1] < hist[0]
 
 
+def test_decoder_no_retiene_el_buffer_del_mse():
+  # trabajo 12: el historial guardaba loss.detach(), que comparte storage con el buffer elementwise del mse_loss
+  # (B*3*H*W floats); con bs 64 eran ~24 MiB por paso y el decoder se quedó sin memoria en el paso ~1000
+  import gc
+  from src.models.vjepa.train_decoder import entrenar
+  torch.manual_seed(0)
+  m = VJEPA2(Config(**TINY)).eval()
+  img = px(4, 1)[:, 0]
+  vivos = []
+
+  def frames_fn(step, bs):
+    gc.collect()
+    vivos.append(sum(1 for o in gc.get_objects() if torch.is_tensor(o) and o.ndim == 0
+                     and o.untyped_storage().nbytes() >= img[:bs].numel() * 4))
+    return img[:bs]
+
+  _, hist = entrenar(m, frames_fn, torch.device("cpu"), steps=6, bs=4, dim=32, depth=1, heads=2, log=lambda s: None)
+  # solo el `loss` del paso anterior (variable del bucle); con la pérdida eran 0, 1, 2, 3, ... (uno por paso)
+  assert vivos == [0] + [1] * 5 and len(hist) == 6 and all(isinstance(h, float) for h in hist)
+
+
 # ---------------------------------------------------------------- stream
 
 def _camara(B, n, seed=0):

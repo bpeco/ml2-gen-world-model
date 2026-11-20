@@ -1,0 +1,194 @@
+{
+ "run": "vjepa2_ac",
+ "kind": "vjepa2_ac",
+ "size": null,
+ "config": {
+  "encoder_run": "vjepa2_s",
+  "cargar_encoder": false,
+  "encoder": "small",
+  "embed_dim": 0,
+  "depth": 0,
+  "num_heads": 0,
+  "patch": 16,
+  "tubelet": 2,
+  "pred_dim": 384,
+  "pred_depth": 12,
+  "pred_heads": 12,
+  "frames": 16,
+  "height": 128,
+  "width": 256,
+  "n_pose": 30,
+  "action_dim": 6,
+  "auto_steps": 2,
+  "oficial_rope": true,
+  "grad_ckpt": true
+ },
+ "params": 21595392,
+ "tokens": 100657152,
+ "frames": 780288,
+ "steps": 1524,
+ "seconds": 5955.05902838707,
+ "tokens_per_s": 16902.796684328256,
+ "final_monitor_ce": 0.19787034392356873,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 16512000,
+   "monitor_ce": 0.219185471534729
+  },
+  {
+   "step": 500,
+   "tokens": 33024000,
+   "monitor_ce": 0.22040551900863647
+  },
+  {
+   "step": 750,
+   "tokens": 49536000,
+   "monitor_ce": 0.21393591165542603
+  },
+  {
+   "step": 1000,
+   "tokens": 66048000,
+   "monitor_ce": 0.21245738863945007
+  },
+  {
+   "step": 1250,
+   "tokens": 82560000,
+   "monitor_ce": 0.203975647687912
+  },
+  {
+   "step": 1500,
+   "tokens": 99072000,
+   "monitor_ce": 0.19940435886383057
+  },
+  {
+   "step": 1524,
+   "tokens": 100657152,
+   "monitor_ce": 0.19787034392356873
+  }
+ ],
+ "args": {
+  "kind": "vjepa2_ac",
+  "size": null,
+  "config": "{\"encoder_run\":\"vjepa2_s\"}",
+  "run": "vjepa2_ac",
+  "receta": null,
+  "set": [],
+  "presupuesto": null,
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": null,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [],
+  "receta_hash": "fc9176850076",
+  "receta_nombre": "vjepa2_ac_oficial"
+ },
+ "receta": {
+  "name": "vjepa2_ac_oficial",
+  "fuente": "V-JEPA 2 (arXiv 2506.09985) §3.1; configs/train/vitg16/droid-256px-8f.yaml",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "warmup",
+    "forma": "linear",
+    "ini": 7.5e-05,
+    "fin": 0.000425,
+    "frac": 0.047619047619047616
+   },
+   {
+    "nombre": "constante",
+    "forma": "constant",
+    "ini": 0.000425,
+    "fin": 0.000425
+   },
+   {
+    "nombre": "decay",
+    "forma": "linear",
+    "ini": 0.000425,
+    "fin": 0.0,
+    "frac": 0.047619047619047616
+   }
+  ],
+  "wd_ini": 0.04,
+  "wd_fin": null,
+  "wd_on": "matrices",
+  "ema_segs": null,
+  "grad_clip": null,
+  "amp": "bf16",
+  "batch": 16,
+  "frames": 16,
+  "frameskip": 5,
+  "accum": 2,
+  "presupuesto": 780000,
+  "extras": {},
+  "paper_steps": 94500,
+  "batch_fuente": 256,
+  "forzado": [
+   [
+    "batch",
+    "32 efectivo (16 x accum 2) en vez de 256: con el presupuesto común de 780k frames da ~1.5k pasos (con 256 serían ~190). El lr queda el del paper: el humo de 300 pasos lo eligió entre fuente, raíz y x3, con diferencias menores al 1 % (results/humo_vjepa2_ac.json)",
+    "presupuesto"
+   ],
+   [
+    "presupuesto",
+    "~1.5k pasos en vez de 94.5k; las fracciones de warmup y decay se conservan",
+    "presupuesto"
+   ],
+   [
+    "predictor",
+    "12 x 384 en vez de 24 x 1024",
+    "presupuesto"
+   ],
+   [
+    "frames/frameskip",
+    "16 frames a 4 fps = 1 de cada 5 de los 20 FPS",
+    "datos"
+   ]
+  ]
+ },
+ "receta_hash": "fc9176850076",
+ "desviaciones": [],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261118-145508-68fc",
+  "comando": "python -m src.cli vjepa2_ac entrenar --encoder vjepa2_s",
+  "commit": "09b558003316d52f07aa80e4818751a87c7a73e6"
+ }
+}

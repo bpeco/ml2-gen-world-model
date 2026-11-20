@@ -51,7 +51,9 @@ def entrenar(encoder_model, frames_fn, dev, steps=3000, bs=64, dim=256, depth=6,
   opt = torch.optim.AdamW([{"params": [p for p in dec.parameters() if p.ndim >= 2], "weight_decay": wd},
                            {"params": [p for p in dec.parameters() if p.ndim < 2], "weight_decay": 0.0}],
                           lr=peak, betas=(0.9, 0.999))
-  hist = []
+  # historial en un buffer del device: guardar loss.detach() retenía todo el buffer elementwise del mse_loss (el escalar
+  # comparte storage con él: ~24 MiB por paso con bs 64, y OOM en el paso ~1000), y .item() por paso sincronizaría
+  hist = torch.zeros(steps, device=dev)
   for step in range(steps):
     for g in opt.param_groups:
       g["lr"] = lr_en(step, steps, peak)
@@ -66,10 +68,10 @@ def entrenar(encoder_model, frames_fn, dev, steps=3000, bs=64, dim=256, depth=6,
     loss.backward()
     torch.nn.utils.clip_grad_norm_(dec.parameters(), clip)
     opt.step()
-    hist.append(loss.detach())
+    hist[step] = loss.detach()
     if (step + 1) % 100 == 0 or step + 1 == steps:
       log(f"step {step + 1}/{steps} mse {loss.item():.4f}")
-  return dec, [h.item() for h in hist]
+  return dec, hist.tolist()
 
 
 def main(argv=None):

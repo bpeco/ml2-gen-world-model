@@ -29,15 +29,18 @@ INK, INK2, MUTED, GRID = "#0b0b0b", "#52514e", "#8a8985", "#e4e3df"
 SURF = "#fcfcfb"
 # Los latentes (lewm) van en su propia figura (fig_pareto_latente*.png), con el violeta de la ablación y las
 # referencias de tokens en gris. No aparecen en las figuras de las otras familias.
-COLORS = {"gpt": "#2a78d6", "gpt_kd": "#2a78d6", "maskgit": "#eb6834", "gpt2m": INK,
-          "baseline": MUTED, "ablación": "#6250d6", "contexto": "#eb6834", "lewm": "#6250d6"}
-MARKERS = {"gpt": "o", "gpt_kd": "o", "maskgit": "^", "gpt2m": "D", "baseline": "X",
+# Genie es la dinámica MaskGIT fiel: lleva el naranja de MaskGIT. El ConvLSTM de píxeles lleva el violeta (el tercer
+# tono validado); el MaskGIT propio queda como ablación opcional.
+COLORS = {"gpt": "#2a78d6", "gpt_kd": "#2a78d6", "maskgit": "#eb6834", "genie": "#eb6834", "convlstm": "#6250d6",
+          "gpt2m": INK, "baseline": MUTED, "ablación": "#6250d6", "contexto": "#eb6834", "lewm": "#6250d6"}
+MARKERS = {"gpt": "o", "gpt_kd": "o", "maskgit": "^", "genie": "^", "convlstm": "s", "gpt2m": "D", "baseline": "X",
            "ablación": "v", "contexto": "^", "lewm": "h"}
 FAMILY_NAMES = {"baseline": "baselines de conteo", "gpt": "GPT de cero",
-                "gpt_kd": "GPT destilado (hueco)", "maskgit": "MaskGIT: S lleno, M hueco (número = pasos)", "gpt2m": "gpt2m de comma (307M)",
+                "gpt_kd": "GPT-S destilado (hueco)", "maskgit": "MaskGIT: S lleno, M hueco (número = pasos)",
+                "genie": "Genie S (número = pasadas)", "convlstm": "ConvLSTM de píxeles", "gpt2m": "gpt2m de comma (307M)",
                 "ablación": "ablación", "contexto": "contexto",
                 "lewm": "LeWorldModel (un vector por frame)"}
-LATENT_FAMS = ("lewm",)
+LATENT_FAMS = ("lewm", "vjepa2")   # su latencia es por paso de 250 ms o por clip: no va con la de video
 
 plt.rcParams.update({"font.size": 9, "axes.spines.top": False, "axes.spines.right": False,
                      "axes.edgecolor": MUTED, "axes.labelcolor": INK2, "xtick.color": INK2, "ytick.color": INK2,
@@ -100,7 +103,8 @@ def load_configs(manifest, registro=None):
              fvd={h: _get(vd, "fvd", h) for h in ("1", "2", "3")},
              piso1=_get(vd, "piso", "1", "value"), piso_n1=_get(pf, "piso", "1", "value"),
              piso_n1_ci=(_get(pf, "piso", "1", "lo"), _get(pf, "piso", "1", "hi")), fvd1_mitades=_get(vd, "piso", "1", "modelo_mitades"),
-             ms=_get(bn, "median_ms"), e2e_p99=_get(e2e, "steady", "p99"))
+             ms=_get(bn, "median_ms"),
+             e2e_p99=_get(e2e, "cadena_ritmo", "p99") or _get(e2e, "steady", "p99"))   # protocolo único (D15), o el e2e viejo
     c["fvd1"] = _get(c["fvd"]["1"], "value")
     cfgs.append(c)
   return cfgs
@@ -164,6 +168,18 @@ def _repel(ax, items, points=()):
     ax.annotate(it["t"], (it["x"], it["y"]), textcoords="offset points", xytext=(dx, dy), ha=ha, va="center",
                 fontsize=it["size"], color=it["col"], arrowprops=guide)
 
+CON_PASADAS = ("maskgit", "genie")   # familias que se grafican de 1 a N pasadas por frame
+_NOMBRE_PASADAS = {"maskgit": "MaskGIT", "genie": "Genie"}
+
+
+def leyenda_tamano_m(cfgs):
+  """Entradas de leyenda para las familias con pasadas que tienen tamaño M (hueco y punteado en el Pareto)."""
+  from matplotlib.lines import Line2D
+  return [Line2D([], [], c=color(f), ls=":", lw=1, marker=MARKERS[f], ms=5, mfc=SURF, mec=color(f), mew=1.4,
+                 label=f"{_NOMBRE_PASADAS[f]} M (hueco, punteado)")
+          for f in CON_PASADAS if any(c["family"] == f and c["size"] == "m" and c["steps"] for c in cfgs)]
+
+
 def fig_pareto(cfgs, key, ylabel, path, ci):
   """Figura central: calidad vs. ms/frame. Pareto sobre el grupo principal (mismo presupuesto de tokens)."""
   from matplotlib.lines import Line2D
@@ -183,31 +199,34 @@ def fig_pareto(cfgs, key, ylabel, path, ci):
   if front:
     ax.step([p[0] for p in front] + [2000], [p[1] for p in front] + [front[-1][1]], where="post", c=MUTED, lw=1,
             zorder=1)
-  for size in ("s", "m"):  # MaskGIT: una línea por tamaño, pasos 1 -> 8
-    mg = sorted([c for c in main if c["family"] == "maskgit" and c["size"] == size], key=lambda c: c["steps"])
-    if not mg:
-      continue
-    ax.plot([c["ms"] for c in mg], [c[key] for c in mg], c=color("maskgit"), lw=1, alpha=0.6,
-            ls="-" if size == "s" else ":", zorder=2)
-    for c in mg:
-      _mark(ax, c["ms"], c[key], c, _err(c, c[key], *ci(c)), ms=6 if size == "s" else 5, hollow=size == "m")
-      _txt(ax, c["ms"], c[key], str(c["steps"]), dx=0 if size == "s" else 8, dy=-12 if size == "s" else 0,
-           ha="center" if size == "s" else "left", size=7, col=INK)
-    last = mg[-1]
-    _txt(ax, last["ms"], last[key], f"MaskGIT-{size.upper()}", dx=10 if size == "s" else 12, dy=8 if size == "s" else -16)
+  # una línea por familia y tamaño, de 1 a N pasadas. Solo el tamaño S lleva el número de pasadas y el nombre junto a
+  # los puntos: el M cae encima (mismas latencias de 5 a 35 ms) y se identifica en la leyenda, hueco y punteado
+  for fam in CON_PASADAS:
+    for size in ("s", "m"):
+      mg = sorted([c for c in main if c["family"] == fam and c["size"] == size and c["steps"]], key=lambda c: c["steps"])
+      if not mg:
+        continue
+      ax.plot([c["ms"] for c in mg], [c[key] for c in mg], c=color(fam), lw=1, alpha=0.6,
+              ls="-" if size == "s" else ":", zorder=2)
+      for c in mg:
+        _mark(ax, c["ms"], c[key], c, _err(c, c[key], *ci(c)), ms=6 if size == "s" else 5, hollow=size == "m")
+        if size == "s":
+          _txt(ax, c["ms"], c[key], str(c["steps"]), dx=0, dy=-12, ha="center", size=7, col=INK)
+      if size == "s":
+        _txt(ax, mg[-1]["ms"], mg[-1][key], f"{_NOMBRE_PASADAS[fam]}-S", dx=0, dy=16, ha="center")
   for c in pts:
-    if c["family"] != "maskgit":
+    if c["family"] not in CON_PASADAS:
       _mark(ax, c["ms"], c[key], c, _err(c, c[key], *ci(c)), hollow=c.get("kd") or c["group"] == "extra")
-  lab = {c["short"]: c for c in pts if c["family"] != "maskgit"}
-  pos = {"Transición": (9, 0, "left"),
-         "gpt2m (comma)": (-9, 9, "right"), "GPT-S": (-9, 7, "right"), "GPT-S KD": (-9, -7, "right"),
-         "GPT-M": (9, 7, "left"), "GPT-M KD": (9, -7, "left")}
+  lab = {c["short"]: c for c in pts if c["family"] not in CON_PASADAS}
+  pos = {"Transición por celda": (9, 10, "left"), "gpt2m": (-9, 9, "right"), "gpt_s_kd": (-9, 9, "right"),
+         "convlstm_px": (9, 0, "left"), "gpt_s": (-9, -7, "right"), "gpt_m": (9, 7, "left")}
   for name, (dx, dy, ha) in pos.items():
     if name in lab:
       c = lab[name]
-      _txt(ax, c["ms"], c[key], name.replace(", 1B tokens", " (1B tokens, 10×)"), dx=dx, dy=dy, ha=ha)
-  fams = [f for f in ("gpt", "gpt_kd", "maskgit", "gpt2m", "baseline") if any(c["family"] == f for c in pts)]
-  _legend(ax, fams, loc="upper center", extra=[Line2D([], [], c=MUTED, lw=1, label="frontera de Pareto (100M tokens)")])
+      _txt(ax, c["ms"], c[key], name, dx=dx, dy=dy, ha=ha)
+  fams = [f for f in ("gpt", "gpt_kd", "genie", "maskgit", "convlstm", "gpt2m", "baseline") if any(c["family"] == f for c in pts)]
+  _legend(ax, fams, loc="upper center", bbox_to_anchor=(0.5, -0.13), ncol=3, frameon=False,
+          extra=leyenda_tamano_m(main) + [Line2D([], [], c=MUTED, lw=1, label="frontera de Pareto (780.000 frames)")])
   ax.set_xlim(0.3, 2000)
   ax.set_ylim(0, None)
   ax.set_xlabel("latencia por frame generado (ms, mediana, batch 1, RTX 3080 Ti; escala log)")
@@ -262,9 +281,8 @@ def fig_pareto_latente(cfgs, key, ylabel, path, ci):
   plt.close(fig)
 
 
-HORIZON = [("gpt2m (comma)", "-"), ("MaskGIT-S 8 pasos", "--"),
-           ("MaskGIT-S 4 pasos", "-"), ("GPT-M destilado", "-"), ("GPT-S", "--"), ("Frame congelado", "--"),
-           ("Transición por celda", "-")]
+HORIZON = [("gpt2m", "-"), ("gpt_s_kd", "-"), ("genie_s_p4", "-"), ("genie_s_p25", "--"), ("convlstm_px", "-"),
+           ("Frame congelado", "--"), ("Transición por celda", "-")]
 
 
 def fig_horizon(cfgs, path):
@@ -302,10 +320,14 @@ def fig_horizon(cfgs, path):
   plt.close(fig)
 
 
+MIN_N_CORR = 5   # con menos de 5 puntos ni una permutación exacta llega a p < 0,05 (con 3, scipy da ρ = 1 y p = 0)
+
+
 def correlation(cfgs):
-  """Spearman entre CE (ce_all) y FVD a 1 s de las configuraciones autoregresivas. -> (rho, p, n, puntos)."""
+  """Spearman entre CE (ce_all) y FVD a 1 s de las configuraciones autoregresivas. -> (rho, p, n, puntos); rho y p son
+  None con menos de MIN_N_CORR puntos."""
   pts = [c for c in cfgs if c["autoregressive"] and c["ce_all"] is not None and c["fvd1"] is not None]
-  if len(pts) < 3:
+  if len(pts) < MIN_N_CORR:
     return None, None, len(pts), pts
   r = spearmanr([c["ce_all"] for c in pts], [c["fvd1"] for c in pts])
   return float(r.statistic), float(r.pvalue), len(pts), pts
@@ -340,43 +362,32 @@ def fig_ce_vs_fvd(cfgs, path):
   plt.close(fig)
 
 
-LAT = [("gpt2m (307M)", "gpt2m", ["fp32", "fp16", "fp16_graphs"]),
-       ("GPT-L (88M, sin entrenar)", "random_gpt_l", ["fp32", "fp16", "fp16_graphs"]),
-       ("GPT-M (26M)", "gpt_m", ["fp32", "fp16", "fp16_graphs"]), ("GPT-S (11M)", "gpt_s", ["fp32", "fp16", "fp16_graphs"]),
-       ("MaskGIT-M, 8 pasos", "maskgit_m", ["fp32_s8", "fp16_s8", "fp16_graphs_s8"]),
-       ("MaskGIT-S, 8 pasos", "maskgit_s", ["fp32_s8", "fp16_s8", "fp16_graphs_s8"]),
-       ("MaskGIT-S, 2 pasos", "maskgit_s", ["fp32_s2", None, "fp16_graphs_s2"])]
-
-
-def fig_latency(bench_dir, path, registro=None):
-  """H3: ms/frame en fp32, fp16 y fp16 + CUDA graphs (rampa de un tono: más oscuro = más optimizado)."""
-  shades = ["#a9c9ef", "#5d9ce3", "#1d5fae"]
-  names = ["fp32", "fp16", "fp16 + CUDA graphs"]
-  rows = []
-  for lab, n, vs in LAT:
-    vals = [_get(_load(Path(bench_dir) / f"{n}__{v}.json", Path(".")), "median_ms")
-            if v and resultados.vigente(Path(bench_dir) / f"{n}__{v}.json", registro) else None for v in vs]
-    if any(vals):
-      rows.append((lab, vals))
+def fig_latency(cfgs, path):
+  """Latencia por frame de los modelos de video: el modelo solo (p50) y la cadena completa a ritmo de cámara (p99,
+  cámara -> encoder -> modelo -> decoder). Un tono: más oscuro = la cadena completa."""
+  rows = sorted([c for c in cfgs if c["group"] == "principal" and c["ms"] and c["family"] not in LATENT_FAMS + ("contexto",)],
+                key=lambda c: c["ms"])
   if not rows:
     return
-  fig, ax = plt.subplots(figsize=(8, 4.8))
-  h = 0.26
-  for i, (lab, vals) in enumerate(rows):
-    for j, v in enumerate(vals):
+  shades, names = ["#a9c9ef", "#1d5fae"], ["modelo solo (p50)", "cadena a 20 FPS (p99)"]
+  fig, ax = plt.subplots(figsize=(8, 0.45 * len(rows) + 1.4))
+  h, usados = 0.38, set()
+  for i, c in enumerate(rows):
+    for j, v in enumerate((c["ms"], c.get("e2e_p99"))):
       if v:
-        y = i + (j - 1) * h
-        ax.barh(y, v, height=h * 0.88, color=shades[j], label=names[j] if i == 0 else None)
-        ax.text(v * 1.08, y, f"{v:.0f}" if v >= 10 else f"{v:.1f}", va="center", fontsize=7, color=INK2)
-  ax.set_yticks(range(len(rows)), [r[0] for r in rows])
+        y = i + (j - 0.5) * h
+        ax.barh(y, v, height=h * 0.88, color=shades[j], label=None if j in usados else names[j])
+        usados.add(j)
+        ax.text(v * 1.08, y, f"{v:.0f}" if v >= 10 else f"{v:.1f}".replace(".", ","), va="center", fontsize=7, color=INK2)
+  ax.set_yticks(range(len(rows)), [c["short"] for c in rows])
   ax.invert_yaxis()
   ax.set_xscale("log")
-  ax.set_xlim(0.5, 6000)
+  ax.set_xlim(0.2, 3000)
   ax.axvline(RT_MS, ls="--", c=INK2, lw=0.9)
-  ax.text(RT_MS * 1.06, -0.62, f"{RT_MS:.0f} ms (20 FPS)", fontsize=8, color=INK2)
-  ax.set_xlabel("ms por frame generado (mediana, batch 1, RTX 3080 Ti; escala log)")
+  ax.text(RT_MS * 1.06, -0.75, f"{RT_MS:.0f} ms (20 FPS)", fontsize=8, color=INK2)
+  ax.set_xlabel("ms por frame (batch 1, RTX 3080 Ti; escala log)")
   ax.grid(axis="y", visible=False)
-  ax.legend(loc="lower right", fontsize=8)
+  ax.legend(loc="upper right", fontsize=8)
   fig.savefig(path, dpi=200, bbox_inches="tight")
   plt.close(fig)
 
@@ -443,10 +454,10 @@ def markdown(rows):
   out = ["| Configuración | Familia | Params (M) | CE | CE último frame | LPIPS@1s | FVD@1s [IC 95% por segmento] | FVD@3s "
          "| Piso FVD@1s (400 contra 400) | Piso en mitades (modelo en mitades) | ms/frame | FPS | Tiempo real (<50 ms) | Pareto | De punta a punta p99 (ms) | Estado |",
          "|---|---|---:|---:|---:|---:|---:|---:|---:|---:|---:|---:|:-:|:-:|---:|---|"]
-  out = ["Pareto: no dominada en (ms/frame, FVD a 1 s) entre las configuraciones principales (100M tokens); las "
+  out = ["Pareto: no dominada en (ms/frame, FVD a 1 s) entre las configuraciones principales (780.000 frames); las semillas 1 y 2, las "
          "ablaciones y los extras no compiten. Latencia de los transformers con fp16 + CUDA graphs. De punta a punta: "
-         "video → encoder → modelo → decoder → video en la GPU, modo imaginación, p99 de 3000 frames "
-         "(results/infer/summary_e2e.md). Estado: solo las filas vigentes entran en la frontera de Pareto y en las figuras "
+         "cámara → encoder → modelo → decoder → frame en la GPU, a ritmo de cámara (un frame cada 50 ms), p99 de 3000 "
+         "frames (results/infer/latencia_*.json). Estado: solo las filas vigentes entran en la frontera de Pareto y en las figuras "
          "(results/estado.json). IC del FVD y de LPIPS: bootstrap por segmento (los 4 clips de un segmento no son independientes). "
          "Piso (400 contra 400): FVD de los clips reales de evaluación contra otros 400 reales de los mismos segmentos "
          "(results/piso_fvd.json); es el comparable con la columna de FVD. Piso en mitades: real contra real con dos mitades "
@@ -497,7 +508,7 @@ def main(argv=None):
                        lambda c: c["lpips1_ci"])
     fig_horizon(vig, out / "fig_horizon.png")
     fig_ce_vs_fvd(vig, out / "fig_ce_vs_fvd.png")
-    fig_latency(Path(a.manifest).parent / "bench", out / "fig_latency.png", registro)
+    fig_latency(vig, out / "fig_latency.png")
     fig_ce_posicion(Path(a.manifest).parent / "ce_por_posicion.json", out / "fig_ce_posicion.png", registro)
   rows = summary(cfgs)
   rho, p, n, _ = correlation(vig)

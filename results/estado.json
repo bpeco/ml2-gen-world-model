@@ -1,13 +1,148 @@
 {
+ "results/bench/convlstm_px__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230306-fa45: python -m src.cli convlstm_px bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/decoder__fp16.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-225846-2283: python -m src.cli codec bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/decoder__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-225846-2283: python -m src.cli codec bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_m_p12__fp16_graphs_s12.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-130829-d71f: python -m src.cli genie bench '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_m_p1__fp16_graphs_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-130829-d71f: python -m src.cli genie bench '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_m_p25__fp16_graphs_s25.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-130829-d71f: python -m src.cli genie bench '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_m_p2__fp16_graphs_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-130829-d71f: python -m src.cli genie bench '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_m_p4__fp16_graphs_s4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-130829-d71f: python -m src.cli genie bench '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_m_p8__fp16_graphs_s8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-130829-d71f: python -m src.cli genie bench '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p12__fp16_graphs_s12.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p1__fp16_graphs_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p25__fp16_graphs_s25.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p2__fp16_graphs_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p4__fp16_graphs_s4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/genie_s_p8__fp16_graphs_s8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/gpt2m__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230043-6b72: python -m src.cli gpt2m bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/gpt_s_kd__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230217-89d2: python -m src.cli gpt bench '--tamaño' s --variante kd",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/lewm__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230312-66d4: python -m src.cli lewm bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/transicion__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230041-e4af: python -m src.cli transicion bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/vjepa2_ac__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230915-430b: python -m src.cli vjepa2_ac bench",
+  "fecha": "2026-11-19"
+ },
+ "results/bench/vjepa2_s__fp32.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230903-e307: python -m src.cli vjepa2 bench",
+  "fecha": "2026-11-19"
+ },
+ "results/diferencia_convlstm_px_vs_genie_s_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-063417-f720: python -m src.cli estadistica diferencia --a convlstm_px --b genie_s_p8",
+  "fecha": "2026-11-19"
+ },
+ "results/diferencia_genie_m_p4_vs_genie_s_p4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-131801-e150: python -m src.cli estadistica diferencia --a genie_m_p4 --b genie_s_p4",
+  "fecha": "2026-11-19"
+ },
+ "results/diferencia_genie_s_p8_vs_gpt_s_kd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-063224-64c7: python -m src.cli estadistica diferencia --a genie_s_p8 --b gpt_s_kd",
+  "fecha": "2026-11-19"
+ },
  "results/eval_congelado.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-094028-7f09: python -m src.cli congelado evaluar",
   "fecha": "2026-11-18"
  },
+ "results/eval_genie_m.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-121724-bc02: python -m src.cli genie evaluar '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
  "results/eval_genie_s.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-18"
+ },
+ "results/eval_genie_s_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-035227-5b15: python -m src.cli genie evaluar '--tamaño' s --semilla 1 --pasos 8",
+  "fecha": "2026-11-19"
+ },
+ "results/eval_genie_s_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-035951-1c31: python -m src.cli genie evaluar '--tamaño' s --semilla 2 --pasos 8",
+  "fecha": "2026-11-19"
  },
  "results/eval_gpt2m.json": {
   "estado": "vigente",
@@ -29,9 +164,99 @@
   "motivo": "bitácora 20261118-093145-47c0: python -m src.cli unigram evaluar",
   "fecha": "2026-11-18"
  },
+ "results/humo_genie.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-031151-9faf: python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10,x30 --forzar",
+  "fecha": "2026-11-19"
+ },
+ "results/humo_gpt.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-030912-5d3b: python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10,x30 --forzar",
+  "fecha": "2026-11-19"
+ },
+ "results/humo_lewm.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-125920-0cb9: python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
+  "fecha": "2026-11-19"
+ },
+ "results/humo_vjepa2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-021806-8c0d: python -m src.cli vjepa2 entrenar --humo --humo-candidatos fuente,raiz,x3",
+  "fecha": "2026-11-19"
+ },
+ "results/humo_vjepa2_ac.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-134633-962c: python -m src.cli vjepa2_ac entrenar --encoder vjepa2_s --humo --humo-candidatos fuente,raiz,x3",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/codec_rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-225846-2283: python -m src.cli codec bench",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/diagnostico_genie_s_p4__online__pace50__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-065705-bdf1: python -m src.cli genie bench '--tamaño' s --pasos 4 --cadena --ritmo 50 --diagnostico",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/imagine_check_genie_s_p4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-002256-2364: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/imagine_check_transicion.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-003129-76d3: python -m src.cli transicion evaluar --cadena",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/latencia_convlstm_px__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-001445-2f47: python -m src.cli convlstm_px bench --cadena --ritmo 50",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/latencia_genie_m_p4__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-130902-669e: python -m src.cli genie bench '--tamaño' m --pasos 4 --cadena",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/latencia_genie_s_p4__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-065318-8192: python -m src.cli genie bench '--tamaño' s --pasos 4 --cadena --ritmo 50",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/latencia_gpt_s_kd__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-234537-0b29: python -m src.cli gpt bench '--tamaño' s --variante kd --cadena --ritmo 50",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/latencia_transicion__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-230930-47af: python -m src.cli transicion bench --cadena",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/online_genie_s_p4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-070121-d385: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
+  "fecha": "2026-11-19"
+ },
+ "results/infer/online_transicion.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-003129-76d3: python -m src.cli transicion evaluar --cadena",
+  "fecha": "2026-11-19"
+ },
  "results/latent_lewm.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-111117-05f1: python -m src.cli lewm evaluar",
+  "fecha": "2026-11-18"
+ },
+ "results/latent_lewm_lrx3.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-222920-f8dd: python -m src.cli lewm evaluar --variante lrx3",
+  "fecha": "2026-11-18"
+ },
+ "results/latent_vjepa2_ac.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-200312-e905: python -m src.cli vjepa2_ac evaluar",
   "fecha": "2026-11-18"
  },
  "results/latent_vjepa2_s.json": {
@@ -39,14 +264,54 @@
   "motivo": "bitácora 20261118-124832-5bd9: python -m src.cli vjepa2 evaluar",
   "fecha": "2026-11-18"
  },
+ "results/piso_fvd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-095655-6c04: python -m src.cli estadistica piso --b real_eval_b",
+  "fecha": "2026-11-19"
+ },
+ "results/semillas_convlstm_px.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-063224-aa3e: python -m src.cli estadistica semillas --nombre convlstm_px --runs convlstm_px,convlstm_px_s1,convlstm_px_s2",
+  "fecha": "2026-11-19"
+ },
+ "results/semillas_genie_s_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-063223-1723: python -m src.cli estadistica semillas --nombre genie_s_p8 --runs genie_s_p8,genie_s_s1_p8,genie_s_s2_p8",
+  "fecha": "2026-11-19"
+ },
+ "results/temperatura_genie_s.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-065932-705e: python -m src.cli genie evaluar '--tamaño' s --barrer-temperatura -- --temperaturas 0.8,1.0,1.2,1.4",
+  "fecha": "2026-11-19"
+ },
+ "results/temperatura_gpt_s_kd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-053837-423e: python -m src.cli gpt evaluar '--tamaño' s --variante kd --barrer-temperatura",
+  "fecha": "2026-11-19"
+ },
  "results/train_convlstm_px.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-041132-ab00: python -m src.cli convlstm_px entrenar",
   "fecha": "2026-11-18"
  },
+ "results/train_convlstm_px_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-005501-6c5e: python -m src.cli convlstm_px entrenar --semilla 1",
+  "fecha": "2026-11-19"
+ },
+ "results/train_convlstm_px_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-022511-73f8: python -m src.cli convlstm_px entrenar --semilla 2",
+  "fecha": "2026-11-19"
+ },
  "results/train_decoder_lewm.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-105625-72de: python -m src.cli lewm demo --entrenar-decoder",
+  "fecha": "2026-11-18"
+ },
+ "results/train_decoder_lewm_lrx3.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-221418-cd86: python -m src.cli lewm demo --entrenar-decoder --variante lrx3",
   "fecha": "2026-11-18"
  },
  "results/train_genie_humo_fuente.json": {
@@ -74,10 +339,25 @@
   "motivo": "bitácora 20261118-031151-9faf: python -m src.cli genie entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10,x30 --forzar",
   "fecha": "2026-11-18"
  },
+ "results/train_genie_m.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-115917-53a5: python -m src.cli genie entrenar '--tamaño' m",
+  "fecha": "2026-11-19"
+ },
  "results/train_genie_s.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-031610-5f83: python -m src.cli genie entrenar '--tamaño' s",
   "fecha": "2026-11-18"
+ },
+ "results/train_genie_s_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-004056-976b: python -m src.cli genie entrenar '--tamaño' s --semilla 1",
+  "fecha": "2026-11-19"
+ },
+ "results/train_genie_s_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-004757-9b63: python -m src.cli genie entrenar '--tamaño' s --semilla 2",
+  "fecha": "2026-11-19"
  },
  "results/train_gpt_humo_fuente.json": {
   "estado": "vigente",
@@ -134,6 +414,16 @@
   "motivo": "bitácora 20261118-125920-0cb9: python -m src.cli lewm entrenar --humo --humo-candidatos fuente,x3,x10,x30",
   "fecha": "2026-11-18"
  },
+ "results/train_lewm_lrx3.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-211520-fd8a: python -m src.cli lewm entrenar --variante lrx3 --set receta.lr_peak=1.5e-4",
+  "fecha": "2026-11-18"
+ },
+ "results/train_vjepa2_ac.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261118-145508-68fc: python -m src.cli vjepa2_ac entrenar --encoder vjepa2_s",
+  "fecha": "2026-11-18"
+ },
  "results/train_vjepa2_ac_humo_fuente.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-134633-962c: python -m src.cli vjepa2_ac entrenar --encoder vjepa2_s --humo --humo-candidatos fuente,raiz,x3",
@@ -179,6 +469,46 @@
   "motivo": "bitácora 20261118-082005-1a6a: python -m src.cli convlstm_px evaluar",
   "fecha": "2026-11-18"
  },
+ "results/video_convlstm_px_s1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-040708-76af: python -m src.cli convlstm_px evaluar --semilla 1",
+  "fecha": "2026-11-19"
+ },
+ "results/video_convlstm_px_s2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-040959-d426: python -m src.cli convlstm_px evaluar --semilla 2",
+  "fecha": "2026-11-19"
+ },
+ "results/video_genie_m_p1.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-121724-bc02: python -m src.cli genie evaluar '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/video_genie_m_p12.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-121724-bc02: python -m src.cli genie evaluar '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/video_genie_m_p2.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-121724-bc02: python -m src.cli genie evaluar '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/video_genie_m_p25.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-121724-bc02: python -m src.cli genie evaluar '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/video_genie_m_p4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-121724-bc02: python -m src.cli genie evaluar '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
+ "results/video_genie_m_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-121724-bc02: python -m src.cli genie evaluar '--tamaño' m --pasos 1,2,4,8,12,25",
+  "fecha": "2026-11-19"
+ },
  "results/video_genie_s_p1.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
@@ -204,10 +534,25 @@
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-18"
  },
+ "results/video_genie_s_p4_stream.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-002256-2364: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
+  "fecha": "2026-11-19"
+ },
  "results/video_genie_s_p8.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-18"
+ },
+ "results/video_genie_s_s1_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-035227-5b15: python -m src.cli genie evaluar '--tamaño' s --semilla 1 --pasos 8",
+  "fecha": "2026-11-19"
+ },
+ "results/video_genie_s_s2_p8.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-035951-1c31: python -m src.cli genie evaluar '--tamaño' s --semilla 2 --pasos 8",
+  "fecha": "2026-11-19"
  },
  "results/video_gpt2m.json": {
   "estado": "vigente",
@@ -233,6 +578,11 @@
   "estado": "vigente",
   "motivo": "bitácora 20261118-093608-2f96: python -m src.cli transicion evaluar",
   "fecha": "2026-11-18"
+ },
+ "results/video_transicion_stream.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261119-003129-76d3: python -m src.cli transicion evaluar --cadena",
+  "fecha": "2026-11-19"
  },
  "results/video_unigram.json": {
   "estado": "vigente",

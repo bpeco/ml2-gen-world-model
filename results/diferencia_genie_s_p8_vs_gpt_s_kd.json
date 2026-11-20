@@ -1,0 +1,45 @@
+{
+ "a": "genie_s_p8",
+ "b": "gpt_s_kd",
+ "n_clips": 400,
+ "fvd": {
+  "1": {
+   "fvd_a": 276.1258063908449,
+   "fvd_b": 206.7484570225347,
+   "diff": 69.3773493683102,
+   "lo": 43.1849129241597,
+   "hi": 95.56978581246071,
+   "sd": 13.363487981709444,
+   "p": 0.009950248756218905,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "2": {
+   "fvd_a": 350.483239775092,
+   "fvd_b": 357.82714463603816,
+   "diff": -7.343904860946168,
+   "lo": -39.98828593957753,
+   "hi": 25.300476217685194,
+   "sd": 16.65529646868947,
+   "p": 0.5771144278606966,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "3": {
+   "fvd_a": 425.0369702750472,
+   "fvd_b": 468.46218230082786,
+   "diff": -43.42521202578064,
+   "lo": -83.3622016059933,
+   "hi": -3.4882224455679633,
+   "sd": 20.37601509194524,
+   "p": 0.03980099502487562,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  }
+ },
+ "_bitacora": {
+  "id": "20261119-063224-64c7",
+  "comando": "python -m src.cli estadistica diferencia --a genie_s_p8 --b gpt_s_kd",
+  "commit": "160356917c3695c5542824d3ea2001eb5070b048"
+ }
+}

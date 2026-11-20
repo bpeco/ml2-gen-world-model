@@ -10,7 +10,7 @@ Pregunta del proyecto: **¿cuánto se puede achicar y acelerar un world model de
 4. **Cola de GPU.** Cada modelo se entrena y se evalúa solo con `python -m src.cli` o con la cola (`scripts/queue.toml`), y cada corrida queda en la bitácora con su comando exacto. Es la etapa que llena la tabla de resultados.
 5. **Al final:** las corridas 10x de `vjepa2` y `lewm`, solo con todo lo anterior verificado.
 
-Hasta que la cola termine, todo resultado figura como `pendiente` en [`resultados.md`](resultados.md); el código es el definitivo.
+La cola de GPU terminó (trabajos 0 a 16): todos los resultados de [`resultados.md`](resultados.md) son `vigente`, con su comando en la bitácora. De los opcionales se corrió el 19 (`genie_m`); los demás y las corridas 10× no se hicieron.
 
 ## Decisiones
 
@@ -44,10 +44,10 @@ Hasta que la cola termine, todo resultado figura como `pendiente` en [`resultado
 |---|---|---|
 | `gpt2m`, `unigram`, `transicion`, `congelado`, `real` | referencias; `real` es el piso de FVD (400 contra 400) | [`referencias.md`](modelos/referencias.md) |
 | `gpt` (`gpt_s_kd`) | GPT-S destilado, receta de IRIS | [`gpt.md`](modelos/gpt.md) |
-| `genie` (`genie_s`) | MaskGIT fiel (Genie), con 1, 2, 4, 8, 12 y 25 pasadas | [`genie.md`](modelos/genie.md) |
+| `genie` (`genie_s`, y `genie_m` como opcional) | MaskGIT fiel (Genie), con 1, 2, 4, 8, 12 y 25 pasadas | [`genie.md`](modelos/genie.md) |
 | `convlstm_px` | ConvLSTM de Shi sobre píxeles | [`convlstm_px.md`](modelos/convlstm_px.md) |
 | `lewm`, `vjepa2`, `vjepa2_ac` | modelos latentes | [`lewm.md`](modelos/lewm.md), [`vjepa2.md`](modelos/vjepa2.md), [`vjepa2_ac.md`](modelos/vjepa2_ac.md) |
-| `gpt_s`, `gpt_m`, `genie_m`, `maskgit_s` | implementados y entrenables, fuera de la cola (opcionales) | [`gpt.md`](modelos/gpt.md), [`genie.md`](modelos/genie.md), [`maskgit.md`](modelos/maskgit.md) |
+| `gpt_s`, `gpt_m`, `maskgit_s` | implementados y entrenables, fuera de la cola (opcionales) | [`gpt.md`](modelos/gpt.md), [`genie.md`](modelos/genie.md), [`maskgit.md`](modelos/maskgit.md) |
 
 La cola incluye además las semillas 1 y 2 de `genie_s` y `convlstm_px`. Las corridas 10x de `vjepa2` y `lewm` van al final.
 
@@ -60,14 +60,32 @@ La cola incluye además las semillas 1 y 2 de `genie_s` y `convlstm_px`. Las cor
 | El comando y el commit que produjo cada resultado | dentro de cada JSON y en `results/bitacora.jsonl` |
 | Estado de cada archivo de resultados | `results/estado.json` (`python -m src.cli resultados`) |
 | Tablas y figuras generadas | `python -m src.cli reporte` (`results/summary.md` y figuras) |
-| Los checkpoints | `checkpoints/<run>/`, locales: no se distribuyen. Cada uno entrena lo que necesita; las corridas se registran en `results/checkpoints.json` |
+| Los checkpoints | `checkpoints/<run>/` y el repo público de Hugging Face [`KevinSoulier/ml2-gen-world-model`](https://huggingface.co/KevinSoulier/ml2-gen-world-model): el código baja solo lo que falte y verifica el sha256 de `results/checkpoints.json` ([Modelos entrenados](uso.md#modelos-entrenados-hugging-face)) |
 | Cómo reentrenar un modelo | [`modelos/README.md`](modelos/README.md) y [`uso.md`](uso.md) |
 | Los papers del camino de la investigación | [`world-models-conduccion-papers.md`](world-models-conduccion-papers.md) |
 | La presentación de avance | [`../pre-entrega/index.html`](../pre-entrega/index.html) |
 
+## Lo que encontró correr todo por la CLI
+
+Toda la cola (trabajos 0 a 16) corrió con `python -m src.cli` y quedó en la bitácora. Cada vez que algo falló o dio un resultado raro, el arreglo fue cambio de código, test que lo reproduce y commit. Después se repitió el mismo comando con `bitacora repetir`. Estas fueron las fricciones:
+
+| fricción | arreglo | commit |
+|---|---|---|
+| El monitor del entrenamiento usaba ventanas de un largo distinto al de la receta, y el humo de Genie hubo que repetirlo | el monitor usa el largo de la receta | `2d562f0` |
+| El humo aceptaba solo algunos múltiplos del lr, y el óptimo quedaba en el borde de la grilla | `--humo-candidatos` acepta cualquier `x<k>` | `9251f61` |
+| `cola correr --dry-run` agregaba `--dry-run` al final de cada comando: con un `--` en el comando iba al script y la acción corría de verdad. Además faltaba un paso para pasar a `vigente` lo que cerraba cada bloque | el `--dry-run` va antes del `--`; `bitacora vigentes` cierra cada bloque | `6efc402` |
+| El decoder de visualización del trabajo 12 (`vjepa2_ac demo --entrenar-decoder`) se quedó sin memoria: el historial de la loss retenía el buffer del MSE, unos 24 MiB por paso | el historial es un buffer en el device | `3211f38` |
+| La bitácora le atribuía a una acción larga resultados que había escrito otra, concurrente, o que `vigentes` solo había re-sellado | una acción no reclama lo de otra; tocar solo el sello no es escribir; manda el sello del JSON | `5405b87`, `ec563b9` |
+| `vjepa2 bench` caía en el stream de tokens (V-JEPA 2 sin acciones no tiene stream) | mide el encoder sobre un clip | `8d866e0` |
+| La estadística, el piso, la temperatura y el humo no tenían estado: `bitacora verificar` no los revisaba y los docs no podían citarlos | entran en el estado de resultados | `8623b9a` |
+| La cadena de Genie con 4 pasadas se guardaba como `genie_s_s4`, que se lee como la semilla 4, y el reporte no la encontraba | las pasadas se nombran `_p<n>`; los archivos viejos se apartaron con `resultados --quitar` | `0d80802`, `4df35c8`, `a0ecc4d` |
+| `bench --device npu` pasaba el dry-run y fallaba al correr | falla al planear y dice cómo medir la cadena del codec con ONNX Runtime | `4df35c8` |
+| Las figuras del reporte eran de las familias viejas; el destilado no figuraba como autorregresivo; la correlación de H4 se informaba con 3 puntos | figuras con Genie y ConvLSTM, el destilado autorregresivo, correlación solo con 5 puntos o más | `4df35c8`, `3881107` |
+| Compartir los modelos entrenados: Git LFS gastaba la cuota del dueño del repo | Hugging Face, con bajada sin login y subida automática al terminar de entrenar | `a957766`, `b3e602f` |
+
 ## Qué falta
 
-- Correr la cola de GPU y pasar los resultados a `vigente`.
-- Escribir las conclusiones y re-evaluar las hipótesis con los datos nuevos: hoy figuran como "a evaluar".
-- Medir la inferencia en la T4 y en la laptop (iGPU y NPU).
-- Las corridas 10x de `vjepa2` y `lewm`.
+- **Trabajos opcionales de la cola (17, 18 y 20):** los GPT de cero, que cierran H1 y H4, y el MaskGIT propio con sus ablaciones. El 19 (`genie_m`) ya se corrió.
+- **H3:** medir los transformers en fp32 y comparar calidad y latencia con fp16 y CUDA graphs.
+- **Otros dispositivos:** medir la inferencia en CPU (todas las latencias de `results/bench/` y `results/infer/` son de la RTX 3080 Ti), en la T4 y en la laptop (iGPU y NPU).
+- **Corridas 10×** de `vjepa2` y `lewm`.

@@ -58,6 +58,12 @@ def test_bench_por_stream_con_p50_y_p99(salida):
   assert r["unidad"].startswith("paso de modelo") and r["realtime"]
 
 
+def test_bench_vjepa2_mide_el_encoder_sobre_un_clip(salida):
+  """Trabajo 14: `vjepa2 bench` caía en el stream de tokens (V-JEPA 2 sin acciones no tiene stream)."""
+  r = bench.main(["--model", "random:vjepa2", "--device", "cpu", "--warmup", "1", "--frames", "2", "--name", "pytest_vjepa2"])
+  assert r["p50_ms"] > 0 and r["unidad"].startswith("clip del encoder") and r["graphs_usados"] is False
+
+
 def test_timer_1ms_no_rompe_fuera_de_windows():
   with bench_e2e.timer_1ms(False) as ok:
     assert ok is False

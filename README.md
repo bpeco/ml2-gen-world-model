@@ -13,9 +13,9 @@ Pregunta del proyecto: ¿cuánto se puede achicar y acelerar un world model de v
 
 ## Estado del proyecto
 
-**Resultados en re-ejecución; el código es el definitivo.** Los modelos se reconstruyeron para ser fieles a su fuente y cada uno entrena con la receta de su paper. La cola de GPU todavía no se corrió: todos los valores de la tabla de resultados están "pendiente", y las conclusiones y las hipótesis están "a evaluar".
+**La cola de GPU terminó y todos los resultados de la tabla son actuales.** Los modelos se reconstruyeron para ser fieles a su fuente; cada uno entrena con la receta de su paper, escalada a un presupuesto común de 780.000 frames. Cada número de los docs sale de un JSON de `results/` con su comando en la bitácora. Las conclusiones y las hipótesis están en [`Docs/resultados.md`](Docs/resultados.md#4-hipótesis-y-conclusiones). De los opcionales se corrió `genie_m`; quedan sin correr los GPT de cero, el MaskGIT propio y las corridas 10× de los latentes.
 
-**Los checkpoints no se distribuyen:** cada uno entrena lo que necesita con un comando de la CLI (más abajo). Quedan en `checkpoints/<run>/` y se registran en `results/checkpoints.json`.
+**Los modelos entrenados están en Hugging Face:** los de la tabla y sus decoders, en un repo público. `load_model("<run>")` y la CLI bajan solos lo que falte, sin cuenta ni login, y lo verifican contra el sha256 de `results/checkpoints.json` ([Modelos entrenados](Docs/uso.md#modelos-entrenados-hugging-face)). Lo que no está ahí se entrena con un comando de la CLI (más abajo).
 
 ### Modelos
 
@@ -23,15 +23,16 @@ Una fila por modelo. La performance está en la tabla de resultados, que a su ve
 
 | Modelo | Qué es | Performance | Reentrenar |
 |---|---|---|---|
-| `gpt_s_kd` | GPT-S destilado de `gpt2m`, receta de IRIS | [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance): pendiente | [`gpt entrenar`](Docs/modelos/gpt.md#entrenar) |
-| `genie_s` | MaskGIT fiel: la dinámica de Genie, con 1 a 25 pasadas por frame | [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance): pendiente | [`genie entrenar`](Docs/modelos/genie.md#entrenar) |
-| `convlstm_px` | ConvLSTM de Shi sobre píxeles | [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance): pendiente | [`convlstm_px entrenar`](Docs/modelos/convlstm_px.md#entrenar) |
-| `lewm` | LeWorldModel desde píxeles (SIGReg) | [resultados](Docs/resultados.md#2-modelos-latentes-modelo--performance): pendiente | [`lewm entrenar`](Docs/modelos/lewm.md#entrenar) |
-| `vjepa2` | V-JEPA 2: preentrenamiento autosupervisado | [resultados](Docs/resultados.md#2-modelos-latentes-modelo--performance): pendiente | [`vjepa2 entrenar`](Docs/modelos/vjepa2.md#entrenar) |
-| `vjepa2_ac` | V-JEPA 2-AC, con acciones, sobre `vjepa2` | [resultados](Docs/resultados.md#2-modelos-latentes-modelo--performance): pendiente | [`vjepa2_ac entrenar`](Docs/modelos/vjepa2_ac.md#entrenar) |
-| referencias | `gpt2m`, `unigram`, `transicion`, `congelado`, `real` (piso de FVD) y `codec` | [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance): pendiente | [`referencias`](Docs/modelos/referencias.md) |
+| `gpt_s_kd` | GPT-S destilado de `gpt2m`, receta de IRIS | FVD 207 a 1 s y 468 a 3 s; 158 ms por frame ([video](results/video_gpt_s_kd.json), [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance)) | [`gpt entrenar`](Docs/modelos/gpt.md#entrenar) |
+| `genie_s` | MaskGIT fiel: la dinámica de Genie, con 1 a 25 pasadas por frame | FVD a 3 s 413 con 4 pasadas y 5,7 ms por frame ([video](results/video_genie_s_p4.json)); 402 ± 20 con 8 pasadas y 3 semillas ([semillas](results/semillas_genie_s_p8.json), [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance)) | [`genie entrenar`](Docs/modelos/genie.md#entrenar) |
+| `genie_m` | Genie M (35M), el trabajo opcional 19 | FVD a 3 s 406 con 4 pasadas, empatado con `genie_s`; 9,4 ms por frame y cadena a 20 FPS ([video](results/video_genie_m_p4.json), [diferencia](results/diferencia_genie_m_p4_vs_genie_s_p4.json), [latencia](results/infer/latencia_genie_m_p4__rtx3080ti.json)) | [`genie entrenar`](Docs/modelos/genie.md#entrenar) |
+| `convlstm_px` | ConvLSTM de Shi sobre píxeles | rápido (11,8 ms por frame) pero borroso: FVD a 3 s 2393 ± 14 con 3 semillas ([latencia](results/infer/latencia_convlstm_px__rtx3080ti.json), [semillas](results/semillas_convlstm_px.json), [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance)) | [`convlstm_px entrenar`](Docs/modelos/convlstm_px.md#entrenar) |
+| `lewm` | LeWorldModel desde píxeles (SIGReg) | casi empata con copiar el último latente (L1 de 1,02 a 1,04 veces el de copiar) ([latente](results/latent_lewm.json), [resultados](Docs/resultados.md#2-modelos-latentes-modelo--performance)) | [`lewm entrenar`](Docs/modelos/lewm.md#entrenar) |
+| `vjepa2` | V-JEPA 2: preentrenamiento autosupervisado | sus features leen la velocidad peor que los píxeles (R² 0,02 contra 0,15) ([latente](results/latent_vjepa2_s.json), [resultados](Docs/resultados.md#2-modelos-latentes-modelo--performance)) | [`vjepa2 entrenar`](Docs/modelos/vjepa2.md#entrenar) |
+| `vjepa2_ac` | V-JEPA 2-AC, con acciones, sobre `vjepa2` | le gana a copiar el último latente (L1 de 0,91 a 0,94 veces), pero casi no usa la acción ([latente](results/latent_vjepa2_ac.json), [resultados](Docs/resultados.md#2-modelos-latentes-modelo--performance)) | [`vjepa2_ac entrenar`](Docs/modelos/vjepa2_ac.md#entrenar) |
+| referencias | `gpt2m`, `unigram`, `transicion`, `congelado`, `real` (piso de FVD) y `codec` | `gpt2m`, el techo: FVD a 3 s 105, en el piso de 111 ([video](results/video_gpt2m.json), [piso](results/piso_fvd.json), [resultados](Docs/resultados.md#1-modelos-de-video-modelo--performance)) | [`referencias`](Docs/modelos/referencias.md) |
 
-Implementados y entrenables, fuera de la cola: `gpt_s`, `gpt_m`, `genie_m` y `maskgit_s` (el MaskGIT propio, con sus ablaciones).
+Implementados y entrenables, fuera de la cola: `gpt_s`, `gpt_m` y `maskgit_s` (el MaskGIT propio, con sus ablaciones).
 
 ## Cómo está armado
 
@@ -84,7 +85,7 @@ uv pip install -r requirements.txt -r requirements-metrics.txt
 git clone --depth 1 https://github.com/commaai/commavq.git third_party/commavq
 ```
 
-La GPU se usa por MPS (se elige sola si está; `--device mps` la pide; `PYTORCH_ENABLE_MPS_FALLBACK=1` hace que las operaciones sin soporte caigan a la CPU). Anda bien la CLI, los notebooks, las demos de clase y la inferencia; entrenar las recetas completas es lento. Los checkpoints no se suben a ningún lado: para correr una demo con modelos entrenados en otra máquina, copiá `checkpoints/<run>/final.pt` y `results/train_<run>.json` y registrá la corrida con `python -m src.store register <run>`.
+La GPU se usa por MPS (se elige sola si está; `--device mps` la pide; `PYTORCH_ENABLE_MPS_FALLBACK=1` hace que las operaciones sin soporte caigan a la CPU). Anda bien la CLI, los notebooks, las demos de clase y la inferencia; entrenar las recetas completas es lento. Los modelos entrenados se bajan solos de Hugging Face ([Modelos entrenados](Docs/uso.md#modelos-entrenados-hugging-face)).
 
 ### Colab
 

@@ -1,0 +1,204 @@
+{
+ "run": "lewm_lrx3",
+ "kind": "lewm",
+ "size": null,
+ "config": {
+  "dim": 192,
+  "enc_layers": 12,
+  "enc_heads": 3,
+  "enc_mlp": 768,
+  "patch": 16,
+  "img_h": 128,
+  "img_w": 256,
+  "proj_hidden": 2048,
+  "pred_layers": 6,
+  "pred_heads": 16,
+  "pred_dim_head": 64,
+  "pred_mlp": 2048,
+  "pred_dropout": 0.1,
+  "emb_dropout": 0.0,
+  "act_smooth": 10,
+  "act_mlp_scale": 4,
+  "history": 3,
+  "num_preds": 1,
+  "frameskip": 5,
+  "n_pose": 30,
+  "lam": 0.09,
+  "num_proj": 1024,
+  "knots": 17
+ },
+ "params": 18044662,
+ "tokens": 100657152,
+ "frames": 780288,
+ "steps": 1524,
+ "seconds": 3519.2381403446198,
+ "tokens_per_s": 28601.972354773126,
+ "final_monitor_ce": 0.17045527696609497,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 16512000,
+   "monitor_ce": 0.28461718559265137
+  },
+  {
+   "step": 500,
+   "tokens": 33024000,
+   "monitor_ce": 0.24528028070926666
+  },
+  {
+   "step": 750,
+   "tokens": 49536000,
+   "monitor_ce": 0.1864902675151825
+  },
+  {
+   "step": 1000,
+   "tokens": 66048000,
+   "monitor_ce": 0.19087640941143036
+  },
+  {
+   "step": 1250,
+   "tokens": 82560000,
+   "monitor_ce": 0.16725100576877594
+  },
+  {
+   "step": 1500,
+   "tokens": 99072000,
+   "monitor_ce": 0.16898028552532196
+  },
+  {
+   "step": 1524,
+   "tokens": 100657152,
+   "monitor_ce": 0.17045527696609497
+  }
+ ],
+ "args": {
+  "kind": "lewm",
+  "size": null,
+  "config": "{}",
+  "run": "lewm_lrx3",
+  "receta": null,
+  "set": [],
+  "presupuesto": null,
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": 0.00015,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [
+   {
+    "campo": "lr",
+    "receta": 5e-05,
+    "valor": 0.00015
+   }
+  ],
+  "receta_hash": "061d68f198f3",
+  "receta_nombre": "lewm_paper"
+ },
+ "receta": {
+  "name": "lewm_paper",
+  "fuente": "LeWM (arXiv 2603.19312); github.com/lucas-maes/le-wm config/train/lewm.yaml, train.py",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.999
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "warmup",
+    "forma": "linear",
+    "ini": 0.0,
+    "fin": 0.00015,
+    "frac": 0.01,
+    "min_pasos": 1
+   },
+   {
+    "nombre": "cosine",
+    "forma": "cosine",
+    "ini": 0.00015,
+    "min_frac": 0.0
+   }
+  ],
+  "wd_ini": 0.001,
+  "wd_fin": null,
+  "wd_on": "todos",
+  "ema_segs": null,
+  "grad_clip": 1.0,
+  "amp": "bf16",
+  "batch": 128,
+  "frames": 4,
+  "frameskip": 5,
+  "accum": 1,
+  "presupuesto": 780000,
+  "extras": {},
+  "paper_steps": null,
+  "batch_fuente": 128,
+  "forzado": [
+   [
+    "lr_segs",
+    "el oficial planifica por época (warmup en pasos); acá todo por paso: warmup lineal sobre el 1 % de los pasos (piso 1, sin el piso de 100) y coseno a 0",
+    "presupuesto"
+   ],
+   [
+    "presupuesto",
+    "780k frames renderizados vistos (~1 500 pasos); el oficial son 10-100 épocas de PushT",
+    "presupuesto"
+   ],
+   [
+    "batch",
+    "128 muestras de 4 frames sin acumulación (BatchNorm y SIGReg dependen del batch); si la GPU no alcanza, bajar bs en vez de acumular",
+    "presupuesto"
+   ],
+   [
+    "frames",
+    "4 por muestra (history 3 + num_preds 1): la unidad de presupuesto son los frames renderizados",
+    "datos"
+   ]
+  ]
+ },
+ "receta_hash": "061d68f198f3",
+ "desviaciones": [
+  {
+   "campo": "lr",
+   "receta": 5e-05,
+   "valor": 0.00015
+  }
+ ],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261118-211520-fd8a",
+  "comando": "python -m src.cli lewm entrenar --variante lrx3 --set receta.lr_peak=1.5e-4",
+  "commit": "b3e602f9c7ed0cfb00d868a486f0f961bc07e899"
+ }
+}

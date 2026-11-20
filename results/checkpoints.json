@@ -45,6 +45,96 @@
     ],
     [
      "early stopping",
+     "se entrena el presupuesto completo; train.py guarda el \u00c3\u00baltimo estado",
+     "presupuesto"
+    ],
+    [
+     "RGB 128x256, 20 FPS, parches 4x4 -> 32x64x48",
+     "el dato de comma obliga",
+     "datos"
+    ],
+    [
+     "fp32",
+     "el paper no publica la precisi\u00c3\u00b3n",
+     "propio"
+    ]
+   ],
+   "frames": 20,
+   "frameskip": 1,
+   "fuente": "Shi et al. 2015 (arXiv 1506.04214) \u00c2\u00a74.1",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.001,
+     "forma": "constant",
+     "ini": 0.001,
+     "nombre": "constante"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "convlstm_px_shi2015",
+   "optimizer": "rmsprop",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0,
+   "wd_on": "todos"
+  },
+  "receta_hash": "c23ba4babe55",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "7021f53d216cc1f96400a4073da65b72e37283d8dc323b2eec1852f0316ed725",
+  "step": 9750,
+  "tokens": 100620000,
+  "train_json": "results/train_convlstm_px.json"
+ },
+ "convlstm_px_s1": {
+  "bytes": 32024873,
+  "config": {
+   "height": 128,
+   "hidden": [
+    128,
+    64,
+    64
+   ],
+   "in_ch": 3,
+   "kernel": 5,
+   "n_in": 10,
+   "n_out": 10,
+   "patch": 4,
+   "width": 256
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "convlstm_px",
+  "params": 8003120,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.9,
+   "amp": null,
+   "batch": 4,
+   "batch_fuente": 4,
+   "betas": [
+    0.9,
+    0.95
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch 4, clip 1.0, eps 1e-8",
+     "el paper no los publica; batch por la memoria de 12 GB",
+     "propio"
+    ],
+    [
+     "batch_fuente 4",
+     "Shi 2015 no publica su batch: sin batch de referencia, el lr de la fuente no se escala",
+     "propio"
+    ],
+    [
+     "early stopping",
      "se entrena el presupuesto completo; train.py guarda el \u00faltimo estado",
      "presupuesto"
     ],
@@ -81,12 +171,295 @@
    "wd_on": "todos"
   },
   "receta_hash": "c23ba4babe55",
-  "sha256": "7021f53d216cc1f96400a4073da65b72e37283d8dc323b2eec1852f0316ed725",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "301055217e340a22ad093e8c654eb9e1f895a08e4bfb02021240577971088312",
   "step": 9750,
   "tokens": 100620000,
-  "train_json": "results/train_convlstm_px.json"
+  "train_json": "results/train_convlstm_px_s1.json"
+ },
+ "convlstm_px_s2": {
+  "bytes": 32024873,
+  "config": {
+   "height": 128,
+   "hidden": [
+    128,
+    64,
+    64
+   ],
+   "in_ch": 3,
+   "kernel": 5,
+   "n_in": 10,
+   "n_out": 10,
+   "patch": 4,
+   "width": 256
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "convlstm_px",
+  "params": 8003120,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.9,
+   "amp": null,
+   "batch": 4,
+   "batch_fuente": 4,
+   "betas": [
+    0.9,
+    0.95
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch 4, clip 1.0, eps 1e-8",
+     "el paper no los publica; batch por la memoria de 12 GB",
+     "propio"
+    ],
+    [
+     "batch_fuente 4",
+     "Shi 2015 no publica su batch: sin batch de referencia, el lr de la fuente no se escala",
+     "propio"
+    ],
+    [
+     "early stopping",
+     "se entrena el presupuesto completo; train.py guarda el \u00faltimo estado",
+     "presupuesto"
+    ],
+    [
+     "RGB 128x256, 20 FPS, parches 4x4 -> 32x64x48",
+     "el dato de comma obliga",
+     "datos"
+    ],
+    [
+     "fp32",
+     "el paper no publica la precisi\u00f3n",
+     "propio"
+    ]
+   ],
+   "frames": 20,
+   "frameskip": 1,
+   "fuente": "Shi et al. 2015 (arXiv 1506.04214) \u00a74.1",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.001,
+     "forma": "constant",
+     "ini": 0.001,
+     "nombre": "constante"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "convlstm_px_shi2015",
+   "optimizer": "rmsprop",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0,
+   "wd_on": "todos"
+  },
+  "receta_hash": "c23ba4babe55",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "7c0d402d577c1ac2f32db695a9066892679cafa12b8eba29161f208157b23676",
+  "step": 9750,
+  "tokens": 100620000,
+  "train_json": "results/train_convlstm_px_s2.json"
+ },
+ "genie_m": {
+  "bytes": 139122797,
+  "config": {
+   "choice_temp": 4.5,
+   "default_steps": 25,
+   "dim": 512,
+   "frames": 16,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mlp_ratio": 4,
+   "n_head": 8,
+   "n_layer": 8,
+   "temperature": 2.0
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "genie",
+  "params": 34761216,
+  "receta": {
+   "accum": 2,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 16,
+   "batch_fuente": 256,
+   "betas": [
+    0.9,
+    0.9
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos",
+     "presupuesto"
+    ],
+    [
+     "lr",
+     "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_genie.json)",
+     "presupuesto"
+    ],
+    [
+     "warmup",
+     "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos",
+     "presupuesto"
+    ],
+    [
+     "lr_segs",
+     "coseno hasta el 10 % del m\u00e1ximo tras el warmup: Genie no publica la forma para la din\u00e1mica",
+     "propio"
+    ],
+    [
+     "grad_clip",
+     "1.0: Genie no lo publica",
+     "propio"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 1,
+   "fuente": "Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.0003,
+     "forma": "linear",
+     "frac": 0.025,
+     "ini": 0.0,
+     "nombre": "warmup"
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.0003,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "genie_paper",
+   "optimizer": "adamw",
+   "paper_steps": 200000,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0001,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "008c979cf9f7",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "cd70d0efe790297e252c8522735efa34407e03e9b64dffc0e39187a66cc6b0e1",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_genie_m.json"
  },
  "genie_s": {
+  "bytes": 60245857,
+  "config": {
+   "choice_temp": 4.5,
+   "default_steps": 25,
+   "dim": 384,
+   "frames": 16,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mlp_ratio": 4,
+   "n_head": 6,
+   "n_layer": 6,
+   "temperature": 2.0
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "genie",
+  "params": 15046528,
+  "receta": {
+   "accum": 2,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 16,
+   "batch_fuente": 256,
+   "betas": [
+    0.9,
+    0.9
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos",
+     "presupuesto"
+    ],
+    [
+     "lr",
+     "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligi\u00c3\u00b3 x10 entre fuente, ra\u00c3\u00adz, x3, x10 y x30 (results/humo_genie.json)",
+     "presupuesto"
+    ],
+    [
+     "warmup",
+     "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos",
+     "presupuesto"
+    ],
+    [
+     "lr_segs",
+     "coseno hasta el 10 % del m\u00c3\u00a1ximo tras el warmup: Genie no publica la forma para la din\u00c3\u00a1mica",
+     "propio"
+    ],
+    [
+     "grad_clip",
+     "1.0: Genie no lo publica",
+     "propio"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 1,
+   "fuente": "Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.0003,
+     "forma": "linear",
+     "frac": 0.025,
+     "ini": 0.0,
+     "nombre": "warmup"
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.0003,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "genie_paper",
+   "optimizer": "adamw",
+   "paper_steps": 200000,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0001,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "008c979cf9f7",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "765fa4c6a9a1ac3a696cea3254771ad54fe3943e62191c0c2d07a9842debd6c0",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_genie_s.json"
+ },
+ "genie_s_s1": {
   "bytes": 60245857,
   "config": {
    "choice_temp": 4.5,
@@ -173,10 +546,108 @@
    "wd_on": "matrices"
   },
   "receta_hash": "008c979cf9f7",
-  "sha256": "765fa4c6a9a1ac3a696cea3254771ad54fe3943e62191c0c2d07a9842debd6c0",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "353ffc996acfef23fb48ca094bc65c58de1201ead431f756db0c2ef873460703",
   "step": 1524,
   "tokens": 100657152,
-  "train_json": "results/train_genie_s.json"
+  "train_json": "results/train_genie_s_s1.json"
+ },
+ "genie_s_s2": {
+  "bytes": 60245857,
+  "config": {
+   "choice_temp": 4.5,
+   "default_steps": 25,
+   "dim": 384,
+   "frames": 16,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mlp_ratio": 4,
+   "n_head": 6,
+   "n_layer": 6,
+   "temperature": 2.0
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "genie",
+  "params": 15046528,
+  "receta": {
+   "accum": 2,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 16,
+   "batch_fuente": 256,
+   "betas": [
+    0.9,
+    0.9
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 muestras por paso (16 x accum 2) en vez de 256: con el presupuesto fijo de 780k frames da ~1.520 pasos",
+     "presupuesto"
+    ],
+    [
+     "lr",
+     "3e-4 -> 3e-5 (x10 del 3e-5 -> 3e-6 de Genie): con ~1.520 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_genie.json)",
+     "presupuesto"
+    ],
+    [
+     "warmup",
+     "0.025 de la corrida (5k de 200k) con piso de 100 pasos: el presupuesto da pocos pasos",
+     "presupuesto"
+    ],
+    [
+     "lr_segs",
+     "coseno hasta el 10 % del m\u00e1ximo tras el warmup: Genie no publica la forma para la din\u00e1mica",
+     "propio"
+    ],
+    [
+     "grad_clip",
+     "1.0: Genie no lo publica",
+     "propio"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 1,
+   "fuente": "Genie (arXiv 2402.15391) Tab. 9, 10, App. F.1; schedule y clip: propio",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.0003,
+     "forma": "linear",
+     "frac": 0.025,
+     "ini": 0.0,
+     "nombre": "warmup"
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.0003,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "genie_paper",
+   "optimizer": "adamw",
+   "paper_steps": 200000,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.0001,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "008c979cf9f7",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "93d1972908a8a49bbdb4cf6eaeed3d24ad554071c32400c4b88099d49590a365",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_genie_s_s2.json"
  },
  "gpt_s_d025": {
   "bytes": 49730703,
@@ -383,7 +854,7 @@
     ],
     [
      "lr",
-     "1e-3 (x10 del 1e-4 de IRIS): con ~2.440 pasos, el humo de 300 pasos eligi\u00f3 x10 entre fuente, ra\u00edz, x3, x10 y x30 (results/humo_gpt.json)",
+     "1e-3 (x10 del 1e-4 de IRIS): con ~2.440 pasos, el humo de 300 pasos eligi\u00c3\u00b3 x10 entre fuente, ra\u00c3\u00adz, x3, x10 y x30 (results/humo_gpt.json)",
      "presupuesto"
     ],
     [
@@ -392,7 +863,7 @@
      "presupuesto"
     ],
     [
-     "tama\u00f1o",
+     "tama\u00c3\u00b1o",
      "6x384 / 8x512 en vez de 24x1024",
      "presupuesto"
     ]
@@ -419,6 +890,9 @@
    "wd_on": "lineales"
   },
   "receta_hash": "7c117183649e",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
   "sha256": "2bdaa331a6e2de1a8f28b7be1bad2117d6d580478de998693c617ecbb661e1d7",
   "step": 2438,
   "tokens": 100640640,
@@ -452,6 +926,15 @@
    "proj_hidden": 2048
   },
   "desviaciones": [],
+  "extras": {
+   "lewm/decoder.pt": {
+    "bytes": 41663430,
+    "remotes": {
+     "hf": "KevinSoulier/ml2-gen-world-model"
+    },
+    "sha256": "49702eef56e9caf15547cc61145dd33cd1f09d315acfd684834e729c47e500f2"
+   }
+  },
   "file": "final.pt",
   "kind": "lewm",
   "params": 18044662,
@@ -471,17 +954,17 @@
    "forzado": [
     [
      "lr_segs",
-     "el oficial planifica por \u00e9poca (warmup en pasos); ac\u00e1 todo por paso: warmup lineal sobre el 1 % de los pasos (piso 1, sin el piso de 100) y coseno a 0",
+     "el oficial planifica por \u00c3\u00a9poca (warmup en pasos); ac\u00c3\u00a1 todo por paso: warmup lineal sobre el 1 % de los pasos (piso 1, sin el piso de 100) y coseno a 0",
      "presupuesto"
     ],
     [
      "presupuesto",
-     "780k frames renderizados vistos (~1 500 pasos); el oficial son 10-100 \u00e9pocas de PushT",
+     "780k frames renderizados vistos (~1 500 pasos); el oficial son 10-100 \u00c3\u00a9pocas de PushT",
      "presupuesto"
     ],
     [
      "batch",
-     "128 muestras de 4 frames sin acumulaci\u00f3n (BatchNorm y SIGReg dependen del batch); si la GPU no alcanza, bajar bs en vez de acumular",
+     "128 muestras de 4 frames sin acumulaci\u00c3\u00b3n (BatchNorm y SIGReg dependen del batch); si la GPU no alcanza, bajar bs en vez de acumular",
      "presupuesto"
     ],
     [
@@ -520,10 +1003,132 @@
    "wd_on": "todos"
   },
   "receta_hash": "9bae95a09ba4",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
   "sha256": "5752d8cafa45d86e2829e160b14d9fb700f05fd327626448e7936255f2ab89c8",
   "step": 1524,
   "tokens": 100657152,
   "train_json": "results/train_lewm.json"
+ },
+ "lewm_lrx3": {
+  "bytes": 72309636,
+  "config": {
+   "act_mlp_scale": 4,
+   "act_smooth": 10,
+   "dim": 192,
+   "emb_dropout": 0.0,
+   "enc_heads": 3,
+   "enc_layers": 12,
+   "enc_mlp": 768,
+   "frameskip": 5,
+   "history": 3,
+   "img_h": 128,
+   "img_w": 256,
+   "knots": 17,
+   "lam": 0.09,
+   "n_pose": 30,
+   "num_preds": 1,
+   "num_proj": 1024,
+   "patch": 16,
+   "pred_dim_head": 64,
+   "pred_dropout": 0.1,
+   "pred_heads": 16,
+   "pred_layers": 6,
+   "pred_mlp": 2048,
+   "proj_hidden": 2048
+  },
+  "desviaciones": [
+   {
+    "campo": "lr",
+    "receta": 5e-05,
+    "valor": 0.00015
+   }
+  ],
+  "extras": {
+   "lewm_lrx3/decoder.pt": {
+    "bytes": 41663430,
+    "remotes": {
+     "hf": "KevinSoulier/ml2-gen-world-model"
+    },
+    "sha256": "69ef00622b39f0e6576db2f527c04e5e7c90644d704151a6fe65c021f60accf9"
+   }
+  },
+  "file": "final.pt",
+  "kind": "lewm",
+  "params": 18044662,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 128,
+   "batch_fuente": 128,
+   "betas": [
+    0.9,
+    0.999
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "lr_segs",
+     "el oficial planifica por \u00c3\u00a9poca (warmup en pasos); ac\u00c3\u00a1 todo por paso: warmup lineal sobre el 1 % de los pasos (piso 1, sin el piso de 100) y coseno a 0",
+     "presupuesto"
+    ],
+    [
+     "presupuesto",
+     "780k frames renderizados vistos (~1 500 pasos); el oficial son 10-100 \u00c3\u00a9pocas de PushT",
+     "presupuesto"
+    ],
+    [
+     "batch",
+     "128 muestras de 4 frames sin acumulaci\u00c3\u00b3n (BatchNorm y SIGReg dependen del batch); si la GPU no alcanza, bajar bs en vez de acumular",
+     "presupuesto"
+    ],
+    [
+     "frames",
+     "4 por muestra (history 3 + num_preds 1): la unidad de presupuesto son los frames renderizados",
+     "datos"
+    ]
+   ],
+   "frames": 4,
+   "frameskip": 5,
+   "fuente": "LeWM (arXiv 2603.19312); github.com/lucas-maes/le-wm config/train/lewm.yaml, train.py",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.00015,
+     "forma": "linear",
+     "frac": 0.01,
+     "ini": 0.0,
+     "min_pasos": 1,
+     "nombre": "warmup"
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.00015,
+     "min_frac": 0.0,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "lewm_paper",
+   "optimizer": "adamw",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.001,
+   "wd_on": "todos"
+  },
+  "receta_hash": "061d68f198f3",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "fcbd8125099e554a9a8c89e6443a949cde659089632a06b4c1ab48c4b8291386",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_lewm_lrx3.json"
  },
  "maskgit_s_abs": {
   "bytes": 49730511,
@@ -599,6 +1204,112 @@
   "tokens": 100640640,
   "train_json": "results/train_maskgit_s_abs.json"
  },
+ "vjepa2_ac": {
+  "bytes": 174029525,
+  "config": {
+   "action_dim": 6,
+   "auto_steps": 2,
+   "cargar_encoder": false,
+   "depth": 0,
+   "embed_dim": 0,
+   "encoder": "small",
+   "encoder_run": "vjepa2_s",
+   "frames": 16,
+   "grad_ckpt": true,
+   "height": 128,
+   "n_pose": 30,
+   "num_heads": 0,
+   "oficial_rope": true,
+   "patch": 16,
+   "pred_depth": 12,
+   "pred_dim": 384,
+   "pred_heads": 12,
+   "tubelet": 2,
+   "width": 256
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "vjepa2_ac",
+  "params": 21595392,
+  "receta": {
+   "accum": 2,
+   "alpha": 0.99,
+   "amp": "bf16",
+   "batch": 16,
+   "batch_fuente": 256,
+   "betas": [
+    0.9,
+    0.999
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "batch",
+     "32 efectivo (16 x accum 2) en vez de 256: con el presupuesto com\u00c3\u00ban de 780k frames da ~1.5k pasos (con 256 ser\u00c3\u00adan ~190). El lr queda el del paper: el humo de 300 pasos lo eligi\u00c3\u00b3 entre fuente, ra\u00c3\u00adz y x3, con diferencias menores al 1 % (results/humo_vjepa2_ac.json)",
+     "presupuesto"
+    ],
+    [
+     "presupuesto",
+     "~1.5k pasos en vez de 94.5k; las fracciones de warmup y decay se conservan",
+     "presupuesto"
+    ],
+    [
+     "predictor",
+     "12 x 384 en vez de 24 x 1024",
+     "presupuesto"
+    ],
+    [
+     "frames/frameskip",
+     "16 frames a 4 fps = 1 de cada 5 de los 20 FPS",
+     "datos"
+    ]
+   ],
+   "frames": 16,
+   "frameskip": 5,
+   "fuente": "V-JEPA 2 (arXiv 2506.09985) \u00c2\u00a73.1; configs/train/vitg16/droid-256px-8f.yaml",
+   "grad_clip": null,
+   "lr_segs": [
+    {
+     "fin": 0.000425,
+     "forma": "linear",
+     "frac": 0.047619047619047616,
+     "ini": 7.5e-05,
+     "nombre": "warmup"
+    },
+    {
+     "fin": 0.000425,
+     "forma": "constant",
+     "ini": 0.000425,
+     "nombre": "constante"
+    },
+    {
+     "fin": 0.0,
+     "forma": "linear",
+     "frac": 0.047619047619047616,
+     "ini": 0.000425,
+     "nombre": "decay"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "vjepa2_ac_oficial",
+   "optimizer": "adamw",
+   "paper_steps": 94500,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.04,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "fc9176850076",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
+  "sha256": "5bbad490571b7493807f6abd737429e991cbe44b391bb3d8bd5cf4f50dcff6a8",
+  "step": 1524,
+  "tokens": 100657152,
+  "train_json": "results/train_vjepa2_ac.json"
+ },
  "vjepa2_s": {
   "bytes": 261599942,
   "config": {
@@ -630,6 +1341,15 @@
    "width": 256
   },
   "desviaciones": [],
+  "extras": {
+   "vjepa2_s_viz/decoder.pt": {
+    "bytes": 20166329,
+    "remotes": {
+     "hf": "KevinSoulier/ml2-gen-world-model"
+    },
+    "sha256": "555f7fedf91e7493d5373d9d00ee5609125e1e66e006e3319de4cecb2d775f11"
+   }
+  },
   "file": "final.pt",
   "kind": "vjepa2",
   "params": 43474944,
@@ -649,7 +1369,7 @@
    "forzado": [
     [
      "batch",
-     "32 clips por paso en vez de 3072: con el presupuesto com\u00fan de 780k frames da ~1.5k pasos (con 3072 ser\u00edan ~16). El lr queda el del paper: el humo eligi\u00f3 x3 por menor L1 (0,255 contra 0,291), pero con menos dispersi\u00f3n del target entre parches (0,47 contra 0,51); en un JEPA un L1 menor no implica una representaci\u00f3n mejor (results/humo_vjepa2.json)",
+     "32 clips por paso en vez de 3072: con el presupuesto com\u00c3\u00ban de 780k frames da ~1.5k pasos (con 3072 ser\u00c3\u00adan ~16). El lr queda el del paper: el humo eligi\u00c3\u00b3 x3 por menor L1 (0,255 contra 0,291), pero con menos dispersi\u00c3\u00b3n del target entre parches (0,47 contra 0,51); en un JEPA un L1 menor no implica una representaci\u00c3\u00b3n mejor (results/humo_vjepa2.json)",
      "presupuesto"
     ],
     [
@@ -704,6 +1424,9 @@
    "wd_on": "matrices"
   },
   "receta_hash": "1cf2f40f3096",
+  "remotes": {
+   "hf": "KevinSoulier/ml2-gen-world-model"
+  },
   "sha256": "2cfdd73d62a79ab07624a39afa318c339981beab4eb18942310ba8ee44fc7e99",
   "step": 1524,
   "tokens": 100657152,

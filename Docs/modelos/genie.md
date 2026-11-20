@@ -7,7 +7,7 @@ La dinámica de Genie (Bruce et al. 2024, arXiv 2402.15391) sin el modelo de acc
 - **Fuente:** Genie, secciones 2.3 y 3, tablas 9, 10 y 17, apéndice F.1; la decodificación sigue a MaskGIT (arXiv 2202.04200).
 - **Es el modelo fiel:** el `maskgit` propio (con `p_clean`, posición factorizada) es una ablación y vive aparte, en [`maskgit.md`](maskgit.md).
 - **Pasos de decodificación:** `--pasos 1,2,4,8,12,25` mide la calidad y la latencia contra el número de pasadas por frame.
-- **En la cola:** `genie_s`, sus pasos de decodificación y las semillas 1 y 2 evaluadas a 8 pasos (`scripts/queue.toml`). `genie_m` es opcional.
+- **En la cola:** `genie_s`, sus pasos de decodificación y las semillas 1 y 2 evaluadas a 8 pasos (`scripts/queue.toml`). `genie_m` es el trabajo opcional 19 (se corrió: entrenar, evaluar a 1 a 25 pasos y latencia); sus números están en [`../resultados.md`](../resultados.md#1-modelos-de-video-modelo--performance).
 - **Evaluación:** `video`.
 
 ## 2. Fidelidad

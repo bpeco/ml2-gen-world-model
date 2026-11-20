@@ -87,11 +87,13 @@ def test_pareto_hand_made():
 
 
 def test_spearman_monotone():
-  cfgs = [dict(autoregressive=True, ce_all=c, fvd1=f) for c, f in [(1, 10), (2, 20), (3, 35), (4, 90)]]
+  cfgs = [dict(autoregressive=True, ce_all=c, fvd1=f) for c, f in [(1, 10), (2, 20), (3, 35), (4, 90), (5, 95)]]
   cfgs.append(dict(autoregressive=False, ce_all=9, fvd1=0))     # se ignora
   cfgs.append(dict(autoregressive=True, ce_all=None, fvd1=5))   # se ignora
   rho, p, n, _ = report.correlation(cfgs)
-  assert rho == pytest.approx(1.0) and n == 4
+  assert rho == pytest.approx(1.0) and n == 5
+  # con 3 puntos scipy daba ρ = 1 y p = 0, que no dice nada: por debajo de 5 no se informa
+  assert report.correlation(cfgs[:3])[:3] == (None, None, 3)
 
 
 def test_bench_smoke_cpu(tmp_path):
@@ -109,3 +111,52 @@ def test_bench_smoke_cpu(tmp_path):
             "steps", "ctx_frames", "warmup", "frames", "device", "torch", "timestamp"):
     assert k in d
   assert d["frames"] == 5 and d["median_ms"] > 0
+
+
+def test_de_punta_a_punta_lee_el_protocolo_unico(manifest):
+  """Trabajo 14: el reporte buscaba el e2e viejo ("steady") y la columna de punta a punta salía vacía."""
+  cfgs = json.loads(manifest.read_text())
+  (manifest.parent / "latencia_gpt_s.json").write_text(json.dumps(
+    {"modelo_solo": {"p50": 40.0, "p99": 41.0}, "cadena_cerrada": {"p50": 45.0, "p99": 47.0},
+     "cadena_ritmo": {"p50": 46.0, "p99": 48.5}}))
+  (manifest.parent / "e2e_gpt_l.json").write_text(json.dumps({"steady": {"p50": 30.0, "p99": 33.0}}))
+  for m in cfgs:
+    m["e2e"] = {"gpt_s": "latencia_gpt_s.json", "gpt_l": "e2e_gpt_l.json"}.get(m["label"])
+  manifest.write_text(json.dumps(cfgs))
+  rows = {c["label"]: c for c in report.load_configs(manifest, {})}
+  assert rows["gpt_s"]["e2e_p99"] == 48.5 and rows["gpt_l"]["e2e_p99"] == 33.0 and rows["copy"]["e2e_p99"] is None
+
+
+def test_las_semillas_no_compiten_en_el_pareto(tmp_path, monkeypatch):
+  """Las semillas 1 y 2 van en su grupo: no entran en la frontera de Pareto ni en la figura (la principal es la 0)."""
+  from src import configs
+  monkeypatch.setattr(configs, "R", tmp_path)
+  for n in ("video_convlstm_px.json", "video_convlstm_px_s1.json"):
+    (tmp_path / n).write_text("{}")
+  grupos = {configs.entrada(n)["label"]: configs.entrada(n)["group"] for n in ("convlstm_px", "convlstm_px_s1")}
+  assert grupos == {"convlstm_px": "principal", "convlstm_px_s1": "semilla"}
+
+
+def test_genie_m_tiene_su_entrada_en_la_leyenda_del_pareto():
+  """Con genie_m, el Pareto encimaba los números de pasadas de S y M y la leyenda no decía qué eran los huecos."""
+  base = dict(family="genie", steps=4)
+  assert report.leyenda_tamano_m([dict(base, size="s")]) == []
+  [h] = report.leyenda_tamano_m([dict(base, size="s"), dict(base, size="m")])
+  assert h.get_label() == "Genie M (hueco, punteado)" and h.get_linestyle() == ":"
+
+
+def test_fig_latency_modelo_y_cadena(manifest, tmp_path):
+  """La figura de latencia esperaba las variantes fp32/fp16/graphs de la tanda vieja y salía con una sola barra."""
+  cfgs = report.load_configs(manifest, {})
+  for c in cfgs:
+    c["estado"], c["e2e_p99"] = "vigente", (c["ms"] * 1.5 if c["label"] == "gpt_s" else None)
+  report.fig_latency(cfgs, tmp_path / "lat.png")
+  assert (tmp_path / "lat.png").stat().st_size > 0
+
+
+def test_el_destilado_es_autorregresivo(tmp_path, monkeypatch):
+  """gpt_s_kd quedaba fuera de CE contra FVD (H4) porque su familia, gpt_kd, no figuraba como autorregresiva."""
+  from src import configs
+  monkeypatch.setattr(configs, "R", tmp_path)
+  (tmp_path / "eval_gpt_s_kd.json").write_text("{}")
+  assert configs.entrada("gpt_s_kd")["autoregressive"] is True
