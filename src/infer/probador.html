@@ -1,0 +1,779 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Banco de pruebas</title>
+<style>
+:root{
+  --bg:#f6f6f4; --panel:#ffffff; --panel2:#efefec; --line:#dcdcd6; --ink:#1b1c1e; --ink2:#55575c; --ink3:#86888d;
+  --a:#2f6fc4; --b:#c25e17; --ref:#8a8c90; --ctx:#8a8985; --gen:#c25e17; --ok:#2e7d4f; --mal:#b3261e;
+  --chip:#e6e6e1; --foco:#2f6fc4;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0f1012; --panel:#17191c; --panel2:#1e2024; --line:#2c2f34; --ink:#ececea; --ink2:#a9abaf; --ink3:#73767b;
+    --a:#4a8fe8; --b:#d9722a; --ref:#7d8085; --ctx:#7b7a76; --gen:#d9722a; --ok:#4fb47b; --mal:#e5675d;
+    --chip:#24272b; --foco:#4a8fe8;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0f1012; --panel:#17191c; --panel2:#1e2024; --line:#2c2f34; --ink:#ececea; --ink2:#a9abaf; --ink3:#73767b;
+  --a:#4a8fe8; --b:#d9722a; --ref:#7d8085; --ctx:#7b7a76; --gen:#d9722a; --ok:#4fb47b; --mal:#e5675d;
+  --chip:#24272b; --foco:#4a8fe8;
+}
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.num{font-variant-numeric:tabular-nums}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:18px 24px 6px}
+header h1{font-size:20px;margin:0;font-weight:650;letter-spacing:-.01em}
+header .sub{color:var(--ink2)}
+header .gpu{margin-left:auto;font-size:12px;color:var(--ink2);background:var(--chip);padding:3px 9px;border-radius:99px}
+main{padding:8px 24px 40px;max-width:1500px;margin:0 auto}
+.barra{display:flex;flex-wrap:wrap;gap:10px;align-items:stretch;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px}
+.grupo{display:flex;flex-direction:column;gap:4px;min-width:0}
+.grupo>span{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+.fila{display:flex;gap:6px;align-items:center;flex-wrap:wrap}
+select,input,button{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:6px 9px}
+input[type=number]{width:74px}
+button{cursor:pointer}
+button:hover{border-color:var(--ink3)}
+:focus-visible{outline:2px solid var(--foco);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;color:var(--ink2);padding:6px 12px}
+.seg button.on{background:var(--ink);color:var(--bg)}
+.modelo{border-left:3px solid var(--a);padding-left:10px}
+.modelo.b{border-left-color:var(--b)}
+.oculto{display:none!important}
+#generar{background:var(--ink);color:var(--bg);border-color:var(--ink);font-weight:600;padding:8px 18px;margin-left:auto;align-self:flex-end}
+#generar:disabled{opacity:.5;cursor:default}
+.estado{margin:10px 2px;color:var(--ink2);min-height:20px}
+.estado.fallo{color:var(--mal)}
+.nota{font-size:12px;color:var(--ink3);max-width:340px}
+
+.escenario{display:grid;gap:14px;grid-template-columns:repeat(var(--n,2),minmax(0,1fr))}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px;min-width:0}
+.panel h2{font-size:14px;margin:0 0 6px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.panel h2 .pt{width:10px;height:10px;border-radius:3px;background:var(--c,var(--ink3))}
+.panel h2 small{font-weight:400;color:var(--ink3)}
+.pantalla{position:relative;aspect-ratio:2/1;background:#000;border-radius:6px;overflow:hidden;outline:3px solid var(--ctx);outline-offset:-3px}
+.pantalla.gen{outline-color:var(--gen)}
+.pantalla.esperando{outline-color:var(--line)}
+.pantalla img{width:100%;height:100%;display:block;object-fit:cover}
+.rotulo{position:absolute;left:8px;top:8px;background:rgba(10,10,10,.72);color:#f2f2ef;font-size:12px;padding:2px 7px;border-radius:5px}
+.rotulo2{position:absolute;right:8px;bottom:8px;background:rgba(10,10,10,.72);color:#f2f2ef;font-size:12px;padding:2px 7px;border-radius:5px}
+.vivo{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;margin-top:8px}
+.vivo div{background:var(--panel2);border-radius:6px;padding:5px 7px;min-width:0}
+.vivo b{display:block;font-size:16px;font-weight:600}
+.vivo span{font-size:11px;color:var(--ink3)}
+.tira{display:grid;grid-template-columns:repeat(60,1fr);gap:1px;margin-top:8px;height:10px;position:relative}
+.tira i{background:var(--panel2);border-radius:1px}
+.tira i.h{background:var(--c,var(--ink3))}
+.tira i.lento{background:var(--c,var(--ink3));opacity:.45}
+.marca{position:absolute;top:-3px;bottom:-3px;width:2px;background:var(--ink);border-radius:1px;transition:left .05s linear}
+.leyenda-tira{display:flex;justify-content:space-between;font-size:11px;color:var(--ink3);margin-top:3px}
+
+.reloj{display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:12px 2px;color:var(--ink2)}
+.reloj b{color:var(--ink)}
+.pista{flex:1;min-width:200px;height:6px;background:var(--panel2);border-radius:3px;position:relative;overflow:hidden}
+.pista i{position:absolute;left:0;top:0;bottom:0;background:var(--ink2);border-radius:3px}
+
+.post{margin-top:18px}
+.navega{display:flex;gap:10px;align-items:center;flex-wrap:wrap;background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+.navega input[type=range]{flex:1;min-width:180px;accent-color:var(--ink)}
+h3{font-size:15px;margin:22px 2px 8px}
+.tabla{width:100%;border-collapse:collapse;background:var(--panel);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.tabla th,.tabla td{padding:7px 12px;text-align:right;border-bottom:1px solid var(--line)}
+.tabla th:first-child,.tabla td:first-child{text-align:left;color:var(--ink2)}
+.tabla thead th{font-size:12px;color:var(--ink2);font-weight:600;background:var(--panel2)}
+.tabla tr.sec td{background:var(--panel2);font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3);text-align:left}
+.tabla td.mejor{font-weight:700}
+.tabla td.mejor::after{content:" ●";font-size:9px;vertical-align:2px;color:var(--ink2)}
+.tabla td.ref{color:var(--ink3)}
+.si{color:var(--ok);font-weight:600}.no{color:var(--mal);font-weight:600}
+.graficos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+.grafico{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px;position:relative;min-width:0}
+.grafico h4{margin:0 0 2px;font-size:14px}
+.grafico p{margin:0 0 6px;font-size:12px;color:var(--ink3)}
+.grafico svg{width:100%;height:auto;display:block;overflow:visible}
+.leyenda{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--ink2);margin-top:4px}
+.leyenda i{display:inline-block;width:14px;height:2px;vertical-align:middle;margin-right:5px;background:var(--c)}
+.leyenda i.dash{background:repeating-linear-gradient(90deg,var(--c) 0 4px,transparent 4px 7px)}
+.tip{position:absolute;pointer-events:none;background:var(--ink);color:var(--bg);font-size:12px;padding:5px 8px;border-radius:6px;white-space:nowrap;transform:translate(-50%,-110%);display:none}
+.mini{position:absolute;right:8px;top:8px;width:30%;aspect-ratio:2/1;border:2px solid #f2f2ef;border-radius:4px;overflow:hidden;background:#000}
+.mini img{width:100%;height:100%;object-fit:cover;display:block}
+.mini span{position:absolute;left:0;right:0;bottom:0;background:rgba(10,10,10,.75);color:#f2f2ef;font-size:10px;padding:1px 4px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.gantt{margin-top:8px}
+.gantt svg{width:100%;height:auto;display:block}
+.explica{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:10px 14px;margin:0 0 12px;color:var(--ink2);font-size:13px}
+.explica b{color:var(--ink)}
+.pie{font-size:12px;color:var(--ink3);margin-top:10px;max-width:900px}
+@media (max-width:900px){
+  .escenario{grid-template-columns:minmax(0,1fr)}
+  .graficos{grid-template-columns:minmax(0,1fr)}
+  header,main{padding-left:16px;padding-right:16px}
+  .vivo{grid-template-columns:repeat(2,minmax(0,1fr))}
+  #generar{margin-left:0}
+}
+</style>
+</head>
+<body>
+<header>
+  <h1>Banco de pruebas</h1>
+  <span class="sub">World models de manejo sobre commaVQ: 1 s de contexto real, 3 s imaginados</span>
+  <span class="gpu num" id="gpu">…</span>
+</header>
+<main>
+  <section class="barra" aria-label="Configuración">
+    <div class="grupo"><span>Escenario</span>
+      <div class="seg" role="group"><button id="e1" class="on" title="1 s de contexto real y 3 s imaginados de corrido">Rollout de 3 s</button><button id="e2" title="La cámara sigue; el modelo se re-ancla en los frames reales y predice K segundos adelante">En línea</button></div>
+    </div>
+    <div class="grupo"><span>Modelos</span>
+      <div class="seg" role="group"><button id="m1" class="on">Uno</button><button id="m2">Comparar dos</button></div>
+    </div>
+    <div class="grupo modelo" id="ga"><span>Modelo A</span>
+      <div class="fila"><select id="selA"></select><select id="pasA" title="Pasos de decodificación"></select>
+        <label class="fila" title="Temperatura de muestreo (default: la del paper)">T <input id="tA" type="number" step="0.1" min="0" style="width:62px"></label></div>
+    </div>
+    <div class="grupo modelo b oculto" id="gb"><span>Modelo B</span>
+      <div class="fila"><select id="selB"></select><select id="pasB" title="Pasos de decodificación"></select>
+        <label class="fila" title="Temperatura de muestreo (default: la del paper)">T <input id="tB" type="number" step="0.1" min="0" style="width:62px"></label></div>
+    </div>
+    <div class="grupo"><span>Clip de val</span>
+      <div class="fila"><input id="clip" type="number" min="0" class="num"><button id="azar" title="Elegir un clip al azar">Al azar</button></div>
+    </div>
+    <div class="grupo oculto" id="gOn"><span>En línea</span>
+      <div class="fila">
+        <label class="fila" title="Cuánto video real pasa la cámara">Duración <select id="dur"><option value="10">10 s</option><option value="20">20 s</option></select></label>
+        <label class="fila" title="Cuántos segundos adelante imagina cada plan">Anticipación <select id="antic"><option value="0.5">0,5 s</option><option value="1">1 s</option><option value="2" selected>2 s</option><option value="3">3 s</option></select></label>
+        <label class="fila" title="Cada cuánto toma la información real de la cámara y vuelve a planear (si está libre)">Re-anclar <select id="periodo"><option value="0">apenas termina</option><option value="0.5">cada 0,5 s</option><option value="1" selected>cada 1 s</option><option value="2">cada 2 s</option></select></label>
+      </div>
+    </div>
+    <div class="grupo"><span>Semilla</span><input id="semilla" type="number" value="0" min="0" class="num"></div>
+    <div class="grupo"><span>Velocidad</span>
+      <select id="vel"><option value="1">Tiempo real</option><option value="0.5">× 1/2</option><option value="0.25">× 1/4</option><option value="0.1">× 1/10</option></select>
+    </div>
+    <button id="generar">Generar ▶</button>
+  </section>
+  <div class="estado" id="estado" role="status"></div>
+
+  <div class="explica oculto" id="explicaOn"></div>
+  <section class="escenario" id="escenario"></section>
+  <div class="reloj num" id="reloj"></div>
+
+  <section class="post oculto" id="post">
+    <div class="navega">
+      <button id="repetir">Repetir ▶</button>
+      <span>Ver el frame</span>
+      <input type="range" id="scrub" min="1" max="60" value="60" aria-label="Frame generado">
+      <span class="num" id="scrubT" style="min-width:110px">+3,00 s</span>
+    </div>
+    <h3>Métricas de esta corrida</h3>
+    <table class="tabla num" id="tabla"></table>
+    <div class="graficos" style="margin-top:14px">
+      <div class="grafico" id="gLp"><h4>LPIPS contra la continuación real</h4><p>Por frame generado. Más bajo es más parecido, píxel a píxel.</p><div class="svg"></div><div class="leyenda"></div><div class="tip"></div></div>
+      <div class="grafico" id="gMs"><h4>Latencia por frame</h4><p>Paso del modelo, batch 1, fp16. Escala log; la línea es el presupuesto de 50 ms (20 FPS).</p><div class="svg"></div><div class="leyenda"></div><div class="tip"></div></div>
+    </div>
+    <p class="pie" id="pie">
+      El <b>FVD</b> compara la distribución de muchos videos generados con la de los reales; con un solo clip no se puede calcular,
+      así que la tabla muestra el del paper (400 clips) al lado de lo medido acá. El <b>LPIPS</b> y la <b>CE</b> sí se miden en esta corrida:
+      el LPIPS contra los tokens reales decodificados con el mismo decoder, y la CE del último frame con teacher forcing (cada uno de
+      los 60 frames, dados los 19 reales anteriores), como <code>ce_last</code> del paper. El frame congelado es la referencia trivial: el LPIPS
+      lo favorece porque no se mueve. La latencia es la del paso del modelo; el decoder y el envío del frame se miden aparte.
+    </p>
+  </section>
+</main>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const fmt = (v, d = 2) => v == null || !isFinite(v) ? "—" : v.toLocaleString("es-AR", {minimumFractionDigits: d, maximumFractionDigits: d});
+const fmtMs = v => v == null ? "—" : (v >= 100 ? fmt(v, 0) : v >= 10 ? fmt(v, 1) : fmt(v, 2));
+const seg = s => (s >= 0 ? "+" : "−") + fmt(Math.abs(s), 2) + " s";
+const N = 60, FRAME_MS = 50;
+const color = k => getComputedStyle(document.documentElement).getPropertyValue(k).trim();
+
+let escenario = "rollout";
+let CAT = null, modo = 1, clipDatos = null, corrida = null, fuente = null;
+
+// ------------------------------------------------------------ catálogo y controles
+async function iniciar() {
+  CAT = await (await fetch("/api/catalogo")).json();
+  $("#gpu").textContent = CAT.gpu;
+  for (const k of ["A", "B"]) {
+    const sel = $("#sel" + k);
+    let fam = null, og = null;
+    for (const m of CAT.modelos) {
+      if (m.familia !== fam) { og = document.createElement("optgroup"); og.label = fam = m.familia; sel.append(og); }
+      const o = new Option(m.nombre + (m.disponible === "descarga" ? " (se baja)" : ""), m.id);
+      og.append(o);
+    }
+    sel.value = k === "A" ? "maskgit_s" : "gpt_s_kd";
+    sel.onchange = () => pasos(k);
+    pasos(k);
+  }
+  $("#clip").max = CAT.n_clips - 1;
+  $("#e1").onclick = () => setEscenario("rollout");
+  $("#e2").onclick = () => setEscenario("online");
+  $("#m1").onclick = () => setModo(1);
+  $("#m2").onclick = () => setModo(2);
+  $("#azar").onclick = () => elegirClip(Math.floor(Math.random() * CAT.n_clips));
+  $("#clip").onchange = () => elegirClip(+$("#clip").value);
+  $("#generar").onclick = () => escenario === "online" ? generarOnline() : generar();
+  $("#repetir").onclick = () => { if (!corrida) return; corrida.online ? reproducirOnline() : reproducir(true); };
+  $("#scrub").oninput = () => { if (!corrida) return; corrida.online ? mostrarOnline(+$("#scrub").value * 50 - 1) : mostrarFrame(+$("#scrub").value - 1); };
+  armarEscenario();
+  elegirClip(Math.floor(Math.random() * CAT.n_clips));
+}
+
+function modeloDe(k) { return CAT.modelos.find(m => m.id === $("#sel" + k).value); }
+function pasos(k) {
+  const m = modeloDe(k), s = $("#pas" + k);
+  s.innerHTML = "";
+  s.classList.toggle("oculto", !m.pasos);
+  for (const p of m.pasos || []) s.append(new Option(p + (p === 1 ? " paso" : " pasos"), p));
+  if (m.pasos) s.value = m.pasos_def;
+  $("#t" + k).value = m.temp;
+  $("#sel" + k).title = m.nota + " · " + m.params + " parámetros";
+}
+function setEscenario(e) {
+  escenario = e;
+  $("#e1").classList.toggle("on", e === "rollout"); $("#e2").classList.toggle("on", e === "online");
+  $("#gOn").classList.toggle("oculto", e !== "online");
+  $("#explicaOn").classList.toggle("oculto", e !== "online");
+  explicarOnline();
+  if (fuente) { fuente.close(); fuente = null; $("#generar").disabled = false; }
+  corrida = null; $("#post").classList.add("oculto");
+  armarEscenario();
+  if (clipDatos) poster();
+}
+function setModo(n) {
+  modo = n;
+  $("#m1").classList.toggle("on", n === 1); $("#m2").classList.toggle("on", n === 2);
+  $("#gb").classList.toggle("oculto", n === 1);
+  armarEscenario();
+  if (clipDatos) poster();
+}
+async function elegirClip(i) {
+  i = Math.max(0, Math.min(CAT.n_clips - 1, i | 0));
+  $("#clip").value = i;
+  estado("Cargando el clip " + i + "…");
+  try {
+    const r = await fetch("/api/clip?i=" + i);
+    const d = await r.json();
+    if (d.error) throw new Error(d.error);
+    clipDatos = d;
+    corrida = null; $("#post").classList.add("oculto");
+    armarEscenario(); poster();
+    estado(`Clip ${i}: segmento ${d.segmento}, frames ${d.inicio}–${d.inicio + 79}` +
+           (d.movimiento != null ? ` · cambio de escena en 3 s: percentil ${d.movimiento} de los 400` : "") + ". Elegí modelo y apretá Generar.");
+  } catch (e) { estado(String(e.message || e), true); }
+}
+function estado(t, fallo = false) { const e = $("#estado"); e.textContent = t; e.classList.toggle("fallo", fallo); }
+
+// ------------------------------------------------------------ escenario
+function seleccion() {
+  const ks = modo === 2 ? ["A", "B"] : ["A"];
+  return ks.map(k => { const m = modeloDe(k); return {k, id: m.id, nombre: m.nombre, pasos: m.pasos ? +$("#pas" + k).value : null, temp: +$("#t" + k).value}; });
+}
+function etiquetaModelo(s) {
+  return (s.pasos ? `${s.pasos} paso${s.pasos > 1 ? "s" : ""} · ` : "") + `T ${fmt(s.temp, 1)}`;
+}
+function armarEscenario(sel) {
+  sel = sel || seleccion();
+  if (escenario === "online") return armarOnline(sel);
+  const esc = $("#escenario");
+  esc.style.setProperty("--n", sel.length + 1);
+  esc.innerHTML = `<div class="panel" id="p_real" style="--c:var(--ink3)"><h2><span class="pt"></span>Cámara real <small>20 FPS, un frame cada 50 ms</small></h2>
+    <div class="pantalla" id="s_real"><img alt="Frame real"><span class="rotulo num"></span></div>
+    <div class="vivo num"><div><b id="v_real_f">—</b><span>frame</span></div><div><b>50</b><span>ms por frame</span></div><div><b>20</b><span>FPS</span></div><div><b id="v_real_t">—</b><span>video</span></div></div>
+    <div class="tira" id="t_real"></div><div class="leyenda-tira"><span>+0,05 s</span><span>+3 s</span></div></div>` +
+    sel.map((s, j) => `<div class="panel" id="p_${j}" style="--c:var(--${s.k.toLowerCase()})"><h2><span class="pt"></span>${s.nombre} <small>${etiquetaModelo(s)}</small></h2>
+    <div class="pantalla esperando" id="s_${j}"><img alt="Frame de ${s.nombre}"><span class="rotulo num"></span><span class="rotulo2 num"></span></div>
+    <div class="vivo num"><div><b id="v_${j}_f">—</b><span>frame</span></div><div><b id="v_${j}_ms">—</b><span>ms último frame</span></div><div><b id="v_${j}_fps">—</b><span>FPS (media)</span></div><div><b id="v_${j}_at">—</b><span>vs cámara</span></div></div>
+    <div class="tira" id="t_${j}"></div><div class="leyenda-tira"><span>generado</span><span>▏ cámara</span></div></div>`).join("");
+  for (const id of ["t_real", ...sel.map((_, j) => "t_" + j)]) {
+    const t = document.getElementById(id);
+    t.innerHTML = "<i></i>".repeat(N) + '<span class="marca" style="left:0"></span>';
+  }
+  $("#reloj").innerHTML = "";
+}
+function poster() {
+  const last = clipDatos.ctx[clipDatos.ctx.length - 1];
+  document.querySelectorAll(".pantalla img").forEach(im => im.src = last);
+  document.querySelectorAll(".pantalla .rotulo").forEach(r => r.textContent = "último frame de contexto");
+}
+function setPantalla(id, src, txt, clase, txt2) {
+  const p = document.getElementById("s_" + id);
+  if (!p) return;
+  const im = p.querySelector("img");
+  if (im.dataset.src !== src) { im.src = src; im.dataset.src = src; }
+  p.querySelector(".rotulo").textContent = txt;
+  const r2 = p.querySelector(".rotulo2"); if (r2) { r2.textContent = txt2 || ""; r2.style.display = txt2 ? "" : "none"; }
+  p.classList.remove("gen", "esperando");
+  if (clase) p.classList.add(clase);
+}
+
+// ------------------------------------------------------------ corrida en vivo
+function generar() {
+  if (!clipDatos) return;
+  if (fuente) fuente.close();
+  const sel = seleccion();
+  armarEscenario(sel); poster();
+  $("#post").classList.add("oculto");
+  corrida = {sel, frames: sel.map(() => []), ms: sel.map(() => []), cum: sel.map(() => [0]), terminado: false, metricas: null, info: null};
+  const pedido = {clip: clipDatos.clip, semilla: +$("#semilla").value || 0, modelos: sel.map(s => ({id: s.id, pasos: s.pasos, temp: s.temp}))};
+  $("#generar").disabled = true;
+  fuente = new EventSource("/api/correr?pedido=" + encodeURIComponent(JSON.stringify(pedido)));
+  const c = corrida;
+  fuente.addEventListener("estado", e => estado(JSON.parse(e.data).texto));
+  fuente.addEventListener("listo", e => {
+    c.info = JSON.parse(e.data).modelos;
+    estado("Generando… la cámara pasa el segundo de contexto y después cada modelo muestra sus frames a su ritmo medido.");
+    reproducir(false);
+  });
+  fuente.addEventListener("frame", e => {
+    const d = JSON.parse(e.data);
+    c.frames[d.m][d.i] = d.img; c.ms[d.m][d.i] = d.ms;
+    c.cum[d.m][d.i + 1] = c.cum[d.m][d.i] + d.ms;
+  });
+  fuente.addEventListener("metricas", e => { c.metricas = JSON.parse(e.data); });
+  fuente.addEventListener("fin", () => {
+    fuente.close(); fuente = null; c.terminado = true; $("#generar").disabled = false;
+    if (c.metricas) mostrarMetricas();
+    if (!c.reproduciendo) cerrar();
+  });
+  fuente.addEventListener("fallo", e => { estado("Error: " + JSON.parse(e.data).texto, true); fuente.close(); fuente = null; $("#generar").disabled = false; });
+  fuente.onerror = () => { if (fuente) { estado("Se cortó la conexión con el servidor.", true); fuente.close(); fuente = null; $("#generar").disabled = false; } };
+}
+
+// Reloj de video: t = 0 al terminar el contexto. La cámara muestra el frame real k desde t = 50 (k + 1);
+// el modelo, su frame i desde que terminó de generarlo (su tiempo acumulado medido). Si un modelo todavía no
+// mandó el frame que le tocaría, el reloj espera (el servidor intercala los dos modelos y decodifica para mostrar).
+function reproducir(repetir) {
+  const c = corrida;
+  c.reproduciendo = true;
+  const vel = +$("#vel").value;
+  const CTX = clipDatos.ctx.length;
+  let t = -CTX * FRAME_MS, prev = performance.now(), espera = 0;
+  const n = c.sel.length;
+  function tick(now) {
+    if (corrida !== c) return;
+    const dt = (now - prev) * vel; prev = now;
+    let tope = Infinity;
+    for (let j = 0; j < n; j++) {
+      const k = c.ms[j].filter(v => v != null).length;
+      if (k < N) tope = Math.min(tope, c.cum[j][k]);
+    }
+    const objetivo = t + dt;
+    const tNuevo = t < 0 ? objetivo : Math.min(objetivo, Math.max(t, tope));
+    if (t >= 0 && tNuevo < objetivo) { if (!espera) espera = now; } else espera = 0;
+    t = tNuevo;
+    pintar(t, espera && now - espera > 150);
+    const fin = Math.max(N * FRAME_MS, ...c.cum.map(a => a[N] || Infinity));
+    if (t >= fin && c.ms.every(a => a.filter(v => v != null).length === N)) {
+      c.reproduciendo = false;
+      if (c.terminado) cerrar();
+      return;
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+}
+
+function pintar(t, esperando) {
+  const c = corrida, CTX = clipDatos.ctx.length;
+  if (t < 0) {
+    const k = Math.min(CTX - 1, Math.floor((t + CTX * FRAME_MS) / FRAME_MS));
+    const txt = `contexto ${seg((k - CTX + 1) * FRAME_MS / 1000)}`;
+    setPantalla("real", clipDatos.ctx[k], txt);
+    c.sel.forEach((_, j) => setPantalla(j, clipDatos.ctx[k], txt + " · lo ve el modelo"));
+    $("#v_real_f").textContent = "ctx " + (k + 1) + "/" + CTX;
+    $("#reloj").innerHTML = `Reloj: <b>${seg(t / 1000)}</b> · contexto real (1 s): todos ven lo mismo`;
+    return;
+  }
+  const kr = Math.min(N, Math.floor(t / FRAME_MS)); // frames reales ya grabados
+  setPantalla("real", kr ? clipDatos.real[kr - 1] : clipDatos.ctx[CTX - 1], kr ? `real ${seg(kr * FRAME_MS / 1000)}` : "último frame de contexto", kr ? "gen" : null);
+  $("#v_real_f").textContent = kr + "/" + N;
+  $("#v_real_t").textContent = fmt(kr * FRAME_MS / 1000, 2) + " s";
+  tira("t_real", kr, null, Math.min(t, N * FRAME_MS) / (N * FRAME_MS));
+  const partes = [];
+  c.sel.forEach((s, j) => {
+    let i = 0; while (i < N && c.cum[j][i + 1] != null && c.cum[j][i + 1] <= t) i++;
+    const ms = c.ms[j];
+    if (i) {
+      setPantalla(j, c.frames[j][i - 1], `${s.nombre} ${seg(i * FRAME_MS / 1000)}`, "gen", `${fmtMs(ms[i - 1])} ms`);
+      const media = c.cum[j][i] / i;
+      $(`#v_${j}_ms`).textContent = fmtMs(ms[i - 1]);
+      $(`#v_${j}_fps`).textContent = fmt(1000 / media, media < 10 ? 0 : 1);
+      const atraso = (c.cum[j][i] - i * FRAME_MS) / 1000;
+      $(`#v_${j}_at`).textContent = atraso <= 0 ? "adelante " + fmt(-atraso, 2) + " s" : "atrás " + fmt(atraso, 2) + " s";
+    } else {
+      setPantalla(j, clipDatos.ctx[CTX - 1], `${s.nombre}: generando el primer frame…`, "esperando");
+    }
+    $(`#v_${j}_f`).textContent = i + "/" + N;
+    tira("t_" + j, i, ms, Math.min(t, N * FRAME_MS) / (N * FRAME_MS));
+    partes.push(`${s.nombre}: <b>${i}/${N}</b>`);
+  });
+  $("#reloj").innerHTML = `Reloj: <b>${seg(t / 1000)}</b> · cámara: <b>${kr}/${N}</b> · ${partes.join(" · ")}` +
+    (esperando ? ` · <span style="color:var(--ink3)">esperando frames del servidor…</span>` : "");
+}
+function tira(id, k, ms, pos) {
+  const el = document.getElementById(id); if (!el) return;
+  const cs = el.children;
+  for (let i = 0; i < N; i++) {
+    cs[i].className = i < k ? (ms && ms[i] > FRAME_MS ? "lento" : "h") : "";
+    if (ms && i < k) cs[i].title = `frame ${i + 1}: ${fmtMs(ms[i])} ms`;
+  }
+  el.querySelector(".marca").style.left = `calc(${(pos * 100).toFixed(2)}% - 1px)`;
+}
+function cerrar() {
+  $("#post").classList.remove("oculto");
+  $("#scrub").max = N; $("#scrub").value = N;
+  mostrarFrame(N - 1);
+  if (corrida.metricas) estado("Listo. Mové la barra para comparar cualquier horizonte, o Repetir para verlo de nuevo.");
+}
+function mostrarFrame(i) {
+  const c = corrida;
+  $("#scrubT").textContent = `frame ${i + 1} · ${seg((i + 1) * FRAME_MS / 1000)}`;
+  setPantalla("real", clipDatos.real[i], `real ${seg((i + 1) * FRAME_MS / 1000)}`, "gen");
+  c.sel.forEach((s, j) => {
+    if (c.frames[j][i]) setPantalla(j, c.frames[j][i], `${s.nombre} ${seg((i + 1) * FRAME_MS / 1000)}`, "gen",
+      c.metricas ? `LPIPS ${fmt(c.metricas.modelos[j].lpips.curva[i], 3)}` : "");
+  });
+}
+
+// ------------------------------------------------------------ métricas
+function mostrarMetricas() {
+  const c = corrida, M = c.metricas.modelos, z = c.metricas.congelado, sel = c.sel;
+  const comp = sel.length > 1;
+  const filas = [];
+  const sec = t => filas.push(`<tr class="sec"><td colspan="${sel.length + 2}">${t}</td></tr>`);
+  // fila: etiqueta, valores por modelo, formato, menor es mejor (null = sin ganador), ref
+  const fila = (lab, vals, f, menor, ref) => {
+    let best = -1;
+    if (comp && menor != null) {
+      const ok = vals.map((v, i) => [v, i]).filter(([v]) => v != null && isFinite(v));
+      if (ok.length > 1 && new Set(ok.map(([v]) => v)).size > 1) best = ok.sort((a, b) => menor ? a[0] - b[0] : b[0] - a[0])[0][1];
+    }
+    filas.push(`<tr><td>${lab}</td>${vals.map((v, i) => `<td class="${i === best ? "mejor" : ""}">${f(v)}</td>`).join("")}<td class="ref">${ref ?? ""}</td></tr>`);
+  };
+  const head = `<thead><tr><th></th>${sel.map(s => `<th><span style="color:var(--${s.k.toLowerCase()})">■</span> ${s.nombre}${s.pasos ? `, ${s.pasos} p.` : ""}</th>`).join("")}<th>Referencia</th></tr></thead>`;
+  sec("Velocidad en esta corrida (" + CAT.gpu.replace("NVIDIA GeForce ", "") + ", batch 1, fp16)");
+  fila("ms por frame, media", M.map(m => m.latencia.media), fmtMs, true, "presupuesto: 50 ms");
+  fila("ms por frame, p50 / p99", M.map(m => [m.latencia.p50, m.latencia.p99]), v => fmtMs(v[0]) + " / " + fmtMs(v[1]), null, "");
+  fila("FPS", M.map(m => m.latencia.fps), v => fmt(v, v >= 100 ? 0 : 1), false, "cámara: 20");
+  fila("Frames dentro de 50 ms", M.map(m => m.latencia.bajo_presupuesto), v => fmt(100 * v, 0) + " %", false, "");
+  fila("¿Tiempo real? (media ≤ 50 ms)", M.map(m => m.latencia.media <= 50), v => v ? '<span class="si">Sí</span>' : '<span class="no">No</span>', null, "");
+  fila("3 s de video generados en", M.map(m => m.latencia.total_s), v => fmt(v, 2) + " s", true, "la cámara: 3,00 s");
+  fila("Decoder VQ (aparte), p50", M.map(m => m.latencia.decoder_ms), fmtMs, null, "ms; no entra en la latencia");
+  sec("Calidad en este clip");
+  for (const h of ["1", "2", "3"]) fila(`LPIPS a ${h} s`, M.map(m => m.lpips[h]), v => fmt(v, 3), true, "congelado: " + fmt(z[h], 3));
+  fila("Deriva LPIPS (3 s / 1 s)", M.map(m => m.lpips.deriva), v => fmt(v, 2) + "×", true, "congelado: " + fmt(z["3"] / z["1"], 2) + "×");
+  fila("CE del último frame (nats)", M.map(m => m.ce_last), v => v == null ? "— (píxeles)" : fmt(v, 3), true, "");
+  sec("Paper (400 clips de val)");
+  fila("FVD a 1 s", M.map(m => m.paper.fvd_1s), v => fmt(v, 0), true, "piso real-real: 103");
+  fila("FVD a 3 s", M.map(m => m.paper.fvd_3s), v => fmt(v, 0), true, "gpt2m: 105");
+  fila("Deriva FVD (3 s / 1 s)", M.map(m => m.paper.deriva), v => v == null ? "—" : fmt(v, 2) + "×", true, "");
+  fila("LPIPS a 1 s", M.map(m => m.paper.lpips_1s), v => fmt(v, 3), true, "congelado: 0,235");
+  fila("CE del último frame", M.map(m => m.paper.ce_last), v => fmt(v, 3), true, "");
+  fila("ms por frame (bench del paper)", M.map(m => m.paper.ms_frame), fmtMs, true, "");
+  $("#tabla").innerHTML = head + "<tbody>" + filas.join("") + "</tbody>";
+  graficoLPIPS(); graficoMs();
+}
+
+const W = 560, H = 250, PAD = {l: 46, r: 14, t: 10, b: 32};
+function ejes(xs, yTicks, yFmt, ySc, xLab) {
+  const g = [];
+  for (const v of yTicks) { const y = ySc(v); g.push(`<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${y}" y2="${y}" stroke="var(--line)" stroke-width="1"/><text x="${PAD.l - 6}" y="${y + 4}" text-anchor="end" font-size="11" fill="var(--ink3)">${yFmt(v)}</text>`); }
+  for (const [v, x] of xs) g.push(`<text x="${x}" y="${H - PAD.b + 16}" text-anchor="middle" font-size="11" fill="var(--ink3)">${v}</text>`);
+  g.push(`<text x="${(PAD.l + W - PAD.r) / 2}" y="${H - 2}" text-anchor="middle" font-size="11" fill="var(--ink3)">${xLab}</text>`);
+  return g.join("");
+}
+function linea(vals, xSc, ySc, col, dash) {
+  const d = vals.map((v, i) => `${i ? "L" : "M"}${xSc(i).toFixed(1)},${ySc(v).toFixed(1)}`).join("");
+  return `<path d="${d}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" ${dash ? 'stroke-dasharray="5 4"' : ""}/>`;
+}
+function hover(caja, series, xSc, ySc, txt) {
+  const svg = caja.querySelector("svg"), tip = caja.querySelector(".tip");
+  const cur = svg.querySelector(".cur"), dots = svg.querySelectorAll(".dot");
+  svg.onmousemove = e => {
+    const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width;
+    const i = Math.max(0, Math.min(N - 1, Math.round((x - PAD.l) / (W - PAD.l - PAD.r) * (N - 1))));
+    cur.setAttribute("x1", xSc(i)); cur.setAttribute("x2", xSc(i)); cur.style.display = "";
+    series.forEach((s, j) => { dots[j].setAttribute("cx", xSc(i)); dots[j].setAttribute("cy", ySc(s.v[i])); dots[j].style.display = ""; });
+    tip.innerHTML = txt(i); tip.style.display = "block";
+    tip.style.left = (xSc(i) / W * r.width + 12) + "px"; tip.style.top = (PAD.t / H * r.height + 50) + "px";
+  };
+  svg.onmouseleave = () => { tip.style.display = "none"; cur.style.display = "none"; dots.forEach(d => d.style.display = "none"); };
+}
+function titulos(caja, h, p) { caja.querySelector("h4").textContent = h; caja.querySelector("p").textContent = p; }
+function graficoLPIPS() {
+  titulos($("#gLp"), "LPIPS contra la continuación real", "Por frame generado. Más bajo es más parecido, píxel a píxel.");
+  titulos($("#gMs"), "Latencia por frame", "Paso del modelo, batch 1, fp16. Escala log; la línea es el presupuesto de 50 ms (20 FPS).");
+  const c = corrida, M = c.metricas.modelos;
+  const series = [...c.sel.map((s, j) => ({nom: s.nombre, col: `var(--${s.k.toLowerCase()})`, v: M[j].lpips.curva})),
+                  {nom: "Frame congelado (referencia)", col: "var(--ref)", v: c.metricas.congelado.curva, dash: true}];
+  const ymax = Math.max(0.1, ...series.flatMap(s => s.v)) * 1.08;
+  const xSc = i => PAD.l + i / (N - 1) * (W - PAD.l - PAD.r), ySc = v => H - PAD.b - v / ymax * (H - PAD.t - PAD.b);
+  const ticks = []; const st = ymax > .6 ? .2 : .1; for (let v = 0; v <= ymax; v += st) ticks.push(+v.toFixed(2));
+  const xs = [[`0,5 s`, xSc(9)], [`1 s`, xSc(19)], [`2 s`, xSc(39)], [`3 s`, xSc(59)]];
+  const caja = $("#gLp");
+  caja.querySelector(".svg").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="LPIPS por frame">${ejes(xs, ticks, v => fmt(v, 1), ySc, "horizonte")}
+    ${series.map(s => linea(s.v, xSc, ySc, s.col, s.dash)).join("")}
+    <line class="cur" y1="${PAD.t}" y2="${H - PAD.b}" stroke="var(--ink3)" stroke-width="1" style="display:none"/>
+    ${series.map(s => `<circle class="dot" r="4" fill="${s.col}" stroke="var(--panel)" stroke-width="2" style="display:none"/>`).join("")}</svg>`;
+  caja.querySelector(".leyenda").innerHTML = series.map(s => `<span style="--c:${s.col}"><i class="${s.dash ? "dash" : ""}"></i>${s.nom}</span>`).join("");
+  hover(caja, series, xSc, ySc, i => `<b>${seg((i + 1) * FRAME_MS / 1000)}</b><br>` + series.map(s => `${s.nom}: ${fmt(s.v[i], 3)}`).join("<br>"));
+}
+function graficoMs() {
+  const c = corrida, M = c.metricas.modelos;
+  const series = c.sel.map((s, j) => ({nom: s.nombre, col: `var(--${s.k.toLowerCase()})`, v: M[j].latencia.por_frame.map(v => Math.max(v, 0.05))}));
+  const all = series.flatMap(s => s.v).concat([FRAME_MS]);
+  const lo = Math.pow(10, Math.floor(Math.log10(Math.min(...all)))), hi = Math.pow(10, Math.ceil(Math.log10(Math.max(...all) * 1.05)));
+  const L = v => Math.log10(v);
+  const xSc = i => PAD.l + i / (N - 1) * (W - PAD.l - PAD.r), ySc = v => H - PAD.b - (L(v) - L(lo)) / (L(hi) - L(lo)) * (H - PAD.t - PAD.b);
+  const ticks = []; for (let v = lo; v <= hi * 1.001; v *= 10) ticks.push(v);
+  const xs = [[`1`, xSc(0)], [`20`, xSc(19)], [`40`, xSc(39)], [`60`, xSc(59)]];
+  const caja = $("#gMs");
+  const yb = ySc(FRAME_MS);
+  caja.querySelector(".svg").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Latencia por frame">${ejes(xs, ticks, v => v >= 1 ? fmt(v, 0) : fmt(v, v >= .1 ? 1 : 2), ySc, "frame generado")}
+    <line x1="${PAD.l}" x2="${W - PAD.r}" y1="${yb}" y2="${yb}" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="6 4"/>
+    <text x="${W - PAD.r}" y="${yb - 5}" text-anchor="end" font-size="11" fill="var(--ink2)">50 ms · 20 FPS</text>
+    ${series.map(s => linea(s.v, xSc, ySc, s.col)).join("")}
+    <line class="cur" y1="${PAD.t}" y2="${H - PAD.b}" stroke="var(--ink3)" stroke-width="1" style="display:none"/>
+    ${series.map(s => `<circle class="dot" r="4" fill="${s.col}" stroke="var(--panel)" stroke-width="2" style="display:none"/>`).join("")}</svg>`;
+  caja.querySelector(".leyenda").innerHTML = series.map(s => `<span style="--c:${s.col}"><i></i>${s.nom}</span>`).join("") + `<span style="--c:var(--ink2)"><i class="dash"></i>Presupuesto de 50 ms</span>`;
+  hover(caja, series, xSc, ySc, i => `<b>Frame ${i + 1}</b><br>` + series.map(s => `${s.nom}: ${fmtMs(M[series.indexOf(s)].latencia.por_frame[i])} ms`).join("<br>"));
+}
+
+// ------------------------------------------------------------ escenario en línea
+// El servidor simula el uso real (un modelo solo en la GPU, con sus tiempos medidos) y manda todo junto; acá se
+// reproduce: la cámara a 20 FPS y, por modelo, la predicción vigente para "ahora" y lo que espera ver en +K s.
+const fmtK = v => fmt(v, v % 1 ? 1 : 0);
+const PIE_ROLLOUT = document.getElementById("pie").innerHTML;
+const PIE_ONLINE = `Cada modelo se simula solo en la GPU: los planes se calculan de verdad y su costo es el tiempo medido de sus pasos
+  (batch 1, fp16); el encoder de la cámara no se cuenta, porque los frames reales entran como los tokens de val. La <b>edad</b> de la
+  predicción es hace cuánto llegó el último frame real que usó: un modelo rápido se re-ancla seguido y su predicción nunca envejece mucho;
+  uno lento vive con predicciones viejas, o sin ninguna si el plan termina después del instante que predice. El <b>LPIPS</b> compara la
+  predicción para cada instante con el frame real de ese instante; la referencia es repetir el último frame real que vio el modelo.
+  El FVD es el del paper (rollout de 3 s, 400 clips).`;
+function explicarOnline() {
+  document.getElementById("pie").innerHTML = escenario === "online" ? PIE_ONLINE : PIE_ROLLOUT;
+  const K = fmtK(+$("#antic").value), per = +$("#periodo").value;
+  $("#explicaOn").innerHTML = `<b>Uso en línea.</b> La cámara pasa ${$("#dur").value} s de video real. ` +
+    (per ? `Cada ${fmtK(per)} s, si está libre,` : `Apenas termina un plan (y llegó un frame nuevo),`) +
+    ` el modelo toma todos los frames reales que llegaron e imagina los próximos <b>${K} s</b>: un <i>plan</i>. ` +
+    `El plan cuesta lo que tardan sus pasos en la GPU (medido) y recién al terminar pasa a ser la predicción vigente. ` +
+    `El panel grande muestra lo que el plan vigente predijo para <b>este instante</b>; la miniatura, lo que espera ver más adelante. ` +
+    `Si el modelo es lento, sus planes llegan viejos o directamente tarde. Cada modelo se simula solo en la GPU.`;
+}
+["dur", "antic", "periodo"].forEach(id => document.getElementById(id).addEventListener("change", explicarOnline));
+
+function armarOnline(sel) {
+  const esc = $("#escenario");
+  esc.style.setProperty("--n", sel.length + 1);
+  esc.innerHTML = `<div class="panel" id="p_real" style="--c:var(--ink3)"><h2><span class="pt"></span>Cámara real <small>ahora</small></h2>
+    <div class="pantalla" id="s_real"><img alt="Frame real"><span class="rotulo num"></span></div>
+    <div class="vivo num"><div><b id="v_real_f">—</b><span>tiempo</span></div><div><b>50</b><span>ms por frame</span></div><div><b>20</b><span>FPS</span></div><div><b id="v_real_k">—</b><span>frames reales</span></div></div></div>` +
+    sel.map((s, j) => `<div class="panel" id="p_${j}" style="--c:var(--${s.k.toLowerCase()})"><h2><span class="pt"></span>${s.nombre} <small>${etiquetaModelo(s)}</small></h2>
+    <div class="pantalla esperando" id="s_${j}"><img alt="Predicción de ${s.nombre} para ahora"><span class="rotulo num"></span><span class="rotulo2 num"></span>
+      <div class="mini oculto" id="mini_${j}"><img alt="Lo que espera ver más adelante"><span class="num"></span></div></div>
+    <div class="vivo num"><div><b id="v_${j}_pl">—</b><span>planes listos</span></div><div><b id="v_${j}_ed">—</b><span>edad de la predicción</span></div><div><b id="v_${j}_ms">—</b><span>cómputo del plan</span></div><div><b id="v_${j}_lp">—</b><span>LPIPS ahora</span></div></div>
+    <div class="gantt" id="gantt_${j}"></div></div>`).join("");
+  $("#reloj").innerHTML = "";
+}
+
+function generarOnline() {
+  if (!clipDatos) return;
+  if (fuente) fuente.close();
+  const sel = seleccion();
+  armarOnline(sel); poster();
+  $("#post").classList.add("oculto");
+  const c = corrida = {online: true, sel, d: null};
+  const pedido = {escenario: "online", clip: clipDatos.clip, semilla: +$("#semilla").value || 0,
+                  dur: +$("#dur").value, antic: +$("#antic").value, periodo: +$("#periodo").value,
+                  modelos: sel.map(s => ({id: s.id, pasos: s.pasos, temp: s.temp}))};
+  $("#generar").disabled = true;
+  fuente = new EventSource("/api/correr?pedido=" + encodeURIComponent(JSON.stringify(pedido)));
+  fuente.addEventListener("estado", e => estado(JSON.parse(e.data).texto));
+  fuente.addEventListener("online", e => {
+    c.d = JSON.parse(e.data);
+    if (corrida !== c) return;
+    c.sel.forEach((s, j) => gantt(j));
+    estado(`Segmento ${c.d.segmento}, desde el frame ${c.d.inicio}. Reproduciendo…`);
+    reproducirOnline();
+  });
+  fuente.addEventListener("fin", () => { fuente.close(); fuente = null; $("#generar").disabled = false; });
+  fuente.addEventListener("fallo", e => { estado("Error: " + JSON.parse(e.data).texto, true); fuente.close(); fuente = null; $("#generar").disabled = false; });
+  fuente.onerror = () => { if (fuente) { estado("Se cortó la conexión con el servidor.", true); fuente.close(); fuente = null; $("#generar").disabled = false; } };
+}
+
+// Cronograma por modelo: fila de cómputo (cuándo calcula cada plan) y fila de uso (cuándo su predicción está en pantalla).
+const GW = 600, GH = 46;
+function gantt(j) {
+  const d = corrida.d, m = d.modelos[j], T = d.dur_f * 50, x = v => 4 + Math.min(v, T) / T * (GW - 8);
+  const col = `var(--${corrida.sel[j].k.toLowerCase()})`;
+  const r = [];
+  m.planes.forEach((p, i) => {
+    if (p.ini < T) r.push(`<rect x="${x(p.ini)}" y="4" width="${Math.max(1.5, x(p.ini + p.ms) - x(p.ini) - 1)}" height="12" rx="2" fill="${col}" opacity=".45"><title>Plan ${i + 1}: arranca en ${fmt(p.ini / 1000, 2)} s con ${p.n} frames reales; cómputo ${fmtMs(p.ms)} ms</title></rect>`);
+  });
+  let ini = 0, cur = null;
+  const plan = k => k == null ? null : k.split("_")[0];
+  const cerrarTramo = t => { if (cur != null) r.push(`<rect x="${x(ini)}" y="22" width="${Math.max(1.5, x(t) - x(ini) - 1)}" height="12" rx="2" fill="${col}"><title>En pantalla: plan ${+cur + 1}</title></rect>`); };
+  m.vista.forEach((k, i) => { if (plan(k) !== cur) { cerrarTramo(i * 50); ini = i * 50; cur = plan(k); } });
+  cerrarTramo(T);
+  for (let s = 0; s <= d.dur_f / 20; s += (d.dur_f > 200 ? 5 : 2)) r.push(`<text x="${Math.min(GW - 12, Math.max(12, x(s * 1000)))}" y="${GH + 4}" font-size="14" fill="var(--ink3)" text-anchor="middle">${s} s</text>`);
+  document.getElementById("gantt_" + j).innerHTML = `<svg viewBox="0 0 ${GW} ${GH + 8}" role="img" aria-label="Cronograma de planes">
+    <rect x="4" y="4" width="${GW - 8}" height="12" fill="var(--panel2)" rx="2"/><rect x="4" y="22" width="${GW - 8}" height="12" fill="var(--panel2)" rx="2"/>
+    ${r.join("")}<line class="cab" x1="4" x2="4" y1="1" y2="37" stroke="var(--ink)" stroke-width="2"/></svg>
+    <div class="leyenda-tira"><span>arriba: calcula un plan · abajo: su predicción en pantalla</span><span>vacío = sin predicción</span></div>`;
+}
+
+function reproducirOnline() {
+  const c = corrida, d = c.d, vel = +$("#vel").value, T = d.dur_f * 50;
+  let t = -d.ctx.length * 50, prev = performance.now();
+  const tick = now => {
+    if (corrida !== c) return;
+    t += (now - prev) * vel; prev = now;
+    if (t < 0) {
+      const k = Math.max(0, Math.min(d.ctx.length - 1, Math.floor((t + d.ctx.length * 50) / 50)));
+      setPantalla("real", d.ctx[k], `contexto ${seg((k - d.ctx.length + 1) * 0.05)}`);
+      c.sel.forEach((_, j) => setPantalla(j, d.ctx[k], "contexto: lo ve el modelo"));
+      $("#reloj").innerHTML = `Reloj: <b>${seg(t / 1000)}</b> · contexto real`;
+    } else mostrarOnline(Math.min(t, T - 1));
+    if (t < T) requestAnimationFrame(tick);
+    else cerrarOnline();
+  };
+  requestAnimationFrame(tick);
+}
+
+function mostrarOnline(t) {
+  const c = corrida, d = c.d, kr = Math.max(1, Math.min(d.dur_f, Math.floor(t / 50) + 1)), tt = kr * 50;
+  setPantalla("real", d.real[kr - 1], `real ${seg(kr * 0.05)}`, "gen");
+  $("#v_real_f").textContent = fmt(kr * 0.05, 2) + " s";
+  $("#v_real_k").textContent = kr + "/" + d.dur_f;
+  $("#scrubT").textContent = seg(kr * 0.05);
+  const partes = [];
+  c.sel.forEach((s, j) => {
+    const m = d.modelos[j], k = m.vista[kr - 1];
+    const listos = m.planes.filter(p => p.listo <= tt), ult = listos[listos.length - 1];
+    if (k != null) {
+      const edad = m.edad[kr - 1];
+      setPantalla(j, m.imgs[k], `predicho hace ${fmt(edad / 1000, 2)} s`, "gen", `LPIPS ${fmt(m.lpips[kr - 1], 3)}`);
+      $(`#v_${j}_ed`).textContent = fmt(edad / 1000, 2) + " s";
+      $(`#v_${j}_lp`).textContent = fmt(m.lpips[kr - 1], 3);
+    } else {
+      const visto = ult ? ult.n : 0;
+      setPantalla(j, visto ? d.real[visto - 1] : d.ctx[d.ctx.length - 1],
+        ult ? "sin predicción vigente: el último plan ya venció" : "calculando el primer plan…", "esperando");
+      $(`#v_${j}_ed`).textContent = "—"; $(`#v_${j}_lp`).textContent = "—";
+    }
+    const mini = document.getElementById("mini_" + j);
+    if (ult) {
+      const ti = (ult.n + d.antic_f) * 50;
+      mini.classList.remove("oculto");
+      const im = mini.querySelector("img"); if (im.dataset.src !== ult.ultimo) { im.src = m.imgs[ult.ultimo]; im.dataset.src = ult.ultimo; }
+      mini.querySelector("span").textContent = `para ${fmt(ti / 1000, 2)} s · ` + (ti >= tt ? `faltan ${fmt((ti - tt) / 1000, 2)} s` : ult.listo > ti ? "llegó tarde" : "ya pasó");
+    } else mini.classList.add("oculto");
+    $(`#v_${j}_pl`).textContent = listos.length + "/" + m.planes.length;
+    const enCurso = m.planes.find(p => p.ini <= tt && p.listo > tt);
+    $(`#v_${j}_ms`).textContent = enCurso ? "calculando…" : (ult ? fmtMs(ult.ms) + " ms" : "—");
+    const cab = document.querySelector(`#gantt_${j} .cab`);
+    if (cab) { const X = 4 + Math.min(t, d.dur_f * 50) / (d.dur_f * 50) * (GW - 8); cab.setAttribute("x1", X); cab.setAttribute("x2", X); }
+    partes.push(`${s.nombre}: <b>${k != null ? "predicción de hace " + fmt(m.edad[kr - 1] / 1000, 2) + " s" : "sin predicción"}</b>`);
+  });
+  $("#reloj").innerHTML = `Reloj: <b>${seg(t / 1000)}</b> · ` + partes.join(" · ");
+}
+
+function cerrarOnline() {
+  const d = corrida.d;
+  $("#post").classList.remove("oculto");
+  const sc = $("#scrub"); sc.max = d.dur_f; sc.value = d.dur_f;
+  mostrarOnline(d.dur_f * 50 - 1);
+  tablaOnline(); graficosOnline();
+  estado("Listo. Mové la barra para recorrer el video, o Repetir para verlo de nuevo.");
+}
+
+function tablaOnline() {
+  const c = corrida, d = c.d, sel = c.sel, M = d.modelos.map(m => m.resumen), comp = sel.length > 1;
+  const K = d.antic_f / 20, filas = [];
+  const sec = t => filas.push(`<tr class="sec"><td colspan="${sel.length + 2}">${t}</td></tr>`);
+  const fila = (lab, vals, f, menor, ref) => {
+    let best = -1;
+    if (comp && menor != null) {
+      const ok = vals.map((v, i) => [v, i]).filter(([v]) => v != null && isFinite(v));
+      if (ok.length > 1 && new Set(ok.map(([v]) => v)).size > 1) best = ok.sort((a, b) => menor ? a[0] - b[0] : b[0] - a[0])[0][1];
+    }
+    filas.push(`<tr><td>${lab}</td>${vals.map((v, i) => `<td class="${i === best ? "mejor" : ""}">${f(v)}</td>`).join("")}<td class="ref">${ref ?? ""}</td></tr>`);
+  };
+  const head = `<thead><tr><th></th>${sel.map(s => `<th><span style="color:var(--${s.k.toLowerCase()})">■</span> ${s.nombre}${s.pasos ? `, ${s.pasos} p.` : ""}</th>`).join("")}<th>Referencia</th></tr></thead>`;
+  const per = d.periodo_ms;
+  sec(`Ritmo: planes de ${fmtK(K)} s, re-anclando ${per ? "cada " + fmtK(per / 1000) + " s" : "apenas termina"}`);
+  fila("Planes hechos", M.map(m => m.planes), v => fmt(v, 0), false, `en ${fmt(d.dur_f / 20, 0)} s de video`);
+  fila("Cómputo por plan", M.map(m => m.ms_plan), v => fmtMs(v) + " ms", true, per ? `período: ${fmt(per, 0)} ms` : "");
+  fila("ms por paso (frame imaginado)", M.map(m => m.ms_paso), fmtMs, true, "");
+  fila("¿Sostiene el ritmo?", M.map(m => m.sostiene), v => v ? '<span class="si">Sí</span>' : '<span class="no">No</span>', null, per ? "cómputo ≤ período" : "");
+  fila("Primera predicción lista a los", M.map(m => m.primera_s), v => fmt(v, 2) + " s", true, "");
+  fila(`Anticipación efectiva del frame a +${fmtK(K)} s`, M.map(m => m.margen_medio / 1000),
+       v => v < 0 ? `<span class="no">llega ${fmt(-v, 2)} s tarde</span>` : `listo ${fmt(v, 2)} s antes`, false, `pedida: ${fmt(K, 2)} s`);
+  sec("Lo que ve el sistema en cada instante");
+  fila("Cobertura (tiempo con predicción vigente)", M.map(m => m.cobertura), v => fmt(100 * v, 0) + " %", false, "");
+  fila("Edad media de la predicción vigente", M.map(m => m.edad_media), v => v == null ? "—" : fmt(v / 1000, 2) + " s", true, "");
+  fila("Edad máxima", M.map(m => m.edad_max), v => v == null ? "—" : fmt(v / 1000, 2) + " s", true, "");
+  fila("LPIPS de la predicción para ahora (media)", M.map(m => m.lpips_ahora), v => fmt(v, 3), true,
+       M.length === 1 ? "congelado con la misma info: " + fmt(M[0].ref_ahora, 3) : "");
+  fila(`LPIPS del frame a +${fmtK(K)} s (media de planes)`, M.map(m => m.lpips_ant), v => fmt(v, 3), true, "");
+  sec("Paper (rollout de 3 s, 400 clips)");
+  fila("FVD a 1 s / 3 s", d.modelos.map(m => [m.paper.fvd_1s, m.paper.fvd_3s]), v => fmt(v[0], 0) + " / " + fmt(v[1], 0), null, "");
+  fila("Deriva FVD (3 s / 1 s)", d.modelos.map(m => m.paper.deriva), v => v == null ? "—" : fmt(v, 2) + "×", true, "");
+  $("#tabla").innerHTML = head + "<tbody>" + filas.join("") + "</tbody>";
+}
+
+function serieT(caja, titulo, desc, series, n, yFmt, refLinea) {
+  titulos(caja, titulo, desc);
+  const vals = series.flatMap(s => s.v.filter(v => v != null)).concat(refLinea ? [refLinea.v] : []);
+  const ymax = Math.max(1e-6, ...vals) * 1.08;
+  const xSc = i => PAD.l + i / (n - 1) * (W - PAD.l - PAD.r), ySc = v => H - PAD.b - v / ymax * (H - PAD.t - PAD.b);
+  const paso = [0.05, 0.1, 0.2, 0.25, 0.5, 1, 2, 5].find(st => ymax / st <= 6) || 5;
+  const ticks = []; for (let v = 0; v <= ymax; v += paso) ticks.push(+v.toFixed(3));
+  const segs = n / 20, cada = segs > 12 ? 5 : 2, xs = [];
+  for (let s = 0; s <= segs; s += cada) xs.push([s + " s", xSc(Math.max(0, s * 20 - 1))]);
+  const linea2 = (v, col, dash) => {
+    let p = "", pen = false;
+    v.forEach((y, i) => { if (y == null) { pen = false; return; } p += `${pen ? "L" : "M"}${xSc(i).toFixed(1)},${ySc(y).toFixed(1)}`; pen = true; });
+    return `<path d="${p}" fill="none" stroke="${col}" stroke-width="2" stroke-linejoin="round" ${dash ? 'stroke-dasharray="5 4"' : ""}/>`;
+  };
+  const yb = refLinea ? ySc(refLinea.v) : 0;
+  caja.querySelector(".svg").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${titulo}">${ejes(xs, ticks, v => yFmt(v, false), ySc, "tiempo de video")}
+    ${refLinea ? `<line x1="${PAD.l}" x2="${W - PAD.r}" y1="${yb}" y2="${yb}" stroke="var(--ink2)" stroke-width="1.5" stroke-dasharray="6 4"/><text x="${W - PAD.r}" y="${yb - 5}" text-anchor="end" font-size="11" fill="var(--ink2)">${refLinea.nom}</text>` : ""}
+    ${series.map(s => linea2(s.v, s.col, s.dash)).join("")}
+    <line class="cur" y1="${PAD.t}" y2="${H - PAD.b}" stroke="var(--ink3)" stroke-width="1" style="display:none"/></svg>`;
+  caja.querySelector(".leyenda").innerHTML = series.map(s => `<span style="--c:${s.col}"><i class="${s.dash ? "dash" : ""}"></i>${s.nom}</span>`).join("") +
+    (refLinea ? `<span style="--c:var(--ink2)"><i class="dash"></i>${refLinea.nom}</span>` : "");
+  const svg = caja.querySelector("svg"), tip = caja.querySelector(".tip"), cur = svg.querySelector(".cur");
+  svg.onmousemove = e => {
+    const r = svg.getBoundingClientRect(), x = (e.clientX - r.left) * W / r.width;
+    const i = Math.max(0, Math.min(n - 1, Math.round((x - PAD.l) / (W - PAD.l - PAD.r) * (n - 1))));
+    cur.setAttribute("x1", xSc(i)); cur.setAttribute("x2", xSc(i)); cur.style.display = "";
+    tip.innerHTML = `<b>${fmt((i + 1) / 20, 2)} s</b><br>` + series.map(s => `${s.nom}: ${s.v[i] == null ? "sin predicción" : yFmt(s.v[i], true)}`).join("<br>");
+    tip.style.display = "block"; tip.style.left = (xSc(i) / W * r.width + 12) + "px"; tip.style.top = "60px";
+  };
+  svg.onmouseleave = () => { tip.style.display = "none"; cur.style.display = "none"; };
+}
+
+function graficosOnline() {
+  const c = corrida, d = c.d, n = d.dur_f;
+  const col = s => `var(--${s.k.toLowerCase()})`;
+  const lp = c.sel.map((s, j) => ({nom: s.nombre, col: col(s), v: d.modelos[j].lpips}));
+  if (c.sel.length === 1) lp.push({nom: "Congelado con la misma info", col: "var(--ref)", v: d.modelos[0].ref, dash: true});
+  serieT($("#gLp"), "LPIPS de la predicción para ahora", "Contra el frame real de ese instante. Los huecos son momentos sin predicción vigente.",
+         lp, n, (v, tip) => fmt(v, tip ? 3 : 1));
+  const ed = c.sel.map((s, j) => ({nom: s.nombre, col: col(s), v: d.modelos[j].edad.map(v => v == null ? null : v / 1000)}));
+  serieT($("#gMs"), "Edad de la predicción vigente", "Hace cuánto llegó el último frame real que usó. Baja en cada plan nuevo; la línea es la anticipación pedida.",
+         ed, n, (v, tip) => fmt(v, tip ? 2 : 1) + (tip ? " s" : ""), {v: d.antic_f / 20, nom: `anticipación: ${fmtK(d.antic_f / 20)} s`});
+}
+
+iniciar().catch(e => estado("No pude hablar con el servidor: " + e, true));
+</script>
+</body>
+</html>
