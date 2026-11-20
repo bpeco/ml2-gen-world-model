@@ -20,9 +20,14 @@
 
 \sisetup{output-decimal-marker={,},group-separator={.}}
 \newcommand{\pend}[1]{\textcolor{red}{[#1]}}
-% Revisión: \editado{...} pinta de azul el texto que cambiamos. Para sacar las marcas: \DeclareRobustCommand{\editado}[1]{#1}
+% \editado{...} marca el texto que cambiamos en la revisión. En este archivo no se ve;
+% main_azul.tex compila este mismo texto con esas partes en azul.
 \definecolor{editado}{RGB}{0,84,180}
-\DeclareRobustCommand{\editado}[1]{\textcolor{editado}{#1}}
+\ifdefined\conmarcas
+  \DeclareRobustCommand{\editado}[1]{\textcolor{editado}{#1}}
+\else
+  \DeclareRobustCommand{\editado}[1]{#1}
+\fi
 \newcommand{\ms}{\,ms}
 
 \title{¿Cuánto se puede achicar un world model de manejo?\\
