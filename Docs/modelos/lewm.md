@@ -192,6 +192,7 @@ ONNX del encoder y del predictor (un paso), con la comparación de ONNX Runtime 
 
 <!-- auto:opciones modelo=lewm accion=exportar -->
 - `--dtype`: precisión de la inferencia
+- `--aleatorio`: modelo sin entrenar con la arquitectura de la corrida (latencia)
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->

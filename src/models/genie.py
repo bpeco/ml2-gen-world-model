@@ -97,7 +97,7 @@ FIDELIDAD = [
 ]
 
 # Capacidades que expone la CLI (src/cli.py, src/toolkit.py): solo las acciones que este modelo soporta.
-ACCIONES = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo")
+ACCIONES = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo", "exportar")
 EVALUACION = "video"  # "video": CE + rollouts + LPIPS/FVD; "latente": src.eval_latent
 
 

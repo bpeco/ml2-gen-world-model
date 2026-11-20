@@ -823,6 +823,11 @@ def test_humo_candidatos_acepta_cualquier_multiplo():
       Toolkit("genie").plan("entrenar", humo=True, humo_candidatos=malo)
 
 
+def test_genie_exporta_un_paso_aunque_sea_aleatorio():
+  assert [c.argv[2:] for c in Toolkit("genie").plan("exportar", tamano="s", aleatorio=True).comandos] == [
+    ["src.export_onnx", "--model", "random:genie_s"]]
+
+
 def test_exportar_y_demo_de_latentes():
   assert [c.argv[2:] for c in Toolkit("lewm").plan("exportar").comandos] == [
     ["src.export_latente", "--model", "lewm", "--parte", "encoder"], ["src.export_latente", "--model", "lewm", "--parte", "predictor"]]

@@ -92,7 +92,7 @@ OPCIONES = [
          ("evaluar", "bench", "demo")),
   Opcion("ctx_frames", ("--ctx-frames",), "int", "frames de contexto en la inferencia (default 20 = 1 s)", ("evaluar", "bench")),
   Opcion("int8", ("--int8",), "bool", "cuantización int8 dinámica en CPU", ("bench",)),
-  Opcion("aleatorio", ("--aleatorio",), "bool", "modelo sin entrenar con la arquitectura de la corrida (latencia)", ("bench", "demo")),
+  Opcion("aleatorio", ("--aleatorio",), "bool", "modelo sin entrenar con la arquitectura de la corrida (latencia)", ("bench", "demo", "exportar")),
   Opcion("humo", ("--humo",), "bool", "tres entrenamientos de 300 pasos (lr de la receta, por raíz y lineal) y elige", ("entrenar",)),
   Opcion("humo_candidatos", ("--humo-candidatos",), "str", "con --humo: candidatos a probar, p. ej. fuente,raiz,x3 (default: fuente,raiz,lineal,x3,x10)",
          ("entrenar",)),

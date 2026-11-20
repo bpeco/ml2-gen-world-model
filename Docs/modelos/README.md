@@ -12,7 +12,7 @@ Esta tabla sale del código (`python -m src.docs_gen`): lista lo que declara cad
 | `gpt` | video | receta, entrenar, continuar, evaluar, bench, demo, estado | [gpt.md](gpt.md) |
 | `maskgit` | video | receta, entrenar, continuar, evaluar, bench, demo, exportar, estado | [maskgit.md](maskgit.md) |
 | `lewm` | latente | receta, entrenar, continuar, evaluar, bench, demo, exportar, estado | [lewm.md](lewm.md) |
-| `genie` | video | receta, entrenar, continuar, evaluar, bench, demo, estado | [genie.md](genie.md) |
+| `genie` | video | receta, entrenar, continuar, evaluar, bench, demo, exportar, estado | [genie.md](genie.md) |
 | `vjepa2` | latente | receta, entrenar, continuar, evaluar, bench, demo, exportar, estado | [vjepa2.md](vjepa2.md) |
 | `vjepa2_ac` | latente | receta, entrenar, continuar, evaluar, bench, demo, exportar, estado | [vjepa2_ac.md](vjepa2_ac.md) |
 | `convlstm_px` | video | receta, entrenar, continuar, evaluar, bench, demo, estado | [convlstm_px.md](convlstm_px.md) |

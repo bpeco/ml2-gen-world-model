@@ -174,6 +174,7 @@ Exporta una pasada de forma fija a ONNX (`--dtype fp16` para el modelo en media 
 
 <!-- auto:opciones modelo=maskgit accion=exportar -->
 - `--dtype`: precisión de la inferencia
+- `--aleatorio`: modelo sin entrenar con la arquitectura de la corrida (latencia)
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->

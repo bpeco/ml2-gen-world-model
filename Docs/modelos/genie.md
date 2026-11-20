@@ -77,6 +77,7 @@ Evaluación: `video`.
 | `genie evaluar` | mide el modelo (video: CE, rollouts, LPIPS y FVD; latentes: error, probes, sorpresa y CEM) |
 | `genie bench` | mide la latencia (el modelo solo, o la cadena de punta a punta con `--cadena`) |
 | `genie demo` | genera la demostración (mp4 con el video real y el predicho, o figura para los latentes) |
+| `genie exportar` | exporta a ONNX |
 | `genie estado` | porcentaje, paso, loss, lr, tramo y ETA de las corridas del modelo |
 <!-- /auto -->
 
@@ -196,6 +197,21 @@ Más las [opciones comunes](README.md#opciones-comunes).
 
 ```bash
 python -m src.cli genie demo --tamaño s --pasos 4
+```
+
+### exportar
+
+Exporta a ONNX UN paso de decodificación con el contexto de forma fija (los 15 frames de la config): entra el frame nuevo con MASK y el (k, v) temporal de cada capa, sale (1, 128, 1024). Es lo que se repite S veces por frame; el prefill del contexto y el muestreo quedan en PyTorch. Verifica el resultado contra PyTorch (ORT en CPU) y escribe `checkpoints/onnx/<nombre>_paso_k16.onnx`. Para medirlo en la NPU o la iGPU: `python -m src.ort_model --onnx <archivo> --provider npu|dml|cpu` (ver [uso](../uso.md)). Con `-- --parte prefill` (los argumentos tras `--` pasan a `src.export_onnx`) exporta en cambio el prefill del contexto: entra `ctx` (1, 15, 128) y salen el (k, v) de cada capa, que es lo que recibe el paso; se mide igual.
+
+<!-- auto:opciones modelo=genie accion=exportar -->
+- `--dtype`: precisión de la inferencia
+- `--aleatorio`: modelo sin entrenar con la arquitectura de la corrida (latencia)
+
+Más las [opciones comunes](README.md#opciones-comunes).
+<!-- /auto -->
+
+```bash
+python -m src.cli genie exportar --tamaño s --aleatorio
 ```
 
 ### estado

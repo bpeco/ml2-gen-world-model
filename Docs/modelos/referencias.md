@@ -291,6 +291,7 @@ ONNX del encoder y del decoder, para ONNX Runtime (CPU, DirectML o NPU).
 
 <!-- auto:opciones modelo=codec accion=exportar -->
 - `--dtype`: precisión de la inferencia
+- `--aleatorio`: modelo sin entrenar con la arquitectura de la corrida (latencia)
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->

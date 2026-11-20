@@ -7,6 +7,10 @@ Sin caché KV: cada pasada recalcula el contexto, que es lo que midió el plan (
 [K-1 frames de contexto, frame nuevo con BOS + MASK x128]; las S pasadas siguen el mismo esquema
 coseno / confianza que src/models/maskgit.py. El muestreo va en torch sobre CPU.
 
+También mide el paso de decodificación de Genie que escribe `src.export_onnx --model random:genie_s` (entradas cur, k0, v0...,
+sin "tokens") y su prefill (`--parte prefill`, entrada ctx): ms por llamada y acuerdo con ORT en CPU sobre las mismas
+entradas (la NPU calcula en bf16).
+
 NPU (provider "vitisai"): SIN PROBAR (esta máquina no tiene NPU). Sigue la receta del plan 2.5:
 ML2_VITISAI_EP_DIR = carpeta (sin espacios, copia de ExecutionProvider del paquete
 Microsoft.WinML.AMD.NPU.EP.2) con onnxruntime_vitisai_ep.dll; se registra con
@@ -123,6 +127,59 @@ def bench_ort(sess, K, n=100, warmup=20):
   return ms[warmup:]
 
 
+def feed_paso(sess, seed=0):
+  """Entradas de un paso de Genie (cur todo MASK y un (k, v) aleatorio por capa) o de su prefill (ctx de tokens aleatorios).
+  La latencia no depende de los valores."""
+  rng = np.random.default_rng(seed)
+  feed = {}
+  for i in sess.get_inputs():
+    if i.type == "tensor(int64)":
+      feed[i.name] = np.full(i.shape, MASK, np.int64) if i.name == "cur" else rng.integers(0, 1024, i.shape).astype(np.int64)
+    else:
+      feed[i.name] = rng.standard_normal(i.shape).astype(np.float16 if "float16" in i.type else np.float32)
+  return feed
+
+
+def bench_paso(sess, feed, n=100, warmup=20):
+  """ms por llamada (n tiempos tras el warm-up) y las salidas de la última corrida."""
+  ms = []
+  for _ in range(warmup + n):
+    t = time.perf_counter()
+    out = sess.run(None, feed)
+    ms.append((time.perf_counter() - t) * 1000)
+  return ms[warmup:], out
+
+
+def main_paso(a, cpu):
+  """Mide un paso de Genie (o su prefill) exportado en el provider pedido y lo compara con ORT en CPU (cpu: la sesión ya creada)."""
+  path = Path(a.onnx)
+  sess = cpu if backends.resolver_ort(a.provider).ort_provider == "CPUExecutionProvider" else make_session(path, a.provider)
+  feed = feed_paso(sess)
+  ms, out = bench_paso(sess, feed, a.n, a.warmup)
+  ref = [r.astype(np.float32) for r in cpu.run(None, feed)]
+  out = [o.astype(np.float32) for o in out]
+  med = float(np.median(ms))
+  name = f"ort_{path.stem}"
+  prefill = "cur" not in feed
+  ctx = feed["ctx"].shape[1] if prefill else next(v.shape[2] for k, v in feed.items() if k.startswith("k"))
+  vs = {"max_abs_diff": max(float(np.abs(o - r).max()) for o, r in zip(out, ref)),
+        "rel_l2": float(np.sqrt(sum(((o - r) ** 2).sum() for o, r in zip(out, ref)) / sum((r ** 2).sum() for r in ref))),
+        # el argmax solo dice algo sobre logits (un paso); las salidas del prefill son (k, v)
+        "acuerdo_argmax": None if prefill else float((out[0].argmax(-1) == ref[0].argmax(-1)).mean())}
+  res = {"name": name, "model": str(path), "variant": a.provider, "decoder": False, "unit": "prefill" if prefill else "paso",
+         "median_ms": med, "p10_ms": float(np.percentile(ms, 10)), "p90_ms": float(np.percentile(ms, 90)),
+         "mean_ms": float(np.mean(ms)), "fps": 1000 / med, "warmup": a.warmup, "frames": a.n, "provider": a.provider,
+         "contexto": [ctx], "vs_cpu": vs,
+         "ort": ort.__version__, "ort_providers": sess.get_providers(), "device": device_info("cpu"),
+         "timestamp": datetime.now().isoformat(timespec="seconds")}
+  OUT.mkdir(parents=True, exist_ok=True)
+  dest = OUT / f"{name}__{a.provider}.json"
+  dest.write_text(json.dumps(res, indent=1))
+  print(f"{name} {a.provider}: {med:.2f} ms por {res['unit']} (p10 {res['p10_ms']:.2f}, p90 {res['p90_ms']:.2f}); "
+        f"vs ORT CPU: diff máx {vs['max_abs_diff']:.2e}, error relativo {vs['rel_l2']:.1e}"
+        + ("" if prefill else f", argmax {vs['acuerdo_argmax'] * 100:.1f} %") + f" -> {dest}")
+
+
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument("--onnx", required=True)
@@ -131,6 +188,9 @@ def main():
   ap.add_argument("--n", type=int, default=100)
   ap.add_argument("--warmup", type=int, default=20)
   a = ap.parse_args()
+  cpu = make_session(a.onnx, "cpu")
+  if "tokens" not in {i.name for i in cpu.get_inputs()}:   # un paso de Genie, no una ventana de MaskGIT
+    return main_paso(a, cpu)
   m = OrtMaskGIT(a.onnx, a.provider)
   ms = bench_ort(m.sess, m.K, a.n, a.warmup)
   med = float(np.median(ms))

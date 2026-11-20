@@ -182,6 +182,7 @@ ONNX del predictor (su encoder es el de `vjepa2` y se exporta con ese modelo).
 
 <!-- auto:opciones modelo=vjepa2_ac accion=exportar -->
 - `--dtype`: precisión de la inferencia
+- `--aleatorio`: modelo sin entrenar con la arquitectura de la corrida (latencia)
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->

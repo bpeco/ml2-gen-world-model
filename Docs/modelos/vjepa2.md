@@ -183,6 +183,7 @@ ONNX del encoder, comparado contra PyTorch.
 
 <!-- auto:opciones modelo=vjepa2 accion=exportar -->
 - `--dtype`: precisión de la inferencia
+- `--aleatorio`: modelo sin entrenar con la arquitectura de la corrida (latencia)
 
 Más las [opciones comunes](README.md#opciones-comunes).
 <!-- /auto -->
