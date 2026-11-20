@@ -153,7 +153,7 @@ con $\alpha=0{,}5$ y $\tau=1$, donde $p_t$ son las probabilidades de \texttt{gpt
 
 La Tabla~\ref{tab:principal} resume la calidad de todos los modelos. Achicar el world model 20 a 25 veces tiene un costo claro pero acotado: el FVD a 3~s pasa de 105 (\texttt{gpt2m}, 307M) a entre 370 y 470 en los mejores modelos chicos (12--15M), es decir, de 3,5 a 4,5 veces más. Aun así, todos los modelos de tokens chicos quedan muy por debajo de los baselines: el mejor baseline, el frame congelado, tiene un FVD a 3~s de 978, y la tabla de transición por celda, 1241.
 
-\paragraph{El GPT gana a corto plazo y la decodificación paralela a largo plazo.} A 1~s el GPT destilado es el mejor modelo chico (FVD 207), pero también el que más se degrada con el horizonte (drift de 2,3). La diferencia pareada con Genie-S a 8 pasos lo confirma: el GPT es mejor a 1~s ($\Delta=69$, IC [43, 96], $p=0{,}01$), empatan a 2~s ($p=0{,}58$) y Genie es mejor a 3~s ($\Delta=-43$, IC [$-83$, $-3$], $p=0{,}04$). MaskGIT-S con 8 a 12 pasos logra el menor FVD a 3~s entre los modelos chicos (380 y 370) con el menor drift (1,5 y 1,3, similar al de \texttt{gpt2m}). \pend{Diferencia pareada MaskGIT-S 8 pasos contra GPT-S destilado y contra Genie-S 4 pasos.}
+\paragraph{El GPT gana a corto plazo y la decodificación paralela a largo plazo.} A 1~s el GPT destilado es el mejor modelo chico (FVD 207), pero también el que más se degrada con el horizonte (drift de 2,3). La diferencia pareada con Genie-S a 8 pasos lo confirma: el GPT es mejor a 1~s ($\Delta=69$, IC [43, 96], $p=0{,}01$), empatan a 2~s ($p=0{,}58$) y Genie es mejor a 3~s ($\Delta=-43$, IC [$-83$, $-3$], $p=0{,}04$). MaskGIT-S con 8 a 12 pasos logra el menor FVD a 3~s entre los modelos chicos (380 y 370) con el menor drift (1,5 y 1,3, similar al de \texttt{gpt2m}). Las diferencias pareadas lo confirman. Contra el GPT-S destilado, MaskGIT-S con 8 pasos es peor a 1~s ($\Delta=40$, IC [17, 63], $p=0{,}02$) y mejor a 2 y 3~s ($\Delta=-77$ y $-81$, $p=0{,}01$); con 12 pasos el patrón se repite ($\Delta=77$ a 1~s y $-91$ a 3~s, $p=0{,}01$). Con 4 pasos, MaskGIT-S empata con el GPT a 1~s y a 3~s ($p=0{,}31$ y $0{,}82$) y es mejor a 2~s ($\Delta=-63$, $p=0{,}01$): es la misma calidad. Contra Genie-S con 4 pasos, MaskGIT-S con 8 empata a 1~s ($p=0{,}76$) y es mejor a 3~s ($\Delta=-54$, IC [$-89$, $-18$], $p=0{,}02$). Para estas comparaciones regeneramos los rollouts del GPT-S destilado y de Genie-S sobre los mismos 400 clips; sus FVD reproducen los de la Tabla~\ref{tab:principal} dentro del ruido de muestreo (462 y 434 a 3~s, contra 468 y 413).
 
 \paragraph{Tres semillas.} Genie-S a 8 pasos es estable entre semillas: $260\pm14$ a 1~s y $402\pm20$ a 3~s (Tabla~\ref{tab:semillas}). El ConvLSTM, en cambio, varía mucho ($1680\pm118$ a 1~s) y queda siempre peor que repetir el último frame: predecir píxeles con este presupuesto produce video borroso que se aleja rápido de la distribución real.
 
@@ -200,7 +200,7 @@ La arquitectura también importa en el régimen de pocos pasos: con 1 paso, Mask
 \label{fig:calidad_latencia}
 \end{figure*}
 
-\paragraph{Los GPT no llegan a tiempo real.} El GPT de comma tarda 733\ms\ por frame (1,4~FPS) en la RTX 3080 Ti. Achicarlo 25 veces no alcanza: el GPT-S destilado sigue tardando 158\ms\ (6,3~FPS), porque cada frame exige 128 pasadas secuenciales por la red y, con un modelo tan chico, cada pasada está dominada por el costo fijo de lanzarla y no por el cómputo.
+\paragraph{Los GPT no llegan a tiempo real.} El GPT de comma tarda 733\ms\ por frame (1,4~FPS) en la RTX 3080 Ti y 916\ms\ en la 4060 Laptop. Achicarlo 25 veces no alcanza: el GPT-S destilado sigue tardando 158\ms\ (6,3~FPS), porque cada frame exige 128 pasadas secuenciales por la red y, con un modelo tan chico, cada pasada está dominada por el costo fijo de lanzarla y no por el cómputo.
 
 \paragraph{La decodificación paralela sí.} Genie-S tarda entre 3,3 y 24\ms\ según los pasos (1 a 25) y Genie-M, entre 5,7 y 35\ms: todas las configuraciones entran en el presupuesto. Para comparar con MaskGIT-S en las mismas condiciones, medimos los tres modelos chicos en una misma GPU (Figura~\ref{fig:calidad_latencia}a). Allí MaskGIT-S con 4 pasos tarda 12,8\ms\ y alcanza el mismo FVD a 3~s que el GPT-S destilado (468 contra 469), que tarda 131\ms: \textbf{la misma calidad, 10 veces más rápido}. Con 8 a 12 pasos, MaskGIT-S tarda 18 a 23\ms\ y es el mejor modelo chico a 3~s. Genie-S es algo más barato por paso (1,16 contra 1,27\ms\ por paso adicional), y es el más rápido a igual calidad entre 4 y 8 pasos.
 
@@ -250,7 +250,14 @@ Los modelos latentes no aprendieron una representación útil del movimiento con
 \subsection{Ejemplos cualitativos}
 \label{sec:ejemplos}
 
-\pend{Figura de frames: un clip de validación, 1~s de contexto y la continuación a 0,5, 1, 2 y 3~s para el video real, \texttt{gpt2m}, GPT-S destilado, MaskGIT-S (8 pasos), Genie-S (4 pasos), ConvLSTM y frame congelado.}
+La Figura~\ref{fig:frames} muestra un clip de validación con mucho movimiento. \texttt{gpt2m} sigue de cerca la continuación real durante los 3~s: mantiene los postes, los autos y la geometría de la calle. Los modelos chicos de tokens generan desde el primer medio segundo una escena plausible, con calle, cordón y vegetación coherentes, pero que se aparta de la real; con el horizonte aparecen artefactos (texturas que se mezclan, cielo que se lava), menos marcados en MaskGIT-S que en el GPT-S destilado. El ConvLSTM produce un promedio borroso que pierde toda estructura antes de 1~s, y el frame congelado queda idéntico al contexto. Estos ejemplos ilustran por qué el LPIPS favorece al frame congelado y el FVD no.
+
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/frames_clip000.pdf}
+\caption{Frames generados a partir de 1~s de contexto real (clip 0 de validación, con mucho movimiento). Columnas: último frame de contexto y continuación a 0,5, 1, 2 y 3~s. Los modelos de tokens se decodifican con el decoder del VQ-VAE; el ConvLSTM genera píxeles directamente. Temperatura de evaluación de cada familia.}
+\label{fig:frames}
+\end{figure*}
 
 % ---------------------------------------------------------------------------------------------------------------
 \section{Discusión y limitaciones}

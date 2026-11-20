@@ -75,7 +75,7 @@ def bench_ms(nombre):
 
 def guardar(fig, nombre):
   fig.savefig(OUT_F / f"{nombre}.pdf")
-  fig.savefig(OUT_F / f"{nombre}.png", dpi=200)
+  fig.savefig(OUT_F / f"{nombre}.png", dpi=320)
   plt.close(fig)
   print("figura", OUT_F / f"{nombre}.pdf")
 
@@ -107,7 +107,7 @@ def fig_calidad_latencia():
            ms=8 if fam == "gpt2m" else 5, mec="white", mew=0.6, zorder=3)
     for x, y, s in zip(xs, ys, ss):
       if s in (1, 4, 12):
-        a.annotate(f"{s}", (x, y), textcoords="offset points", xytext=(4, 3), fontsize=6.5, color=TINTA2)
+        a.annotate(f"{s}", (x, y), textcoords="offset points", xytext=(3, -11 if fam == "genie" else 4), fontsize=6.5, color=TINTA2)
   a.axvline(50, color=TINTA2, ls="--", lw=0.9)
   a.text(53, a.get_ylim()[0] + 15, "50 ms = 20 FPS", fontsize=6.5, color=TINTA2, va="bottom")
   a.set_xscale("log")

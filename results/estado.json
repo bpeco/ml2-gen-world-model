@@ -99,6 +99,11 @@
   "motivo": "bitácora 20261118-230239-5c11: python -m src.cli genie bench '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-19"
  },
+ "results/bench/gpt2m_4060__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "RTX 4060 Laptop: latencia de gpt2m para la comparación en la misma GPU",
+  "fecha": "2026-11-20"
+ },
  "results/bench/gpt2m__fp16_graphs.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-230043-6b72: python -m src.cli gpt2m bench",
@@ -173,6 +178,26 @@
   "estado": "vigente",
   "motivo": "bitácora 20261119-063224-64c7: python -m src.cli estadistica diferencia --a genie_s_p8 --b gpt_s_kd",
   "fecha": "2026-11-19"
+ },
+ "results/diferencia_maskgit_s_abs_p12_vs_gpt_s_kd_r.json": {
+  "estado": "vigente",
+  "motivo": "réplica en la 4060 (mismos 400 clips, otra muestra) para las diferencias pareadas con maskgit_s_abs",
+  "fecha": "2026-11-20"
+ },
+ "results/diferencia_maskgit_s_abs_p4_vs_gpt_s_kd_r.json": {
+  "estado": "vigente",
+  "motivo": "réplica en la 4060 (mismos 400 clips, otra muestra) para las diferencias pareadas con maskgit_s_abs",
+  "fecha": "2026-11-20"
+ },
+ "results/diferencia_maskgit_s_abs_p8_vs_genie_s_p4_r.json": {
+  "estado": "vigente",
+  "motivo": "réplica en la 4060 (mismos 400 clips, otra muestra) para las diferencias pareadas con maskgit_s_abs",
+  "fecha": "2026-11-20"
+ },
+ "results/diferencia_maskgit_s_abs_p8_vs_gpt_s_kd_r.json": {
+  "estado": "vigente",
+  "motivo": "réplica en la 4060 (mismos 400 clips, otra muestra) para las diferencias pareadas con maskgit_s_abs",
+  "fecha": "2026-11-20"
  },
  "results/eval_congelado.json": {
   "estado": "vigente",
@@ -624,6 +649,11 @@
   "motivo": "bitácora 20261118-073014-1447: python -m src.cli genie evaluar '--tamaño' s --pasos 1,2,4,8,12,25",
   "fecha": "2026-11-18"
  },
+ "results/video_genie_s_p4_r.json": {
+  "estado": "vigente",
+  "motivo": "réplica en la 4060 (mismos 400 clips, otra muestra) para las diferencias pareadas con maskgit_s_abs",
+  "fecha": "2026-11-20"
+ },
  "results/video_genie_s_p4_stream.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261119-002256-2364: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
@@ -663,6 +693,11 @@
   "estado": "vigente",
   "motivo": "bitácora 20261118-081139-6aef: python -m src.cli gpt evaluar '--tamaño' s --variante kd",
   "fecha": "2026-11-18"
+ },
+ "results/video_gpt_s_kd_r.json": {
+  "estado": "vigente",
+  "motivo": "réplica en la 4060 (mismos 400 clips, otra muestra) para las diferencias pareadas con maskgit_s_abs",
+  "fecha": "2026-11-20"
  },
  "results/video_maskgit_s_abs_p1.json": {
   "estado": "vigente",
