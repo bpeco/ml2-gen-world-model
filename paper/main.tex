@@ -92,7 +92,7 @@ Para usarse en lazo cerrado, un simulador tiene que ser rápido además de creí
 \foreach \a/\b in {cam/enc, enc/ctx, ctx/tra, tra/dec, dec/gen} \draw[->] (\a) -- (\b);
 \draw[->] (tra.south) -- ++(0,-3mm) -| node[nota, pos=0.25, below] {el frame predicho se agrega al contexto} (ctx.south);
 \node[nota, above=1mm of tra] {lo que cambiamos};
-\node[panel] at ($(cam.north west)+(0,5mm)$) {(b) Inferencia en lazo};
+\node[panel] at ($(cam.north west)+(0,5mm)$) {(b) Inferencia};
 \draw[decorate, decoration={brace, mirror, amplitude=4pt}] ($(enc.west |- tra.south)+(0,-10mm)$) -- ($(dec.east |- tra.south)+(0,-10mm)$)
   node[nota, midway, below=4pt] {latencia de la cadena completa: menos de 50~ms por frame para 20~FPS};
 \node[nota, below=2mm of gen] {calidad: FVD y LPIPS\\contra el video real};
