@@ -543,18 +543,20 @@ def escanear(raiz=None):
       nodo(n)["eval"] = p
   for p in R.glob("latent_*.json"):
     nodo(p.stem[len("latent_"):])["latent"] = p
-  for p in R.glob("bench/*__*.json"):
+  from src import configs   # los resultados de la RTX (dispositivo de referencia) mandan sobre los de otro dispositivo
+  benchs, e2es = {}, {}
+  for p in sorted(R.glob("bench/*__*.json")):
     n = p.name.split("__")[0]
-    prev = nodo(n).get("bench")
-    d = leer_json(p) or {}
-    if "cpu" in p.name or "int8" in p.name:
-      continue
-    if prev is None or (d.get("median_ms") or 1e18) < (leer_json(prev) or {}).get("median_ms", 1e18):
-      nodo(n)["bench"] = p
+    nodo(n)
+    if "cpu" not in p.name and "int8" not in p.name:
+      benchs.setdefault(n, []).append(p)
+  for n, fs in benchs.items():
+    nodo(n)["bench"] = min(configs.preferir_ref(fs), key=lambda p: (leer_json(p) or {}).get("median_ms") or 1e18)
   for pat in ("infer/latencia_*.json", "infer/e2e_*.json"):
-    for p in R.glob(pat):
-      n = p.name.split("__")[0].split("_", 1)[1]
-      nodo(n).setdefault("e2e", p)
+    for p in sorted(R.glob(pat)):
+      e2es.setdefault(p.name.split("__")[0].split("_", 1)[1], []).append(p)
+  for n, fs in e2es.items():
+    nodo(n)["e2e"] = configs.preferir_ref(fs)[0]
   return out
 
 

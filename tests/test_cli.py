@@ -764,6 +764,25 @@ def test_configs_se_derivan_de_results(tmp_path, monkeypatch):
   assert json.loads((tmp_path / "configs.json").read_text())[0]["label"]
 
 
+def test_configs_prefieren_la_rtx_aunque_otro_dispositivo_sea_mas_rapido(tmp_path, monkeypatch):
+  """Lo medido en la laptop (--tag) convive con lo de la RTX pero no lo desplaza, ni por orden alfabético ni por ser más rápido."""
+  from src import configs
+  monkeypatch.setattr(configs, "R", tmp_path)
+  (tmp_path / "bench").mkdir()
+  (tmp_path / "infer").mkdir()
+  for run in ("lewm", "vjepa2_ac"):
+    (tmp_path / f"latent_{run}.json").write_text("{}")
+  b, i = tmp_path / "bench", tmp_path / "infer"
+  (b / "lewm__fp32.json").write_text(json.dumps({"median_ms": 3.0}))                    # RTX: sin etiqueta
+  (b / "lewm__fp32__radeon860m.json").write_text(json.dumps({"median_ms": 1.0}))        # más rápido, pero es de la laptop
+  (i / "latencia_lewm__radeon860m.json").write_text("{}")                               # 'radeon' < 'rtx' alfabéticamente
+  (i / "latencia_lewm__rtx3080ti.json").write_text("{}")
+  (b / "vjepa2_ac__fp32__radeon860m.json").write_text(json.dumps({"median_ms": 9.0}))   # solo se midió en la laptop: es lo que hay
+  C = {c["label"]: c for c in configs.main([])}
+  assert C["lewm"]["bench"].endswith("bench/lewm__fp32.json") and C["lewm"]["e2e"].endswith("latencia_lewm__rtx3080ti.json")
+  assert C["vjepa2_ac"]["bench"].endswith("vjepa2_ac__fp32__radeon860m.json")
+
+
 def test_un_resultado_sin_marca_es_vigente(entorno, tmp_path):
   from src import report
   f = tmp_path / "video_x.json"

@@ -119,6 +119,21 @@ def video_json(fvd, lo, hi, curva=(0.1, 0.2, 0.3)):
           "piso": {"1": {"value": 110.0}}}
 
 
+def test_escanear_prefiere_la_rtx_sobre_otro_dispositivo(repo):
+  b, i = repo / "results" / "bench", repo / "results" / "infer"
+  b.mkdir()
+  i.mkdir()
+  (b / "lewm__fp32.json").write_text(json.dumps({"median_ms": 3.0}))                    # RTX: sin etiqueta
+  (b / "lewm__fp32__radeon860m.json").write_text(json.dumps({"median_ms": 1.0}))        # más rápido, pero es de la laptop
+  (b / "lewm__fp32_cpu__ryzen7350.json").write_text(json.dumps({"median_ms": 0.5}))     # CPU: no cuenta
+  (i / "latencia_lewm__radeon860m.json").write_text("{}")
+  (i / "latencia_lewm__rtx3080ti.json").write_text("{}")
+  (b / "vjepa2_ac__fp32__radeon860m.json").write_text(json.dumps({"median_ms": 9.0}))   # solo en la laptop: es lo que hay
+  e = nbui.escanear()
+  assert e["lewm"]["bench"].name == "lewm__fp32.json" and e["lewm"]["e2e"].name == "latencia_lewm__rtx3080ti.json"
+  assert e["vjepa2_ac"]["bench"].name == "vjepa2_ac__fp32__radeon860m.json"
+
+
 def test_sin_json_todo_es_pendiente(repo, capsys):
   assert nbui.escanear() == {}
   assert nbui.filas_video() == [] and nbui.filas_latente() == []
