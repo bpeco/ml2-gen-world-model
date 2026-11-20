@@ -541,6 +541,54 @@
    "pareto": true
   },
   {
+   "label": "gpt_s_d025",
+   "family": "gpt",
+   "params_M": 12.4,
+   "ce_all": 3.959,
+   "ce_last": 4.736,
+   "lpips_1s": 0.383,
+   "fvd_1s": 414.4,
+   "fvd_1s_ci": [
+    372.7,
+    456.1
+   ],
+   "fvd_3s": 615.3,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": 316.8,
+   "fvd_1s_mitades": 506.4,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "principal",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
+   "label": "gpt_s_d050",
+   "family": "gpt",
+   "params_M": 12.4,
+   "ce_all": 3.299,
+   "ce_last": 3.229,
+   "lpips_1s": 0.345,
+   "fvd_1s": 234.8,
+   "fvd_1s_ci": [
+    198.5,
+    271.0
+   ],
+   "fvd_3s": 478.6,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": 316.8,
+   "fvd_1s_mitades": 329.7,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "principal",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
    "label": "gpt_s_kd",
    "family": "gpt_kd",
    "params_M": 12.4,
@@ -603,6 +651,147 @@
    "fps": null,
    "realtime": null,
    "group": "principal",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
+   "label": "maskgit_s_abs",
+   "family": "maskgit",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 3.179,
+   "lpips_1s": null,
+   "fvd_1s": null,
+   "fvd_1s_ci": null,
+   "fvd_3s": null,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": null,
+   "fvd_1s_mitades": null,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "ablación",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
+   "label": "maskgit_s_abs_p1",
+   "family": "maskgit",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 3.179,
+   "lpips_1s": 0.338,
+   "fvd_1s": 227.8,
+   "fvd_1s_ci": [
+    190.5,
+    265.0
+   ],
+   "fvd_3s": 607.4,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": 316.8,
+   "fvd_1s_mitades": 325.5,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "ablación",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
+   "label": "maskgit_s_abs_p12",
+   "family": "maskgit",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 3.179,
+   "lpips_1s": 0.268,
+   "fvd_1s": 283.8,
+   "fvd_1s_ci": [
+    247.7,
+    319.9
+   ],
+   "fvd_3s": 370.5,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": 316.8,
+   "fvd_1s_mitades": 371.5,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "ablación",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
+   "label": "maskgit_s_abs_p2",
+   "family": "maskgit",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 3.179,
+   "lpips_1s": 0.327,
+   "fvd_1s": 214.2,
+   "fvd_1s_ci": [
+    179.8,
+    248.5
+   ],
+   "fvd_3s": 544.9,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": 316.8,
+   "fvd_1s_mitades": 308.5,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "ablación",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
+   "label": "maskgit_s_abs_p4",
+   "family": "maskgit",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 3.179,
+   "lpips_1s": 0.298,
+   "fvd_1s": 220.1,
+   "fvd_1s_ci": [
+    180.9,
+    259.3
+   ],
+   "fvd_3s": 467.6,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": 316.8,
+   "fvd_1s_mitades": 312.7,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "ablación",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
+   "label": "maskgit_s_abs_p8",
+   "family": "maskgit",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 3.179,
+   "lpips_1s": 0.278,
+   "fvd_1s": 247.3,
+   "fvd_1s_ci": [
+    211.7,
+    283.0
+   ],
+   "fvd_3s": 380.4,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": 316.8,
+   "fvd_1s_mitades": 335.4,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "ablación",
    "estado": "vigente",
    "pareto": null
   },
@@ -746,8 +935,13 @@
   }
  ],
  "ce_vs_fvd1": {
-  "spearman_rho": null,
-  "p": null,
-  "n": 3
+  "spearman_rho": 0.8999999999999998,
+  "p": 0.03738607346849874,
+  "n": 5
+ },
+ "_bitacora": {
+  "id": "20261119-222053-e85c",
+  "comando": "python -m src.cli reporte",
+  "commit": "9ef57ed95d3b2ebaac5975daed57c41ae516be13"
  }
 }
