@@ -58,39 +58,46 @@ Un \emph{world model} aprende a predecir cómo evoluciona el entorno~\cite{ha201
 
 Para usarse en lazo cerrado, un simulador tiene que ser rápido además de creíble. La cámara de comma graba a 20~FPS, así que cada frame tiene que generarse en menos de 50\ms. Los world models basados en tokens, como IRIS~\cite{micheli2023iris} y el GPT de commaVQ~\cite{commavq}, generan cada frame como una secuencia de tokens discretos, uno por vez: en commaVQ son 128 tokens por frame, es decir, 128 pasadas secuenciales por la red. La calidad sube con el tamaño del modelo, pero cada pasada también se encarece.
 
-\editado{La Figura~\ref{fig:pipeline} muestra el sistema completo. Del pipeline de commaVQ reutilizamos fijos el encoder y el decoder del VQ-VAE, y el GPT de comma, que usamos como referencia y como maestro. Lo único que entrenamos y comparamos es el modelo que predice los tokens del frame siguiente. De ese modelo medimos la calidad del video que genera y la latencia, solo y dentro de la cadena completa.}
+\editado{La Figura~\ref{fig:pipeline} muestra el sistema completo. Del pipeline de commaVQ reutilizamos fijos el encoder y el decoder del VQ-VAE, y el GPT de comma, que usamos como referencia y como maestro. Lo que cambiamos es el transformer que predice los tokens del frame siguiente. De ese transformer medimos la calidad del video que genera y la latencia, solo y dentro de la cadena completa.}
 
 \begin{figure*}[t]
 \centering
-\begin{tikzpicture}[
-  font=\footnotesize, >={Stealth[length=1.8mm]}, node distance=5mm,
-  caja/.style={draw, rounded corners=1pt, align=center, minimum height=12mm, text width=17mm, inner sep=2pt},
+\tikzset{
+  >={Stealth[length=1.8mm]}, node distance=6mm,
+  caja/.style={draw, rounded corners=1pt, align=center, minimum height=12mm, text width=19mm, inner sep=2pt, font=\footnotesize},
   fija/.style={caja, fill=black!12},
-  nuestra/.style={caja, very thick, text width=31mm},
+  nuestra/.style={caja, line width=1.2pt, text width=27mm, minimum height=15mm},
   nota/.style={font=\scriptsize, text=black!70, align=center},
-  fila/.style={font=\footnotesize\bfseries, anchor=south west}]
-% inferencia, en lazo
+  panel/.style={font=\footnotesize\bfseries, anchor=south west}}
+\begin{tikzpicture}
+\node[fija, text width=27mm] (datos) {commaVQ\\video ya en tokens\\780.000 frames por modelo};
+\node[nuestra, right=of datos] (tra) {\textbf{Transformer}\\predice los tokens\\del frame siguiente};
+\node[caja, right=of tra, text width=31mm] (perd) {Pérdida: cross-entropy\\contra los tokens reales};
+\node[fija, right=18mm of perd] (ref) {\texttt{gpt2m} (307M)\\maestro};
+\draw[->] (datos) -- (tra);
+\draw[->] (tra) -- (perd);
+\draw[->, dashed] (ref) -- node[nota, above] {destilación} (perd);
+\node[nota, above=1mm of tra] {lo que cambiamos};
+\node[panel] at ($(datos.north west)+(0,5mm)$) {(a) Entrenamiento};
+\end{tikzpicture}
+
+\vspace{4mm}
+\begin{tikzpicture}
 \node[caja] (cam) {Cámara\\frame RGB\\$128\times256$};
-\node[fija, right=of cam, text width=14mm] (enc) {Encoder\\VQ-VAE};
-\node[caja, right=of enc, text width=20mm] (ctx) {Contexto\\1~s de video\\en tokens};
-\node[nuestra, right=of ctx] (din) {\textbf{Modelo de dinámica}\\predice 128 tokens\\[2pt] GPT: 128 pasadas\\Genie y MaskGIT:\\$S$ pasadas};
-\node[fija, right=of din, text width=14mm] (dec) {Decoder\\VQ-VAE};
-\node[caja, right=of dec] (gen) {Frame\\generado};
-\foreach \a/\b in {cam/enc, enc/ctx, ctx/din, din/dec, dec/gen} \draw[->] (\a) -- (\b);
-\draw[->] (din.south) -- ++(0,-3mm) -| node[nota, pos=0.25, below] {el frame predicho se agrega al contexto} (ctx.south);
-% entrenamiento
-\node[fija, above=10mm of enc, text width=20mm] (datos) {commaVQ\\video ya en tokens};
-\node[fija, above=10mm of gen, text width=20mm] (ref) {\texttt{gpt2m} (307M)\\referencia y maestro};
-\draw[->] (datos.east) -| node[nota, pos=0.3, above] {780.000 frames por modelo} ($(din.north)+(-7mm,0)$);
-\draw[->, dashed] (ref.west) -| node[nota, pos=0.35, above] {destilación} ($(din.north)+(7mm,0)$);
-\node[fila] at ($(cam.west |- datos.north)+(0,1mm)$) {Entrenamiento};
-\node[fila] at ($(cam.north west)+(0,1mm)$) {Inferencia};
-% qué medimos
-\draw[decorate, decoration={brace, mirror, amplitude=4pt}] ($(enc.west |- din.south)+(0,-11mm)$) -- ($(dec.east |- din.south)+(0,-11mm)$)
+\node[fija, right=of cam, text width=15mm] (enc) {Encoder\\VQ-VAE};
+\node[caja, right=of enc] (ctx) {Contexto\\1~s de video\\en tokens};
+\node[nuestra, right=of ctx] (tra) {\textbf{Transformer}\\GPT: 128 pasadas\\Genie y MaskGIT:\\$S$ pasadas};
+\node[fija, right=of tra, text width=15mm] (dec) {Decoder\\VQ-VAE};
+\node[caja, right=of dec, text width=15mm] (gen) {Frame\\generado};
+\foreach \a/\b in {cam/enc, enc/ctx, ctx/tra, tra/dec, dec/gen} \draw[->] (\a) -- (\b);
+\draw[->] (tra.south) -- ++(0,-3mm) -| node[nota, pos=0.25, below] {el frame predicho se agrega al contexto} (ctx.south);
+\node[nota, above=1mm of tra] {lo que cambiamos};
+\node[panel] at ($(cam.north west)+(0,5mm)$) {(b) Inferencia en lazo};
+\draw[decorate, decoration={brace, mirror, amplitude=4pt}] ($(enc.west |- tra.south)+(0,-10mm)$) -- ($(dec.east |- tra.south)+(0,-10mm)$)
   node[nota, midway, below=4pt] {latencia de la cadena completa: menos de 50~ms por frame para 20~FPS};
 \node[nota, below=2mm of gen] {calidad: FVD y LPIPS\\contra el video real};
 \end{tikzpicture}
-\caption{\editado{Pipeline de commaVQ y la parte que estudiamos. Arriba, el entrenamiento: commaVQ trae el video ya codificado en tokens, cada modelo ve 780.000 frames y \texttt{gpt2m} es la referencia y el maestro de la destilación. Abajo, la inferencia en lazo: el encoder codifica el frame de la cámara, el modelo de dinámica predice los 128 tokens del frame siguiente a partir del contexto, y el decoder los vuelve imagen. En gris, lo que reutilizamos fijo; con borde grueso, lo que entrenamos y comparamos. Medimos la calidad del video generado (FVD y LPIPS; la CE se mide sobre los tokens) y la latencia del modelo solo y de la cadena completa. El ConvLSTM predice píxeles directamente, sin encoder ni decoder.}}
+\caption{\editado{Pipeline de commaVQ y la parte que cambiamos. (a) Entrenamiento: commaVQ trae el video ya codificado en tokens, y cada transformer aprende a predecir los tokens del frame siguiente; en la destilación, la pérdida suma las probabilidades de \texttt{gpt2m}. (b) Inferencia: el encoder codifica el frame de la cámara, el transformer predice los 128 tokens del frame siguiente a partir del contexto, y el decoder los vuelve imagen; el frame predicho se agrega al contexto. En gris, lo que reutilizamos fijo de commaVQ; con borde grueso, lo que cambiamos. \texttt{gpt2m} es además la referencia de calidad y de latencia. El ConvLSTM es la excepción: predice píxeles directamente, sin encoder ni decoder.}}
 \label{fig:pipeline}
 \end{figure*}
 
