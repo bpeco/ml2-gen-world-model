@@ -1,0 +1,420 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>World models chicos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e2dfd6;--paper:#f7f6f2;--paper2:#ecebe4;--card:#fdfdfb;--ink:#16202e;--mut:#4a5568;--line:#d8d5cc;--acc:#b8431a;--orange:#eb6834;--blue:#2a78d6;--green:#1baf7a;--violet:#6250d6;--gold:#eda100;--pink:#e87ba4}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);overflow:hidden;font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink)}
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1600px;height:900px;position:relative;transform-origin:center center;flex:none}
+section{position:absolute;inset:0;background:var(--paper);border-radius:6px;box-shadow:0 10px 40px #0000001f;padding:58px 76px 70px;display:none;flex-direction:column;gap:26px;overflow:hidden}
+section.on{display:flex}
+section.alt{background:var(--paper2)}
+section.dark{background:var(--ink);color:#f3f1ea}
+section.statement{background:var(--orange)}
+h1,h2,h3{font-family:"Space Grotesk",sans-serif}
+h1{font-size:82px;font-weight:700;line-height:1.04;letter-spacing:-1.5px}
+h2{font-size:46px;font-weight:600;line-height:1.1;letter-spacing:-.5px;max-width:1440px}
+h3{font-size:26px;font-weight:600;line-height:1.15}
+p{font-size:22px;line-height:1.42}
+.eyebrow{font-size:17px;font-weight:600;letter-spacing:2.5px;text-transform:uppercase;color:var(--acc)}
+.dark .eyebrow{color:#f0a27f}
+.lead{font-size:26px;color:var(--mut)}
+.dark .lead{color:#b9c2cf}
+.small{font-size:17px;color:var(--mut)}
+.dark .small{color:#b9c2cf}
+.pg{position:absolute;right:76px;bottom:30px;font-size:16px;color:var(--mut)}
+.dark .pg{color:#b9c2cf}
+.row{display:flex;gap:24px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:24px}
+.grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:20px}
+.card{flex:1;background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:24px 28px;display:flex;flex-direction:column;gap:10px}
+.alt .card{background:var(--paper)}
+.num{font:700 64px/1 "Space Grotesk";color:var(--ink)}
+.num.a{color:var(--acc)}
+.desc{font-size:19px;color:var(--mut);line-height:1.4}
+.tag{font-size:15px;font-weight:600;letter-spacing:1.6px;text-transform:uppercase;color:var(--acc)}
+.figcard{background:#fff;border:1.5px solid var(--line);border-radius:16px;padding:16px;display:flex;justify-content:center;align-items:center;min-height:0}
+.figcard img{display:block;max-width:100%;max-height:100%;object-fit:contain}
+.takeaway{font-size:21px;color:var(--mut)}
+.takeaway b{color:var(--ink)}
+.split{display:flex;gap:36px;align-items:center;flex:1;min-height:0}
+.side{flex:1;display:flex;flex-direction:column;gap:16px}
+.side p{font-size:20px;color:var(--mut)}
+.side p b{color:var(--ink)}
+ul.l{margin:0;padding-left:24px;display:flex;flex-direction:column;gap:6px}
+ul.l li{font-size:19px;line-height:1.38;color:var(--mut)}
+ul.l li b{color:var(--ink)}
+svg.dia{width:100%;height:auto;display:block;font-family:"IBM Plex Sans",sans-serif}
+.claims{display:flex;flex-direction:column;gap:22px;flex:1;justify-content:center}
+.claim{display:flex;gap:28px;align-items:baseline}
+.claim .n{font:700 58px/1 "Space Grotesk";width:50px}
+.claim .t{font-size:30px;line-height:1.3;font-weight:600;flex:1}
+/* modelos */
+.mcard{background:var(--card);border:1.5px solid var(--line);border-radius:14px;padding:14px 18px 16px;display:flex;flex-direction:column;gap:6px;border-top:5px solid var(--c)}
+.mcard h3{font-size:22px;display:flex;justify-content:space-between;align-items:baseline}
+.mcard h3 span{font:600 15px "IBM Plex Sans";color:var(--mut)}
+.mcard p{font-size:16.5px;color:var(--mut);line-height:1.38}
+/* animación de tokens */
+.race{display:grid;grid-template-columns:1fr 1fr;gap:24px;flex:1;min-height:0}
+.lane{background:var(--card);border:1.5px solid var(--line);border-radius:16px;padding:18px 24px;display:flex;flex-direction:column;gap:10px;border-top:5px solid var(--c)}
+.lane .hd{display:flex;justify-content:space-between;align-items:baseline}
+.lane .hd h3{font-size:24px}
+.lane .clock{font:600 18px "IBM Plex Sans";color:var(--mut);font-variant-numeric:tabular-nums}
+.lane .stats{display:flex;gap:26px;font-size:17px;color:var(--mut)}
+.lane .stats b{font:700 30px "Space Grotesk";color:var(--c);display:block;font-variant-numeric:tabular-nums}
+/* reveal */
+@keyframes rise{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+section.on .r{animation:rise 480ms cubic-bezier(.2,.7,.2,1) both;animation-delay:calc(var(--i,0)*90ms)}
+body.quieto section.on .r{animation:none}
+/* navegación y notas */
+#nav{position:fixed;left:50%;bottom:8px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#ffffffe6;border:1px solid var(--line);border-radius:999px;padding:4px 10px;font:600 13px "IBM Plex Sans";color:var(--mut);opacity:.2;transition:opacity .2s;z-index:5}
+#nav:hover{opacity:1}
+#nav button{border:0;background:none;font:600 15px "IBM Plex Sans";cursor:pointer;color:var(--ink);padding:2px 8px;border-radius:6px}
+#nav button:hover{background:var(--paper2)}
+#notas{position:fixed;left:0;right:0;bottom:0;max-height:42vh;overflow:auto;background:#16202ef2;color:#f3f1ea;padding:16px 28px 48px;font-size:19px;line-height:1.5;display:none;z-index:4}
+#notas.on{display:block}
+#notas .meta{display:flex;gap:24px;font:600 14px "IBM Plex Sans";letter-spacing:.06em;text-transform:uppercase;color:#f0a27f;margin-bottom:8px}
+#notas .meta .late{color:#ff8a80}
+@media print{#nav,#notas{display:none!important}html,body{overflow:visible;height:auto;background:#fff}#viewport{position:static;display:block}#stage{transform:none!important;height:auto}section{display:flex!important;position:relative;page-break-after:always;box-shadow:none;height:900px}section .r{animation:none!important}}
+@page{size:1600px 900px;margin:0}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<div id="notas"></div>
+<div id="nav"><button id="prev" aria-label="Anterior">←</button><span id="cnt"></span><button id="next" aria-label="Siguiente">→</button><button id="bn" title="Notas del orador (N)">notas</button><button id="fs" title="Pantalla completa (F)">⤢</button></div>
+<script>
+const D = __DATA__;
+const FIG = __FIGS__;
+/*__COMUN__*/
+
+/* ---------- dibujos propios de la charla ---------- */
+const PAL={gpt2m:'#3d3d3a',gpt:'#2a78d6',maskgit:'#eb6834',genie:'#1baf7a',conv:'#6250d6',base:'#eda100',lat:'#e87ba4',acc:'#b8431a'};
+
+function dibTimeline(){ // 1 s de cámara contra un frame de gpt2m
+  const x0=150, k=1.3; let s='';
+  const X=ms=>x0+ms*k;
+  s+=T(20,58,'Cámara',{a:'start',s:17,w:600})+T(20,78,'20 FPS',{a:'start',s:14,c:C.mut});
+  for(let i=0;i<20;i++) s+=`<image href="${D.ctx[i%3]}" x="${X(i*50)+2}" y="36" width="61" height="31" preserveAspectRatio="xMidYMid slice"/>`;
+  s+=`<rect x="${X(0)}" y="28" width="${50*k}" height="47" rx="4" fill="none" stroke="${PAL.acc}" stroke-width="3"/>`;
+  s+=T(X(25),104,'50 ms',{s:14,w:700,c:PAL.acc});
+  s+=T(20,150,'gpt2m',{a:'start',s:17,w:600})+T(20,170,'307M',{a:'start',s:14,c:C.mut});
+  s+=`<rect x="${X(0)}" y="130" width="${733*k}" height="40" rx="6" fill="${PAL.gpt2m}"/>`;
+  s+=T(X(366),156,'1 frame generado: 733 ms (128 pasadas)',{s:16,w:600,c:'#fff'});
+  s+=T(X(745),148,'mientras tanto, la',{a:'start',s:15,c:C.mut})+T(X(745),167,'cámara grabó 15 frames',{a:'start',s:15,w:700,c:PAL.acc});
+  s+=`<path d="M${X(0)} 196 H${X(1000)}" stroke="${C.mut}" stroke-width="1.2"/>`;
+  [0,250,500,750,1000].forEach(m=>{s+=`<path d="M${X(m)} 196 v7" stroke="${C.mut}"/>`+T(X(m),222,m+' ms',{s:13,c:C.mut});});
+  return uniq(`<svg class="dia" viewBox="0 0 1490 230">${s}</svg>`);
+}
+
+function miniGPT(acc){let s='';for(let i=0;i<14;i++){const st=i<8?'f':i===8?'n':'e';s+=`<rect x="${10+i*20}" y="40" width="17" height="26" rx="3" fill="${st==='f'?tc(FLAT[i*3]):st==='n'?'#fff':C.soft}" ${st==='n'?`stroke="${acc}" stroke-width="2.5"`:''}/>`;}
+  s+=`<path d="M${10+7*20+8} 72 q 10 22 20 0" fill="none" stroke="${acc}" stroke-width="2" marker-end="url(#aa${acc.slice(1)})"/>`;
+  s+=T(150,110,'un token por pasada · 128 por frame',{s:14,c:C.mut});
+  return svg(s,acc).replace('viewBox="0 0 940 500"','viewBox="0 0 300 120"');}
+function miniMask(acc){let s='';const rank=i=>(i*97)%128;[10,37,128].forEach((n,j)=>{s+=G(12+j*98,30,5,i=>rank(i)<n?'tok':'mask',acc);if(j)s+=A(`M${j*98-4} 50 H${j*98+8}`);});
+  s+=T(150,110,'todo el frame en S pasos (1 a 25)',{s:14,c:C.mut});
+  return svg(s,acc).replace('viewBox="0 0 940 500"','viewBox="0 0 300 120"');}
+function miniGenie(acc){let s='';[0,1,2].forEach(k=>{s+=G(20+k*22,14+k*14,4,k===2?(i=>'mask'):null,acc);});
+  s+=R(20+44-3,14+28-3,70,38,{f:'none',st:acc,sw:2.2,rx:3});
+  s+=`<path d="M${20+36+2} ${14+12} L${20+44+36+2} ${14+28+12}" stroke="${C.ink}" stroke-width="2" stroke-dasharray="3 2"/>`;
+  s+=T(170,36,'□ espacial: el frame',{a:'start',s:13,w:600,c:acc})+T(170,60,'⋯ temporal: la celda',{a:'start',s:13,w:600})+T(170,78,'en el tiempo',{a:'start',s:13,c:C.mut});
+  s+=T(150,110,'atención factorizada + MaskGIT',{s:14,c:C.mut});
+  return svg(s,acc).replace('viewBox="0 0 940 500"','viewBox="0 0 300 120"');}
+function miniConv(acc){let s=IMG(10,22,110,55,D.ctx[2]);s+=A('M124 50 H146');
+  for(let k=0;k<3;k++)s+=R(150+k*7,30+k*5,26,30,{f:acc+'40',st:acc,rx:2});
+  s+=A('M196 50 H212')+IMG(214,22,80,55,D.frames.convlstm_px_ej[0]);
+  s+=T(150,110,'píxeles → ConvLSTM → píxeles',{s:14,c:C.mut});
+  return svg(s,acc).replace('viewBox="0 0 940 500"','viewBox="0 0 300 120"');}
+function miniBase(acc){let s=IMG(10,22,110,55,D.ctx[2])+A('M124 50 H160')+T(142,42,'copiar',{s:12,c:C.mut})+IMG(164,22,110,55,D.ctx[2]);
+  s+=T(150,110,'frame congelado, transición, unigrama',{s:14,c:C.mut});
+  return svg(s,acc).replace('viewBox="0 0 940 500"','viewBox="0 0 300 120"');}
+function miniLat(acc){let s=IMG(10,22,100,50,D.ctx[2])+A('M114 47 H130');
+  s+=`<path d="M132 25 L180 37 L180 57 L132 69 Z" fill="${acc}" fill-opacity=".35" stroke="${acc}"/>`+A('M184 47 H198');
+  for(let k=0;k<5;k++)s+=`<rect x="200" y="${26+k*9}" width="18" height="7" rx="1.5" fill="${acc}" fill-opacity="${.4+k*.12}"/>`;
+  s+=A('M222 47 H236')+T(262,52,'R²',{s:17,w:700});
+  s+=T(150,110,'embeddings, sin generar video',{s:14,c:C.mut});
+  return svg(s,acc).replace('viewBox="0 0 940 500"','viewBox="0 0 300 120"');}
+
+function dibProtocolo(){
+  const acc=PAL.acc; let s=''; const w=16.5, x0=40;
+  for(let i=0;i<80;i++){const ctx=i<20;s+=`<rect x="${x0+i*w}" y="70" width="${w-3}" height="34" rx="2.5" fill="${ctx?'#4a5568':acc}" fill-opacity="${ctx?.85:.28+.6*(i-20)/60}"/>`;}
+  s+=T(x0+10*w,128,'1 s de contexto real · 20 frames',{s:15,w:600});
+  s+=T(x0+50*w,128,'3 s generados por el modelo · 60 frames, alimentándose de sí mismo',{s:15,w:600,c:acc});
+  [[20,'FVD 1 s'],[40,'FVD 2 s'],[60,'FVD 3 s']].forEach(([e,l])=>{const a=x0+(20+e-16)*w, b=x0+(20+e)*w-3;
+    s+=`<path d="M${a} 58 V50 H${b} V58" fill="none" stroke="${C.ink}" stroke-width="1.6"/>`+T((a+b)/2,42,l,{s:14,w:700});});
+  s+=T(x0+80*w,162,'drift = FVD 3 s / FVD 1 s: cuánto se aleja el video de la distribución real',{a:'end',s:14,c:C.mut});
+  s+=T(x0,162,'ventanas de 16 frames, features de I3D',{a:'start',s:14,c:C.mut});
+  return `<svg class="dia" viewBox="0 0 1420 172">${s}</svg>`;
+}
+
+/* ---------- animación: GPT contra MaskGIT, misma red, cámara lenta ---------- */
+const CARRERA={gpt:131.2, mg:12.8, pasos:4, lento:30};
+function laneHTML(id,c,tit,sub){
+  return `<div class="lane r" style="--c:${c};--i:2"><div class="hd"><h3>${tit}</h3><span class="clock" id="${id}-clk">0,0 ms</span></div>
+  <svg class="dia" viewBox="0 0 420 212" id="${id}-g"></svg>
+  <div class="stats"><span><b id="${id}-a">0</b>${id==='rg'?'tokens generados':'pasos del frame actual'}</span><span><b id="${id}-b">0</b>frames completos</span></div>
+  <p class="desc">${sub}</p></div>`;
+}
+function grillaCarrera(el,state,acc){
+  let s='';for(let i=0;i<128;i++){const st=state(i);s+=`<rect x="${(i%16)*26+1}" y="${Math.floor(i/16)*26+1}" width="24" height="24" rx="4" fill="${st==='t'?tc(FLAT[i]):st==='n'?'#fff':'#e4e1d8'}"${st==='n'?` stroke="${acc}" stroke-width="3"`:''}/>`;}
+  el.innerHTML=s;
+}
+let carreraRAF=null;
+const CONGELAR=new URLSearchParams(location.search).get('t'); // ?t=60: animación quieta en 60 ms simulados (capturas, impresión)
+function dibujarCarrera(t){
+  const gG=document.getElementById('rg-g'), gM=document.getElementById('rm-g');
+  const fmt=v=>v.toFixed(1).replace('.',',')+' ms';
+  const fills=[10,37,79,128];
+  const n=Math.min(128,Math.floor(t/CARRERA.gpt*128));
+  grillaCarrera(gG,i=>i<n?'t':i===n?'n':'e','#2a78d6');
+  document.getElementById('rg-clk').textContent=fmt(t)+' simulados';
+  document.getElementById('rg-a').textContent=n; document.getElementById('rg-b').textContent=n>=128?1:0;
+  const f=Math.floor(t/CARRERA.mg), dentro=t-f*CARRERA.mg, paso=Math.min(4,Math.floor(dentro/(CARRERA.mg/4))+1);
+  const mult=[97,45,73,113,29,61,85,21,53,117,37][f%11]; const rank=i=>(i*mult)%128;
+  const fin=t>=CARRERA.gpt;
+  grillaCarrera(gM,i=>fin||rank(i)<fills[paso-1]?'t':'e','#eb6834');
+  document.getElementById('rm-clk').textContent=fmt(t)+' simulados';
+  document.getElementById('rm-a').textContent=fin?4:paso; document.getElementById('rm-b').textContent=Math.floor(t/CARRERA.mg);
+}
+function carrera(on){
+  cancelAnimationFrame(carreraRAF); if(!on) return;
+  if(CONGELAR!==null){dibujarCarrera(+CONGELAR);return;}
+  const t0=performance.now(), H=1600; // pausa al final, en ms reales
+  const tick=now=>{const real=(now-t0)%(CARRERA.gpt*CARRERA.lento+H);dibujarCarrera(Math.min(real/CARRERA.lento,CARRERA.gpt));carreraRAF=requestAnimationFrame(tick);};
+  carreraRAF=requestAnimationFrame(tick);
+}
+
+/* ---------- diapositivas ---------- */
+const img=(k,alt,st='')=>`<img src="${FIG[k]}" alt="${alt}" style="${st}">`;
+const SL=[
+{t:15, cls:'dark', html:`
+<p class="eyebrow r" style="--i:0">Deep Learning · Maestría en Inteligencia Artificial · UdeSA</p>
+<div style="display:flex;gap:48px;align-items:center;flex:1">
+ <div style="flex:1;display:flex;flex-direction:column;gap:28px">
+  <h1 class="r" style="--i:1">¿Cuánto se puede achicar un world model de manejo?</h1>
+  <p class="lead r" style="--i:2">Calidad contra latencia de modelos de tokens, de decodificación paralela y de píxeles sobre commaVQ</p>
+ </div>
+ <div class="r" style="--i:3;width:470px;display:flex;flex-direction:column;gap:14px">
+  <img src="${D.ctx[2]}" alt="frame real de commaVQ" style="width:470px;border-radius:10px;display:block">
+  <svg viewBox="0 0 470 236" style="width:470px">${G(3,3,29,null)}</svg>
+  <p class="small">Un frame real y sus 8 × 16 tokens</p>
+ </div>
+</div>
+<p class="small r" style="--i:4">[Autores] · noviembre de 2026</p>`,
+ n:`Presentamos un estudio sobre world models de video de manejo: cuánto se pueden achicar y acelerar para usarlos como simulador en tiempo real, y cuánta calidad se pierde. Todo sobre commaVQ, el dataset tokenizado de comma.ai.`},
+
+{t:45, html:`
+<p class="eyebrow r" style="--i:0">El problema</p>
+<h2 class="r" style="--i:1">Un simulador de manejo tiene que generar cada frame en menos de 50 ms</h2>
+<div class="card r" style="--i:2;flex:none;padding:18px 22px">${dibTimeline()}</div>
+<div class="row r" style="--i:3">
+ <div class="card"><p class="tag">La cámara</p><p class="num">20 FPS</p><p class="desc">Presupuesto: 50 ms por frame.</p></div>
+ <div class="card"><p class="tag">La referencia</p><p class="num a">733 ms</p><p class="desc">El GPT de comma (307M) en una RTX 3080 Ti: 1,4 FPS.</p></div>
+ <div class="card"><p class="tag">El cuello de botella</p><p class="num">128</p><p class="desc">Pasadas en serie por frame: un token por pasada.</p></div>
+</div>
+<p class="lead r" style="--i:4"><b style="color:var(--ink)">Pregunta:</b> ¿cuánto se puede achicar y acelerar sin perder calidad?</p>`,
+ n:`Un world model de video puede funcionar como simulador: comma.ai entrena su política de manejo dentro de uno. Para usarlo en lazo cerrado tiene que seguir a la cámara: 20 cuadros por segundo, 50 milisegundos por frame. El GPT que publicó comma tarda 733 milisegundos: en lo que genera un frame, la cámara grabó quince. Y no es solo el tamaño: genera los 128 tokens de cada frame de a uno.`},
+
+{t:40, cls:'alt', html:`
+<p class="eyebrow r" style="--i:0">Cómo funciona</p>
+<h2 class="r" style="--i:1">Un world model de tokens comprime el frame, predice el siguiente y lo decodifica</h2>
+<div class="card r" style="--i:2;flex:none;padding:14px 20px"><div style="max-width:1180px;margin:0 auto;width:100%">${diaPortada()}</div></div>
+<div class="grid3 r" style="--i:3">
+ <div class="card"><p class="tag">1 · Comprimir</p><p class="desc">Un VQ-VAE convierte cada frame de 128 × 256 en 8 × 16 códigos de un vocabulario de 1024.</p></div>
+ <div class="card"><p class="tag">2 · Predecir</p><p class="desc">El world model ve 1 s de contexto (20 frames) y predice los 128 tokens del frame siguiente.</p></div>
+ <div class="card"><p class="tag">3 · Encadenar</p><p class="desc">El frame generado entra al contexto: así se generan 3 s, alimentándose de sí mismo.</p></div>
+</div>`,
+ n:`Así funciona un world model de tokens. Un VQ-VAE comprime cada frame en una grilla de 8 por 16 códigos. El modelo ve un segundo de contexto y predice los tokens del frame siguiente; el decoder los vuelve a imagen. Ese frame se agrega al contexto, y así se generan tres segundos en lazo cerrado. El encoder y el decoder suman unos 10 milisegundos: el resto del presupuesto es del modelo.`},
+
+{t:50, html:`
+<p class="eyebrow r" style="--i:0">Cómo se genera un frame</p>
+<h2 class="r" style="--i:1">Misma red de 12,4M: el GPT genera token a token, MaskGIT el frame entero en 4 pasos</h2>
+<div class="race">
+ ${laneHTML('rg','#2a78d6','GPT-S · autoregresivo','Cada pasada agrega un token, viendo solo los anteriores. Con un modelo chico cada pasada es barata, pero son 128 en fila: 131 ms por frame.')}
+ ${laneHTML('rm','#eb6834','MaskGIT-S · 4 pasos','Arranca con todo enmascarado y en cada paso fija los tokens más confiables, viendo el frame completo: 12,8 ms por frame.')}
+</div>
+<p class="small r" style="--i:3">Cámara lenta ×30 con las latencias medidas en una RTX 4060. Mientras el GPT completa un frame, MaskGIT genera 10.</p>`,
+ n:`Esta es la idea central. Las dos son la misma red, del mismo tamaño. El GPT genera los tokens en orden, uno por pasada: 128 pasadas por frame. MaskGIT arranca con el frame enmascarado y en cada paso fija los tokens en que está más seguro, viendo todo el frame. Con 4 pasos, mientras el GPT completa un frame, MaskGIT ya generó diez. El número de pasos es una perilla de inferencia: se elige sin reentrenar.`},
+
+{t:50, cls:'alt', html:`
+<p class="eyebrow r" style="--i:0">Qué comparamos</p>
+<h2 class="r" style="--i:1">Siete familias, el mismo presupuesto de datos</h2>
+<div class="grid3 r" style="--i:2;flex:1">
+ <div class="mcard" style="--c:${PAL.gpt}"><h3>GPT <span>gpt2m 307M · GPT-S 12,4M</span></h3>${miniGPT(PAL.gpt)}<p>Referencia de comma, y su versión chica destilada o entrenada de cero.</p></div>
+ <div class="mcard" style="--c:${PAL.maskgit}"><h3>MaskGIT-S <span>12,4M</span></h3>${miniMask(PAL.maskgit)}<p>La red del GPT-S con decodificación paralela: aísla el efecto de decodificar.</p></div>
+ <div class="mcard" style="--c:${PAL.genie}"><h3>Genie-S / M <span>15,0M · 34,8M</span></h3>${miniGenie(PAL.genie)}<p>Transformer espacio-temporal de Genie con decodificación MaskGIT.</p></div>
+ <div class="mcard" style="--c:${PAL.conv}"><h3>ConvLSTM <span>8,0M</span></h3>${miniConv(PAL.conv)}<p>Predice píxeles directamente, sin tokenizer.</p></div>
+ <div class="mcard" style="--c:${PAL.base}"><h3>Baselines <span>sin parámetros</span></h3>${miniBase(PAL.base)}<p>Calibran qué tan difícil es la tarea y validan el evaluador.</p></div>
+ <div class="mcard" style="--c:${PAL.lat}"><h3>Latentes <span>V-JEPA 2 · LeWM</span></h3>${miniLat(PAL.lat)}<p>Predicen embeddings; los evaluamos con probes, como contraste.</p></div>
+</div>
+<p class="small r" style="--i:3">Cada uno con la receta de su paper de origen y 780.000 frames de entrenamiento.</p>`,
+ n:`Comparamos siete familias, todas con el mismo presupuesto de 780 mil frames y la receta de su paper. El GPT de comma es la referencia, y un GPT 25 veces más chico, destilado o de cero. MaskGIT usa exactamente la red del GPT chico: la comparación entre los dos aísla la forma de decodificar. Genie agrega la atención espacio-temporal. El ConvLSTM predice píxeles, los baselines calibran la tarea y los modelos latentes son un contraste: no generan video.`},
+
+{t:40, html:`
+<p class="eyebrow r" style="--i:0">Cómo medimos</p>
+<h2 class="r" style="--i:1">Un protocolo único de calidad y de latencia</h2>
+<div class="card r" style="--i:2;flex:none;padding:16px 22px">${dibProtocolo()}</div>
+<div class="row r" style="--i:3">
+ <div class="card"><p class="tag">Calidad</p><ul class="l">
+  <li><b>400 clips</b> fijos: 100 segmentos de validación × 4 arranques</li>
+  <li><b>FVD</b> a 1, 2 y 3 s: compara distribuciones de video e incluye el movimiento</li>
+  <li>LPIPS y cross-entropy como complemento; IC por bootstrap por segmento</li>
+  <li>Temperatura elegida en un holdout, nunca en validación</li></ul></div>
+ <div class="card"><p class="tag">Latencia</p><ul class="l">
+  <li>Un frame, <b>batch 1</b>, contexto lleno, fp16 con CUDA graphs</li>
+  <li>Mediana (p50) y percentil 99, sin el warm-up</li>
+  <li>Modelo solo y <b>cadena completa</b> a ritmo de cámara</li>
+  <li>Los modelos se comparan siempre en la misma GPU</li></ul></div>
+</div>`,
+ n:`Cada modelo recibe un segundo de video real y genera tres segundos alimentándose de sus propias predicciones. Medimos el FVD en ventanas que terminan a 1, 2 y 3 segundos; cuánto crece es el drift. Usamos 400 clips fijos de validación, con intervalos por bootstrap. Para latencia medimos un frame con batch 1, que es lo que importa en un simulador, y también la cadena completa a ritmo de cámara.`},
+
+{t:30, cls:'alt', html:`
+<p class="eyebrow r" style="--i:0">Resultados · datos</p>
+<h2 class="r" style="--i:1">Cada modelo vio el 0,65 % de commaVQ y el 0,02 % de lo que vio el GPT de comma</h2>
+<div class="row r" style="--i:2;flex:1;align-items:stretch">
+ <div class="card" style="justify-content:center"><p class="tag">Presupuesto por modelo</p><p class="num">780 mil</p><p class="desc">frames (100M de tokens): el 26 % del shard que usamos.</p></div>
+ <div class="card" style="justify-content:center"><p class="tag">Datos de gpt2m</p><p class="num a">4.600×</p><p class="desc">más frames: 3.000.000 de minutos de manejo.</p></div>
+ <div class="card" style="justify-content:center"><p class="tag">Tokens por parámetro</p><p class="num">8</p><p class="desc">en nuestros modelos de 12M. Chinchilla recomienda ~20; gpt2m tiene ~1.500.</p></div>
+</div>`,
+ n:`Antes de los resultados, el contexto de datos. Cada modelo vio 780 mil frames: menos del uno por ciento del dataset público y una fracción mínima de lo que vio el GPT de comma. En términos de Chinchilla, estamos por debajo del óptimo. Esto importa para leer la brecha de calidad.`},
+
+{t:45, html:`
+<p class="eyebrow r" style="--i:0">Resultados · calidad</p>
+<h2 class="r" style="--i:1">Achicar 25 veces cuesta unas 4 veces más FVD, pero supera a todos los baselines</h2>
+<div class="split r" style="--i:2">
+ <div class="figcard" style="width:900px;height:520px">${img('drift','FVD contra horizonte de 1 a 3 s para todos los modelos')}</div>
+ <div class="side">
+  <p><b>gpt2m:</b> FVD a 3 s de 105.</p>
+  <p><b>Modelos chicos:</b> entre 370 y 470.</p>
+  <p><b>Mejor baseline</b> (frame congelado): 978.</p>
+  <p><b>El GPT gana a 1 s; MaskGIT-S (8 pasos) gana a 3 s</b> al GPT (−81) y a Genie (−54), con p ≤ 0,02.</p>
+  <p><b>ConvLSTM</b> queda peor que no moverse.</p>
+ </div>
+</div>`,
+ n:`El FVD a 1, 2 y 3 segundos, en escala log; más bajo es mejor y la pendiente es el drift. El GPT de comma está muy abajo. Los modelos chicos quedan en una banda intermedia, muy por encima de los baselines. Entre ellos, el GPT destilado es el mejor a 1 segundo pero el que más se degrada; MaskGIT y Genie son mejores a 3 segundos, y las diferencias pareadas lo confirman. El ConvLSTM queda peor que repetir el último frame.`},
+
+{t:35, cls:'alt', html:`
+<p class="eyebrow r" style="--i:0">Resultados · ejemplos</p>
+<h2 class="r" style="--i:1">gpt2m sigue la escena real; los modelos chicos inventan una escena plausible</h2>
+<div class="split r" style="--i:2">
+ <div class="figcard" style="width:860px;height:570px">${img('frames','Frames de un clip de validación: real y continuaciones de cada modelo a 0,5, 1, 2 y 3 s')}</div>
+ <div class="side">
+  <p><b>gpt2m</b> mantiene postes, autos y la geometría de la calle durante 3 s.</p>
+  <p><b>Los modelos chicos de tokens</b> generan calle, cordón y vegetación coherentes, pero distintos de la escena real.</p>
+  <p><b>ConvLSTM</b> se vuelve borroso antes de 1 s.</p>
+  <p><b>El frame congelado</b> no se mueve: por eso el LPIPS lo favorece.</p>
+ </div>
+</div>`,
+ n:`Un clip con mucho movimiento. Arriba el video real. El GPT de comma sigue la escena casi exacta. Los modelos chicos generan una calle creíble, pero ya no es la misma. El ConvLSTM promedia y se vuelve borroso. El frame congelado parece bueno píxel a píxel, pero no es video.`},
+
+{t:35, html:`
+<p class="eyebrow r" style="--i:0">Resultados · pasos de decodificación</p>
+<h2 class="r" style="--i:1">Con 4 pasos se alcanza la calidad de 25</h2>
+<div class="figcard r" style="--i:2;flex:1">${img('pasos','FVD a 1 y 3 s contra pasos de decodificación para Genie-S, Genie-M y MaskGIT-S')}</div>
+<p class="takeaway r" style="--i:3"><b>1–2 pasos:</b> bien a 1 s, pero el video colapsa (Genie-S con 1 paso: de 279 a 1307). <b>Más de 8:</b> no mejora a 3 s y empeora a 1 s.</p>`,
+ n:`El número de pasos es una perilla. Con uno o dos pasos el modelo decide casi todo a la vez y el error se acumula: a 3 segundos el video colapsa. Desde 4 pasos el FVD a 3 segundos se estabiliza: 4 pasos rinden como los 25 que usa el paper de Genie. El punto dulce está entre 4 y 8.`},
+
+{t:55, cls:'alt', html:`
+<p class="eyebrow r" style="--i:0">Resultados · calidad contra latencia</p>
+<h2 class="r" style="--i:1">Con la misma red, MaskGIT logra la calidad del GPT 10 veces más rápido</h2>
+<div class="figcard r" style="--i:2;flex:1">${img('latencia','FVD a 3 s contra ms por frame en una misma GPU, y cadena completa por etapa')}</div>
+<p class="takeaway r" style="--i:3"><b>MaskGIT-S, 4 pasos:</b> 12,8 ms y FVD 468 · <b>GPT-S:</b> 131 ms y FVD 469 · <b>Genie-S, cadena completa:</b> p99 de 22 ms, 0 % de frames tarde.</p>`,
+ n:`La figura central. A la izquierda, todos en la misma GPU: el GPT de comma tarda 916 milisegundos y el GPT chico 131; ninguno llega a 20 cuadros por segundo. MaskGIT con la misma red y 4 pasos tarda 12,8 milisegundos con el mismo FVD a 3 segundos: diez veces más rápido. Con 8 a 12 pasos es el mejor modelo chico y sigue debajo de 25 milisegundos. A la derecha, la cadena completa: con Genie a 4 pasos, el p99 es de 22 milisegundos a ritmo de cámara, sin frames tarde.`},
+
+{t:40, html:`
+<p class="eyebrow r" style="--i:0">Resultados · escala</p>
+<h2 class="r" style="--i:1">Los modelos chicos están limitados por datos, no por tamaño</h2>
+<div class="figcard r" style="--i:2;flex:1">${img('escala','Frames de entrenamiento en escala log y cross-entropy contra tokens con ajuste extrapolado')}</div>
+<p class="takeaway r" style="--i:3"><b>Genie-M</b> (2,3× parámetros) empata con Genie-S. <b>Duplicar los datos</b> baja la CE de 3,96 a 3,30. La extrapolación predice 2,51 en el óptimo de Chinchilla.</p>`,
+ n:`Tres señales de que la limitante son los datos. Agrandar Genie 2,3 veces no mejora nada. El GPT chico de cero mejora mucho al pasar del 25 al 50 por ciento de los datos. Y el destilado, que hereda lo que aprendió el maestro con muchos más datos, es el mejor GPT chico. Para un simulador conviene un modelo chico entrenado con muchos más datos: entrenar más no cambia la latencia.`},
+
+{t:35, cls:'alt', html:`
+<p class="eyebrow r" style="--i:0">Lecciones de evaluación</p>
+<h2 class="r" style="--i:1">Cuatro cosas que aprendimos al medir world models</h2>
+<div class="grid2 r" style="--i:2;flex:1">
+ <div class="card"><h3>El LPIPS premia el video quieto</h3><p class="desc">El frame congelado (0,235) le gana a todos los modelos chicos. Por eso la métrica principal es el FVD.</p></div>
+ <div class="card"><h3>Real contra real no es un piso</h3><p class="desc">Dos tandas de clips reales dan FVD 103, y gpt2m da 67. El FVD solo sirve para comparar.</p></div>
+ <div class="card"><h3>La temperatura importa</h3><p class="desc">Con la temperatura del paper (T = 2), Genie tiene 3 veces más FVD que con T = 1.</p></div>
+ <div class="card"><h3>Los latentes no aprendieron dinámica</h3><p class="desc">Un probe de velocidad explica a lo sumo el 10 %, igual que con pesos aleatorios.</p></div>
+</div>`,
+ n:`Cuatro lecciones de evaluación. El LPIPS premia no moverse, así que usamos el FVD. Pero el FVD tampoco tiene piso: videos reales entre sí dan 103 y el GPT de comma 67. La temperatura cambia los resultados por factores de tres, así que la elegimos en un holdout. Y los modelos latentes, con este presupuesto, no representan la velocidad mejor que un encoder aleatorio.`},
+
+{t:30, cls:'statement', html:`
+<p class="eyebrow r" style="--i:0;color:var(--ink)">Conclusiones</p>
+<h2 class="r" style="--i:1">Lo que habilita el tiempo real es la forma de decodificar</h2>
+<div class="claims">
+ <div class="claim r" style="--i:2"><p class="n">1</p><p class="t">Achicar no alcanza: un GPT 25 veces más chico sigue en 131–158 ms por frame, porque genera los tokens de a uno.</p></div>
+ <div class="claim r" style="--i:3"><p class="n">2</p><p class="t">Con la misma red, MaskGIT con 4 pasos iguala su calidad en 12,8 ms; con 8 a 12 pasos es el mejor modelo chico a 3 s.</p></div>
+ <div class="claim r" style="--i:4"><p class="n">3</p><p class="t">La brecha con gpt2m es sobre todo de datos: entrenar con más datos no cambia la latencia.</p></div>
+</div>`,
+ n:`Tres conclusiones. Achicar el modelo no alcanza mientras se generen los tokens de a uno. La decodificación paralela sí: con la misma red, MaskGIT con 4 pasos tiene la calidad del GPT en una décima parte del tiempo. Y la brecha con el modelo grande es sobre todo de datos: vimos el 0,02 por ciento de lo que vio el de comma.`},
+
+{t:25, html:`
+<p class="eyebrow r" style="--i:0">Cierre</p>
+<h2 class="r" style="--i:1">Limitaciones y próximos pasos</h2>
+<div class="row r" style="--i:2;flex:1">
+ <div class="card"><p class="tag">Limitaciones</p><ul class="l">
+  <li>Presupuesto de datos mínimo frente a los papers de origen</li>
+  <li>MaskGIT evaluado con T = 1 en vez de 0,8: sus números son conservadores</li>
+  <li>Latencias en dos GPUs; comparamos siempre dentro de una misma</li>
+  <li>FVD ruidoso: tres semillas en dos modelos</li>
+  <li>Sin difusión ni condicionamiento por acciones</li></ul></div>
+ <div class="card"><p class="tag">Próximos pasos</p><ul class="l">
+  <li>Entrenar los modelos chicos con todo commaVQ (150 veces más datos)</li>
+  <li>Destilar MaskGIT desde gpt2m</li>
+  <li>Medir MaskGIT en la cadena completa a ritmo de cámara</li>
+  <li>Condicionar en las acciones del auto para usarlo en lazo cerrado</li></ul></div>
+</div>
+<p class="small r" style="--i:3">Código, protocolo y bitácora de cada corrida en el repositorio del grupo. ¡Gracias!</p>`,
+ n:`Las limitaciones: pocos datos, MaskGIT evaluado con una temperatura que no era la óptima, y no evaluamos difusión. Los próximos pasos naturales son entrenar con todo el dataset, destilar MaskGIT del modelo de comma y condicionarlo en acciones para usarlo como simulador. Gracias.`},
+];
+
+/* ---------- render y navegación ---------- */
+if(CONGELAR!==null) document.body.classList.add('quieto');
+const stage=document.getElementById('stage');
+stage.innerHTML=SL.map((s,i)=>`<section class="${s.cls||''}">${s.html}<p class="pg">${i+1} / ${SL.length}</p></section>`).join('');
+const slides=[...stage.querySelectorAll('section')];
+const notas=document.getElementById('notas');
+let cur=0, inicio=null;
+const mmss=s=>`${Math.floor(s/60)}:${String(Math.round(s%60)).padStart(2,'0')}`;
+const acum=SL.map((s,i)=>SL.slice(0,i+1).reduce((a,b)=>a+b.t,0));
+function pintarNotas(){
+  const trans=inicio?(performance.now()-inicio)/1000:0;
+  const late=inicio&&trans>acum[cur]+15;
+  notas.innerHTML=`<div class="meta"><span>Diapositiva ${cur+1} de ${SL.length}</span><span>Objetivo: ${SL[cur].t} s · hasta ${mmss(acum[cur])}</span><span class="${late?'late':''}">Transcurrido: ${mmss(trans)} de ${mmss(acum[acum.length-1])}</span></div>${SL[cur].n}`;
+}
+function go(k){
+  cur=Math.max(0,Math.min(slides.length-1,k));
+  if(cur>0&&!inicio) inicio=performance.now();
+  slides.forEach((s,i)=>s.classList.toggle('on',i===cur));
+  document.getElementById('cnt').textContent=`${cur+1} / ${slides.length}`;
+  carrera(slides[cur].querySelector('#rg-g')!==null);
+  pintarNotas();
+  try{history.replaceState(null,'','#'+(cur+1));}catch(e){}
+}
+setInterval(()=>{if(notas.classList.contains('on'))pintarNotas();},1000);
+function fit(){const s=Math.min(innerWidth/1600,innerHeight/900)*0.98;stage.style.transform=`scale(${s})`;}
+addEventListener('resize',fit);fit();
+const pant=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
+addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();go(cur+1);}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home')go(0); else if(e.key==='End')go(slides.length-1);
+  else if(e.key==='f'||e.key==='F')pant();
+  else if(e.key==='n'||e.key==='N'){notas.classList.toggle('on');pintarNotas();}
+  else if(e.key==='r'||e.key==='R'){inicio=performance.now();pintarNotas();}
+});
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+document.getElementById('bn').onclick=()=>{notas.classList.toggle('on');pintarNotas();};
+document.getElementById('fs').onclick=pant;
+go(Math.max(0,(parseInt(location.hash.slice(1))||1)-1));
+</script>
+</body>
+</html>

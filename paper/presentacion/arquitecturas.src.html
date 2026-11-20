@@ -1,0 +1,460 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Arquitecturas del TP</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#e9e6de;--paper:#fbfaf7;--ink:#1f1e1c;--mut:#6b6a66;--line:#d9d6cd;--panel:#f3f1ea;--acc:#2a78d6}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;background:var(--bg);overflow:hidden;font-family:"IBM Plex Sans",system-ui,sans-serif;color:var(--ink)}
+#viewport{position:fixed;inset:0;display:flex;align-items:center;justify-content:center}
+#stage{width:1600px;height:900px;position:relative;transform-origin:center center;flex:none}
+.slide{position:absolute;inset:0;background:var(--paper);border-radius:6px;box-shadow:0 10px 40px #0000001f;padding:34px 48px 50px;display:none;flex-direction:column;gap:16px}
+.slide.on{display:flex}
+.top{display:flex;justify-content:space-between;align-items:flex-end;gap:30px}
+.kick{font:600 15px "IBM Plex Sans";letter-spacing:.08em;text-transform:uppercase;color:var(--acc);display:flex;align-items:center;gap:10px}
+.kick i{width:14px;height:14px;border-radius:4px;background:var(--acc);display:inline-block}
+h1{font:700 40px/1.08 "Space Grotesk",sans-serif;letter-spacing:-.01em;margin-top:6px;white-space:nowrap}
+.sub{font-size:17.5px;color:var(--mut);margin-top:6px;max-width:1500px}
+.badges{display:flex;gap:8px;flex-wrap:nowrap}
+.badge{border:1.5px solid var(--line);border-radius:999px;padding:5px 12px;font:500 13.5px "IBM Plex Sans";white-space:nowrap;background:#fff;color:var(--mut)}
+.badge b{color:var(--acc);font-weight:700;font-size:15px}
+.body{flex:1;display:grid;grid-template-columns:900px 1fr;gap:24px;min-height:0}
+.left{display:flex;flex-direction:column;gap:14px;min-height:0}
+.dcard{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:10px 10px 4px;flex:1;min-height:0;display:flex;flex-direction:column}
+.dcard h4,.strip h4,.panel h4{font:600 13px "IBM Plex Sans";letter-spacing:.07em;text-transform:uppercase;color:var(--mut);margin:2px 6px 4px}
+svg.dia{width:100%;height:auto;display:block;font-family:"IBM Plex Sans",sans-serif}
+.strip{display:flex;flex-direction:column}
+.frames{display:flex;gap:10px;padding:0 4px}
+.frames figure{display:flex;flex-direction:column;gap:4px}
+.frames img{width:212px;height:100px;object-fit:cover;border-radius:6px;display:block;border:1px solid #0000001a}
+.frames figcaption{font-size:13px;color:var(--mut)}
+.frames figcaption b{color:var(--ink);font-weight:600}
+.frames figure.m figcaption b{color:var(--acc)}
+.right{display:flex;flex-direction:column;gap:11px;min-height:0}
+.aporte{background:var(--panel);border-left:5px solid var(--acc);border-radius:8px;padding:11px 16px;font-size:15px;line-height:1.4}
+.aporte p+p{margin-top:7px}
+.aporte b{font-weight:600}
+.panel{border:1.5px solid var(--line);border-radius:10px;padding:8px 12px;background:#fff}
+dl{display:grid;grid-template-columns:132px 1fr;column-gap:10px;row-gap:3px;font-size:13.5px;line-height:1.3;margin-top:2px}
+dt{color:var(--mut)}
+dd{font-weight:500}
+table{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:2px;font-variant-numeric:tabular-nums}
+th{font-weight:600;color:var(--mut);font-size:12px;text-align:right;padding:3px 5px;border-bottom:1.5px solid var(--ink);white-space:nowrap}
+th:first-child,td:first-child{text-align:left}
+td{text-align:right;padding:3px 5px;border-bottom:1px solid var(--line);white-space:nowrap}
+tr.hl td{background:color-mix(in srgb,var(--acc) 12%,#fff);font-weight:600}
+.note{font-size:12px;color:var(--mut);margin-top:5px;line-height:1.32}
+.foot{position:absolute;left:48px;right:48px;bottom:16px;display:flex;justify-content:space-between;font-size:13px;color:var(--mut)}
+/* portada y resumen */
+.cover h1{font-size:50px;white-space:normal;max-width:1400px}
+.cover .dcard svg{max-width:1080px;margin:0 auto}
+.cards3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{background:#fff;border:1.5px solid var(--line);border-radius:12px;padding:16px 20px;font-size:16px;line-height:1.45}
+.card h3{font:600 20px "Space Grotesk";margin-bottom:6px}
+.card .big{font:700 34px "Space Grotesk";color:var(--ink)}
+.idx{display:flex;flex-wrap:wrap;gap:10px}
+.idx button{border:1.5px solid var(--line);background:#fff;border-radius:999px;padding:8px 16px;font:600 15px "IBM Plex Sans";cursor:pointer;display:flex;gap:8px;align-items:center;color:var(--ink)}
+.idx button i{width:12px;height:12px;border-radius:3px;display:inline-block}
+.idx button:hover{border-color:var(--ink)}
+.sum table{font-size:17px}
+.sum td,.sum th{padding:8px 10px}
+.sum th{font-size:14px}
+.sw{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:8px;vertical-align:-1px}
+.ok{color:#0f7d56;font-weight:700}.no{color:#b3261e;font-weight:700}
+.concl{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.concl .card{font-size:17px}
+.concl .card .n{font:700 30px "Space Grotesk";color:var(--acc)}
+/* navegación */
+#nav{position:fixed;left:50%;bottom:10px;transform:translateX(-50%);display:flex;align-items:center;gap:8px;background:#ffffffe6;border:1px solid var(--line);border-radius:999px;padding:5px 10px;font:600 13px "IBM Plex Sans";color:var(--mut);opacity:.25;transition:opacity .2s;z-index:5}
+#nav:hover{opacity:1}
+#nav button{border:0;background:none;font:600 16px "IBM Plex Sans";cursor:pointer;color:var(--ink);padding:2px 8px;border-radius:6px}
+#nav button:hover{background:var(--panel)}
+.dots{display:flex;gap:5px}
+.dots span{width:8px;height:8px;border-radius:50%;background:var(--line);cursor:pointer}
+.dots span.on{background:var(--ink)}
+@media print{#nav{display:none}html,body{overflow:visible;height:auto;background:#fff}#viewport{position:static;display:block}#stage{transform:none!important;height:auto}.slide{display:flex!important;position:relative;page-break-after:always;box-shadow:none;height:900px}}
+@page{size:1600px 900px;margin:0}
+</style>
+</head>
+<body>
+<div id="viewport"><div id="stage"></div></div>
+<div id="nav"><button id="prev" aria-label="Anterior">←</button><div class="dots" id="dots"></div><span id="cnt"></span><button id="next" aria-label="Siguiente">→</button><button id="fs" title="Pantalla completa (F)">⤢</button></div>
+<script>
+const D = __DATA__;
+/*__COMUN__*/
+/* bloque transformer: items en fila, con conexiones residuales */
+function BLK(x,y,w,h,N,acc,items,res,cap){
+  let s=R(x,y,w,h,{f:'#faf9f5',st:acc,sw:1.6,d:true,rx:10});
+  s+=T(x+12,y+20,`× ${N} capas`,{a:'start',w:700,c:acc,s:13.5});
+  const cy=y+h/2+8; let X=x+20; const P=[];
+  items.forEach((it,i)=>{
+    if(i) s+=A(`M${X-14} ${cy} H${X-2}`);
+    if(it.t==='add'){ s+=`<circle cx="${X+9}" cy="${cy}" r="9" fill="#fff" stroke="${C.mut}" stroke-width="1.4"/>`+T(X+9,cy+4.6,'+',{s:15,w:700,c:C.mut}); P.push({l:X,c:X+9,r:X+18}); X+=32; }
+    else { const bh=it.t==='ln'?38:64; s+=B(X,cy-bh/2,it.w,bh,it.lines,{st:it.t==='ln'?C.line:acc,s:it.t==='ln'?12:13,s2:11}); P.push({l:X,c:X+it.w/2,r:X+it.w}); X+=it.w+14; }
+  });
+  res.forEach(([i,j])=>{ const sx=P[i].l-7; s+=A(`M${sx} ${cy} V${y+38} H${P[j].c} V${cy-10}`,{w:1.3}); });
+  s+=A(`M${X-14} ${cy} H${x+w+20}`);
+  if(cap) s+=T(x+w/2,y+h-11,cap,{s:11.5,c:C.mut});
+  return {s,cy};
+}
+
+/* ---------- fila superior común (tokens) ---------- */
+function filaTokens(acc,ctxLabel){
+  let s=STACK(10,14,150,75);
+  s+=T(95,128,ctxLabel,{s:11.5,c:C.mut});
+  s+=A('M182 62 H198')+B(200,37,96,50,['Encoder VQ','3,8 ms']);
+  s+=A('M296 62 H316')+G(318,34,7)+T(374,108,'8 × 16 tokens',{s:11.5,c:C.mut})+T(374,122,'vocabulario 1024',{s:11.5,c:C.mut});
+  return s;
+}
+function secuencia(acc,modo){
+  let s='',X=470; const y=50;
+  const cell=(f,st)=>{s+=`<rect x="${X}" y="${y}" width="11" height="24" rx="2" fill="${f}"${st?` stroke="${st}" stroke-width="1.6"`:''}/>`;X+=13;};
+  const dots=()=>{s+=T(X+8,y+17,'…',{s:15,c:C.mut});X+=22;};
+  s+=A('M434 62 H466');
+  for(let k=0;k<2;k++){cell(C.ink);for(let j=0;j<5;j++)cell(tc(FLAT[k*21+j]));dots();}
+  const xs=X+4; X+=8; cell(C.ink);
+  if(modo==='ar'){for(let j=0;j<4;j++)cell(tc(FLAT[60+j]));cell('#fff',acc);for(let j=0;j<3;j++)cell(C.soft,C.line);}
+  else for(let j=0;j<8;j++)cell(C.mask);
+  dots();
+  s+=`<path d="M470 ${y-8} H${xs-8}" stroke="${C.mut}" stroke-width="1"/>`+T(470,y-14,'contexto: 19 frames',{a:'start',s:11.5,c:C.mut});
+  s+=`<path d="M${xs} ${y-8} H${X-4}" stroke="${acc}" stroke-width="1.6"/>`+T(xs,y-14,modo==='ar'?'frame nuevo, token a token':'frame nuevo, todo [MASK]',{a:'start',s:11.5,c:acc,w:600});
+  s+=T(470,y+46,'■ = BOS · cada frame = BOS + 128 tokens · 20 × 129 = 2580 posiciones',{a:'start',s:11.5,c:C.mut});
+  return s;
+}
+
+/* ---------- diagramas por familia ---------- */
+function diaGPT(o){
+  const acc=o.acc; let s=filaTokens(acc,'1 s de contexto (20 frames)')+secuencia(acc,'ar');
+  s+=B(10,208,118,90,['Embedding','token +','posición absoluta'],{lh:17});
+  s+=A('M128 253 H146');
+  const b=BLK(148,170,512,155,o.L,acc,[
+    {t:'ln',w:34,lines:['LN']},{t:'box',w:136,lines:['Atención causal',`${o.H} cabezas`]},{t:'add'},
+    {t:'ln',w:34,lines:['LN']},{t:'box',w:124,lines:['MLP',`${o.d} → ${4*o.d} → ${o.d}`]},{t:'add'}],[[1,2],[4,5]],
+    `d = ${o.d} · pre-LN · ${o.params} parámetros`);
+  s+=b.s;
+  s+=B(682,213,108,80,['Cabeza','LN + lineal','softmax 1024'],{lh:17});
+  s+=A('M790 253 H810')+B(812,221,118,64,['Muestrear','1 token']);
+  // bucle autoregresivo
+  s+=AA('M871 285 V345 H236 V376',acc);
+  s+=G(180,380,7,i=>i<77?'tok':i===77?'next':'empty',acc);
+  s+=T(236,452,'token 78 de 128',{s:11.5,c:C.mut})+T(236,470,'128 pasos en serie por frame',{s:12.5,w:700,c:acc});
+  s+=AA('M178 408 H69 V300',acc)+T(78,350,'el token',{a:'start',s:11.5,c:C.mut})+T(78,364,'vuelve a',{a:'start',s:11.5,c:C.mut})+T(78,378,'entrar',{a:'start',s:11.5,c:C.mut});
+  s+=A('M296 408 H320')+B(322,383,96,50,['Decoder VQ','6,1 ms']);
+  s+=A('M418 408 H444')+IMG(446,370,150,75,D.frames[o.key][0]);
+  s+=T(521,462,'frame generado',{s:11.5,c:C.mut})+T(521,476,'→ se suma al contexto',{s:11.5,c:C.mut});
+  s+=MM(626,368,12,7,(r,c)=>c<=r,acc)+T(668,466,'máscara causal',{s:11.5,c:C.mut});
+  if(o.kd){
+    s+=B(740,372,190,92,['gpt2m · maestro','congelado (307M)','L = ½ CE + ½ τ² KL(pₜ‖pₛ)'],{lh:19,st:'#3d3d3a',sw:1.8});
+    s+=A('M790 372 V295',{d:true,c:'#3d3d3a'})+T(797,330,'pₜ',{a:'start',s:13,w:600,c:'#3d3d3a'});
+  } else if(o.nota){ s+=B(740,372,190,92,o.nota,{lh:18,f:'#faf9f5'}); }
+  return svg(s,acc);
+}
+
+function pasosMaskGIT(acc,S){
+  const fill=s=>Math.round(128*(1-Math.cos(Math.PI/2*s/S)));
+  const rank=i=>(i*97)%128; const ks=S===4?[1,2,4]:[2,5,8]; let s='';
+  ks.forEach((k,j)=>{ const x=180+j*110, n=fill(k);
+    s+=G(x,388,5,i=>rank(i)<n?'tok':'mask',acc);
+    s+=T(x+40,444,`paso ${k} · ${n} fijos`,{s:11.5,c:C.mut});
+    if(j) s+=A(`M${x-28} 408 H${x-3}`);
+  });
+  s+=T(330,470,`S pasos (1 a 12), los 128 en paralelo`,{s:12.5,w:700,c:acc});
+  return s;
+}
+function diaMask(o){
+  const acc=o.acc; let s=filaTokens(acc,'1 s de contexto (19 + 1 frames)')+secuencia(acc,'mask');
+  s+=B(10,208,118,90,['Embedding','token o [MASK]','+ posición abs.'],{lh:17});
+  s+=A('M128 253 H146');
+  s+=BLK(148,170,512,155,6,acc,[
+    {t:'ln',w:34,lines:['LN']},{t:'box',w:136,lines:['Atención','causal por bloques']},{t:'add'},
+    {t:'ln',w:34,lines:['LN']},{t:'box',w:124,lines:['MLP','384 → 1536 → 384']},{t:'add'}],[[1,2],[4,5]],
+    'misma red que GPT-S: d = 384 · 6 cabezas · 12,4M').s;
+  s+=B(682,213,108,80,['Cabeza','128 posiciones','softmax 1024'],{lh:17});
+  s+=A('M790 253 H810')+B(812,221,118,64,['Fijar los más','confiables'],{s2:12.5});
+  s+=AA('M871 285 V345 H220 V384',acc)+pasosMaskGIT(acc,8);
+  s+=AA('M178 408 H69 V300',acc)+T(78,350,'re-entra',{a:'start',s:11.5,c:C.mut})+T(78,364,'con los',{a:'start',s:11.5,c:C.mut})+T(78,378,'fijados',{a:'start',s:11.5,c:C.mut});
+  s+=A('M482 408 H504')+B(506,383,90,50,['Decoder VQ','6,1 ms']);
+  s+=A('M596 408 H616')+IMG(618,372,140,70,D.frames[o.key][0]);
+  s+=T(688,460,'frame generado',{s:11.5,c:C.mut});
+  s+=MM(800,368,12,7,(r,c)=>Math.floor(c/4)<=Math.floor(r/4),acc);
+  s+=T(842,466,'causal entre frames,',{s:11.5,c:C.mut})+T(842,480,'bidireccional dentro',{s:11.5,c:C.mut});
+  return svg(s,acc);
+}
+
+function diaGenie(o){
+  const acc=o.acc; let s=filaTokens(acc,'contexto: 15 frames + el nuevo');
+  s+=A('M434 62 H470');
+  const xs=[478,572,666,800]; const hc=3*16+9;
+  xs.forEach((x,k)=>{ const nuevo=k===3;
+    s+=G(x,32,5,i=>nuevo?(i===hc?'mask':'mask'):'tok',acc);
+    s+=`<rect x="${x+9*5-1.5}" y="${32+3*5-1.5}" width="7.5" height="7.5" fill="none" stroke="${C.ink}" stroke-width="2"/>`;
+  });
+  s+=T(758,56,'…',{s:18,c:C.mut});
+  s+=`<path d="M${xs[0]+47} ${32+17} H${xs[3]+47}" stroke="${C.ink}" stroke-width="1.3" stroke-dasharray="3 3"/>`;
+  s+=R(xs[3]-5,27,90,50,{f:'none',st:acc,sw:2.2,rx:4});
+  s+=T(478,96,'t − 15',{a:'start',s:11.5,c:C.mut})+T(572,96,'t − 14',{a:'start',s:11.5,c:C.mut})+T(666,96,'t − 1',{a:'start',s:11.5,c:C.mut})+T(800,96,'t (todo [MASK])',{a:'start',s:11.5,c:acc,w:600});
+  s+=T(478,118,'□ temporal: la misma celda en los 16 frames (causal)',{a:'start',s:11.5,c:C.ink})+T(478,134,'□ espacial: los 128 tokens del mismo frame',{a:'start',s:11.5,c:acc,w:600});
+  s+=B(10,208,118,90,['Embedding','token + pos.','espacial + temporal'],{lh:17});
+  s+=A('M128 253 H146');
+  s+=BLK(148,170,512,155,o.L,acc,[
+    {t:'box',w:118,lines:['Atención','espacial · 128']},{t:'add'},
+    {t:'box',w:118,lines:['Atención','temporal · 16']},{t:'add'},
+    {t:'box',w:96,lines:['MLP',`× 4`]},{t:'add'}],[[0,1],[2,3],[4,5]],
+    `ST-transformer · d = ${o.d} · ${o.H} cabezas · pre-LN en cada subcapa`).s;
+  s+=B(682,213,108,80,['Cabeza','128 posiciones','softmax 1024'],{lh:17});
+  s+=A('M790 253 H810')+B(812,221,118,64,['Fijar los más','confiables'],{s2:12.5});
+  s+=AA('M871 285 V345 H220 V384',acc)+pasosMaskGIT(acc,4);
+  s+=AA('M178 408 H69 V300',acc)+T(78,350,'re-entra',{a:'start',s:11.5,c:C.mut})+T(78,364,'con los',{a:'start',s:11.5,c:C.mut})+T(78,378,'fijados',{a:'start',s:11.5,c:C.mut});
+  s+=A('M482 408 H504')+B(506,383,90,50,['Decoder VQ','6,1 ms']);
+  s+=A('M596 408 H616')+IMG(618,372,140,70,D.frames[o.key][0]);
+  s+=T(688,460,'frame generado',{s:11.5,c:C.mut});
+  s+=B(780,368,150,96,['Cada token atiende a','128 + 16 posiciones','MaskGIT-S: hasta 2580'],{lh:22,s:12,s2:12,f:'#faf9f5'});
+  return svg(s,acc);
+}
+
+function diaConv(o){
+  const acc=o.acc; let s=STACK(10,14,150,75);
+  s+=T(95,128,'10 frames de contexto (píxeles)',{s:11.5,c:C.mut});
+  s+=A('M182 62 H213')+B(215,37,110,50,['Parches 4 × 4','sin tokenizer VQ']);
+  s+=A('M325 62 H350');
+  s+=`<path d="M352 50 l16 -12 h90 l-16 12 z" fill="${acc}" fill-opacity=".25" stroke="${acc}"/><path d="M442 50 l16 -12 v45 l-16 12 z" fill="${acc}" fill-opacity=".4" stroke="${acc}"/>`+R(352,50,90,45,{f:acc+'33',st:acc,rx:0});
+  s+=T(476,62,'32 × 64 × 48',{a:'start',s:13,w:600})+T(476,80,'alto × ancho × canales',{a:'start',s:11.5,c:C.mut});
+  s+=A('M397 97 V170');
+  const grupo=(x,tit)=>{let g=R(x,172,330,165,{f:'#faf9f5',st:acc,sw:1.6,d:true,rx:10})+T(x+14,192,tit,{a:'start',w:700,c:acc,s:13.5});
+    [128,64,64].forEach((c,k)=>{g+=B(x+20,204+k*43,290,34,[`ConvLSTM ${k+1} · ${c} canales · kernel 5 × 5`],{s:12.5,st:acc}); if(k) g+=A(`M${x+165} ${204+k*43-9} V${204+k*43-1}`);});
+    return g;};
+  s+=grupo(150,'Encoder · t = 1 … 10')+grupo(560,'Forecaster · t = 11 … 20');
+  [0,1,2].forEach(k=>{s+=AA(`M480 ${221+k*43} H578`,acc,{d:true});});
+  s+=T(529,342,'copia (h, c)',{s:11.5,c:acc,w:600});
+  s+=A('M725 337 V366')+B(640,368,170,50,['Conv 1 × 1','→ 128 × 256 × 3']);
+  s+=A('M638 393 H604')+IMG(452,370,150,75,D.frames[o.key][0]);
+  s+=T(527,462,'10 frames predichos (0,5 s)',{s:11.5,c:C.mut})+T(527,476,'se encadena hasta 3 s',{s:11.5,c:C.mut});
+  s+=R(10,358,420,132,{f:'#faf9f5'});
+  s+=T(24,382,'Celda ConvLSTM (∗ = convolución 5 × 5)',{a:'start',s:13,w:700});
+  s+=T(24,408,'i, f, o = σ( W ∗ [Xₜ, Hₜ₋₁] + W ∘ Cₜ₋₁ )',{a:'start',s:13.5});
+  s+=T(24,432,'Cₜ = f ∘ Cₜ₋₁ + i ∘ tanh( W ∗ [Xₜ, Hₜ₋₁] )',{a:'start',s:13.5});
+  s+=T(24,456,'Hₜ = o ∘ tanh( Cₜ )',{a:'start',s:13.5});
+  s+=T(24,479,'los estados H y C son mapas espaciales, no vectores',{a:'start',s:11.5,c:C.mut});
+  return svg(s,acc);
+}
+
+function diaBase(o){
+  const acc=o.acc; let s='';
+  s+=T(10,26,'Unigrama',{a:'start',w:700,c:acc,s:15});
+  for(let k=0;k<44;k++){const h=4+86*Math.exp(-k/7); s+=`<rect x="${20+k*5.4}" y="${135-h}" width="4.4" height="${h}" fill="${acc}" fill-opacity=".7"/>`;}
+  s+=`<path d="M18 136 H262" stroke="${C.mut}"/>`+T(140,152,'frecuencia de cada código en train',{s:11.5,c:C.mut});
+  s+=A('M280 98 H330')+B(332,73,170,50,['Muestrear cada celda','independiente']);
+  s+=A('M502 98 H530')+G(532,74,6,null).replace(/fill="hsl\(/g,'fill="hsl(')+'';
+  s+=T(580,142,'sin estructura espacial ni temporal',{s:11.5,c:C.mut});
+  s+=T(10,190,'Transición por celda',{a:'start',w:700,c:acc,s:15});
+  const hl=i=>i===3*16+7?'next':'tok';
+  s+=G(20,214,6,hl,acc)+T(68,284,'frame t',{s:11.5,c:C.mut});
+  s+=A('M124 238 H206')+T(165,230,'código x',{s:11.5,c:C.mut});
+  s+=MM(210,200,12,7,(r,c)=>r===5,acc)+`<rect x="${210+8*7}" y="${200+5*7}" width="6" height="6" fill="${C.ink}"/>`;
+  s+=T(252,300,'p(y | x): 1024 × 1024',{s:11.5,c:C.mut})+T(252,314,'contada en train',{s:11.5,c:C.mut});
+  s+=A('M300 238 H376')+T(338,230,'muestrea y',{s:11.5,c:C.mut});
+  s+=G(380,214,6,hl,acc)+T(428,284,'frame t + 1',{s:11.5,c:C.mut});
+  s+=T(10,354,'Frame congelado',{a:'start',w:700,c:acc,s:15});
+  s+=IMG(20,376,150,75,D.ctx[2])+T(95,468,'último frame de contexto',{s:11.5,c:C.mut});
+  s+=A('M176 413 H222')+T(199,404,'copiar',{s:11.5,c:C.mut});
+  ['+1 s','+2 s','+3 s'].forEach((l,k)=>{s+=IMG(228+k*160,376,150,75,D.ctx[2])+T(303+k*160,468,l,{s:11.5,c:C.mut});});
+  // resúmenes a la derecha
+  const fila=(y,a,b)=>B(720,y,210,58,[a,b],{f:'#faf9f5',s:13,s2:12});
+  s+=fila(78,'FVD 3 s: 1524','CE 6,85 · nada que aprender');
+  s+=fila(208,'FVD 3 s: 1241','0,3 ms por frame');
+  s+=fila(386,'FVD 3 s: 978','LPIPS 0,23: mejor que los chicos');
+  return svg(s,acc);
+}
+
+function diaLat(o){
+  const acc=o.acc; let s='';
+  s+=T(10,24,'V-JEPA 2 · 43M · autosupervisado',{a:'start',w:700,c:acc,s:14.5});
+  s+=STACK(10,38,110,55,8)+T(75,124,'clip de 16 frames',{s:11.5,c:C.mut});
+  s+=A('M150 72 H170')+B(172,44,124,56,['Tubelets 2×16×16','8 × 8 × 16 = 1024']);
+  s+=A('M296 72 H314')+G(316,52,5,i=>{const r=Math.floor(i/16),c=i%16;return (r>=2&&r<6&&c>=3&&c<9)||(r>=4&&c>=11&&c<15)?'mask':'tok';});
+  s+=T(356,108,'máscara multibloque 3D',{s:11.5,c:C.mut});
+  s+=A('M398 72 H416')+B(418,44,110,56,['Encoder ViT','RoPE 3D']);
+  s+=A('M528 72 H548')+B(550,44,110,56,['Predictor','tokens ocultos']);
+  s+=A('M660 72 H680')+B(682,44,112,56,['ẑ ocultos','pérdida latente']);
+  s+=B(550,122,244,34,['Encoder EMA (0,99925) → target'],{d:true,s:12.5});
+  s+=A('M738 122 V102',{d:true});
+  s+=T(808,62,'V-JEPA 2-AC:',{a:'start',s:12,w:600})+T(808,78,'encoder congelado',{a:'start',s:11.5,c:C.mut})+T(808,94,'+ predictor',{a:'start',s:11.5,c:C.mut})+T(808,110,'condicionado en',{a:'start',s:11.5,c:C.mut})+T(808,126,'la pose del auto',{a:'start',s:11.5,c:C.mut});
+  s+=`<path d="M10 176 H930" stroke="${C.line}"/>`;
+  s+=T(10,200,'LeWorldModel · 18M · de punta a punta desde píxeles',{a:'start',w:700,c:acc,s:14.5});
+  s+=STACK(10,214,110,55,8)+T(75,300,'4 Hz (frameskip 5)',{s:11.5,c:C.mut});
+  s+=A('M150 248 H170')+B(172,220,140,56,['Encoder ViT-tiny','12 capas · d 192 → CLS']);
+  s+=A('M312 248 H332');
+  for(let k=0;k<6;k++) s+=`<rect x="334" y="${222+k*9}" width="22" height="8" rx="1.5" fill="${acc}" fill-opacity="${.35+k*.1}"/>`;
+  s+=T(345,290,'zₜ',{s:13,w:600});
+  s+=A('M360 248 H384')+B(386,220,150,56,['Predictor AdaLN-zero','6 capas, causal']);
+  s+=B(386,298,150,30,['acción = pose del auto'],{s:12,f:'#faf9f5'})+A('M461 298 V278');
+  s+=A('M536 248 H556')+B(558,220,90,56,['ẑₜ₊₁','vs. zₜ₊₁']);
+  s+=T(668,236,'MSE + 0,09 · SIGReg(z)',{a:'start',s:13,w:600})+T(668,254,'sin EMA ni stop-grad:',{a:'start',s:11.5,c:C.mut})+T(668,270,'SIGReg evita el colapso',{a:'start',s:11.5,c:C.mut});
+  s+=`<path d="M10 344 H930" stroke="${C.line}"/>`;
+  s+=T(10,368,'Evaluación: probe lineal sobre los embeddings (no generan video)',{a:'start',w:700,c:C.ink,s:14.5});
+  s+=B(20,388,140,54,['Embedding z','congelado']);
+  s+=A('M160 415 H196')+B(198,388,130,54,['Regresión','lineal']);
+  s+=A('M328 404 H366')+A('M328 428 H366');
+  s+=B(368,382,190,30,['velocidad: R² ≤ 0,10'],{st:acc,s:12.5})+B(368,420,190,30,['giro: R² ≈ 0'],{st:acc,s:12.5});
+  s+=T(590,398,'Encoder sin entrenar: 0,04 – 0,09',{a:'start',s:13})+T(590,420,'Píxeles crudos: 0,14',{a:'start',s:13});
+  s+=T(590,448,'→ con este presupuesto no aprendieron dinámica',{a:'start',s:13,w:700,c:acc});
+  return svg(s,acc);
+}
+
+/* ---------- contenido ---------- */
+const TH_VID = ['FVD 1 s','FVD 2 s','FVD 3 s','Drift'];
+const S = [
+{key:'gpt2m_ej', acc:'#3d3d3a', kick:'Referencia', title:'gpt2m: el GPT de comma',
+ sub:'Transformer decoder-only sobre tokens VQ, entrenado por comma con 3 millones de minutos. Techo de calidad y maestro de la destilación.',
+ badges:[['307,1M','parámetros'],['733 ms','por frame'],['105','FVD 3 s']],
+ dia:o=>diaGPT({...o,L:24,H:16,d:1024,params:'307M',nota:['Entrenado por comma','~3M minutos','= 3.600M frames']}),
+ aporte:`<p><b>Calidad:</b> es el mejor por lejos (FVD 105 a 3 s, drift 1,6). Contra él medimos cuánto se pierde al achicar.</p><p><b>Latencia:</b> genera los 128 tokens de cada frame de a uno. Tarda 733 ms por frame en la 3080 Ti: <b>15 veces</b> más que los 50 ms del tiempo real.</p>`,
+ specs:[['Capas · cabezas · d','24 · 16 · 1024 (MLP 4096)'],['Contexto','20 frames × 129 = 2580 tokens'],['Posición','absoluta (aprendida)'],['Datos','~3M minutos de commaVQ (3.600M frames)'],['Receta','tipo IRIS (comma)'],['Inferencia','KV cache, fp16, CUDA graphs, T = 1']],
+ thead:['','CE','LPIPS 1 s',...TH_VID,'ms 3080 Ti','ms 4060'],
+ rows:[['gpt2m','2,03','0,17','67 [50, 84]','91','105','1,6','733,0','916,3']],
+ note:'Medido con 8 clips para los ejemplos y con los 400 clips de validación para las métricas. Real contra real da FVD 103: el FVD no tiene piso.'},
+{key:'gpt_s_kd_ej', acc:'#2a78d6', kick:'Autoregresivo chico', title:'GPT-S: el mismo diseño, 25 veces más chico',
+ sub:'Mismo GPT que gpt2m con 6 capas y d = 384. Lo entrenamos destilado de gpt2m y de cero con 25 y 50 % del presupuesto.',
+ badges:[['12,4M','parámetros'],['131–158 ms','por frame'],['468','FVD 3 s']],
+ dia:o=>diaGPT({...o,L:6,H:6,d:384,params:'12,4M',kd:true}),
+ aporte:`<p><b>Achicar no alcanza:</b> sigue generando 128 tokens en serie, así que tarda 158 ms en la 3080 Ti y 131 ms en la 4060. En la cadena completa, a ritmo de cámara, el <b>100 %</b> de los frames llega tarde.</p><p><b>Calidad:</b> es el mejor modelo chico a 1 s (FVD 207), pero el que más deriva (2,3). La destilación vale más que duplicar los datos: el destilado tiene CE 2,99 y el de cero con el 50 %, 3,30.</p>`,
+ specs:[['Capas · cabezas · d','6 · 6 · 384 (MLP 1536)'],['Contexto','20 frames × 129 = 2580 tokens'],['Destilación','α = 0,5, τ = 1, maestro gpt2m'],['Optimizador','AdamW (0,9, 0,999), wd 0,01, clip 10'],['LR · batch','1e-3 constante (×10, humo) · 16'],['Presupuesto','780k frames ≈ 2.440 pasos']],
+ thead:['','CE','LPIPS 1 s',...TH_VID,'ms 3080 Ti','ms 4060'],
+ rows:[['Destilado','2,99','0,29','207 [165, 249]','358','468','2,3','158,2','131,2'],['De cero, 50 %','3,30','0,34','235 [199, 271]','390','479','2,0','',''],['De cero, 25 %','3,96','0,38','414 [373, 456]','551','615','1,5','','']],
+ hl:0, note:'Cadena completa en la 3080 Ti: encoder 3,9 + modelo 156,9 + decoder 6,0 ms (p50); p99 171 ms. Falta la corrida de cero con el 100 %.'},
+{key:'maskgit_s_abs_p8_ej', acc:'#eb6834', kick:'Decodificación paralela', title:'MaskGIT-S: la misma red, decodificada en paralelo',
+ sub:'Igual backbone, tamaño y posición que GPT-S. Cambian la máscara de atención y la forma de decodificar: los 128 tokens en S pasos.',
+ badges:[['12,4M','parámetros'],['9–23 ms','por frame (4060)'],['370','FVD 3 s']],
+ dia:o=>diaMask(o),
+ aporte:`<p><b>Aísla la decodificación:</b> con 4 pasos iguala la calidad del GPT-S (FVD 3 s: 468 contra 469 en pares, p = 0,82) en <b>12,8 ms contra 131 ms</b> en la misma 4060: diez veces más rápido.</p><p>Con 8 a 12 pasos es el <b>mejor modelo chico a 3 s</b> (380 y 370) y el que menos deriva (1,5 y 1,3). Los pasos son una perilla entre calidad y latencia.</p>`,
+ specs:[['Capas · cabezas · d','6 · 6 · 384, posición absoluta'],['Atención','causal entre frames, bidireccional dentro'],['Vocabulario','1024 + [MASK] + BOS'],['Entrenamiento','máscara con schedule coseno, CE en enmascarados'],['Receta (propia)','AdamW (0,9, 0,95), lr 1e-3, warmup + coseno, fp16'],['Inferencia','S pasos, coseno, confianza + Gumbel, T = 1']],
+ thead:['Pasos','LPIPS 1 s',...TH_VID,'ms 4060'],
+ rows:[['1','0,34','228 [191, 265]','367','607','2,7','9,0'],['2','0,33','214 [180, 249]','336','545','2,5','10,2'],['4','0,30','220 [181, 259]','293','468','2,1','12,8'],['8','0,28','247 [212, 283]','280','380','1,5','17,7'],['12','0,27','284 [248, 320]','307','370','1,3','23,0']],
+ hl:3, note:'Diferencias pareadas a 3 s, 8 pasos: −81 contra GPT-S (p = 0,01) y −54 contra Genie-S con 4 pasos (p = 0,02). Evaluado con T = 1 (el holdout prefería 0,8): números conservadores.'},
+{key:'genie_s_p4_ej', acc:'#1baf7a', kick:'Espacio-temporal', title:'Genie: atención espacio-temporal + MaskGIT',
+ sub:'Dinámica de Genie sin el modelo de acciones latentes. La atención se factoriza: espacial dentro del frame y temporal por celda.',
+ badges:[['15,0M · 34,8M','S · M'],['5,7 ms','modelo, 4 pasos'],['413','FVD 3 s']],
+ dia:o=>diaGenie({...o,L:6,H:6,d:384}),
+ aporte:`<p><b>Es el que habilita el tiempo real:</b> con 4 pasos el modelo tarda 5,7 ms y la cadena completa 15,6 ms (p50). A ritmo de cámara, p99 de 21,7 ms y <b>0 % de frames tarde</b>.</p><p><b>Calidad:</b> FVD 413 a 3 s con 4 pasos; con 1 paso colapsa (1307). El tamaño M no mejora a S (p ≥ 0,33), y la temperatura del paper (T = 2) triplica el FVD.</p>`,
+ specs:[['S · M','6 · 6 · 384 (15,0M) · 8 · 8 · 512 (34,8M)'],['Frames','16 al entrenar (15 + el nuevo al generar)'],['Máscara','Bernoulli, tasa ~ U[0,5; 1], frames 2–16'],['Receta (Genie)','AdamW (0,9, 0,9), wd 1e-4, bf16'],['LR · batch','3e-4 → 3e-5 (×10, humo) · 32'],['Inferencia','S ∈ {1, 2, 4, 8, 12, 25}, T = 1']],
+ thead:['','LPIPS 1 s',...TH_VID,'ms 3080 Ti','ms 4060'],
+ rows:[['S, 1 paso','0,38','279 [233, 325]','723','1307','4,7','3,3','6,4'],['S, 2 pasos','0,32','228 [188, 267]','404','683','3,0','4,0','7,6'],['S, 4 pasos','0,28','232 [194, 271]','310','413','1,8','5,7','9,8'],['S, 8 pasos','0,27','276 [234, 318]','350','425','1,5','9,3','14,5'],['S, 12 pasos','0,26','302 [259, 345]','382','425','1,4','12,7','19,1'],['S, 25 pasos','0,26','326 [282, 370]','394','444','1,4','23,9',''],['M, 4 pasos','0,28','244 [208, 281]','315','406','1,7','9,3',''],['M, 8 pasos','0,27','277 [237, 317]','340','403','1,5','14,1','']],
+ hl:2, note:'Tres semillas (S, 8 pasos): 260 ± 14 / 339 ± 12 / 402 ± 20. Cadena con Genie-M a 4 pasos: p99 20,6 ms, 0 % tarde.'},
+{key:'convlstm_px_ej', acc:'#6250d6', kick:'Píxeles', title:'ConvLSTM: predecir píxeles directamente',
+ sub:'El modelo de Shi et al. (2015): LSTM con convoluciones, encoder-forecaster de 10 a 10 frames, sobre los frames decodificados.',
+ badges:[['8,0M','parámetros'],['16,5 ms','por frame'],['2400','FVD 3 s']],
+ dia:o=>diaConv(o),
+ aporte:`<p><b>Es rápido y no necesita tokenizer</b> (16,5 ms, sin encoder ni decoder VQ), pero con este presupuesto genera video borroso que se aleja rápido de la distribución real.</p><p>Queda <b>peor que repetir el último frame</b> (FVD 1790 contra 929 a 1 s). Muestra que el tokenizer VQ es lo que hace viable la calidad con modelos chicos.</p>`,
+ specs:[['Capas','3 ConvLSTM: 128 / 64 / 64 canales'],['Kernel','5 × 5, padding "same"'],['Entrada','128 × 256 RGB en parches 4 × 4'],['Estructura','encoder-forecaster, 10 → 10 frames'],['Receta (Shi)','RMSprop (α 0,9), lr 1e-3, clip 1'],['Batch','4']],
+ thead:['','LPIPS 1 s',...TH_VID,'ms 3080 Ti'],
+ rows:[['ConvLSTM','0,45','1790 [1630, 1950]','2151','2400','1,3','16,5'],['3 semillas','','1680 ± 118','2096 ± 54','2393 ± 14','',''],['Frame congelado','0,23','929 [861, 996]','918','978','1,1','']],
+ hl:0, note:'Cadena completa a ritmo de cámara: modelo 11,8 ms (p50), p99 32,2 ms, 0,2 % de frames tarde.'},
+{key:'congelado_ej', acc:'#eda100', kick:'Baselines', title:'Baselines: qué tan difícil es la tarea',
+ sub:'Tres modelos sin aprendizaje de dinámica. Validan el evaluador y marcan el piso que cualquier world model tiene que superar.',
+ badges:[['0','parámetros'],['≤ 0,3 ms','por frame'],['978','mejor FVD 3 s']],
+ dia:o=>diaBase(o),
+ aporte:`<p><b>Todos los modelos de tokens quedan muy por debajo:</b> el mejor baseline, el frame congelado, tiene FVD 978 a 3 s, contra 370–470 de los modelos chicos.</p><p><b>El LPIPS premia el video quieto:</b> el frame congelado (0,23) le gana a todos los modelos chicos. Por eso la métrica principal es el FVD.</p>`,
+ specs:[['Unigrama','cada código según su frecuencia en train'],['Transición','tabla p(y | x) de primer orden por celda'],['Congelado','repite el último frame de contexto'],['Uso','calibración del evaluador y piso de calidad']],
+ thead:['','CE','LPIPS 1 s',...TH_VID,'ms'],
+ rows:[['Frame congelado','4,89','0,23','929 [861, 996]','918','978','1,1',''],['Transición por celda','3,48','0,52','729 [656, 803]','1010','1241','1,7','0,3'],['Unigrama','6,85','0,57','1471 [1341, 1601]','1451','1524','1,0','']],
+ hl:0, note:'La transición tiene mejor CE que el congelado pero peor FVD a 3 s: aprende estadística local, no movimiento.'},
+{key:null, acc:'#e87ba4', kick:'Modelos latentes', title:'V-JEPA 2 y LeWorldModel: predecir en latentes',
+ sub:'Predicen embeddings, no tokens ni píxeles. No generan video, así que no tienen FVD: medimos si sus embeddings representan la dinámica.',
+ badges:[['43M · 18M','V-JEPA 2 · LeWM'],['780k','frames'],['≤ 0,10','R² velocidad']],
+ dia:o=>diaLat(o),
+ aporte:`<p><b>No aprendieron dinámica con este presupuesto.</b> Un probe lineal de la velocidad explica a lo sumo el 10 % de la varianza, igual que con un encoder <b>sin entrenar</b>, y menos que los píxeles crudos (0,14). El giro no se recupera.</p><p>Son la apuesta de largo plazo (planificar en latentes), pero necesitan mucho más que 780k frames.</p>`,
+ specs:[['V-JEPA 2','ViT + predictor, máscaras 3D, target EMA'],['V-JEPA 2-AC','encoder congelado + predictor con la pose'],['LeWM','ViT-tiny + predictor AdaLN-zero, SIGReg'],['Acciones','pose del vehículo (LeWM, V-JEPA 2-AC)'],['Entrada','frames reconstruidos por el VQ-VAE'],['Evaluación','probe lineal de velocidad y giro']],
+ thead:['Encoder','R² vel.','sin entrenar','R² giro','sin entrenar'],
+ rows:[['LeWM','0,084','0,040','−0,009','0,000'],['LeWM, lr × 3','0,101','0,040','−0,019','0,000'],['V-JEPA 2-S','0,025','0,094','−0,001','−0,016'],['V-JEPA 2-AC','0,056','0,066','−0,014','−0,007'],['Píxeles crudos','0,140','','−0,020','']],
+ hl:1, note:'R² del probe lineal sobre los segmentos de validación.'},
+];
+
+/* ---------- render ---------- */
+const NOMBRE={gpt2m_ej:'gpt2m',gpt_s_kd_ej:'GPT-S dest.',maskgit_s_abs_p8_ej:'MaskGIT-S, 8 p.',genie_s_p4_ej:'Genie-S, 4 p.',convlstm_px_ej:'ConvLSTM',congelado_ej:'Congelado'};
+function tabla(o){
+  return `<table><thead><tr>${o.thead.map(h=>`<th>${h}</th>`).join('')}</tr></thead><tbody>${o.rows.map((r,i)=>`<tr${i===o.hl?' class="hl"':''}>${r.map(c=>`<td>${c||'–'}</td>`).join('')}</tr>`).join('')}</tbody></table>`;
+}
+function strip(o){
+  if(!o.key) return `<div class="strip"><h4>Entrada: contexto real del clip 3 de validación</h4><div class="frames">${D.ctx.map((s,i)=>`<figure><img src="${s}" alt="frame de contexto"><figcaption>${['−1 s','−0,5 s','t = 0'][i]}</figcaption></figure>`).join('')}<figure><figcaption style="max-width:216px;padding-top:30px;font-size:14px">No generan frames: se evalúan con probes sobre sus embeddings.</figcaption></figure></div></div>`;
+  const f=D.frames[o.key], r=D.frames.real, n=NOMBRE[o.key];
+  return `<div class="strip"><h4>Ejemplo · clip 3 de validación · 1 s de contexto real</h4><div class="frames">
+  <figure><img src="${r[0]}" alt="real a +1 s"><figcaption><b>Real</b> · +1 s</figcaption></figure>
+  <figure class="m"><img src="${f[0]}" alt="${n} a +1 s"><figcaption><b>${n}</b> · +1 s</figcaption></figure>
+  <figure><img src="${r[1]}" alt="real a +3 s"><figcaption><b>Real</b> · +3 s</figcaption></figure>
+  <figure class="m"><img src="${f[1]}" alt="${n} a +3 s"><figcaption><b>${n}</b> · +3 s</figcaption></figure></div></div>`;
+}
+function slideArq(o,i,n){
+  return `<section class="slide" style="--acc:${o.acc}">
+  <div class="top"><div><p class="kick"><i></i>${o.kick} · ${i} de ${n}</p><h1>${o.title}</h1><p class="sub">${o.sub}</p></div></div>
+  <div class="body"><div class="left"><div class="dcard"><h4>Arquitectura</h4>${o.dia(o)}</div>${strip(o)}</div>
+  <div class="right"><div class="badges">${o.badges.map(([a,b])=>`<span class="badge"><b>${a}</b> ${b}</span>`).join('')}</div><div class="aporte">${o.aporte}</div>
+  <div class="panel"><h4>Especificaciones</h4><dl>${o.specs.map(([k,v])=>`<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl></div>
+  <div class="panel"><h4>Resultados en este trabajo</h4>${tabla(o)}<p class="note">${o.note}</p></div></div></div>
+  <div class="foot"><span>World models chicos para manejo · commaVQ</span><span>${i+1} / ${n+2}</span></div></section>`;
+}
+function portada(n){
+  return `<section class="slide cover" style="--acc:#3d3d3a">
+  <div><p class="kick"><i></i>Deep Learning · UdeSA · TP world models</p><h1>World models chicos para manejo: siete arquitecturas, una misma tarea</h1>
+  <p class="sub">Todas predicen el próximo frame de video de manejo real (commaVQ) a partir de 1 s de contexto. Comparamos calidad y latencia con el mismo presupuesto de datos.</p></div>
+  <div class="dcard" style="flex:none"><h4>Tarea común</h4>${diaPortada()}</div>
+  <div class="cards3">
+   <div class="card"><h3>Datos</h3><span class="big">780k</span> frames por modelo (100M de tokens): el 26 % del shard 0 y el 0,02 % de lo que vio gpt2m.</div>
+   <div class="card"><h3>Evaluación</h3><span class="big">400</span> clips de validación: 1 s de contexto y 3 s generados. FVD a 1, 2 y 3 s (I3D), LPIPS y CE.</div>
+   <div class="card"><h3>Latencia</h3><span class="big">50 ms</span> por frame para tiempo real (20 FPS). Batch 1, fp16 con CUDA graphs, en RTX 3080 Ti y RTX 4060.</div>
+  </div>
+  <div class="idx">${S.map((o,k)=>`<button data-go="${k+1}"><i style="background:${o.acc}"></i>${o.title.split(':')[0]}</button>`).join('')}<button data-go="${n+1}"><i style="background:#1f1e1c"></i>Resumen</button></div>
+  <div class="foot"><span>← → o espacio para avanzar · F pantalla completa</span><span>1 / ${n+2}</span></div></section>`;
+}
+function resumen(n){
+  const R2=[['#3d3d3a','gpt2m','307,1M','67','105','1,6','733,0','916,3',false],['#2a78d6','GPT-S destilado','12,4M','207','468','2,3','158,2','131,2',false],
+    ['#eb6834','MaskGIT-S, 4 pasos','12,4M','220','468','2,1','–','12,8',true],['#eb6834','MaskGIT-S, 8 pasos','12,4M','247','380','1,5','–','17,7',true],
+    ['#1baf7a','Genie-S, 4 pasos','15,0M','232','413','1,8','5,7','9,8',true],['#0f7d56','Genie-M, 4 pasos','34,8M','244','406','1,7','9,3','–',true],
+    ['#6250d6','ConvLSTM (píxeles)','8,0M','1790','2400','1,3','16,5','–',true],['#eda100','Frame congelado','–','929','978','1,1','–','–',true]];
+  return `<section class="slide sum" style="--acc:#1f1e1c">
+  <div><p class="kick"><i></i>Resumen</p><h1>Calidad contra latencia: lo que decide es cómo se decodifica</h1>
+  <p class="sub">Modelo solo, batch 1, p50. El presupuesto de tiempo real es de 50 ms por frame; la cadena completa suma unos 10 ms de encoder y decoder VQ.</p></div>
+  <table><thead><tr><th>Modelo</th><th>Params</th><th>FVD 1 s</th><th>FVD 3 s</th><th>Drift</th><th>ms 3080 Ti</th><th>ms 4060</th><th>&lt; 50 ms</th></tr></thead>
+  <tbody>${R2.map(r=>`<tr><td><span class="sw" style="background:${r[0]}"></span>${r[1]}</td>${r.slice(2,8).map(c=>`<td>${c}</td>`).join('')}<td>${r[8]?'<span class="ok">sí</span>':'<span class="no">no</span>'}</td></tr>`).join('')}</tbody></table>
+  <div class="concl">
+   <div class="card"><span class="n">1</span><br>Achicar no alcanza: un GPT 25 veces más chico sigue en 131–158 ms, porque genera los tokens de a uno.</div>
+   <div class="card" style="--acc:#eb6834"><span class="n">2</span><br>Con la misma red, MaskGIT con 4 pasos iguala su calidad en 12,8 ms; con 8 a 12 pasos es el mejor modelo chico a 3 s.</div>
+   <div class="card" style="--acc:#1baf7a"><span class="n">3</span><br>Genie-S cierra la cadena completa en 15,6 ms con 0 % de frames tarde. La brecha con gpt2m es sobre todo de datos.</div>
+  </div>
+  <div class="foot"><span>World models chicos para manejo · commaVQ</span><span>${n+2} / ${n+2}</span></div></section>`;
+}
+
+const stage=document.getElementById('stage');
+const N=S.length;
+stage.innerHTML=portada(N)+S.map((o,i)=>slideArq(o,i+1,N)).join('')+resumen(N);
+const slides=[...stage.querySelectorAll('.slide')];
+const dots=document.getElementById('dots');
+dots.innerHTML=slides.map(()=>'<span></span>').join('');
+let cur=0;
+function go(k){
+  cur=Math.max(0,Math.min(slides.length-1,k));
+  slides.forEach((s,i)=>s.classList.toggle('on',i===cur));
+  [...dots.children].forEach((d,i)=>d.classList.toggle('on',i===cur));
+  document.getElementById('cnt').textContent=`${cur+1} / ${slides.length}`;
+  try{history.replaceState(null,'','#'+(cur+1));}catch(e){}
+}
+function fit(){const s=Math.min(innerWidth/1600,innerHeight/900)*0.98;stage.style.transform=`scale(${s})`;}
+addEventListener('resize',fit);fit();
+addEventListener('keydown',e=>{
+  if(['ArrowRight','PageDown',' ','Enter'].includes(e.key)){e.preventDefault();go(cur+1);}
+  else if(['ArrowLeft','PageUp','Backspace'].includes(e.key)){e.preventDefault();go(cur-1);}
+  else if(e.key==='Home')go(0); else if(e.key==='End')go(slides.length-1);
+  else if(e.key==='f'||e.key==='F'){document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();}
+});
+document.getElementById('prev').onclick=()=>go(cur-1);
+document.getElementById('next').onclick=()=>go(cur+1);
+document.getElementById('fs').onclick=()=>document.fullscreenElement?document.exitFullscreen():document.documentElement.requestFullscreen?.();
+dots.onclick=e=>{const i=[...dots.children].indexOf(e.target);if(i>=0)go(i);};
+stage.addEventListener('click',e=>{const b=e.target.closest('[data-go]');if(b)go(+b.dataset.go);});
+go(Math.max(0,(parseInt(location.hash.slice(1))||1)-1));
+</script>
+</body>
+</html>
