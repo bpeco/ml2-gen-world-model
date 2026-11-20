@@ -149,10 +149,25 @@
   "motivo": "bitácora 20261118-082302-5342: python -m src.cli gpt2m evaluar",
   "fecha": "2026-11-18"
  },
+ "results/eval_gpt_s_d025.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
+ "results/eval_gpt_s_d050.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
  "results/eval_gpt_s_kd.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-081139-6aef: python -m src.cli gpt evaluar '--tamaño' s --variante kd",
   "fecha": "2026-11-18"
+ },
+ "results/eval_maskgit_s_abs.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
  },
  "results/eval_transicion.json": {
   "estado": "vigente",
@@ -289,6 +304,11 @@
   "motivo": "bitácora 20261118-053837-423e: python -m src.cli gpt evaluar '--tamaño' s --variante kd --barrer-temperatura",
   "fecha": "2026-11-19"
  },
+ "results/temperatura_maskgit_s_abs.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
  "results/train_convlstm_px.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-041132-ab00: python -m src.cli convlstm_px entrenar",
@@ -384,6 +404,16 @@
   "motivo": "bitácora 20261118-030912-5d3b: python -m src.cli gpt entrenar '--tamaño' s --humo --humo-candidatos fuente,raiz,x3,x10,x30 --forzar",
   "fecha": "2026-11-18"
  },
+ "results/train_gpt_s_d025.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
+ "results/train_gpt_s_d050.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
  "results/train_gpt_s_kd.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-032251-a3b0: python -m src.cli gpt entrenar '--tamaño' s --destilar --variante kd",
@@ -418,6 +448,11 @@
   "estado": "vigente",
   "motivo": "bitácora 20261118-211520-fd8a: python -m src.cli lewm entrenar --variante lrx3 --set receta.lr_peak=1.5e-4",
   "fecha": "2026-11-18"
+ },
+ "results/train_maskgit_s_abs.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
  },
  "results/train_vjepa2_ac.json": {
   "estado": "vigente",
@@ -559,10 +594,45 @@
   "motivo": "bitácora 20261118-082302-5342: python -m src.cli gpt2m evaluar",
   "fecha": "2026-11-18"
  },
+ "results/video_gpt_s_d025.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
+ "results/video_gpt_s_d050.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
  "results/video_gpt_s_kd.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-081139-6aef: python -m src.cli gpt evaluar '--tamaño' s --variante kd",
   "fecha": "2026-11-18"
+ },
+ "results/video_maskgit_s_abs_p1.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
+ "results/video_maskgit_s_abs_p12.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
+ "results/video_maskgit_s_abs_p2.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
+ "results/video_maskgit_s_abs_p4.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
+ },
+ "results/video_maskgit_s_abs_p8.json": {
+  "estado": "vigente",
+  "motivo": "medido en la RTX 4060 (Tomás) con el protocolo actual; gpt_s_d0xx = estudio de escala, maskgit_s_abs = MaskGIT con backbone GPT-S",
+  "fecha": "2026-11-19"
  },
  "results/video_real.json": {
   "estado": "vigente",
