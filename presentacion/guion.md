@@ -15,9 +15,9 @@ Diez minutos más preguntas. Los segundos están estimados a unas 140 palabras p
 | 8 · Calidad contra latencia | 65 |
 | 9 · Pasos y horizonte | 50 |
 | 10 · Lo que no funcionó | 60 |
-| 11 · Conclusiones | 45 |
-| 12 · Limitaciones | 25 |
-| **Total** | **575 (9:35)** |
+| 11 · Conclusiones | 40 |
+| 12 · Limitaciones | 45 |
+| **Total** | **590 (9:50)** |
 
 Teclas: flechas o clic para avanzar, R repite la animación de la slide, N muestra las notas, T reinicia el cronómetro, F pone pantalla completa, Fin va a la última slide.
 
@@ -115,21 +115,21 @@ Tercero, el LPIPS. Con LPIPS, el frame congelado le gana a todos los modelos chi
 
 Cuarto, agrandar sin más datos. Genie-M tiene más del doble de parámetros y empata con Genie-S. Cada modelo vio 780 mil frames; gpt2m vio 4.600 veces más. El GPT-S tiene 8 tokens por parámetro y Genie-M, unos 3; Chinchilla sugiere unos 20.
 
-## 11 · Conclusiones (45 s)
+## 11 · Conclusiones (40 s)
 
 *Las conclusiones aparecen de a una.*
 
-Uno: un world model de manejo se puede achicar de 307 a 12 o 15 millones de parámetros y generar a 20 frames por segundo solo si cambia la forma de decodificar. La cadena completa usa menos de la mitad del presupuesto.
+Uno: achicar no alcanza. El GPT de 12 millones de parámetros sigue haciendo 128 pasadas por frame y no llega a 20 frames por segundo.
 
-Dos: el GPT chico, token a token, no llega. Con la misma red, MaskGIT con 4 pasos da la misma calidad 10 veces más rápido.
+Dos: con la misma red, decodificar en pocos pasos paralelos entra en los 50 milisegundos con la misma calidad a 3 segundos, con 4 pasos, o mejor, con 8 a 12. A 1 segundo, el GPT sigue siendo mejor.
 
-Tres: el FVD a 3 segundos de los mejores chicos es de 3,5 a 4,5 veces el de gpt2m.
+Tres: el número de pasos se elige en inferencia, sin reentrenar. Permite elegir el punto entre calidad y latencia. Con menos de 4 pasos, el video se degrada con el horizonte.
 
-Cuatro: vieron el 0,02 % de los datos de gpt2m, y varios resultados indican que están limitados por datos. Cuánto mejorarían con más, no lo podemos estimar con dos puntos.
+## 12 · Limitaciones (45 s)
 
-## 12 · Limitaciones (25 s)
+Estos resultados valen para pocos datos: 780 mil frames por modelo, el 0,65 % de commaVQ. También para video de una cámara a 128 por 256, y para latencias con batch 1 en una GPU de escritorio y una de notebook. La temperatura de MaskGIT deja sus números conservadores, y el FVD es ruidoso. No evaluamos difusión, ni acciones en los modelos generativos.
 
-Las limitaciones: el presupuesto de datos, la temperatura de MaskGIT, que deja sus números conservadores, la latencia, que depende de la GPU, y el ruido del FVD. No evaluamos difusión, ni acciones en los modelos generativos. Lo que sigue es entrenar los chicos con todo commaVQ, 150 veces más datos, sin cambiar la latencia. Gracias.
+Lo que sigue es entrenar los chicos con todo commaVQ, 150 veces más datos. No cambia la latencia y permite medir cuánto de la brecha cierran los datos. Después, condicionar el modelo en las acciones del auto, para usarlo como simulador de una política. Gracias.
 
 ---
 

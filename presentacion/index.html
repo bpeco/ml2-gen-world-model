@@ -612,12 +612,11 @@
 <!-- 11. CONCLUSIONES -->
 <section class="slide statement" data-anim="claims" data-name="Conclusiones">
   <div class="kicker">11 · Conclusiones</div>
-  <h2>Se puede achicar si se cambia la forma de decodificar</h2>
+  <h2>Para generar a 20 FPS hay que cambiar la forma de decodificar</h2>
   <div class="claims">
-    <div class="claim"><span class="k">1</span><p class="t">Un world model de manejo se puede achicar de <span data-d="m.gpt2m.params" data-f="0">307</span>M a 12–15M de parámetros y generar a 20 FPS solo si cambia la forma de decodificar. La cadena completa usa menos de la mitad del presupuesto.</p></div>
-    <div class="claim"><span class="k">2</span><p class="t">El GPT chico sigue generando token a token y no llega: 131 a 158 ms por frame. Con la misma red, MaskGIT con 4 pasos da la misma calidad <span data-d="cocientes.maskgit4_vs_gpt_4060" data-f="0">10</span> veces más rápido; con 8 a 12 pasos es el mejor modelo chico a 3 s.</p></div>
-    <div class="claim"><span class="k">3</span><p class="t">El FVD a 3 s de los mejores chicos es de 3,5 a 4,5 veces el de gpt2m.</p></div>
-    <div class="claim"><span class="k">4</span><p class="t">Los chicos vieron el 0,02 % de los datos de gpt2m, y varios resultados indican que están limitados por datos. Cuánto se achicaría la brecha con más datos, no lo podemos estimar con dos puntos de escala.</p></div>
+    <div class="claim"><span class="k">1</span><p class="t">Achicar no alcanza: el GPT de <span data-d="m.gpt_s_kd.params" data-f="0">12</span>M sigue haciendo 128 pasadas por frame y no llega a 20 FPS (<span data-d="m.gpt_s_kd.ms4060" data-f="0">131</span> a <span data-d="m.gpt_s_kd.ms3080" data-f="0">158</span> ms).</p></div>
+    <div class="claim"><span class="k">2</span><p class="t">Con la misma red, decodificar en pocos pasos paralelos entra en los 50 ms con la misma calidad a 3 s (4 pasos) o mejor (8 a 12 pasos). A 1 s, el GPT sigue siendo mejor.</p></div>
+    <div class="claim"><span class="k">3</span><p class="t">El número de pasos se elige en inferencia, sin reentrenar: permite elegir el punto entre calidad y latencia. Con menos de 4 pasos, el video se degrada con el horizonte.</p></div>
   </div>
 </section>
 
@@ -626,13 +625,13 @@
   <div class="kicker">12 · Cierre</div>
   <h2>Limitaciones</h2>
   <ul class="limits">
-    <li>780.000 frames por modelo entrenado. Las conclusiones sobre arquitecturas valen para este régimen de pocos datos.</li>
+    <li>780.000 frames por modelo entrenado, el <span data-d="datos.pct_commavq" data-f="2">0,65</span> % de commaVQ. Las conclusiones sobre arquitecturas valen para este régimen de pocos datos, y para video de una cámara a 128×256.</li>
     <li>MaskGIT-S se evaluó con T = 1; la elegida en el holdout fue <span data-d="temperaturas.maskgit_s_abs.elegida" data-f="1">0,8</span> (FVD <span data-d="temperaturas.maskgit_s_abs.tabla.0\.8" data-f="0">493</span> contra <span data-d="temperaturas.maskgit_s_abs.tabla.1\.0" data-f="0">536</span>). Sus números son conservadores.</li>
-    <li>La latencia depende de la GPU y no escala igual para todos. MaskGIT-S se midió solo en la 4060.</li>
+    <li>La latencia se midió con batch 1, en una GPU de escritorio y una de notebook. Depende de la GPU y no escala igual para todos. MaskGIT-S se midió solo en la 4060.</li>
     <li>El FVD es ruidoso: intervalos de unos ±40 a 1 s y de ±50 a ±90 a 3 s en los chicos, más con 1 o 2 pasos. Tres semillas, en dos modelos.</li>
     <li>No evaluamos difusión, ni acciones en los modelos generativos. Los latentes se entrenan sobre frames reconstruidos por el VQ-VAE.</li>
   </ul>
-  <p class="next">Lo que sigue es entrenar los modelos chicos con todo commaVQ: 150 veces nuestro presupuesto, sin cambiar la latencia.</p>
+  <p class="next">Lo que sigue es entrenar los modelos chicos con todo commaVQ, 150 veces nuestro presupuesto: no cambia la latencia y permite medir cuánto de la brecha cierran los datos. Después, condicionar el modelo en las acciones del auto, para usarlo como simulador de una política.</p>
   <p class="repro" style="margin-top:auto">Cada número sale de un comando de la CLI del repositorio y queda en una bitácora, con su commit.</p>
 </section>
 
