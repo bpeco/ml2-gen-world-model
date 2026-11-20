@@ -68,7 +68,7 @@ Valen para todas las acciones de todos los modelos (las propias de cada acción 
 | `--dry-run` | imprime los comandos que ejecutaría y no corre nada |
 | `--esperar` | si la GPU está ocupada, espera en vez de encolar |
 | `--encolar` | no correr ahora: dejar la acción en la cola |
-| `--permitir-sucio` | correr una acción de GPU con cambios sin commitear (queda anotado; no cuenta) |
+| `--permitir-sucio` | ya no hace falta: una acción de GPU corre con cambios sin commitear (queda anotado; no cuenta como vigente) |
 <!-- /auto -->
 
 `--set` acepta `receta.<campo>=<valor>` y `config.<campo>=<valor>`; el campo se valida contra el dataclass antes de lanzar nada y queda en la bitácora como desvío de la fuente. Lo que viene después de un `--` pasa tal cual al script que envuelve la acción.
@@ -79,6 +79,6 @@ Valen para todas las acciones de todos los modelos (las propias de cada acción 
 - **Nombres de corrida:** `<modelo>_<tamaño>[_<variante>][_s<semilla>][_x<k>]`. Por ejemplo `genie_s`, `gpt_s_kd` (variante `kd`), `genie_s_s1` (semilla 1) y `vjepa2_s_x1` (primera extensión). Los modelos sin tamaño llevan solo el modelo (`lewm`, `convlstm_px`).
 - **Una corrida no se pisa:** `entrenar` se niega si ya existe `checkpoints/<run>/last.pt` o `final.pt`; para retomarla o extenderla está `continuar`.
 - **Una sola acción de GPU a la vez:** si la GPU está ocupada la acción queda en la cola (`results/queue.json`) o espera con `--esperar`.
-- **Árbol limpio:** una acción de GPU no corre con cambios sin commitear en `src/` o `scripts/`; `--permitir-sucio` la deja pasar pero el resultado no cuenta como vigente.
+- **Árbol limpio:** una acción de GPU corre aunque haya cambios sin commitear en `src/` o `scripts/`, pero el resultado no cuenta como vigente.
 - **Sin GPU:** `--device cpu` o `CUDA_VISIBLE_DEVICES=-1` corren todo en CPU, sirve para probar con `--limite`.
 - **`--dry-run`:** imprime los comandos que ejecutaría y no corre nada (los ejemplos de las guías se prueban así).

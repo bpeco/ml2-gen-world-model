@@ -318,7 +318,7 @@ python -m src.cli codec exportar --dtype fp16
 - **El piso de FVD depende de la cantidad de clips:** el FVD baja al crecer la muestra. El piso comparable es 400 contra 400 (`real evaluar --clips eval_b` y `estadistica piso`); un piso con mitades es de muestra chica y no se compara con los modelos.
 - **Los nombres viejos:** `copy` y `copy_mix` son los nombres anteriores de `transicion` y `congelado`; `load_model("copy")` anda con un aviso.
 - **`gpt2m evaluar` es lento:** son 307M de parámetros; la evaluación se hace en lotes de 16 clips y en fp16 en CUDA.
-- **"la corrida ya existe", árbol sucio, GPU ocupada:** ver [`../uso.md`](../uso.md).
+- **"la corrida ya existe", GPU ocupada:** ver [`../uso.md`](../uso.md).
 
 ## 6. Notebook
 

@@ -221,7 +221,7 @@ python -m src.cli vjepa2 estado
 - **`continuar --presupuesto` falla:** necesita `pre_decay.pt` (o `last.pt`) de la corrida; las corridas cortadas antes del enfriamiento no lo tienen.
 - **Memoria:** la activación se recomputa (`grad_ckpt`); si igual pagina, bajá `--set receta.batch=16` y declará el desvío.
 - **Banco de máscaras:** las máscaras se sortean por bancos; no es un problema, pero explica una sincronización por banco en el perfil.
-- **"la corrida ya existe", árbol sucio, GPU ocupada:** ver [`../uso.md`](../uso.md).
+- **"la corrida ya existe", GPU ocupada:** ver [`../uso.md`](../uso.md).
 
 ## 7. Notebook
 

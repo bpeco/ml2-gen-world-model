@@ -220,7 +220,6 @@ Cada acción deja además una línea en `results/bitacora.jsonl` y anota el coma
 ## 6. Problemas frecuentes
 
 - **"la corrida ya existe":** `entrenar` no pisa ni reanuda una corrida con `last.pt` o `final.pt`. Retomala con `continuar`, o usá otra `--variante` o `--semilla`.
-- **"rechazada: hay cambios sin commitear":** una acción de GPU exige el árbol limpio en `src/` y `scripts/`. Commiteá, o usá `--permitir-sucio` (el resultado no cuenta).
 - **La acción quedó en la cola:** la GPU estaba tomada (`results/.gpu.lock`). Mirá `python -m src.cli cola ver`, esperá con `--esperar` o corré la cola con `python -m src.cli cola correr`.
 - **`--destilar` no encuentra el maestro:** hace falta `data/raw/pytorch_model.bin` (`python -m src.data`). Si la descarga de Hugging Face se cuelga, `HF_HUB_DISABLE_XET=1`.
 - **Se pasa de memoria o va diez veces más lento:** en una GPU de 12 GB en Windows, por encima de ~11 GB el driver pagina a la RAM sin avisar. No lances dos trabajos pesados a la vez; bajá el batch con `--set receta.batch=8`.

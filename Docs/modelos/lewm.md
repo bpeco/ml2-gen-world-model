@@ -229,7 +229,7 @@ python -m src.cli lewm estado
 - **Memoria o BatchNorm:** no uses acumulación (rompe BatchNorm y SIGReg); bajá `--set receta.batch=64` y declará el desvío.
 - **El CEM tarda mucho:** es el paso caro de `evaluar`; probá antes con `--no-plan` o con `--limite`.
 - **`demo` sin decoder:** la figura de latentes anda sin decoder; para ver píxeles hay que correr antes `demo --entrenar-decoder`.
-- **"la corrida ya existe", árbol sucio, GPU ocupada:** ver [`../uso.md`](../uso.md).
+- **"la corrida ya existe", GPU ocupada:** ver [`../uso.md`](../uso.md).
 - **`--temperatura` o `--pasos`:** no aplican, el modelo no genera tokens.
 
 ## 7. Notebook

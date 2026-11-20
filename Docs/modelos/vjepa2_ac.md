@@ -219,7 +219,7 @@ python -m src.cli vjepa2_ac estado
 - **El encoder no encuentra la corrida madre:** entrená antes `vjepa2 entrenar` o copiá su carpeta a `checkpoints/<run>/` y registrala con `python -m src.store register <run>`.
 - **El CEM tarda:** `evaluar --no-plan` lo omite; `--limite` achica el número de planes.
 - **El modelo casi no usa la acción:** es un resultado a medir, no un bug; la evaluación incluye la recuperación de acciones con CEM contra referencias.
-- **"la corrida ya existe", árbol sucio, GPU ocupada:** ver [`../uso.md`](../uso.md).
+- **"la corrida ya existe", GPU ocupada:** ver [`../uso.md`](../uso.md).
 
 ## 7. Notebook
 

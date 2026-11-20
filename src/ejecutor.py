@@ -1,8 +1,9 @@
 """Ejecuta un Plan (lista de comandos de subproceso) con candado de GPU, cola y bitácora.
 
 Lo usan Toolkit (notebooks) y la CLI. Un Plan es lo que una acción de la CLI va a correr:
-  - si la acción usa la GPU: rechaza con el árbol sucio (salvo permitir_sucio), toma results/.gpu.lock o, si está
-    tomado, se encola en results/queue.json (o espera con esperar=True);
+  - si la acción usa la GPU: toma results/.gpu.lock o, si está tomado, se encola en results/queue.json (o espera con
+    esperar=True). Con cambios sin commitear corre igual: la bitácora anota que el árbol estaba sucio y el resultado
+    no cuenta como vigente (src/bitacora.py);
   - corre cada comando como subproceso (frena en el primero que falla);
   - escribe una línea en results/bitacora.jsonl y anota "_bitacora" en los JSON de resultados que escribió.
 """
@@ -159,12 +160,6 @@ def ejecutar(plan, esperar=False, encolar=False, permitir_sucio=False, dry_run=F
          "salida": None, "escribio": [], **kw}
     bitacora.registrar(e)
     return e
-
-  if plan.gpu and not limpio and not permitir_sucio:
-    asentar(rechazada="árbol sucio: hay cambios sin commitear en src/ o scripts/ (usá --permitir-sucio, el resultado no cuenta)")
-    salida("rechazada: hay cambios sin commitear en src/ o scripts/; una acción de GPU solo corre con el árbol limpio "
-           "(commiteá, o usá --permitir-sucio: queda anotado y el resultado no cuenta como vigente)")
-    return Resultado(comandos, 2, base["id"], "rechazada")
 
   tomado = False
   if plan.gpu:

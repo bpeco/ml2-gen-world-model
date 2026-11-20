@@ -203,7 +203,7 @@ python -m src.cli convlstm_px estado
 - **Memoria:** BPTT sobre 20 pasos con 3 capas ConvLSTM es lo más pesado en memoria del repo. Con el batch de 4 entra en 12 GB; no lances otro trabajo de GPU en paralelo.
 - **La loss explota:** RMSProp con BPTT puede inestabilizarse; la receta recorta el gradiente a norma 1,0 (decisión propia declarada). Si pasa igual, mirá `log.jsonl` y reportalo en vez de cambiar el lr a mano: el lr se cambia con el humo y un commit.
 - **El FVD a 3 s depende del realimentado:** la predicción se vuelve a entrada cada 10 frames; es la forma declarada de llegar a 3 s. No es comparable con un horizonte de un solo bloque.
-- **"la corrida ya existe", árbol sucio, GPU ocupada:** ver [`../uso.md`](../uso.md).
+- **"la corrida ya existe", GPU ocupada:** ver [`../uso.md`](../uso.md).
 - **No hay `--temperatura` ni `--pasos`:** el modelo es determinista y no decodifica por pasos; la CLI los rechaza.
 
 ## 7. Notebook

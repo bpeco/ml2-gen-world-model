@@ -290,7 +290,7 @@ python -m src.cli bitacora verificar
 python -m src.cli bitacora repetir <id> --dry-run
 ```
 
-- **Árbol sucio:** una acción de GPU no corre con cambios sin commitear en `src/` o `scripts/`. `--permitir-sucio` la deja pasar, queda anotado y el resultado no cuenta como `vigente`.
+- **Árbol sucio:** una acción de GPU corre aunque haya cambios sin commitear en `src/` o `scripts/`; queda anotado y el resultado no cuenta como `vigente` (para que cuente, commitear y repetir la acción). `--permitir-sucio` ya no hace falta, y se acepta igual.
 - **`bitacora repetir <id>`** vuelve a lanzar una entrada tal cual; con `--dry-run` solo la imprime.
 - **`bitacora verificar`** exige que cada resultado `vigente` tenga una entrada con salida 0, árbol limpio y un commit que esté en `main`.
 - **`bitacora vigentes`** cierra un bloque de la cola: marca `vigente` en `results/estado.json` cada resultado nuevo cuya última escritura cumple esas tres condiciones, y lista los que no las cumplen.

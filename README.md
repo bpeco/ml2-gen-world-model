@@ -141,7 +141,7 @@ python -m src.cli cola correr --dry-run               # toda la cola de GPU (scr
 python -m src.cli reporte                             # tablas y figuras desde results/
 ```
 
-Una sola acción de GPU corre a la vez (las demás quedan en la cola), todo queda en `results/bitacora.jsonl` con su comando exacto, y una acción de GPU no corre con cambios sin commitear en `src/` o `scripts/`. Detalles en [`Docs/uso.md`](Docs/uso.md).
+Una sola acción de GPU corre a la vez (las demás quedan en la cola) y todo queda en `results/bitacora.jsonl` con su comando exacto. Detalles en [`Docs/uso.md`](Docs/uso.md).
 
 ## Notebooks
 

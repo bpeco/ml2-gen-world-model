@@ -477,23 +477,20 @@ def test_no_anota_manifiestos(entorno):
   assert "_bitacora" not in json.loads(m.read_text())
 
 
-def test_arbol_sucio_bloquea_la_gpu(entorno, monkeypatch):
+def test_arbol_sucio_no_bloquea_la_gpu_pero_queda_anotado(entorno, monkeypatch):
+  """Una acción de GPU corre con cambios sin commitear: la bitácora anota limpio=False y el resultado no cuenta como vigente."""
   monkeypatch.setattr(bitacora, "git_estado", lambda: ("abc123", False))
   destino = rutas.results() / "eval_sucio.json"
   rutas.results().mkdir(parents=True)
-  salida = []
-  r = ejecutor.ejecutar(juguete(escribe=(destino, {"x": 1})), salida=salida.append)
-  assert r.estado == "rechazada" and r.codigo == 2 and not destino.exists() and not rutas.candado().exists()
-  assert any("sin commitear" in s for s in salida)
+  r = ejecutor.ejecutar(juguete(escribe=(destino, {"x": 1})), salida=lambda s: None)
+  assert r.estado == "ok" and r.codigo == 0 and destino.exists() and not rutas.candado().exists()
   e = bitacora.leer()[-1]
-  assert e["rechazada"] and e["limpio"] is False
-  # CPU: corre igual (queda anotado que el árbol estaba sucio)
-  assert ejecutor.ejecutar(juguete(device="cpu"), salida=lambda s: None).estado == "ok"
+  assert e["limpio"] is False and "rechazada" not in e
+  assert ejecutor.ejecutar(juguete(device="cpu"), salida=lambda s: None).estado == "ok"   # CPU: igual
   assert bitacora.leer()[-1]["limpio"] is False
-  # --permitir-sucio: corre y queda anotado
+  # --permitir-sucio ya no hace falta, pero se acepta (los argv viejos de la bitácora lo llevan) y queda anotado
   r = ejecutor.ejecutar(juguete(escribe=(destino, {"x": 1})), permitir_sucio=True, salida=lambda s: None)
-  assert r.estado == "ok" and destino.exists()
-  assert bitacora.leer()[-1]["permitir_sucio"] is True
+  assert r.estado == "ok" and bitacora.leer()[-1]["permitir_sucio"] is True
 
 
 def test_git_estado_real_detecta_cambios_en_src():

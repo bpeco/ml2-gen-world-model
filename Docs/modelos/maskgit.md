@@ -212,7 +212,7 @@ python -m src.cli maskgit estado
 - **Los rollouts se rompen:** sin `p_clean` el contexto del entrenamiento (todo enmascarado) no se parece al de inferencia. Es parte de la ablación; la corrida `nopc` existe para mostrarlo.
 - **"la corrida ya existe":** cambiá `--variante` (cada variante de la ablación lleva la suya) o usá `continuar`.
 - **`--set config.pos=frame` no aplica a una corrida ya entrenada:** la Config sale del checkpoint; entrená una variante nueva.
-- Ver también los problemas frecuentes de [`genie.md`](genie.md): árbol sucio, GPU ocupada, memoria en 12 GB.
+- Ver también los problemas frecuentes de [`genie.md`](genie.md): GPU ocupada, memoria en 12 GB.
 
 ## 7. Notebook
 

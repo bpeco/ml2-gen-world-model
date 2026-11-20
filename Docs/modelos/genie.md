@@ -239,7 +239,7 @@ python -m src.cli genie estado
 ## 6. Problemas frecuentes
 
 - **"la corrida ya existe":** usá `continuar`, otra `--semilla` o `--variante`.
-- **Árbol sucio o GPU ocupada:** ver [`../uso.md`](../uso.md#bitácora) y la sección de la cola; una acción de GPU se encola si la GPU está tomada.
+- **GPU ocupada:** ver [`../uso.md`](../uso.md#bitácora) y la sección de la cola; una acción de GPU se encola si la GPU está tomada.
 - **`--pasos` sin efecto:** solo `genie` y `maskgit` decodifican por pasos; en el resto la CLI lo rechaza.
 - **Más pasos, ¿mejor?:** no necesariamente en todas las métricas; la tabla de [`../resultados.md`](../resultados.md) tiene una fila por número de pasos y las conclusiones están a evaluar.
 - **Latencia irregular:** mediciones con la GPU ocupada o con otro bench en curso. Corré el bench con la GPU libre.

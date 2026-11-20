@@ -122,7 +122,7 @@ OPCIONES = [
   Opcion("dry_run", ("--dry-run",), "bool", "imprime los comandos que ejecutaría y no corre nada"),
   Opcion("esperar", ("--esperar",), "bool", "si la GPU está ocupada, espera en vez de encolar"),
   Opcion("encolar", ("--encolar",), "bool", "no correr ahora: dejar la acción en la cola"),
-  Opcion("permitir_sucio", ("--permitir-sucio",), "bool", "correr una acción de GPU con cambios sin commitear (queda anotado; no cuenta)"),
+  Opcion("permitir_sucio", ("--permitir-sucio",), "bool", "ya no hace falta: una acción de GPU corre con cambios sin commitear (queda anotado; no cuenta como vigente)"),
 ]
 POR_NOMBRE = {o.nombre: o for o in OPCIONES}
 CONTROL = ("dry_run", "esperar", "encolar", "permitir_sucio")

@@ -25,7 +25,7 @@ Todo resultado que entra al repo sale de `python -m src.cli ...` o de la cola (`
 
 - Un hiperparámetro se cambia con `--set` (queda como desvío) o con un commit a la receta; nunca editando un archivo a mano.
 - Un bug se arregla por el camino normal: un test que lo reproduce, el arreglo, `python -m src.cli verificar` en verde y un commit; después se repite el mismo comando con `python -m src.cli bitacora repetir <id>`.
-- Las acciones de GPU no corren con cambios sin commitear en `src/` o `scripts/`; `--permitir-sucio` deja pasar la acción, pero el resultado no cuenta como `vigente`.
+- Una acción de GPU corre aunque haya cambios sin commitear en `src/` o `scripts/`, pero queda anotado y el resultado no cuenta como `vigente`: para que cuente, commitear y repetir la acción.
 - Los checkpoints de la tabla y sus decoders se comparten por Hugging Face: la CLI los sube al terminar de entrenar (con `hf auth login`) y los baja cuando faltan ([`Docs/uso.md`](Docs/uso.md#modelos-entrenados-hugging-face)). Nunca entran a git; los humos, `last.pt` y `pre_decay.pt` quedan locales.
 
 ### Reglas de experimentos
