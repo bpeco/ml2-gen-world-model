@@ -3,10 +3,17 @@
 % Convención: \pend{...} marca lo que depende de corridas que todavía no terminaron (sale en rojo).
 \documentclass[10pt,twocolumn,a4paper]{article}
 
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+% Codificación y fuente según el motor: pdfLaTeX (Overleaf) usa inputenc + T1; XeTeX (tectonic) usa fontspec.
+% Con T1 bajo XeTeX, "¿" sale como "£".
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+\fi
 \usepackage[spanish,es-noshorthands,es-tabla]{babel}
-\usepackage{lmodern}
 \usepackage[margin=2cm,columnsep=0.7cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
@@ -17,6 +24,8 @@
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{caption}
 \captionsetup{font=small}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,decorations.pathreplacing,calc}
 
 \sisetup{output-decimal-marker={,},group-separator={.}}
 \newcommand{\pend}[1]{\textcolor{red}{[#1]}}
@@ -32,7 +41,7 @@
 
 \title{¿Cuánto se puede achicar un world model de manejo?\\
 \large Calidad contra latencia de modelos autoregresivos, de decodificación paralela y de píxeles sobre commaVQ}
-\author{\pend{Autores} \\ Maestría en Inteligencia Artificial, Universidad de San Andrés}
+\author{\editado{Bautista Peco, Tomás Morales y Kevin Soulier} \\ Maestría en Inteligencia Artificial, Universidad de San Andrés}
 \date{}
 
 \begin{document}
@@ -48,6 +57,42 @@ Un world model de manejo sirve como simulador si genera video creíble y lo hace
 Un \emph{world model} aprende a predecir cómo evoluciona el entorno~\cite{ha2018worldmodels}. En conducción autónoma, un world model de video puede funcionar como simulador: genera lo que vería la cámara del auto y permite evaluar o entrenar una política sin salir a la calle. comma.ai entrena hoy su política de manejo dentro de un world model de este tipo~\cite{goff2025learning}, y modelos como GAIA-1~\cite{hu2023gaia1} muestran que la generación de video de manejo realista es posible a gran escala.
 
 Para usarse en lazo cerrado, un simulador tiene que ser rápido además de creíble. La cámara de comma graba a 20~FPS, así que cada frame tiene que generarse en menos de 50\ms. Los world models basados en tokens, como IRIS~\cite{micheli2023iris} y el GPT de commaVQ~\cite{commavq}, generan cada frame como una secuencia de tokens discretos, uno por vez: en commaVQ son 128 tokens por frame, es decir, 128 pasadas secuenciales por la red. La calidad sube con el tamaño del modelo, pero cada pasada también se encarece.
+
+\editado{La Figura~\ref{fig:pipeline} muestra el sistema completo. Del pipeline de commaVQ reutilizamos fijos el encoder y el decoder del VQ-VAE, y el GPT de comma, que usamos como referencia y como maestro. Lo único que entrenamos y comparamos es el modelo que predice los tokens del frame siguiente. De ese modelo medimos la calidad del video que genera y la latencia, solo y dentro de la cadena completa.}
+
+\begin{figure*}[t]
+\centering
+\begin{tikzpicture}[
+  font=\footnotesize, >={Stealth[length=1.8mm]}, node distance=5mm,
+  caja/.style={draw, rounded corners=1pt, align=center, minimum height=12mm, text width=17mm, inner sep=2pt},
+  fija/.style={caja, fill=black!12},
+  nuestra/.style={caja, very thick, text width=31mm},
+  nota/.style={font=\scriptsize, text=black!70, align=center},
+  fila/.style={font=\footnotesize\bfseries, anchor=south west}]
+% inferencia, en lazo
+\node[caja] (cam) {Cámara\\frame RGB\\$128\times256$};
+\node[fija, right=of cam, text width=14mm] (enc) {Encoder\\VQ-VAE};
+\node[caja, right=of enc, text width=20mm] (ctx) {Contexto\\1~s de video\\en tokens};
+\node[nuestra, right=of ctx] (din) {\textbf{Modelo de dinámica}\\predice 128 tokens\\[2pt] GPT: 128 pasadas\\Genie y MaskGIT:\\$S$ pasadas};
+\node[fija, right=of din, text width=14mm] (dec) {Decoder\\VQ-VAE};
+\node[caja, right=of dec] (gen) {Frame\\generado};
+\foreach \a/\b in {cam/enc, enc/ctx, ctx/din, din/dec, dec/gen} \draw[->] (\a) -- (\b);
+\draw[->] (din.south) -- ++(0,-3mm) -| node[nota, pos=0.25, below] {el frame predicho se agrega al contexto} (ctx.south);
+% entrenamiento
+\node[fija, above=10mm of enc, text width=20mm] (datos) {commaVQ\\video ya en tokens};
+\node[fija, above=10mm of gen, text width=20mm] (ref) {\texttt{gpt2m} (307M)\\referencia y maestro};
+\draw[->] (datos.east) -| node[nota, pos=0.3, above] {780.000 frames por modelo} ($(din.north)+(-7mm,0)$);
+\draw[->, dashed] (ref.west) -| node[nota, pos=0.35, above] {destilación} ($(din.north)+(7mm,0)$);
+\node[fila] at ($(cam.west |- datos.north)+(0,1mm)$) {Entrenamiento};
+\node[fila] at ($(cam.north west)+(0,1mm)$) {Inferencia};
+% qué medimos
+\draw[decorate, decoration={brace, mirror, amplitude=4pt}] ($(enc.west |- din.south)+(0,-11mm)$) -- ($(dec.east |- din.south)+(0,-11mm)$)
+  node[nota, midway, below=4pt] {latencia de la cadena completa: menos de 50~ms por frame para 20~FPS};
+\node[nota, below=2mm of gen] {calidad: FVD y LPIPS\\contra el video real};
+\end{tikzpicture}
+\caption{\editado{Pipeline de commaVQ y la parte que estudiamos. Arriba, el entrenamiento: commaVQ trae el video ya codificado en tokens, cada modelo ve 780.000 frames y \texttt{gpt2m} es la referencia y el maestro de la destilación. Abajo, la inferencia en lazo: el encoder codifica el frame de la cámara, el modelo de dinámica predice los 128 tokens del frame siguiente a partir del contexto, y el decoder los vuelve imagen. En gris, lo que reutilizamos fijo; con borde grueso, lo que entrenamos y comparamos. Medimos la calidad del video generado (FVD y LPIPS; la CE se mide sobre los tokens) y la latencia del modelo solo y de la cadena completa. El ConvLSTM predice píxeles directamente, sin encoder ni decoder.}}
+\label{fig:pipeline}
+\end{figure*}
 
 En este trabajo nos preguntamos \textbf{cuánto se puede achicar y acelerar un world model de video de manejo sin perder calidad}. Estudiamos tres ejes:
 \begin{itemize}
@@ -103,6 +148,7 @@ Los intervalos se obtienen por bootstrap por segmento, porque los cuatro clips d
 \begin{table}[t]
 \centering
 \small
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lll@{}}
 \toprule
 Modelo & Qué es & Params \\
@@ -119,7 +165,7 @@ Modelo & Qué es & Params \\
 \texttt{transicion} & tabla $p(y\mid x)$ por celda & -- \\
 \texttt{congelado} & repite el último frame & -- \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \caption{Modelos evaluados. Los modelos latentes (V-JEPA~2, LeWorldModel) se tratan aparte.}
 \label{tab:modelos}
 \end{table}
@@ -177,7 +223,7 @@ La Tabla~\ref{tab:principal} resume la calidad de todos los modelos. Achicar el 
 \begin{table}[t]
 \centering
 \small
-\input{tablas/semillas}
+\resizebox{\columnwidth}{!}{\input{tablas/semillas}}
 \caption{FVD, media $\pm$ desvío entre las semillas 0, 1 y 2.}
 \label{tab:semillas}
 \end{table}
