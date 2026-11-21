@@ -1,0 +1,370 @@
+{
+ "name": "gpt_s_kd_perfil",
+ "model": "gpt_s_kd",
+ "dtype": "fp16",
+ "steps": null,
+ "ctx_frames": null,
+ "unidad": "frame",
+ "params": 12425472,
+ "variantes": {
+  "graphs": {
+   "graphs_usados": true,
+   "pasos_perfilados": 5,
+   "ms_gpu_por_paso": 159.20215239999806,
+   "kernels_por_paso": 13066.0,
+   "backend_sdpa": "mem-efficient",
+   "por_categoria": {
+    "atencion": {
+     "us_por_paso": 128658.99680000004,
+     "kernels_por_paso": 768.0,
+     "fraccion": 0.8081486013878894
+    },
+    "matmul": {
+     "us_por_paso": 13565.93299999799,
+     "kernels_por_paso": 3200.0,
+     "fraccion": 0.08521199491017782
+    },
+    "elementwise/otros": {
+     "us_por_paso": 7540.934199999741,
+     "kernels_por_paso": 5126.0,
+     "fraccion": 0.047367036728580274
+    },
+    "layer_norm": {
+     "us_por_paso": 4340.205800000416,
+     "kernels_por_paso": 1664.0,
+     "fraccion": 0.027262230658135687
+    },
+    "indexado": {
+     "us_por_paso": 3987.539800000124,
+     "kernels_por_paso": 1921.0,
+     "fraccion": 0.02504702191451133
+    },
+    "muestreo": {
+     "us_por_paso": 620.753000000017,
+     "kernels_por_paso": 256.0,
+     "fraccion": 0.0038991495444129724
+    },
+    "softmax": {
+     "us_por_paso": 483.5081999997063,
+     "kernels_por_paso": 128.0,
+     "fraccion": 0.0030370707475416785
+    },
+    "copia": {
+     "us_por_paso": 4.281600000003891,
+     "kernels_por_paso": 3.0,
+     "fraccion": 2.689410875078058e-05
+    }
+   },
+   "top": [
+    {
+     "kernel": "_Z39fmha_cutlassF_f16_aligned_64x64_rf_sm80N22PyTorchMemEffAttention15AttentionKernelIN7cutlass6half_tENS1_4arch4Sm80ELb1ELi64ELi64ELi64ELb1ELb1EE6ParamsE",
+     "categoria": "atencion",
+     "us_por_paso": 128658.99680000004,
+     "llamadas_por_paso": 768.0,
+     "us_por_llamada": 167.52473541666672,
+     "fraccion": 0.8081486013878894
+    },
+    {
+     "kernel": "_ZN8internal5gemvx6kernelIii6__halfS2_S2_fLb0ELb1ELb1ELb0ELi7ELb0E18cublasGemvParamsExIi30cublasGemvTensorStridedBatchedIKS2_ES6_S4_IS2_EfEEENSt9enable_ifIXntT5",
+     "categoria": "matmul",
+     "us_por_paso": 12579.82559999794,
+     "llamadas_por_paso": 3175.0,
+     "us_por_llamada": 3.962149795274941,
+     "fraccion": 0.07901793669466804
+    },
+    {
+     "kernel": "_ZN2at6native53_GLOBAL__N__87a90936_20_layer_norm_kernel_cu_3ff0b71f28vectorized_layer_norm_kernelIN3c104HalfEfLb0EEEviT0_PKT_S8_S8_PS5_S9_PS6_",
+     "categoria": "layer_norm",
+     "us_por_paso": 4340.205800000416,
+     "llamadas_por_paso": 1664.0,
+     "us_por_llamada": 2.608296754807942,
+     "fraccion": 0.027262230658135683
+    },
+    {
+     "kernel": "_ZN2at6native24index_elementwise_kernelILi128ELi4EZNS0_22index_copy_kernel_implINS0_10OpaqueTypeILi2EEEEEvRNS_14TensorIteratorExxxEUliE_EEvxT1_",
+     "categoria": "indexado",
+     "us_por_paso": 2908.9642000000217,
+     "llamadas_por_paso": 1536.0,
+     "us_por_llamada": 1.8938569010416808,
+     "fraccion": 0.018272141149770396
+    },
+    {
+     "kernel": "_ZN2at6native29vectorized_elementwise_kernelILi4ENS0_15CUDAFunctor_addIN3c104HalfEEESt5arrayIPcLy3EEEEviT0_T1_",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 2190.4600000000655,
+     "llamadas_por_paso": 1664.0,
+     "us_por_llamada": 1.3163822115385009,
+     "fraccion": 0.013758984831414203
+    },
+    {
+     "kernel": "_ZN2at6native18elementwise_kernelILi128ELi4EZNS0_22gpu_kernel_impl_nocastIZZZNS0_49_GLOBAL__N__97375e57_16_TensorCompare_cu_71e06f4e17where_kernel_implERNS_14Te",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 1774.699399999604,
+     "llamadas_por_paso": 768.0,
+     "us_por_llamada": 2.310806510416151,
+     "fraccion": 0.01114745858171969
+    },
+    {
+     "kernel": "_ZN2at6native29vectorized_elementwise_kernelILi4ENS0_11FillFunctorIN3c104HalfEEESt5arrayIPcLy1EEEEviT0_T1_",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 1538.1526000004174,
+     "llamadas_por_paso": 1536.0,
+     "us_por_llamada": 1.0014014322919385,
+     "fraccion": 0.00966163193658201
+    },
+    {
+     "kernel": "_ZN2at6native29vectorized_elementwise_kernelILi4EZZZNS0_18GeluCUDAKernelImplERNS_18TensorIteratorBaseENS0_8GeluTypeEENKUlvE_clEvENKUlvE1_clEvEUlN3c104HalfEE_St5",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 1401.1421999999177,
+     "llamadas_por_paso": 768.0,
+     "us_por_llamada": 1.8244039062498927,
+     "fraccion": 0.008801025481612363
+    },
+    {
+     "kernel": "_ZN2at6native24index_elementwise_kernelILi128ELi4EZNS0_16gpu_index_kernelIZNS0_17index_kernel_implINS0_10OpaqueTypeILi1EEEEEvRNS_18TensorIteratorBaseEN3c108Arra",
+     "categoria": "indexado",
+     "us_por_paso": 623.1118000000548,
+     "llamadas_por_paso": 128.0,
+     "us_por_llamada": 4.868060937500428,
+     "fraccion": 0.0039139659270088015
+    },
+    {
+     "kernel": "_ZN43_GLOBAL__N__c5dc35cd_10_SoftMax_cu_0af7be2120softmax_warp_forwardIfffLi10ELb0ELb0EEEvPT0_PKT_iiiPKbib",
+     "categoria": "softmax",
+     "us_por_paso": 483.5081999997063,
+     "llamadas_por_paso": 128.0,
+     "us_por_llamada": 3.7774078124977053,
+     "fraccion": 0.0030370707475416785
+    },
+    {
+     "kernel": "sm80_xmma_gemm_f16f16_f16f32_f32_tn_n_tilesize96x64x32_stage3_warpsize2x2x1_tensor16x8x16_execute_kernel__5x_cublas",
+     "categoria": "matmul",
+     "us_por_paso": 461.91460000000586,
+     "llamadas_por_paso": 12.0,
+     "us_por_llamada": 38.49288333333382,
+     "fraccion": 0.002901434390405965
+    },
+    {
+     "kernel": "_ZN2at6native44_GLOBAL__N__516f300d_11_Indexing_cu_2a2c434e21indexSelectSmallIndexIN3c104HalfExjLi2ELi2ELin2EEEvNS_4cuda6detail10TensorInfoIT_T1_EENS7_IKS8_S9_E",
+     "categoria": "indexado",
+     "us_por_paso": 444.1298000000497,
+     "llamadas_por_paso": 254.0,
+     "us_por_llamada": 1.748542519685235,
+     "fraccion": 0.0027897223329252877
+    },
+    {
+     "kernel": "_ZN2at6native13reduce_kernelILi512ELi1ENS0_8ReduceOpIfNS0_9ArgMaxOpsIfEEjxLi4ELi4EEEEEvT1_",
+     "categoria": "muestreo",
+     "us_por_paso": 425.61560000006284,
+     "llamadas_por_paso": 128.0,
+     "us_por_llamada": 3.325121875000491,
+     "fraccion": 0.002673428679096603
+    },
+    {
+     "kernel": "_ZN2at6native27unrolled_elementwise_kernelIZZZNS0_23direct_copy_kernel_cudaERNS_18TensorIteratorBaseEENKUlvE1_clEvENKUlvE5_clEvEUlfE_St5arrayIPcLy2EELi4E23Trivi",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 292.1772000000827,
+     "llamadas_por_paso": 128.0,
+     "us_por_llamada": 2.282634375000646,
+     "fraccion": 0.001835259106710961
+    },
+    {
+     "kernel": "sm80_xmma_gemm_f16f16_f16f32_f32_tn_n_tilesize96x64x32_stage4_warpsize2x2x1_tensor16x8x16_execute_kernel__5x_cublas",
+     "categoria": "matmul",
+     "us_por_paso": 253.84360000002417,
+     "llamadas_por_paso": 6.0,
+     "us_por_llamada": 42.30726666667069,
+     "fraccion": 0.001594473417433691
+    }
+   ]
+  },
+  "eager": {
+   "graphs_usados": false,
+   "pasos_perfilados": 5,
+   "ms_gpu_por_paso": 191.02386680000288,
+   "kernels_por_paso": 13064.0,
+   "backend_sdpa": "mem-efficient",
+   "por_categoria": {
+    "atencion": {
+     "us_por_paso": 152116.2147999991,
+     "kernels_por_paso": 768.0,
+     "fraccion": 0.7963204669040698
+    },
+    "matmul": {
+     "us_por_paso": 16949.47659999923,
+     "kernels_por_paso": 3200.0,
+     "fraccion": 0.08872962778910189
+    },
+    "elementwise/otros": {
+     "us_por_paso": 9675.861000002493,
+     "kernels_por_paso": 5126.0,
+     "fraccion": 0.05065262871122211
+    },
+    "indexado": {
+     "us_por_paso": 5522.764800001891,
+     "kernels_por_paso": 1921.0,
+     "fraccion": 0.02891138627082701
+    },
+    "layer_norm": {
+     "us_por_paso": 5185.8636000000815,
+     "kernels_por_paso": 1664.0,
+     "fraccion": 0.027147726024358772
+    },
+    "muestreo": {
+     "us_por_paso": 933.647599999138,
+     "kernels_por_paso": 256.0,
+     "fraccion": 0.004887596590098573
+    },
+    "softmax": {
+     "us_por_paso": 638.6682000008957,
+     "kernels_por_paso": 128.0,
+     "fraccion": 0.0033433947846400005
+    },
+    "copia": {
+     "us_por_paso": 1.370200000028126,
+     "kernels_por_paso": 1.0,
+     "fraccion": 7.1729256819132996e-06
+    }
+   },
+   "top": [
+    {
+     "kernel": "_Z39fmha_cutlassF_f16_aligned_64x64_rf_sm80N22PyTorchMemEffAttention15AttentionKernelIN7cutlass6half_tENS1_4arch4Sm80ELb1ELi64ELi64ELi64ELb1ELb1EE6ParamsE",
+     "categoria": "atencion",
+     "us_por_paso": 152116.2147999991,
+     "llamadas_por_paso": 768.0,
+     "us_por_llamada": 198.0679880208322,
+     "fraccion": 0.7963204669040698
+    },
+    {
+     "kernel": "_ZN8internal5gemvx6kernelIii6__halfS2_S2_fLb0ELb1ELb1ELb0ELi7ELb0E18cublasGemvParamsExIi30cublasGemvTensorStridedBatchedIKS2_ES6_S4_IS2_EfEEENSt9enable_ifIXntT5",
+     "categoria": "matmul",
+     "us_por_paso": 15788.619399999525,
+     "llamadas_por_paso": 3175.0,
+     "us_por_llamada": 4.972793511810874,
+     "fraccion": 0.0826526007691479
+    },
+    {
+     "kernel": "_ZN2at6native53_GLOBAL__N__87a90936_20_layer_norm_kernel_cu_3ff0b71f28vectorized_layer_norm_kernelIN3c104HalfEfLb0EEEviT0_PKT_S8_S8_PS5_S9_PS6_",
+     "categoria": "layer_norm",
+     "us_por_paso": 5185.8636000000815,
+     "llamadas_por_paso": 1664.0,
+     "us_por_llamada": 3.116504567307741,
+     "fraccion": 0.027147726024358772
+    },
+    {
+     "kernel": "_ZN2at6native24index_elementwise_kernelILi128ELi4EZNS0_22index_copy_kernel_implINS0_10OpaqueTypeILi2EEEEEvRNS_14TensorIteratorExxxEUliE_EEvxT1_",
+     "categoria": "indexado",
+     "us_por_paso": 4073.8558000012717,
+     "llamadas_por_paso": 1536.0,
+     "us_por_llamada": 2.6522498697924943,
+     "fraccion": 0.021326423070822324
+    },
+    {
+     "kernel": "_ZN2at6native29vectorized_elementwise_kernelILi4ENS0_15CUDAFunctor_addIN3c104HalfEEESt5arrayIPcLy3EEEEviT0_T1_",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 2677.4550000018,
+     "llamadas_por_paso": 1664.0,
+     "us_por_llamada": 1.6090474759626199,
+     "fraccion": 0.014016337564797738
+    },
+    {
+     "kernel": "_ZN2at6native18elementwise_kernelILi128ELi4EZNS0_22gpu_kernel_impl_nocastIZZZNS0_49_GLOBAL__N__97375e57_16_TensorCompare_cu_71e06f4e17where_kernel_implERNS_14Te",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 2442.6716000016795,
+     "llamadas_por_paso": 768.0,
+     "us_por_llamada": 3.180561979168854,
+     "fraccion": 0.012787258686157236
+    },
+    {
+     "kernel": "_ZN2at6native29vectorized_elementwise_kernelILi4ENS0_11FillFunctorIN3c104HalfEEESt5arrayIPcLy1EEEEviT0_T1_",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 1984.0813999959796,
+     "llamadas_por_paso": 1536.0,
+     "us_por_llamada": 1.2917196614557158,
+     "fraccion": 0.010386562858521036
+    },
+    {
+     "kernel": "_ZN2at6native29vectorized_elementwise_kernelILi4EZZZNS0_18GeluCUDAKernelImplERNS_18TensorIteratorBaseENS0_8GeluTypeEENKUlvE_clEvENKUlvE1_clEvEUlN3c104HalfEE_St5",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 1738.1742000031288,
+     "llamadas_por_paso": 768.0,
+     "us_por_llamada": 2.263247656254074,
+     "fraccion": 0.009099251465906892
+    },
+    {
+     "kernel": "_ZN2at6native24index_elementwise_kernelILi128ELi4EZNS0_16gpu_index_kernelIZNS0_17index_kernel_implINS0_10OpaqueTypeILi1EEEEEvRNS_18TensorIteratorBaseEN3c108Arra",
+     "categoria": "indexado",
+     "us_por_paso": 770.5966000000144,
+     "llamadas_por_paso": 128.0,
+     "us_por_llamada": 6.0202859375001125,
+     "fraccion": 0.0040340330918272604
+    },
+    {
+     "kernel": "_ZN2at6native13reduce_kernelILi512ELi1ENS0_8ReduceOpIfNS0_9ArgMaxOpsIfEEjxLi4ELi4EEEEEvT1_",
+     "categoria": "muestreo",
+     "us_por_paso": 685.2228000005732,
+     "llamadas_por_paso": 128.0,
+     "us_por_llamada": 5.353303125004478,
+     "fraccion": 0.0035871056924943524
+    },
+    {
+     "kernel": "_ZN2at6native44_GLOBAL__N__516f300d_11_Indexing_cu_2a2c434e21indexSelectSmallIndexIN3c104HalfExjLi2ELi2ELin2EEEvNS_4cuda6detail10TensorInfoIT_T1_EENS7_IKS8_S9_E",
+     "categoria": "indexado",
+     "us_por_paso": 663.7858000005283,
+     "llamadas_por_paso": 254.0,
+     "us_por_llamada": 2.613329921261922,
+     "fraccion": 0.00347488411327939
+    },
+    {
+     "kernel": "_ZN43_GLOBAL__N__c5dc35cd_10_SoftMax_cu_0af7be2120softmax_warp_forwardIfffLi10ELb0ELb0EEEvPT0_PKT_iiiPKbib",
+     "categoria": "softmax",
+     "us_por_paso": 638.6682000008957,
+     "llamadas_por_paso": 128.0,
+     "us_por_llamada": 4.989595312506998,
+     "fraccion": 0.0033433947846400005
+    },
+    {
+     "kernel": "sm80_xmma_gemm_f16f16_f16f32_f32_tn_n_tilesize96x64x32_stage3_warpsize2x2x1_tensor16x8x16_execute_kernel__5x_cublas",
+     "categoria": "matmul",
+     "us_por_paso": 544.7512000000922,
+     "llamadas_por_paso": 12.0,
+     "us_por_llamada": 45.39593333334101,
+     "fraccion": 0.002851744177969305
+    },
+    {
+     "kernel": "_ZN2at6native27unrolled_elementwise_kernelIZZZNS0_23direct_copy_kernel_cudaERNS_18TensorIteratorBaseEENKUlvE1_clEvENKUlvE5_clEvEUlfE_St5arrayIPcLy2EELi4E23Trivi",
+     "categoria": "elementwise/otros",
+     "us_por_paso": 402.3696000004835,
+     "llamadas_por_paso": 128.0,
+     "us_por_llamada": 3.1435125000037774,
+     "fraccion": 0.0021063839128633815
+    },
+    {
+     "kernel": "sm80_xmma_gemm_f16f16_f16f32_f32_tn_n_tilesize96x64x32_stage4_warpsize2x2x1_tensor16x8x16_execute_kernel__5x_cublas",
+     "categoria": "matmul",
+     "us_por_paso": 300.09779999982175,
+     "llamadas_por_paso": 6.0,
+     "us_por_llamada": 50.01629999997029,
+     "fraccion": 0.0015709963630566462
+    }
+   ]
+  }
+ },
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "tag": null,
+ "torch": "2.11.0+cu128",
+ "timestamp": "2026-11-21T01:13:32",
+ "_bitacora": {
+  "id": "20261121-011244-d28b",
+  "comando": "python -m src.cli gpt bench '--tamaño' s --variante kd -- --perfil --name gpt_s_kd_perfil",
+  "commit": "79b6cae75fe88442ba823fdedd2fc953324c8688"
+ }
+}
