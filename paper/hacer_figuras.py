@@ -388,7 +388,82 @@ def tabla_cadena():
   print("tabla", OUT_T / "cadena.tex")
 
 
+def fig_online():
+  """Uso en línea (results/online.json, de `python -m src.infer.online_eval`): cada periodo el modelo ve los frames
+  reales que llegaron y genera `antic` s hacia adelante. (a) línea de tiempo de un clip; (b) con cuánta anticipación
+  está listo el frame a +antic (IQR entre clips); (c) fracción del tiempo con una predicción vigente en pantalla."""
+  d = leer(R / "online.json")
+  if d is None:
+    print("falta results/online.json: correr python -m src.infer.online_eval")
+    return
+  cfg, ms = d["config"], d["modelos"]
+  col = {"gpt_s_kd": COLOR["gpt"], "maskgit_s8": "#b84c1f", "maskgit_s4": COLOR["maskgit"], "genie_s4": COLOR["genie"]}
+  c_de = lambda m: col.get(m["id"] + (str(m["pasos"]) if m["pasos"] else ""), TINTA2)
+  fig = plt.figure(figsize=(COL2, 2.15))
+  gs = fig.add_gridspec(1, 3, width_ratios=[2.2, 1.05, 0.95], wspace=0.22)
+  ax = fig.add_subplot(gs[0])
+  dur, antic = cfg["dur_s"], cfg["antic_s"]
+  for r, m in enumerate(ms):
+    y = len(ms) - 1 - r
+    c0 = m["clips"][0]
+    for p in c0["linea"]:   # cómputo de cada plan (barra clara) y el frame real desde el que parte (tick)
+      ax.broken_barh([(p["ini"] / 1000, p["ms"] / 1000)], (y + 0.08, 0.3), facecolors=c_de(m), alpha=0.35,
+                     edgecolor="white", linewidth=0.6)
+    ed = c0["edad"]   # tramos en pantalla, cortados donde entra un plan nuevo (la edad vuelve a bajar)
+    tramos, ini = [], None
+    for k, e in enumerate(ed + [None]):
+      corte = e is None or (k > 0 and ed[k - 1] is not None and e < ed[k - 1])
+      if ini is not None and corte:
+        tramos.append((ini, k / 20 - ini)); ini = None
+      if e is not None and ini is None:
+        ini = k / 20
+    ax.broken_barh(tramos, (y - 0.38, 0.3), facecolors=c_de(m), edgecolor="white", linewidth=0.6)
+    if not tramos:
+      ax.text(0.1, y - 0.23, "sin predicción vigente: cada plan llega tarde", va="center", fontsize=6.5, color=TINTA2)
+  ax.set_yticks(range(len(ms)))
+  ax.set_yticklabels([m["nombre"] for m in ms][::-1])
+  ax.set_xlim(0, dur)
+  ax.set_ylim(-0.6, len(ms) - 0.4)
+  ax.set_xlabel("tiempo real (s)")
+  ax.set_axisbelow(True)
+  ax.grid(axis="y", visible=False)
+  ax.tick_params(axis="y", length=0)
+  ax.set_title(f"(a) Clip {c0['clip']}: cálculo y uso de cada plan", loc="left")
+  # (b) margen del frame +antic: cuánto antes de su instante está listo (negativo: tarde)
+  for j, (k, tit, esc, xl) in enumerate([("margen_medio", f"(b) Anticipación a +{antic:g} s",
+                                           1e-3, "s (negativo: tarde)"),
+                                          ("cobertura", "(c) Cobertura", 100, "% del tiempo")]):
+    a = fig.add_subplot(gs[1 + j])
+    for r, m in enumerate(ms):
+      y = len(ms) - 1 - r
+      vals = np.array([c[k] for c in m["clips"]]) * esc
+      med, q1, q3 = np.median(vals), *np.percentile(vals, [25, 75])
+      a.barh(y, med, height=0.55, color=c_de(m), edgecolor="white", linewidth=0.6)
+      a.plot([q1, q3], [y, y], color=TINTA, lw=1)
+      a.text((q3 if med >= 0 else q1) + (0.12 if k == "margen_medio" else 3) * (1 if med >= 0 else -1), y,
+             f"{med:+.2f}" if k == "margen_medio" else f"{med:.0f}", fontsize=6.5, color=TINTA,
+             ha="left" if med >= 0 else "right", va="center")
+    a.axvline(0, color=TINTA2, lw=0.8)
+    if k == "margen_medio":
+      a.axvline(antic, color=TINTA2, lw=0.8, ls=":")
+      a.set_xlim(-5.3, antic + 0.7)
+      a.set_xticks([-4, -2, 0, 2])
+    else:
+      a.set_xlim(0, 112)
+      a.set_xticks([0, 50, 100])
+    a.set_yticks(range(len(ms)))
+    a.set_yticklabels([])
+    a.tick_params(axis="y", length=0)
+    a.set_ylim(-0.6, len(ms) - 0.4)
+    a.grid(axis="y", visible=False)
+    a.set_xlabel(xl)
+    a.set_axisbelow(True)
+    a.set_title(tit, loc="left")
+  guardar(fig, "online")
+
+
 if __name__ == "__main__":
+  fig_online()
   fig_calidad_latencia()
   fig_drift()
   fig_pasos()
