@@ -3,7 +3,7 @@
   python paper/hacer_figuras.py        # -> paper/figs/*.pdf y paper/tablas/*.tex
 
 Figuras:
-  calidad_latencia  (a) FVD a 3 s contra ms/frame, misma GPU (RTX 4060 Laptop); (b) cadena completa en la 3080 Ti
+  calidad_latencia  (a) FVD a 3 s contra ms/frame, misma GPU (RTX 3080 Ti); (b) cadena completa
   drift             FVD a 1, 2 y 3 s con IC 95 % por segmento (cuánto se degrada el video con el horizonte)
   pasos             FVD contra pasos de decodificación paralela (Genie S/M, MaskGIT S) a 1 y 3 s
   datos_escala      (a) frames vistos frente al dataset y a gpt2m; (b) CE contra tokens del GPT-S y extrapolación
@@ -86,14 +86,21 @@ SUM = {c["label"]: c for c in leer(R / "summary.json")["configs"]}
 # =================================================================================================
 # 1. calidad contra latencia
 # =================================================================================================
+CADENAS = ("gpt_s_kd", "genie_s_p4", "genie_m_p4", "convlstm_px", "transicion")
+
+
+def cadenas():
+  """Las mediciones canónicas de la cadena en la 3080 Ti (no los pasos intermedios de la optimización del GPT)."""
+  return [R / "infer" / f"latencia_{n}__rtx3080ti.json" for n in CADENAS if (R / "infer" / f"latencia_{n}__rtx3080ti.json").exists()]
+
+
 def fig_calidad_latencia():
   fig, (a, b) = plt.subplots(1, 2, figsize=(COL2, 2.5), gridspec_kw={"width_ratios": [1.35, 1]})
-  # (a) misma GPU: RTX 4060 Laptop
-  series = [("gpt", "GPT-S destilado", [("gpt_s_kd_4060", "gpt_s_kd", None)]),
+  # (a) misma GPU: RTX 3080 Ti (latencias canónicas, con el decode optimizado del GPT)
+  series = [("gpt2m", "gpt2m (307M)", [("gpt2m", "gpt2m", None)]),
+            ("gpt", "GPT-S destilado", [("gpt_s_kd", "gpt_s_kd", None)]),
             ("maskgit", "MaskGIT-S", [(f"maskgit_s_abs_p{s}", f"maskgit_s_abs_p{s}", s) for s in (1, 2, 4, 8, 12)]),
-            ("genie", "Genie-S", [(f"genie_s_4060_p{s}", f"genie_s_p{s}", s) for s in (1, 2, 4, 8, 12)])]
-  if bench_ms("gpt2m_4060"):
-    series.insert(0, ("gpt2m", "gpt2m (comma, 307M)", [("gpt2m_4060", "gpt2m", None)]))
+            ("genie", "Genie-S", [(f"genie_s_p{s}", f"genie_s_p{s}", s) for s in (1, 2, 4, 8, 12)])]
   for fam, etiqueta, pts in series:
     xs, ys, ss = [], [], []
     for nb, nv, s in pts:
@@ -111,13 +118,13 @@ def fig_calidad_latencia():
   a.axvline(50, color=TINTA2, ls="--", lw=0.9)
   a.text(53, a.get_ylim()[0] + 15, "50 ms = 20 FPS", fontsize=6.5, color=TINTA2, va="bottom")
   a.set_xscale("log")
-  a.set_xlabel("ms por frame, modelo solo (p50, RTX 4060 Laptop, escala log)")
+  a.set_xlabel("ms por frame, modelo solo (p50, RTX 3080 Ti, escala log)")
   a.set_ylabel("FVD a 3 s (menor es mejor)")
   a.set_title("(a) Calidad contra latencia en la misma GPU", loc="left")
-  a.legend(loc="upper center")
+  a.legend(loc="upper left", bbox_to_anchor=(0.12, 1.0))
   # (b) cadena completa a ritmo de cámara, 3080 Ti
   filas = []
-  for f in sorted((R / "infer").glob("latencia_*__rtx3080ti.json")):
+  for f in cadenas():
     d = leer(f)
     st = d["cadena_cerrada"].get("stages_p50_ms") or {}
     filas.append((d["name"], st.get("encoder", 0), st.get("model", 0), st.get("decoder", 0), d["cadena_ritmo"]["p99"]))
@@ -293,25 +300,25 @@ def num(x, d=1):
 
 
 def tabla_principal():
-  filas = [("gpt2m", "gpt2m (comma)", "gpt2m", "gpt2m_4060"),
-           ("gpt_s_kd", "GPT-S destilado", "gpt_s_kd", "gpt_s_kd_4060"),
+  filas = [("gpt2m", "gpt2m (comma)", "gpt2m", None),
+           ("gpt_s_kd", "GPT-S destilado", "gpt_s_kd", None),
            ("gpt_s_d050", "GPT-S de cero, 50\\,\\%", "gpt_s_d050", None),
            ("gpt_s_d025", "GPT-S de cero, 25\\,\\%", "gpt_s_d025", None)]
   if "gpt_s" in SUM:
     filas.insert(2, ("gpt_s", "GPT-S de cero, 100\\,\\%", "gpt_s", None))
   filas += [(f"maskgit_s_abs_p{s}", f"MaskGIT-S, {s} paso{'s' * (s > 1)}", f"maskgit_s_abs_p{s}",
-             f"maskgit_s_abs_p{s}") for s in (1, 2, 4, 8, 12)]
-  filas += [(f"genie_s_p{s}", f"Genie-S, {s} paso{'s' * (s > 1)}", f"genie_s_p{s}", f"genie_s_4060_p{s}")
+             None) for s in (1, 2, 4, 8, 12)]
+  filas += [(f"genie_s_p{s}", f"Genie-S, {s} paso{'s' * (s > 1)}", f"genie_s_p{s}", None)
             for s in (1, 2, 4, 8, 12, 25)]
   filas += [(f"genie_m_p{s}", f"Genie-M, {s} pasos", f"genie_m_p{s}", None) for s in (4, 8)]
   filas += [("convlstm_px", "ConvLSTM (píxeles)", "convlstm_px", None),
             ("Transición por celda", "Transición por celda", "transicion", None),
             ("Frame congelado", "Frame congelado", "congelado", None),
             ("Unigrama", "Unigrama", "unigram", None)]
-  L = [r"\begin{tabular}{lrrrrrrrrr}", r"\toprule",
-       r"Modelo & Params & CE & LPIPS & \multicolumn{3}{c}{FVD $\downarrow$} & Drift & \multicolumn{2}{c}{ms/frame} \\",
-       r"\cmidrule(lr){5-7}\cmidrule(lr){9-10}",
-       r" & (M) & $\downarrow$ & 1\,s & 1\,s [IC 95\,\%] & 2\,s & 3\,s & 3\,s/1\,s & 3080\,Ti & 4060 \\", r"\midrule"]
+  L = [r"\begin{tabular}{lrrrrrrrr}", r"\toprule",
+       r"Modelo & Params & CE & LPIPS & \multicolumn{3}{c}{FVD $\downarrow$} & Drift & ms/frame \\",
+       r"\cmidrule(lr){5-7}",
+       r" & (M) & $\downarrow$ & 1\,s & 1\,s [IC 95\,\%] & 2\,s & 3\,s & 3\,s/1\,s & 3080\,Ti \\", r"\midrule"]
   for lab, nombre, nv, nb in filas:
     c = SUM.get(lab, {})
     v = video(nv)
@@ -320,10 +327,9 @@ def tabla_principal():
     f1, f2, f3 = (v["fvd"][h] for h in ("1", "2", "3"))
     ce = c.get("ce_all")
     ms38 = c.get("ms_frame")
-    ms46 = bench_ms(nb) if nb else None
     L.append(f"{nombre} & {num(c.get('params_M'))} & {num(ce, 2)} & {num(c.get('lpips_1s'), 2)} & "
              f"{num(f1['value'], 0)} [{num(f1['lo'], 0)}, {num(f1['hi'], 0)}] & {num(f2['value'], 0)} & "
-             f"{num(f3['value'], 0)} & {num(f3['value'] / f1['value'], 1)} & {num(ms38)} & {num(ms46)} \\\\")
+             f"{num(f3['value'], 0)} & {num(f3['value'] / f1['value'], 1)} & {num(ms38)} \\\\")
   L += [r"\bottomrule", r"\end{tabular}"]
   (OUT_T / "principal.tex").write_text("\n".join(L) + "\n", encoding="utf-8")
   print("tabla", OUT_T / "principal.tex")
@@ -376,7 +382,7 @@ def tabla_cadena():
   L = [r"\begin{tabular}{lrrrrr}", r"\toprule",
        r"Configuración & encoder & modelo & decoder & p99 a ritmo & tarde \\",
        r" & \multicolumn{3}{c}{p50 (ms)} & (ms) & (\%) \\", r"\midrule"]
-  for f in sorted((R / "infer").glob("latencia_*__rtx3080ti.json")):
+  for f in cadenas():
     d = leer(f)
     st = d["cadena_cerrada"].get("stages_p50_ms") or {}
     cr = d["cadena_ritmo"]
@@ -441,13 +447,14 @@ def fig_online():
       a.barh(y, med, height=0.55, color=c_de(m), edgecolor="white", linewidth=0.6)
       a.plot([q1, q3], [y, y], color=TINTA, lw=1)
       a.text((q3 if med >= 0 else q1) + (0.12 if k == "margen_medio" else 3) * (1 if med >= 0 else -1), y,
-             f"{med:+.2f}" if k == "margen_medio" else f"{med:.0f}", fontsize=6.5, color=TINTA,
+             f"{med:+.2f}".replace(".", ",") if k == "margen_medio" else f"{med:.0f}", fontsize=6.5, color=TINTA,
              ha="left" if med >= 0 else "right", va="center")
     a.axvline(0, color=TINTA2, lw=0.8)
     if k == "margen_medio":
       a.axvline(antic, color=TINTA2, lw=0.8, ls=":")
-      a.set_xlim(-5.3, antic + 0.7)
-      a.set_xticks([-4, -2, 0, 2])
+      mn = min(np.median([c["margen_medio"] for c in m["clips"]]) / 1000 for m in ms)
+      a.set_xlim(min(-1.0, mn - 1.2), antic + 0.7)
+      a.set_xticks([t for t in (-4, -3, -2, -1, 0, 1, 2) if t >= a.get_xlim()[0]])
     else:
       a.set_xlim(0, 112)
       a.set_xticks([0, 50, 100])
