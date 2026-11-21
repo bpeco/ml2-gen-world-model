@@ -117,6 +117,10 @@ class MaskGIT(WorldModel):
     choice_temp: float = 1.0        # ruido Gumbel sobre la confianza, baja linealmente a 0
     pos: str = "abs"                # embedding de posición: "abs" | "frame" (frame + celda)
     p_clean: float = 0.0            # prob. de dejar un frame entero sin máscara al entrenar (contexto limpio, como en inferencia)
+    # v2, experimentos de movimiento (apagados por defecto: los checkpoints del paper no cambian)
+    peso_cambio: float = 1.0        # peso de la CE en los tokens que cambian respecto del frame anterior (1 = sin pesar)
+    p_self: float = 0.0             # prob. de que un frame de entrada sea una predicción del propio modelo (scheduled sampling)
+    motion_in: bool = False         # embedding de "igual / distinto al frame anterior" sumado a cada token visible
 
   @classmethod
   def recipe(cls, size=None):
@@ -131,6 +135,9 @@ class MaskGIT(WorldModel):
     self.net = Backbone(BackboneConfig(n_layer=cfg.n_layer, n_head=cfg.n_head, dim=cfg.dim,
                                        block_size=cfg.block_size, vocab_in=1026, vocab_out=1024,
                                        attn="block", dropout=cfg.dropout, pos=cfg.pos))
+    if cfg.motion_in:  # 0 = sin dato (MASK, BOS o primer frame), 1 = igual al anterior, 2 = distinto; arranca en cero
+      self.motion = torch.nn.Embedding(3, cfg.dim)
+      torch.nn.init.zeros_(self.motion.weight)
     self._graphs_on = False
     self._graphs = {}
     self._cache_key = None
@@ -140,10 +147,27 @@ class MaskGIT(WorldModel):
       self.net.clear_cache()
       self._cache_key, self._graphs = None, {}
 
+  @staticmethod
+  def prev_of(x):
+    """(B, F*129) -> el token de la misma celda en el frame anterior (-1 en el primer frame)."""
+    prev = torch.full_like(x, -1)
+    prev[:, TPF:] = x[:, :-TPF]
+    return prev
+
+  def run(self, x, input_pos=None, prev=None):
+    """Pasada de la red. Con motion_in suma el embedding de movimiento: prev (mismo shape que x) es el token de la
+    misma celda en el frame anterior; por defecto se toma de la propia secuencia (prev_of)."""
+    if not self.cfg.motion_in:
+      return self.net(x, input_pos)
+    prev = self.prev_of(x) if prev is None else prev
+    valid = (x < BOS) & (prev >= 0) & (prev < BOS)
+    state = torch.where(valid, 1 + (x != prev).long(), torch.zeros_like(x))
+    return self.net(input_pos=input_pos, emb=self.net.wte(x) + self.motion(state))
+
   def logits(self, x):
     """(B, L) secuencia con MASK -> (B, L, 1024): la posición p predice el token en p."""
     self._drop_cache()
-    return self.net(x)
+    return self.run(x)
 
   def _mask_rates(self, B, Fr, dev):
     c = self.cfg
@@ -158,17 +182,47 @@ class MaskGIT(WorldModel):
     if teacher is not None:
       raise ValueError("MaskGIT no se destila: teacher tiene que ser None")
     B, Fr, _ = frames.shape
+    c = self.cfg
+    src = frames
+    if c.p_self > 0 and self.training:  # scheduled sampling (no en el monitor: su CE queda comparable)
+      src = self._self_frames(frames)
     r = self._mask_rates(B, Fr, frames.device)
-    if self.cfg.p_clean > 0:  # en inferencia el contexto está limpio: que en entrenamiento también aparezca
-      r = torch.where(torch.rand(B, Fr, device=frames.device) < self.cfg.p_clean, torch.zeros_like(r), r)
+    if c.p_clean > 0:  # en inferencia el contexto está limpio: que en entrenamiento también aparezca
+      r = torch.where(torch.rand(B, Fr, device=frames.device) < c.p_clean, torch.zeros_like(r), r)
     masked = torch.rand(B, Fr, CODES, device=frames.device) < r[..., None]  # el BOS no entra
-    seq = with_bos(frames).view(B, Fr, TPF)
+    seq = with_bos(src).view(B, Fr, TPF)
     x = seq.clone()
-    x[:, :, 1:] = torch.where(masked, torch.full_like(frames, MASK), frames)
+    x[:, :, 1:] = torch.where(masked, torch.full_like(frames, MASK), src)
     lg = self.logits(x.view(B, -1)).view(B, Fr, TPF, -1)[:, :, 1:]
-    loss, m = lm_loss(lg, frames, mask=masked)
+    if c.peso_cambio == 1.0:
+      loss, m = lm_loss(lg, frames, mask=masked)
+    else:  # más peso a acertar lo que cambia: copiar el frame anterior deja de ser la salida barata
+      ce = torch.nn.functional.cross_entropy(lg.reshape(-1, lg.shape[-1]).float(), frames.reshape(-1),
+                                             reduction="none").view(B, Fr, CODES)
+      cambia = torch.zeros_like(masked)
+      cambia[:, 1:] = frames[:, 1:] != frames[:, :-1]
+      w = masked.float() * torch.where(cambia, c.peso_cambio, 1.0)
+      loss = (ce * w).sum() / w.sum().clamp(min=1)
+      mf = masked.float()
+      m = {"ce": ((ce * mf).sum() / mf.sum().clamp(min=1)).detach(),
+           "ce_cambia": ((ce * mf * cambia).sum() / (mf * cambia).sum().clamp(min=1)).detach()}
     m["mask_rate"] = masked.float().mean().detach()
     return loss, m
+
+  @torch.no_grad()
+  def _self_frames(self, frames):
+    """Copia de frames donde cada frame, con prob. p_self, se reemplaza por la reconstrucción del modelo en una pasada
+    (máscara U[0.5, 1], muestreo a T = 1) desde la entrada real. Imita los errores que el contexto tiene en inferencia."""
+    B, Fr, _ = frames.shape
+    r = 0.5 + 0.5 * torch.rand(B, Fr, 1, device=frames.device)
+    masked = torch.rand(B, Fr, CODES, device=frames.device) < r
+    x = with_bos(frames).view(B, Fr, TPF).clone()
+    x[:, :, 1:] = torch.where(masked, torch.full_like(frames, MASK), frames)
+    lg = self.logits(x.view(B, -1)).view(B, Fr, TPF, -1)[:, :, 1:].float()
+    samp = torch.distributions.Categorical(logits=lg).sample()
+    hat = torch.where(masked, samp, frames)
+    usar = torch.rand(B, Fr, 1, device=frames.device) < self.cfg.p_self
+    return torch.where(usar, hat, frames)
 
   def last_frame_logits(self, frames):
     """Último frame entero enmascarado, una pasada: (B, 128, 1024). Es la "CE con 1 paso"."""
@@ -187,8 +241,8 @@ class MaskGIT(WorldModel):
       self._cache_key = key
       self._graphs = {}  # los graphs apuntan a las cachés viejas
 
-  def _frame_pass(self, tok, pos):
-    return self.net(tok, pos)
+  def _frame_pass(self, tok, pos, prev):
+    return self.run(tok, pos, prev)
 
   @torch.no_grad()
   def next_frame(self, ctx, temperature=1.0, steps=None, generator=None):
@@ -200,10 +254,11 @@ class MaskGIT(WorldModel):
     seq = with_bos(ctx[:, -min(self.ctx_frames, self.cfg.block_size // TPF - 1):])  # el frame nuevo tiene que caber
     P = seq.shape[1]
     pos_all = torch.arange(self.cfg.block_size, device=dev)
-    self.net(seq, pos_all[:P])  # prefill del contexto en la caché; cada frame lo re-prefillea
+    self.run(seq, pos_all[:P])  # prefill del contexto en la caché; cada frame lo re-prefillea
     pos = pos_all[P:P + TPF]
     tok = torch.full((B, TPF), MASK, dtype=torch.long, device=dev)
     tok[:, 0] = BOS
+    prev = seq[:, -TPF:]  # el último frame del contexto: con motion_in, el "anterior" de cada celda del frame nuevo
     use_graph = self._graphs_on and dev.type == "cuda"
 
     def logits_fn(cur):
@@ -211,9 +266,9 @@ class MaskGIT(WorldModel):
       if use_graph:
         g = self._graphs.get(B)
         if g is None:
-          g = self._graphs[B] = GraphedStep(self._frame_pass, tok, pos)
-        return g(tok, pos)[:, 1:].float()
-      return self._frame_pass(tok, pos)[:, 1:].float()
+          g = self._graphs[B] = GraphedStep(self._frame_pass, tok, pos, prev)
+        return g(tok, pos, prev)[:, 1:].float()
+      return self._frame_pass(tok, pos, prev)[:, 1:].float()
 
     cur = torch.full((B, CODES), MASK, dtype=torch.long, device=dev)
     return decode_frame(logits_fn, S, temperature, self.cfg.choice_temp, cur, generator).clone()
