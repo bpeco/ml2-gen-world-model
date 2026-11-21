@@ -11,7 +11,6 @@ Convenciones:
   el código oficial de LeWM (`torch.nan_to_num(batch["action"], 0.0)`). poses=None = acción 0 (la media).
 - Las subclases definen encode(frames) -> z (B, F, D), predict(z, act_emb) -> ẑ (B, F, D) y action_embed(poses).
 """
-import copy
 import math
 
 import torch

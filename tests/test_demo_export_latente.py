@@ -3,12 +3,9 @@ import numpy as np
 import pytest
 import torch
 
-from src import eval_latent as EL
 from src import export_latente
 from src.infer import demo, demo_latente
-from src.models.lewm import LeWM
 from src.models.lewm_decoder import DecoderConfig, LeWMDecoder, save_decoder
-from src.models.vjepa.action import VJEPA2AC
 from src.models.vjepa.decoder import FrameDecoder
 from tests.test_eval_latent import AC, H, LEWM, VJ, W, datos, fake_render, modelo  # noqa: F401  (fixtures y modelos chicos)
 

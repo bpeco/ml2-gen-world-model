@@ -3,7 +3,7 @@ import pytest
 import torch
 
 from src.models.vjepa import FIDELIDAD, MultiSeqMasks, VJEPAEncoder, VJEPAPredictor, apply_masks, normalizar
-from src.models.vjepa.masks import CFG_MASCARAS, MaskGenerator
+from src.models.vjepa.masks import MaskGenerator
 from src.models.vjepa.patch import PatchEmbed3D, clip_a_frames
 from src.models.vjepa.rope import coords_desde_ids, dim_rope, rope_3d
 from src.models.vjepa.vit import PRESETS, RoPEAttention

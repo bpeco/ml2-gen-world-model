@@ -7,7 +7,6 @@ AdamW wd 0.1, clip 1.0, batch 1024, 150k pasos, warmup 2000 a 5e-4 y coseno.
 Aquí (presupuesto): ViT propio chico (bloques RoPE de vit.py, cada token de entrada -> un parche de 16x16x3), salida
 128x256x3; la pérdida es el MSE sobre píxeles normalizados con media/std de ImageNet (el paper no dice el espacio; propio).
 """
-import torch
 import torch.nn as nn
 
 from src.models.vjepa.rope import ids_rejilla

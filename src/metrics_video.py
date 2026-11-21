@@ -26,7 +26,7 @@ import numpy as np
 import torch
 
 from src import estadistica
-from src.common import FPS, device, device_info
+from src.common import device, device_info
 from src.rollouts import CLIPS, CLIPS_B, HORIZON, OUT, VAL, clip_tokens, clips_hash, load_clips
 from src.viz import decode, load_decoder
 

@@ -14,7 +14,6 @@ Cómo sabe el contrato armar cada modelo: ADAPTADORES (abajo) trae la configurac
 modelos que existen; un modelo nuevo las declara en su módulo con CONTRATO = dict(config={...}, ...) (ver
 src/models/_plantilla.py) y usa las pruebas genéricas de los modelos de tokens. Qué claves entiende CONTRATO: ver ADAPTADOR_TOKENS.
 """
-import dataclasses
 import importlib
 import importlib.util
 import json

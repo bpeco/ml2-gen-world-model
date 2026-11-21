@@ -17,7 +17,6 @@ import html
 import io
 import json
 import re
-import shlex
 import threading
 import time
 from datetime import datetime
@@ -228,7 +227,6 @@ def tramos(run, registros=None, st=None, ckpt=None, resultados=None):
 def curvas(run, ckpt=None, resultados=None, figsize=(11, 3.2), mostrar=True):
   """Figura con loss, lr y monitoreo (monitor_ce) de la corrida, con el tramo del schedule sombreado.
   Devuelve la figura, o None (y muestra 'pendiente') si todavía no hay log."""
-  import matplotlib
   import matplotlib.pyplot as plt
   reg = leer_log(run, ckpt)
   tr = [r for r in reg if "lr" in r and "step" in r]

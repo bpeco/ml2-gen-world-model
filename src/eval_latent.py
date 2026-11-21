@@ -37,7 +37,7 @@ import torch.nn.functional as F
 from scipy.stats import t as t_student
 
 from src import pixels
-from src.common import device, device_info, log_device
+from src.common import device, log_device
 from src.data import route_of
 from src.models import build, load_model
 from src.models.lewm import LeWM

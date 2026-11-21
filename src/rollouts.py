@@ -38,7 +38,7 @@ from pathlib import Path
 import numpy as np
 import torch
 
-from src.common import CTX_FRAMES, FPS, device, device_info, log_device
+from src.common import CTX_FRAMES, FPS, device, log_device
 
 CLIPS = Path("results/clips_eval.json")
 CLIPS_B = Path("results/clips_eval_b.json")

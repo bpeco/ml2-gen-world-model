@@ -28,7 +28,6 @@ from src.common import device
 from src.infer.video import write_mp4
 from src.models import load_model
 from src.models.lewm import LeWM
-from src.models.vjepa.action import VJEPA2AC
 from src.models.vjepa.pretrain import VJEPA2
 
 OUT = Path("results/demo")

@@ -29,7 +29,6 @@ from typing import Iterator, Optional
 import torch
 
 from src.common import BOS, MASK, TPF, with_bos
-from src.models.base import sample_logits
 from src.models.cudagraph import GraphedStep
 from src.models.maskgit import CODES, decode_frame
 

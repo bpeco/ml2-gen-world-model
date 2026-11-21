@@ -9,7 +9,6 @@ Receta (paper, Fig. 15: AdamW wd 0.1, clip 1.0, warmup 2000 a 5e-4 y coseno; bat
 warmup lineal (2000 pasos, o el 10% si hay menos) y coseno a 0.
 """
 import argparse
-import dataclasses
 import json
 import math
 from pathlib import Path

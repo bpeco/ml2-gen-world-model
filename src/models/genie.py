@@ -14,7 +14,6 @@ presupuesto (forzado por el cómputo) o propio (el paper no lo publica y lo eleg
 """
 import math
 from dataclasses import dataclass
-from typing import Optional
 
 import torch
 import torch.nn as nn
