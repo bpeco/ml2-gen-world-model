@@ -62,7 +62,7 @@ Cada paso tiene su commit y está medido con la CLI, con el árbol limpio, en la
   - Hay que volver a medirlas en esa máquina.
 - Genie en la 4060 sigue vigente.
 
-**Informe (21/11/2026).** `paper/main.tex` ya usa las cifras nuevas: todas las latencias en la RTX 3080 Ti (la figura de calidad contra latencia y la tabla principal dejaron la columna de la 4060, que era del código de antes), y una subsección nueva con la optimización. Lo nuevo está marcado con `\editado{}` y se ve en azul en `main_azul.tex`. La sección "Anticipar en línea" quedó como estaba (4060, código de antes). Falta compilarlo (Overleaf o tectonic).
+**Informe (21/11/2026).** `paper/main.tex` ya usa las cifras nuevas: todas las latencias en la RTX 3080 Ti (la figura de calidad contra latencia y la tabla principal dejaron la columna de la 4060, que era del código de antes), y una subsección nueva con la optimización. Lo nuevo está marcado con `\editado{}` y se ve en azul en `main_azul.tex`. Tomás volvió a medir la sección "Anticipar en línea" en la 4060 con el decode optimizado (`results/online.json`). Falta compilarlo (Overleaf o tectonic).
 
 ## Primer intento: el frame entero en un CUDA graph (21/11/2026)
 

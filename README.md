@@ -144,6 +144,22 @@ python -m src.cli reporte                             # tablas y figuras desde r
 
 Una sola acción de GPU corre a la vez (las demás quedan en la cola) y todo queda en `results/bitacora.jsonl` con su comando exacto. Detalles en [`Docs/uso.md`](Docs/uso.md).
 
+## Banco de pruebas interactivo
+
+Una página para ver generar a los modelos en vivo y medir cada corrida en tu propia GPU.
+
+```bash
+python -m src.infer.probador                        # abre http://localhost:8765 en el navegador
+python -m src.infer.probador --port 9000 --no-abrir # otro puerto, sin abrir el navegador
+```
+
+- **Requisitos.** El entorno del [Setup](#setup), una GPU con CUDA y los datos de val (`python -m src.data`). Los pesos de `gpt2m` y de los modelos que están en Hugging Face se bajan solos la primera vez que se eligen. Los que no están ahí (por ahora, MaskGIT-S) solo se pueden correr con su checkpoint en `checkpoints/<corrida>/final.pt`.
+- **Clip.** Uno de los clips de evaluación del paper (`results/clips_eval.json`), elegido a mano o al azar: 1 s de contexto real y 3 s de continuación.
+- **Modelos.** Uno solo o dos lado a lado, con los pasos de decodificación y la temperatura de cada uno (por defecto, los del paper).
+- **Escenario "Rollout de 3 s".** El modelo genera los 3 s a partir del contexto y la página lo reproduce a la velocidad medida, al lado de la cámara real. Mide la latencia por frame (media, p50, p99, FPS y fracción bajo 50 ms), el LPIPS a 1, 2 y 3 s y la CE del último frame. Muestra al lado los valores del paper (FVD incluido, que con un solo clip no se puede calcular).
+- **Escenario "En línea".** Simula el uso real: la cámara sigue llegando y, cada cierto período, el modelo recibe los frames reales y predice los próximos segundos. Cada predicción se calcula en la GPU y recién se puede usar cuando termina. Mide cuánto tiempo hay una predicción vigente, su antigüedad y con cuánta anticipación llega. Es la simulación de la discusión del informe, que para varios clips corre `python -m src.infer.online_eval`.
+- **Latencias.** Son las de tu GPU, con el mismo protocolo que `src/bench.py` (batch 1, fp16 y CUDA graphs). Las del paper son de una RTX 3080 Ti, así que en otra placa los números cambian.
+
 ## Notebooks
 
 Hacen lo mismo que la CLI, con barra de progreso y curvas, y lanzan todo por `Toolkit`: sus corridas también quedan en la bitácora.

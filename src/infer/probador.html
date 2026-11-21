@@ -476,7 +476,7 @@ function mostrarMetricas() {
   fila("Deriva FVD (3 s / 1 s)", M.map(m => m.paper.deriva), v => v == null ? "—" : fmt(v, 2) + "×", true, "");
   fila("LPIPS a 1 s", M.map(m => m.paper.lpips_1s), v => fmt(v, 3), true, "congelado: 0,235");
   fila("CE del último frame", M.map(m => m.paper.ce_last), v => fmt(v, 3), true, "");
-  fila("ms por frame (bench del paper)", M.map(m => m.paper.ms_frame), fmtMs, true, "");
+  fila("ms por frame (paper, RTX 3080 Ti)", M.map(m => m.paper.ms_frame), fmtMs, true, "");
   $("#tabla").innerHTML = head + "<tbody>" + filas.join("") + "</tbody>";
   graficoLPIPS(); graficoMs();
 }

@@ -374,30 +374,30 @@ const TH_VID = ['FVD 1 s','FVD 2 s','FVD 3 s','Drift'];
 const S = [
 {key:'gpt2m_ej', acc:'#3d3d3a', kick:'Referencia', title:'gpt2m: el GPT de comma',
  sub:'Transformer decoder-only sobre tokens VQ, entrenado por comma con 3 millones de minutos. Techo de calidad y maestro de la destilación.',
- badges:[['307,1M','parámetros'],['733 ms','por frame'],['105','FVD 3 s']],
+ badges:[['307,1M','parámetros'],['291 ms','por frame'],['105','FVD 3 s']],
  dia:o=>diaGPT({...o,L:24,H:16,d:1024,params:'307M',nota:['Entrenado por comma','~3M minutos','= 3.600M frames']}),
- aporte:`<p><b>Calidad:</b> es el mejor por lejos (FVD 105 a 3 s, drift 1,6). Contra él medimos cuánto se pierde al achicar.</p><p><b>Latencia:</b> genera los 128 tokens de cada frame de a uno. Tarda 733 ms por frame en la 3080 Ti: <b>15 veces</b> más que los 50 ms del tiempo real.</p>`,
+ aporte:`<p><b>Calidad:</b> es el mejor por lejos (FVD 105 a 3 s, drift 1,6). Contra él medimos cuánto se pierde al achicar.</p><p><b>Latencia:</b> genera los 128 tokens de cada frame de a uno. Aun con el decode optimizado tarda 291 ms por frame en la 3080 Ti: <b>casi 6 veces</b> más que los 50 ms del tiempo real.</p>`,
  specs:[['Capas · cabezas · d','24 · 16 · 1024 (MLP 4096)'],['Contexto','20 frames × 129 = 2580 tokens'],['Posición','absoluta (aprendida)'],['Datos','~3M minutos de manejo de comma (3.600M frames)'],['Receta','tipo IRIS (comma)'],['Inferencia','KV cache, fp16, CUDA graphs, T = 1']],
- thead:['','CE','LPIPS 1 s',...TH_VID,'ms 3080 Ti','ms 4060'],
- rows:[['gpt2m','2,03','0,17','67 [50, 84]','91','105','1,6','733,0','916,3']],
+ thead:['','CE','LPIPS 1 s',...TH_VID,'ms 3080 Ti'],
+ rows:[['gpt2m','2,03','0,17','67 [50, 84]','91','105','1,6','290,8']],
  note:'Medido con 8 clips para los ejemplos y con los 400 clips de validación para las métricas. Real contra real da FVD 103 y gpt2m, 67: el FVD real contra real no es una cota inferior.'},
 {key:'gpt_s_kd_ej', acc:'#2a78d6', kick:'Autoregresivo chico', title:'GPT-S: el mismo diseño, 25 veces más chico',
  sub:'Mismo GPT que gpt2m con 6 capas y d = 384. Lo entrenamos destilado de gpt2m y de cero con 25 y 50 % del presupuesto.',
- badges:[['12,4M','parámetros'],['131–158 ms','por frame'],['468','FVD 3 s']],
+ badges:[['12,4M','parámetros'],['37,9 ms','por frame'],['468','FVD 3 s']],
  dia:o=>diaGPT({...o,L:6,H:6,d:384,params:'12,4M',kd:true}),
- aporte:`<p><b>Achicar no alcanza:</b> sigue generando 128 tokens en serie, así que tarda 158 ms en la 3080 Ti y 131 ms en la 4060. En la cadena completa, a ritmo de cámara, el <b>100 %</b> de los frames llega tarde.</p><p><b>Calidad:</b> es el mejor modelo chico a 1 s (FVD 207), pero deriva más que los de decodificación paralela con 4 o más pasos (2,3). Con todos los datos, el destilado (CE 2,99) supera al de cero con la mitad (3,30). Falta el de cero con el 100 %; la extrapolación lo pone en 2,86.</p>`,
+ aporte:`<p><b>Llega, sin margen:</b> sigue generando 128 tokens en serie. Con el decode optimizado (atención explícita contra la caché, el frame entero en un CUDA graph) tarda 37,9 ms en la 3080 Ti, contra 430 ms en PyTorch eager. Con encoder y decoder, la cadena completa tiene un p99 de <b>48,4 ms</b>: ningún frame llega tarde, pero no queda margen.</p><p><b>Calidad:</b> es el mejor modelo chico a 1 s (FVD 207), pero deriva más que los de decodificación paralela con 4 o más pasos (2,3). Con todos los datos, el destilado (CE 2,99) supera al de cero con la mitad (3,30). Falta el de cero con el 100 %; la extrapolación lo pone en 2,86.</p>`,
  specs:[['Capas · cabezas · d','6 · 6 · 384 (MLP 1536)'],['Contexto','20 frames × 129 = 2580 tokens'],['Destilación','α = 0,5, τ = 1, maestro gpt2m'],['Optimizador','AdamW (0,9, 0,999), wd 0,01, clip 10'],['LR · batch','1e-3 constante (×10, humo) · 16'],['Presupuesto','780k frames ≈ 2.440 pasos']],
- thead:['','CE','LPIPS 1 s',...TH_VID,'ms 3080 Ti','ms 4060'],
- rows:[['Destilado','2,99','0,29','207 [165, 249]','358','468','2,3','158,2','131,2'],['De cero, 50 %','3,30','0,34','235 [199, 271]','390','479','2,0','',''],['De cero, 25 %','3,96','0,38','414 [373, 456]','551','615','1,5','','']],
- hl:0, note:'Cadena completa en la 3080 Ti: encoder 3,9 + modelo 156,9 + decoder 6,0 ms (p50); p99 171 ms. Falta la corrida de cero con el 100 %.'},
+ thead:['','CE','LPIPS 1 s',...TH_VID,'ms 3080 Ti'],
+ rows:[['Destilado','2,99','0,29','207 [165, 249]','358','468','2,3','37,9'],['De cero, 50 %','3,30','0,34','235 [199, 271]','390','479','2,0',''],['De cero, 25 %','3,96','0,38','414 [373, 456]','551','615','1,5','']],
+ hl:0, note:'Cadena completa en la 3080 Ti: encoder 3,8 + modelo 38,2 + decoder 6,1 ms (p50); p99 48,4 ms, 0 % de frames tarde. Falta la corrida de cero con el 100 %.'},
 {key:'maskgit_s_abs_p8_ej', acc:'#eb6834', kick:'Decodificación paralela', title:'MaskGIT-S: la misma red, decodificada en paralelo',
  sub:'Igual backbone, tamaño y posición que GPT-S. Cambian la máscara de atención y la forma de decodificar: los 128 tokens en S pasos.',
- badges:[['12,4M','parámetros'],['9–23 ms','por frame (4060)'],['370','FVD 3 s']],
+ badges:[['12,4M','parámetros'],['3,9–13 ms','por frame'],['370','FVD 3 s']],
  dia:o=>diaMask(o),
- aporte:`<p><b>Aísla la decodificación:</b> con 4 pasos iguala la calidad del GPT-S (FVD 3 s: 468 contra 462 en pares, p = 0,82) en <b>12,8 ms contra 131 ms</b> en la misma 4060: diez veces más rápido.</p><p>Con 8 a 12 pasos es el <b>mejor modelo chico a 3 s</b> (380 y 370) con poco drift (1,5 y 1,3), similar al de gpt2m. Los pasos son una perilla entre calidad y latencia.</p>`,
+ aporte:`<p><b>Aísla la decodificación:</b> con 4 pasos iguala la calidad del GPT-S (FVD 3 s: 468 contra 462 en pares, p = 0,82) en <b>6,4 ms contra 37,9 ms</b> en la misma 3080 Ti: seis veces más rápido.</p><p>Con 8 a 12 pasos es el <b>mejor modelo chico a 3 s</b> (380 y 370) con poco drift (1,5 y 1,3), similar al de gpt2m. Los pasos son una perilla entre calidad y latencia.</p>`,
  specs:[['Capas · cabezas · d','6 · 6 · 384, posición absoluta'],['Atención','causal entre frames, bidireccional dentro'],['Vocabulario','1024 + [MASK] + BOS'],['Entrenamiento','máscara con schedule coseno, CE en enmascarados'],['Receta (propia)','AdamW (0,9, 0,95), lr 1e-3, warmup + coseno, fp16'],['Inferencia','S pasos, coseno, confianza + Gumbel, T = 1']],
- thead:['Pasos','LPIPS 1 s',...TH_VID,'ms 4060'],
- rows:[['1','0,34','228 [191, 265]','367','607','2,7','9,0'],['2','0,33','214 [180, 249]','336','545','2,5','10,2'],['4','0,30','220 [181, 259]','293','468','2,1','12,8'],['8','0,28','247 [212, 283]','280','380','1,5','17,7'],['12','0,27','284 [248, 320]','307','370','1,3','23,0']],
+ thead:['Pasos','LPIPS 1 s',...TH_VID,'ms 3080 Ti'],
+ rows:[['1','0,34','228 [191, 265]','367','607','2,7','3,9'],['2','0,33','214 [180, 249]','336','545','2,5','4,7'],['4','0,30','220 [181, 259]','293','468','2,1','6,4'],['8','0,28','247 [212, 283]','280','380','1,5','10,4'],['12','0,27','284 [248, 320]','307','370','1,3','13,0']],
  hl:3, note:'Diferencias pareadas a 3 s, 8 pasos: −81 contra GPT-S (p = 0,01) y −54 contra Genie-S con 4 pasos (p = 0,02). Evaluado con T = 1 (el holdout prefería 0,8): números conservadores.'},
 {key:'genie_s_p4_ej', acc:'#1baf7a', kick:'Espacio-temporal', title:'Genie: atención espacio-temporal + MaskGIT',
  sub:'Dinámica de Genie sin el modelo de acciones latentes. La atención se factoriza: espacial dentro del frame y temporal por celda.',
@@ -405,8 +405,8 @@ const S = [
  dia:o=>diaGenie({...o,L:6,H:6,d:384}),
  aporte:`<p><b>Es el que medimos en la cadena completa:</b> con 4 pasos el modelo tarda 5,7 ms y la cadena completa 15,6 ms (p50). A ritmo de cámara, p99 de 21,7 ms y <b>0 % de frames tarde</b>.</p><p><b>Calidad:</b> FVD 413 a 3 s con 4 pasos; con 1 paso colapsa (1307). El tamaño M no mejora a S (p ≥ 0,33), y la temperatura del paper (T = 2) triplica el FVD.</p>`,
  specs:[['S · M','6 · 6 · 384 (15,0M) · 8 · 8 · 512 (34,8M)'],['Frames','16 al entrenar (15 + el nuevo al generar)'],['Máscara','Bernoulli, tasa ~ U[0,5; 1], frames 2–16'],['Receta (Genie)','AdamW (0,9, 0,9), wd 1e-4, bf16'],['LR · batch','3e-4 → 3e-5 (×10, humo) · 32'],['Inferencia','S ∈ {1, 2, 4, 8, 12, 25}, T = 1']],
- thead:['','LPIPS 1 s',...TH_VID,'ms 3080 Ti','ms 4060'],
- rows:[['S, 1 paso','0,38','279 [233, 325]','723','1307','4,7','3,3','6,4'],['S, 2 pasos','0,32','228 [188, 267]','404','683','3,0','4,0','7,6'],['S, 4 pasos','0,28','232 [194, 271]','310','413','1,8','5,7','9,8'],['S, 8 pasos','0,27','276 [234, 318]','350','425','1,5','9,3','14,5'],['S, 12 pasos','0,26','302 [259, 345]','382','425','1,4','12,7','19,1'],['S, 25 pasos','0,26','326 [282, 370]','394','444','1,4','23,9',''],['M, 4 pasos','0,28','244 [208, 281]','315','406','1,7','9,3',''],['M, 8 pasos','0,27','277 [237, 317]','340','403','1,5','14,1','']],
+ thead:['','LPIPS 1 s',...TH_VID,'ms 3080 Ti'],
+ rows:[['S, 1 paso','0,38','279 [233, 325]','723','1307','4,7','3,3'],['S, 2 pasos','0,32','228 [188, 267]','404','683','3,0','4,0'],['S, 4 pasos','0,28','232 [194, 271]','310','413','1,8','5,7'],['S, 8 pasos','0,27','276 [234, 318]','350','425','1,5','9,3'],['S, 12 pasos','0,26','302 [259, 345]','382','425','1,4','12,7'],['S, 25 pasos','0,26','326 [282, 370]','394','444','1,4','23,9'],['M, 4 pasos','0,28','244 [208, 281]','315','406','1,7','9,3'],['M, 8 pasos','0,27','277 [237, 317]','340','403','1,5','14,1']],
  hl:2, note:'Tres semillas (S, 8 pasos): 260 ± 14 / 339 ± 12 / 402 ± 20. Cadena con Genie-M a 4 pasos: p99 20,6 ms, 0 % tarde.'},
 {key:'convlstm_px_ej', acc:'#6250d6', kick:'Píxeles', title:'ConvLSTM: predecir píxeles directamente',
  sub:'El modelo de Shi et al. (2015): LSTM con convoluciones, encoder-forecaster de 10 a 10 frames, sobre los frames decodificados.',
@@ -468,24 +468,24 @@ function portada(n){
   <div class="cards3">
    <div class="card"><h3>Datos</h3><span class="big">780k</span> frames por modelo entrenado (100M de tokens): el 26 % del shard 0 y el 0,02 % de lo que vio gpt2m.</div>
    <div class="card"><h3>Evaluación</h3><span class="big">400</span> clips de validación: 1 s de contexto y 3 s generados. FVD a 1, 2 y 3 s (I3D), LPIPS y CE.</div>
-   <div class="card"><h3>Latencia</h3><span class="big">50 ms</span> por frame para tiempo real (20 FPS). Batch 1, fp16 con CUDA graphs (ConvLSTM y transición: fp32 sin graphs), en RTX 3080 Ti y RTX 4060.</div>
+   <div class="card"><h3>Latencia</h3><span class="big">50 ms</span> por frame para tiempo real (20 FPS). Batch 1, fp16 con CUDA graphs (ConvLSTM y transición: fp32 sin graphs), todo en una RTX 3080 Ti.</div>
   </div>
   <div class="idx">${S.map((o,k)=>`<button data-go="${k+1}"><i style="background:${o.acc}"></i>${o.title.split(':')[0]}</button>`).join('')}<button data-go="${n+1}"><i style="background:#1f1e1c"></i>Resumen</button></div>
   <div class="foot"><span>← → o espacio para avanzar · F pantalla completa</span><span>1 / ${n+2}</span></div></section>`;
 }
 function resumen(n){
-  const R2=[['#3d3d3a','gpt2m','307,1M','67','105','1,6','733,0','916,3',false],['#2a78d6','GPT-S destilado','12,4M','207','468','2,3','158,2','131,2',false],
-    ['#eb6834','MaskGIT-S, 4 pasos','12,4M','220','468','2,1','–','12,8',true],['#eb6834','MaskGIT-S, 8 pasos','12,4M','247','380','1,5','–','17,7',true],
-    ['#1baf7a','Genie-S, 4 pasos','15,0M','232','413','1,8','5,7','9,8',true],['#0f7d56','Genie-M, 4 pasos','34,8M','244','406','1,7','9,3','–',true],
-    ['#6250d6','ConvLSTM (píxeles)','8,0M','1790','2400','1,3','16,5','–',true],['#eda100','Frame congelado','–','929','978','1,1','–','–',true]];
+  const R2=[['#3d3d3a','gpt2m','307,1M','67','105','1,6','290,8',false],['#2a78d6','GPT-S destilado','12,4M','207','468','2,3','37,9',true],
+    ['#eb6834','MaskGIT-S, 4 pasos','12,4M','220','468','2,1','6,4',true],['#eb6834','MaskGIT-S, 8 pasos','12,4M','247','380','1,5','10,4',true],
+    ['#1baf7a','Genie-S, 4 pasos','15,0M','232','413','1,8','5,7',true],['#0f7d56','Genie-M, 4 pasos','34,8M','244','406','1,7','9,3',true],
+    ['#6250d6','ConvLSTM (píxeles)','8,0M','1790','2400','1,3','16,5',true],['#eda100','Frame congelado','–','929','978','1,1','–',true]];
   return `<section class="slide sum" style="--acc:#1f1e1c">
   <div><p class="kick"><i></i>Resumen</p><h1>Calidad contra latencia: lo que decide es cómo se decodifica</h1>
   <p class="sub">Modelo solo, batch 1, p50. El presupuesto de tiempo real es de 50 ms por frame; la cadena completa suma unos 10 ms de encoder y decoder VQ.</p></div>
-  <table><thead><tr><th>Modelo</th><th>Params</th><th>FVD 1 s</th><th>FVD 3 s</th><th>Drift</th><th>ms 3080 Ti</th><th>ms 4060</th><th>&lt; 50 ms</th></tr></thead>
-  <tbody>${R2.map(r=>`<tr><td><span class="sw" style="background:${r[0]}"></span>${r[1]}</td>${r.slice(2,8).map(c=>`<td>${c}</td>`).join('')}<td>${r[8]?'<span class="ok">sí</span>':'<span class="no">no</span>'}</td></tr>`).join('')}</tbody></table>
+  <table><thead><tr><th>Modelo</th><th>Params</th><th>FVD 1 s</th><th>FVD 3 s</th><th>Drift</th><th>ms 3080 Ti</th><th>&lt; 50 ms</th></tr></thead>
+  <tbody>${R2.map(r=>`<tr><td><span class="sw" style="background:${r[0]}"></span>${r[1]}</td>${r.slice(2,7).map(c=>`<td>${c}</td>`).join('')}<td>${r[7]?'<span class="ok">sí</span>':'<span class="no">no</span>'}</td></tr>`).join('')}</tbody></table>
   <div class="concl">
-   <div class="card"><span class="n">1</span><br>Achicar no alcanza: un GPT 25 veces más chico sigue en 131–158 ms, porque genera los tokens de a uno.</div>
-   <div class="card" style="--acc:#eb6834"><span class="n">2</span><br>Con la misma red, MaskGIT con 4 pasos iguala su calidad en 12,8 ms; con 8 a 12 pasos es el mejor modelo chico a 3 s.</div>
+   <div class="card"><span class="n">1</span><br>Achicar alcanza justo: un GPT 25 veces más chico, con el decode optimizado, tarda 37,9 ms; con encoder y decoder llega a 48 ms, sin margen, porque genera los tokens de a uno.</div>
+   <div class="card" style="--acc:#eb6834"><span class="n">2</span><br>Con la misma red, MaskGIT con 4 pasos iguala su calidad en 6,4 ms, seis veces más rápido; con 8 a 12 pasos es el mejor modelo chico a 3 s.</div>
    <div class="card" style="--acc:#1baf7a"><span class="n">3</span><br>Genie-S cierra la cadena completa en 15,6 ms con 0 % de frames tarde. Varios resultados indican que están limitados por datos; cuánto se cerraría la brecha con gpt2m, no lo podemos estimar.</div>
   </div>
   <div class="foot"><span>World models chicos para manejo · commaVQ</span><span>${n+2} / ${n+2}</span></div></section>`;
