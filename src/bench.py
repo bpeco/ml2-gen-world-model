@@ -268,11 +268,15 @@ def main(argv=None):
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent); repetible")
   ap.add_argument("--perfil", action="store_true", help="desglose por kernel (torch.profiler) en vez de la latencia: "
                   "results/perfil/<name>.json")
+  ap.add_argument("--sin-graphs", action="store_true", help="eager aunque llegue --graphs (la CLI siempre lo pide): el punto "
+                  "de partida de la optimización, con la CPU lanzando cada kernel")
   a = ap.parse_args(argv)
   if not a.decoder and not a.model:
     ap.error("falta --model (o --decoder)")
   if a.perfil and a.decoder:
     ap.error("--perfil es para el paso de un modelo, no para el decoder")
+  if a.sin_graphs:
+    a.graphs = False
   dev = backends.dispositivo(a.device)
   # defaults explícitos de PyTorch: el fp32 depende de TF32
   torch.backends.cuda.matmul.allow_tf32 = False
