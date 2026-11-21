@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 274" width="720" height="274" role="img" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<title>Qué es bmm</title>
+<desc>Una multiplicación de matrices por lotes: las 6 cabezas son 6 productos independientes en una sola llamada.</desc>
+<defs><marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#5f5e5a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker><pattern id="rayas" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#8a8984" stroke-width="1.5"/></pattern></defs>
+<rect x="0.5" y="0.5" width="719.0" height="273.0" rx="10" fill="#fcfcfb" stroke="#e1e0d9" stroke-width="1" />
+<text x="24.0" y="30.0" font-size="13" fill="#1f1e1c" text-anchor="start" font-weight="600">bmm y baddbmm: 6 multiplicaciones independientes, una por cabeza (acá, el q·kᵀ)</text>
+<rect x="65.0" y="121.0" width="46.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="58.0" y="114.0" width="46.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="51.0" y="107.0" width="46.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="44.0" y="100.0" width="46.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="37.0" y="93.0" width="46.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="30.0" y="86.0" width="46.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<text x="30.0" y="156.0" font-size="13" fill="#1f1e1c" text-anchor="start" font-weight="600">q</text>
+<text x="30.0" y="172.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400" font-family="'JetBrains Mono', Consolas, 'SFMono-Regular', monospace">(6, 1, 64)</text>
+<text x="112.0" y="100.0" font-size="16" fill="#5f5e5a" text-anchor="middle" font-weight="400">@</text>
+<rect x="175.0" y="105.0" width="250.0" height="46.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="168.0" y="98.0" width="250.0" height="46.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="161.0" y="91.0" width="250.0" height="46.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="154.0" y="84.0" width="250.0" height="46.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="147.0" y="77.0" width="250.0" height="46.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="140.0" y="70.0" width="250.0" height="46.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<text x="140.0" y="156.0" font-size="13" fill="#1f1e1c" text-anchor="start" font-weight="600">kᵀ</text>
+<text x="140.0" y="172.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400" font-family="'JetBrains Mono', Consolas, 'SFMono-Regular', monospace">(6, 64, 2584)</text>
+<text x="448.0" y="100.0" font-size="16" fill="#5f5e5a" text-anchor="middle" font-weight="400">=</text>
+<rect x="511.0" y="121.0" width="190.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="504.0" y="114.0" width="190.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="497.0" y="107.0" width="190.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="490.0" y="100.0" width="190.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="483.0" y="93.0" width="190.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="476.0" y="86.0" width="190.0" height="8.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<text x="476.0" y="156.0" font-size="13" fill="#1f1e1c" text-anchor="start" font-weight="600">s, los puntajes</text>
+<text x="476.0" y="172.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400" font-family="'JetBrains Mono', Consolas, 'SFMono-Regular', monospace">(6, 1, 2584)</text>
+<text x="24.0" y="210.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">Cada hoja de la pila es una cabeza: (1 × 64) @ (64 × 2584) = (1 × 2584). Ninguna depende de otra.</text>
+<text x="24.0" y="232.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">baddbmm suma la máscara al resultado, bias + alpha · (q @ kᵀ), y lanza dos kernels: una copia y la multiplicación.</text>
+<text x="24.0" y="254.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">bmm(p, v) es la otra: (6, 1, 2584) @ (6, 2584, 64) = (6, 1, 64).</text>
+</svg>
