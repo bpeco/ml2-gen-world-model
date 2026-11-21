@@ -151,7 +151,7 @@ Modelo & Qué es & Params \\
 \midrule
 \texttt{gpt2m} & GPT de comma (referencia) & 307M \\
 \texttt{gpt\_s\_kd} & GPT-S destilado de \texttt{gpt2m} & 12,4M \\
-\texttt{gpt\_s} & GPT-S de cero (25, 50 y 100\,\%) & 12,4M \\
+\texttt{gpt\_s} & GPT-S de cero (25 y 50\,\%) & 12,4M \\
 \texttt{genie\_s} & dinámica de Genie + MaskGIT & 15,0M \\
 \texttt{genie\_m} & ídem, tamaño M & 34,8M \\
 \texttt{maskgit\_s} & MaskGIT, backbone del GPT & 12,4M \\
@@ -272,7 +272,7 @@ La arquitectura también importa en el régimen de pocos pasos: con 1 paso, Mask
 \begin{figure*}[t]
 \centering
 \includegraphics[width=\textwidth]{figs/datos_escala.pdf}
-\caption{(a) Frames de entrenamiento en escala log: cada modelo vio 780.000 frames, el 26\,\% del shard que bajamos, el 0,65\,\% de commaVQ y el 0,022\,\% de los datos de \texttt{gpt2m}. (b) Cross-entropy en validación del GPT-S de cero entrenado con el 25\,\% y el 50\,\% del presupuesto, y el ajuste $L(D)=E+B\,D^{-\beta}$ extrapolado a $1\times$, al óptimo de Chinchilla (20 tokens por parámetro) y a $10\times$. Con dos puntos, $E$ se fija en la CE de \texttt{gpt2m}, lo que hace la extrapolación optimista. \pend{Agregar el punto de 100\,\% y ajustar los tres parámetros.}}
+\caption{(a) Frames de entrenamiento en escala log: cada modelo vio 780.000 frames, el 26\,\% del shard que bajamos, el 0,65\,\% de commaVQ y el 0,022\,\% de los datos de \texttt{gpt2m}. (b) Cross-entropy en validación del GPT-S de cero entrenado con el 25\,\% y el 50\,\% del presupuesto, y el ajuste $L(D)=E+B\,D^{-\beta}$ extrapolado a $1\times$, al óptimo de Chinchilla (20 tokens por parámetro) y a $10\times$. Con dos puntos, $E$ se fija en la CE de \texttt{gpt2m}, lo que hace la extrapolación optimista.}
 \label{fig:datos_escala}
 \end{figure*}
 
@@ -280,7 +280,7 @@ La arquitectura también importa en el régimen de pocos pasos: con 1 paso, Mask
 
 \paragraph{Los modelos chicos están limitados por datos.} Tres resultados apuntan en la misma dirección. Primero, el GPT-S de cero mejora mucho al duplicar los datos: su CE baja de 3,96 a 3,30 entre el 25\,\% y el 50\,\% del presupuesto, y el FVD a 1~s, de 414 a 235. Segundo, agrandar el modelo sin agregar datos no ayuda: Genie-M (35M) empata con Genie-S (15M) en los tres horizontes (diferencias pareadas con $p\geq0{,}33$). Tercero, el modelo destilado, que recibe a través del maestro parte de lo que \texttt{gpt2m} aprendió con muchos más datos, es el mejor GPT chico (CE de 2,99).
 
-\paragraph{Extrapolación.} Con los dos puntos del GPT-S de cero ajustamos $L(D)=E+B\,D^{-\beta}$ fijando $E$ en la CE de \texttt{gpt2m} (2,03), una cota optimista de la pérdida irreducible de un modelo de 12M. El ajuste da $\beta=0{,}60$ y predice una CE de 2,86 con el presupuesto completo, 2,51 en el óptimo de Chinchilla (2,5 veces nuestro presupuesto) y 2,23 con 10 veces más datos (Figura~\ref{fig:datos_escala}b). Si la predicción se confirma, entrenar el GPT-S de cero con todo el presupuesto alcanzaría al destilado, y la ventaja de la destilación vendría de compensar la falta de datos. \pend{Confirmar con el punto de 100\,\% (\texttt{gpt\_s}).}
+\paragraph{Extrapolación.} Con los dos puntos del GPT-S de cero ajustamos $L(D)=E+B\,D^{-\beta}$ fijando $E$ en la CE de \texttt{gpt2m} (2,03), una cota optimista de la pérdida irreducible de un modelo de 12M. El ajuste da $\beta=0{,}60$ y predice una CE de 2,86 con el presupuesto completo, 2,51 en el óptimo de Chinchilla (2,5 veces nuestro presupuesto) y 2,23 con 10 veces más datos (Figura~\ref{fig:datos_escala}b). Si la predicción se confirma, entrenar el GPT-S de cero con todo el presupuesto alcanzaría al destilado, y la ventaja de la destilación vendría de compensar la falta de datos. \editado{Confirmarlo requiere entrenar el GPT-S de cero con el presupuesto completo, que queda como trabajo futuro.}
 
 \paragraph{¿La CE predice el FVD?} Entre los modelos autoregresivos, el orden por CE coincide casi con el orden por FVD a 1~s (Spearman $\rho=0{,}90$, $p=0{,}04$, $n=5$; la muestra es chica). Si esa relación se mantiene, la mejora de CE que predice la extrapolación se traduciría en un mejor FVD, aunque no podemos estimar cuánto con cinco puntos.
 
@@ -315,6 +315,16 @@ La Figura~\ref{fig:frames} muestra un clip de validación con mucho movimiento. 
 
 \paragraph{La decodificación paralela es lo que habilita el tiempo real.} El resultado central es que el cuello de botella para generar a 20~FPS no es el tamaño del modelo sino la forma de decodificar. Un GPT 25 veces más chico sigue lejos del tiempo real porque mantiene las 128 pasadas por frame. Con la misma red, decodificar en 4 a 12 pasos paralelos baja la latencia 6 a 10 veces sin perder calidad, y además reduce el drift a largo plazo. \editado{Una explicación posible, que no pusimos a prueba, es} que el GPT condiciona cada token solo en los anteriores del mismo frame, mientras que MaskGIT, \editado{en cada paso, condiciona en todos los tokens ya fijados del frame, en cualquier posición}.
 
+\paragraph{Anticipar en línea.} \editado{La latencia por frame no dice por sí sola si un modelo sirve para anticipar. Para medirlo simulamos el uso real sobre 40 clips de validación de 10~s (Figura~\ref{fig:online}). Cada segundo, el modelo recibe los frames reales que llegaron y genera los 2~s siguientes (un \emph{plan} de 40 frames). El plan se calcula de verdad en la GPU y solo queda disponible cuando termina. El GPT-S destilado tarda 5,3~s en cada plan: cuando termina, el instante que predijo ya pasó hace 3,3~s, y nunca hay una predicción vigente. MaskGIT-S y Genie-S con 4 pasos tardan 0,59 y 0,46~s, y MaskGIT-S con 8 pasos, 0,80~s. Los tres se re-anclan cada segundo, tienen una predicción vigente el 92 a 96\,\% del tiempo (lo que falta es el primer plan) y entregan el frame de $+2$~s entre 1,2 y 1,5~s antes de que ocurra. Re-anclar además acota el drift: la predicción en pantalla tiene en promedio de 1,0 a 1,3~s de antigüedad, por debajo del horizonte donde la decodificación en pocos pasos se degrada. El GPT, mejor a 1~s con horizonte fijo, en este uso no aporta nada. Este experimento mide si la predicción llega a tiempo, no su calidad: en LPIPS, la predicción en pantalla (0,27 a 0,30) sigue siendo peor que repetir el último frame real recibido (0,23 a 0,25), por la misma razón que en la Sección~\ref{sec:calidad}. El repositorio incluye un banco de pruebas interactivo (\texttt{src/infer/probador.py}) que muestra esta simulación clip a clip.}
+
+% Figura: python -m src.infer.online_eval --clips 40 (-> results/online.json) y python paper/hacer_figuras.py
+\begin{figure*}[t]
+\centering
+\includegraphics[width=\textwidth]{figs/online.pdf}
+\caption{\editado{Uso en línea: cada 1~s el modelo observa los frames reales que llegaron y genera 2~s hacia adelante; el plan queda vigente recién cuando termina de calcularse (RTX 4060 Laptop, batch~1, fp16 con CUDA graphs, un modelo a la vez; el encoder no se cuenta). (a) En un clip: cálculo de cada plan (claro) y predicción en pantalla (oscuro; cada corte es un plan nuevo). Los planes del GPT-S destilado terminan después del instante que predicen. (b) Cuánto antes de su instante está listo el frame a $+2$~s (mediana y rango intercuartil en 40 clips); la línea punteada es el máximo posible. (c) Fracción del tiempo con una predicción vigente.}}
+\label{fig:online}
+\end{figure*}
+
 \paragraph{Cuántos pasos usar.} El número de pasos es un hiperparámetro de inferencia que permite elegir el punto calidad--latencia sin reentrenar. Por debajo de 4 pasos el ahorro de tiempo es chico (de 12,8 a 9\ms\ en MaskGIT-S) y el costo en drift es grande. Por encima de 8, el FVD a 3~s ya no mejora y el de 1~s empeora.
 
 \paragraph{Escala, datos y la lectura de Chinchilla.} Chinchilla optimiza la calidad para un cómputo de entrenamiento fijo. Para un simulador, el costo dominante es la inferencia, que se paga en cada frame, y el óptimo se desplaza hacia modelos más chicos entrenados con muchos más datos que los de Chinchilla~\cite{sardana2024beyond}. Nuestros resultados son coherentes con esa lectura: los modelos chicos están limitados por datos y no por tamaño (Sección~\ref{sec:escala}). Entrenar un modelo de 12--15M con todo commaVQ (150 veces nuestro presupuesto) \editado{no cambia la latencia, y es el siguiente experimento natural}.
@@ -336,7 +346,7 @@ La Figura~\ref{fig:frames} muestra un clip de validación con mucho movimiento. 
 
 \editado{Estos resultados valen para un régimen de pocos datos (780.000 frames por modelo, el 0,65\,\% de commaVQ), para video de una cámara a $128\times256$ y para latencias medidas con batch~1 en una GPU de escritorio y una de notebook. No evaluamos difusión ni condicionamiento por acciones. El paso siguiente es entrenar los modelos chicos con todo commaVQ, que no cambia la latencia y permite medir cuánto de la brecha cierran los datos. Después, condicionar el modelo en las acciones del auto, para usarlo como simulador de una política.}
 
-\paragraph{Reproducibilidad.} Todo resultado sale de un comando de la CLI del repositorio y queda registrado, con su commit, en una bitácora. \pend{link al repositorio}
+\paragraph{Reproducibilidad.} Todo resultado sale de un comando de la CLI del repositorio y queda registrado, con su commit, en una bitácora. \editado{El código está en \url{https://github.com/bpeco/ml2-gen-world-model} y los pesos de los modelos, en \url{https://huggingface.co/KevinSoulier/ml2-gen-world-model}.}
 
 \bibliographystyle{plainnat}
 \bibliography{refs}
