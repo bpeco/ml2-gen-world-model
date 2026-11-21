@@ -3,7 +3,9 @@
   python paper/hacer_figuras.py        # -> paper/figs/*.pdf y paper/tablas/*.tex
 
 Figuras:
-  calidad_latencia  (a) FVD a 3 s contra ms/frame, misma GPU (RTX 4060 Laptop); (b) cadena completa en la 3080 Ti
+  calidad_latencia  (a) FVD a 3 s contra ms/frame, todos en la RTX 3080 Ti; (b) cadena completa en la 3080 Ti
+  optimizacion      (a, b) latencia por frame de gpt2m y del GPT-S en cada paso de la optimización de la atención del
+                    decode; (c) una llamada a la atención del GPT-S, antes y ahora (perfil por kernel)
   drift             FVD a 1, 2 y 3 s con IC 95 % por segmento (cuánto se degrada el video con el horizonte)
   pasos             FVD contra pasos de decodificación paralela (Genie S/M, MaskGIT S) a 1 y 3 s
   datos_escala      (a) frames vistos frente al dataset y a gpt2m; (b) CE contra tokens del GPT-S y extrapolación
@@ -73,6 +75,14 @@ def bench_ms(nombre):
   return b.get("latency", {}).get("p50") or b.get("ms", {}).get("p50")
 
 
+PASOS_OPT = ("_attn", "_base_hoy", "_framegraph")   # pasos intermedios de la optimización (Docs/optimizar-decode-gpt.md)
+
+
+def latencias_cadena():
+  """Las cadenas completas vigentes en la 3080 Ti, sin los pasos intermedios de la optimización del decode."""
+  return [f for f in sorted((R / "infer").glob("latencia_*__rtx3080ti.json")) if not any(x in f.stem for x in PASOS_OPT)]
+
+
 def guardar(fig, nombre):
   fig.savefig(OUT_F / f"{nombre}.pdf")
   fig.savefig(OUT_F / f"{nombre}.png", dpi=320)
@@ -88,12 +98,11 @@ SUM = {c["label"]: c for c in leer(R / "summary.json")["configs"]}
 # =================================================================================================
 def fig_calidad_latencia():
   fig, (a, b) = plt.subplots(1, 2, figsize=(COL2, 2.5), gridspec_kw={"width_ratios": [1.35, 1]})
-  # (a) misma GPU: RTX 4060 Laptop
-  series = [("gpt", "GPT-S destilado", [("gpt_s_kd_4060", "gpt_s_kd", None)]),
+  # (a) misma GPU: RTX 3080 Ti (las mediciones de la 4060 son del código de antes de optimizar la atención del decode)
+  series = [("gpt2m", "gpt2m (comma, 307M)", [("gpt2m", "gpt2m", None)]),
+            ("gpt", "GPT-S destilado", [("gpt_s_kd", "gpt_s_kd", None)]),
             ("maskgit", "MaskGIT-S", [(f"maskgit_s_abs_p{s}", f"maskgit_s_abs_p{s}", s) for s in (1, 2, 4, 8, 12)]),
-            ("genie", "Genie-S", [(f"genie_s_4060_p{s}", f"genie_s_p{s}", s) for s in (1, 2, 4, 8, 12)])]
-  if bench_ms("gpt2m_4060"):
-    series.insert(0, ("gpt2m", "gpt2m (comma, 307M)", [("gpt2m_4060", "gpt2m", None)]))
+            ("genie", "Genie-S", [(f"genie_s_p{s}", f"genie_s_p{s}", s) for s in (1, 2, 4, 8, 12)])]
   for fam, etiqueta, pts in series:
     xs, ys, ss = [], [], []
     for nb, nv, s in pts:
@@ -107,17 +116,18 @@ def fig_calidad_latencia():
            ms=8 if fam == "gpt2m" else 5, mec="white", mew=0.6, zorder=3)
     for x, y, s in zip(xs, ys, ss):
       if s in (1, 4, 12):
-        a.annotate(f"{s}", (x, y), textcoords="offset points", xytext=(3, -11 if fam == "genie" else 4), fontsize=6.5, color=TINTA2)
+        a.annotate(f"{s}", (x, y), textcoords="offset points", xytext=(4, -11) if fam == "genie" else (-10, -11), fontsize=6.5,
+                   color=COLOR[fam])
   a.axvline(50, color=TINTA2, ls="--", lw=0.9)
   a.text(53, a.get_ylim()[0] + 15, "50 ms = 20 FPS", fontsize=6.5, color=TINTA2, va="bottom")
   a.set_xscale("log")
-  a.set_xlabel("ms por frame, modelo solo (p50, RTX 4060 Laptop, escala log)")
+  a.set_xlabel("ms por frame, modelo solo (p50, RTX 3080 Ti, escala log)")
   a.set_ylabel("FVD a 3 s (menor es mejor)")
   a.set_title("(a) Calidad contra latencia en la misma GPU", loc="left")
   a.legend(loc="upper center")
   # (b) cadena completa a ritmo de cámara, 3080 Ti
   filas = []
-  for f in sorted((R / "infer").glob("latencia_*__rtx3080ti.json")):
+  for f in latencias_cadena():
     d = leer(f)
     st = d["cadena_cerrada"].get("stages_p50_ms") or {}
     filas.append((d["name"], st.get("encoder", 0), st.get("model", 0), st.get("decoder", 0), d["cadena_ritmo"]["p99"]))
@@ -293,25 +303,24 @@ def num(x, d=1):
 
 
 def tabla_principal():
-  filas = [("gpt2m", "gpt2m (comma)", "gpt2m", "gpt2m_4060"),
-           ("gpt_s_kd", "GPT-S destilado", "gpt_s_kd", "gpt_s_kd_4060"),
+  filas = [("gpt2m", "gpt2m (comma)", "gpt2m", None),
+           ("gpt_s_kd", "GPT-S destilado", "gpt_s_kd", None),
            ("gpt_s_d050", "GPT-S de cero, 50\\,\\%", "gpt_s_d050", None),
            ("gpt_s_d025", "GPT-S de cero, 25\\,\\%", "gpt_s_d025", None)]
   if "gpt_s" in SUM:
     filas.insert(2, ("gpt_s", "GPT-S de cero, 100\\,\\%", "gpt_s", None))
-  filas += [(f"maskgit_s_abs_p{s}", f"MaskGIT-S, {s} paso{'s' * (s > 1)}", f"maskgit_s_abs_p{s}",
-             f"maskgit_s_abs_p{s}") for s in (1, 2, 4, 8, 12)]
-  filas += [(f"genie_s_p{s}", f"Genie-S, {s} paso{'s' * (s > 1)}", f"genie_s_p{s}", f"genie_s_4060_p{s}")
-            for s in (1, 2, 4, 8, 12, 25)]
+  filas += [(f"maskgit_s_abs_p{s}", f"MaskGIT-S, {s} paso{'s' * (s > 1)}", f"maskgit_s_abs_p{s}", None)
+            for s in (1, 2, 4, 8, 12)]
+  filas += [(f"genie_s_p{s}", f"Genie-S, {s} paso{'s' * (s > 1)}", f"genie_s_p{s}", None) for s in (1, 2, 4, 8, 12, 25)]
   filas += [(f"genie_m_p{s}", f"Genie-M, {s} pasos", f"genie_m_p{s}", None) for s in (4, 8)]
   filas += [("convlstm_px", "ConvLSTM (píxeles)", "convlstm_px", None),
             ("Transición por celda", "Transición por celda", "transicion", None),
             ("Frame congelado", "Frame congelado", "congelado", None),
             ("Unigrama", "Unigrama", "unigram", None)]
-  L = [r"\begin{tabular}{lrrrrrrrrr}", r"\toprule",
-       r"Modelo & Params & CE & LPIPS & \multicolumn{3}{c}{FVD $\downarrow$} & Drift & \multicolumn{2}{c}{ms/frame} \\",
-       r"\cmidrule(lr){5-7}\cmidrule(lr){9-10}",
-       r" & (M) & $\downarrow$ & 1\,s & 1\,s [IC 95\,\%] & 2\,s & 3\,s & 3\,s/1\,s & 3080\,Ti & 4060 \\", r"\midrule"]
+  L = [r"\begin{tabular}{lrrrrrrrr}", r"\toprule",
+       r"Modelo & Params & CE & LPIPS & \multicolumn{3}{c}{FVD $\downarrow$} & Drift & ms/frame \\",
+       r"\cmidrule(lr){5-7}",
+       r" & (M) & $\downarrow$ & 1\,s & 1\,s [IC 95\,\%] & 2\,s & 3\,s & 3\,s/1\,s & 3080\,Ti \\", r"\midrule"]
   for lab, nombre, nv, nb in filas:
     c = SUM.get(lab, {})
     v = video(nv)
@@ -319,11 +328,10 @@ def tabla_principal():
       continue
     f1, f2, f3 = (v["fvd"][h] for h in ("1", "2", "3"))
     ce = c.get("ce_all")
-    ms38 = c.get("ms_frame")
-    ms46 = bench_ms(nb) if nb else None
+    ms38 = bench_ms(nv) or c.get("ms_frame")
     L.append(f"{nombre} & {num(c.get('params_M'))} & {num(ce, 2)} & {num(c.get('lpips_1s'), 2)} & "
              f"{num(f1['value'], 0)} [{num(f1['lo'], 0)}, {num(f1['hi'], 0)}] & {num(f2['value'], 0)} & "
-             f"{num(f3['value'], 0)} & {num(f3['value'] / f1['value'], 1)} & {num(ms38)} & {num(ms46)} \\\\")
+             f"{num(f3['value'], 0)} & {num(f3['value'] / f1['value'], 1)} & {num(ms38)} \\\\")
   L += [r"\bottomrule", r"\end{tabular}"]
   (OUT_T / "principal.tex").write_text("\n".join(L) + "\n", encoding="utf-8")
   print("tabla", OUT_T / "principal.tex")
@@ -376,7 +384,7 @@ def tabla_cadena():
   L = [r"\begin{tabular}{lrrrrr}", r"\toprule",
        r"Configuración & encoder & modelo & decoder & p99 a ritmo & tarde \\",
        r" & \multicolumn{3}{c}{p50 (ms)} & (ms) & (\%) \\", r"\midrule"]
-  for f in sorted((R / "infer").glob("latencia_*__rtx3080ti.json")):
+  for f in latencias_cadena():
     d = leer(f)
     st = d["cadena_cerrada"].get("stages_p50_ms") or {}
     cr = d["cadena_ritmo"]
@@ -386,6 +394,77 @@ def tabla_cadena():
   L += [r"\bottomrule", r"\end{tabular}"]
   (OUT_T / "cadena.tex").write_text("\n".join(L) + "\n", encoding="utf-8")
   print("tabla", OUT_T / "cadena.tex")
+
+
+def bench_p50(nombre):
+  """p50 de un JSON de results/bench/ por su nombre completo (sin buscar variantes)."""
+  d = leer(R / "bench" / f"{nombre}.json")
+  return d["p50_ms"] if d else None
+
+
+def kernels_atencion(perfil_antes, perfil_ahora, n_layer):
+  """El kernel de atención de antes (SDPA) y los cuatro de cached_attention (los que corren n_layer x 127 veces por
+  frame, en el orden en que corren), del perfil por kernel de `bench --perfil`."""
+  a = leer(R / "perfil" / f"{perfil_antes}.json")["variantes"]["graphs"]
+  z = leer(R / "perfil" / f"{perfil_ahora}.json")["variantes"]["graphs"]
+  sdpa = next(k for k in a["top"] if k["categoria"] == "atencion")
+  nombres = (("direct_copy", "copia"), ("gemv", "p·v"), ("SoftMax", "softmax"), ("gemm", "q·kᵀ"))
+  por = {}
+  for k in z["top"]:
+    if round(k["llamadas_por_paso"]) == n_layer * 127:
+      por[next(n for clave, n in nombres if clave in k["kernel"])] = k
+  return sdpa, [(n, por[n]["us_por_llamada"], por[n]["bloques"]) for n in ("copia", "q·kᵀ", "softmax", "p·v")], \
+    us_decode(a, z, sdpa)
+
+
+def us_decode(a, z, sdpa):
+  """µs de una llamada del decode al kernel de SDPA de antes: el promedio del perfil mezcla las llamadas del decode con
+  las del prefill (más largas). El prefill sigue por SDPA después, así que su tiempo sale del perfil de ahora."""
+  pasos = a["pasos_perfilados"]
+  grids = sorted(sdpa["grids"].items(), key=lambda kv: -kv[1])
+  n_dec, n_pre = grids[0][1] / pasos, sum(n for _, n in grids[1:]) / pasos
+  pre = next(k for k in z["top"] if k["categoria"] == "atencion")["us_por_llamada"]
+  return (sdpa["us_por_paso"] - n_pre * pre) / n_dec
+
+
+def fig_optimizacion():
+  """La optimización de la atención del decode (Docs/atencion-decode.md), en la RTX 3080 Ti.
+  (a, b) ms por frame (p50, modelo solo) con el frame en un graph, con la atención explícita y con el ruido del muestreo
+  en un lanzamiento. (c) una llamada a la atención del GPT-S, por capa y por token: el kernel de SDPA y los cuatro de
+  cached_attention, con sus bloques, del perfil por kernel."""
+  fig = plt.figure(figsize=(COL2, 1.75))
+  gs = fig.add_gridspec(1, 3, width_ratios=[1, 1, 1.7], wspace=0.6)
+  pasos = ["frame en un graph", "atención explícita", "+ ruido en 1 lanz."]
+  for j, (m, tit) in enumerate((("gpt2m", "(a) gpt2m"), ("gpt_s_kd", "(b) GPT-S destilado"))):
+    ax = fig.add_subplot(gs[j])
+    v = [bench_p50(f"{m}_framegraph__fp16_graphs"), bench_p50(f"{m}_attn__fp16_graphs"), bench_p50(f"{m}__fp16_graphs")]
+    y = np.arange(3)[::-1]
+    ax.barh(y, v, color=[GRILLA, COLOR["gpt"], COLOR["gpt"]], height=0.6, edgecolor="white")
+    for yi, vi in zip(y, v):
+      ax.text(vi + max(v) * 0.03, yi, f"{vi:.0f}", va="center", fontsize=6.5, color=TINTA)
+    ax.set_yticks(y, pasos if j == 0 else [""] * 3)
+    ax.set_xlim(0, max(v) * 1.3)
+    ax.set_xlabel("ms por frame (p50)")
+    ax.grid(axis="y", visible=False)
+    ax.set_title(tit, loc="left")
+  ax = fig.add_subplot(gs[2])
+  sdpa, nuevos, us_sdpa = kernels_atencion("gpt_s_kd_perfil", "gpt_s_kd_perfil_attn", 6)
+  sdpa_bl = [int(x) for x in max(sdpa["grids"].items(), key=lambda kv: kv[1])[0].split("x")]
+  ax.barh(1, us_sdpa, color=COLOR["maskgit"], height=0.5, edgecolor="white")
+  ax.text(us_sdpa - 3, 1, f"{us_sdpa:.0f} µs: {int(np.prod(sdpa_bl))} bloques (1 por cabeza)",
+          va="center", ha="right", fontsize=6.5, color="white")
+  acc = 0
+  for i, (n, us, bl) in enumerate(nuevos):
+    ax.barh(0, us, left=acc, color=COLOR["maskgit"], alpha=1 if i % 2 == 0 else 0.55, height=0.5, edgecolor="white", lw=0.5)
+    acc += us
+  ax.text(acc + 3, 0, f"{acc:.1f} µs: ".replace(".", ",") + ", ".join(f"{n} {bl}" for n, _, bl in nuevos), va="center",
+          fontsize=6.2, color=TINTA)
+  ax.set_yticks([1, 0], ["antes\n(SDPA)", "ahora\n(4 kernels)"])
+  ax.set_xlim(0, us_sdpa * 1.08)
+  ax.set_xlabel("µs por llamada (bloques de cada kernel)")
+  ax.grid(axis="y", visible=False)
+  ax.set_title("(c) Una llamada a la atención del GPT-S", loc="left")
+  guardar(fig, "optimizacion")
 
 
 def fig_online():
@@ -465,6 +544,7 @@ def fig_online():
 if __name__ == "__main__":
   fig_online()
   fig_calidad_latencia()
+  fig_optimizacion()
   fig_drift()
   fig_pasos()
   pts = fig_datos_escala()

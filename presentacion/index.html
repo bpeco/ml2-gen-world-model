@@ -215,6 +215,11 @@
   svg.ch .paso.act rect.b { fill: var(--accent); }
   svg.ch .paso.fin rect.b { fill: var(--ok); }
   svg.ch .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12.5px; fill: var(--muted); }
+  /* ---------- slide 6: los SM de la GPU (una llamada a la atención, antes y ahora) ---------- */
+  .smsl { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.6em; flex: 1; min-height: 0; align-items: start; }
+  .smsl .stat b { font-size: 1.6em; }
+  .smsl .stat b small { font-size: .55em; font-weight: 650; color: var(--muted); margin-left: .25em; }
+  #chSm .sm { transition: none; }
   .g2 { display: grid; grid-template-columns: 1.55fr 1fr; gap: 1.8em; flex: 1; min-height: 0; align-items: start; }
   .stat { margin-bottom: 1em; }
   .stat b { display: block; font-size: 1.85em; line-height: 1.05; color: var(--accent); font-variant-numeric: tabular-nums; letter-spacing: -.01em; }
@@ -516,21 +521,9 @@
   <p class="note" id="duoNota" style="margin-top:auto;padding-bottom:1.3em">&nbsp;</p>
 </section>
 
-<!-- 5. CÓMO CORRE EN LA GPU: LA OPTIMIZACIÓN DE LA INFERENCIA (Docs/optimizar-decode-gpt.md) -->
-<section class="slide" data-anim="opt" data-name="Cómo corre en la GPU">
-  <div class="head" style="font-size:1em;margin:0"><div class="kicker">5 · Cómo corre en la GPU</div><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
-  <h2>Sin cambiar el modelo, el GPT-S pasó de <span data-d="opt.pasos.gpt_s_kd.0" data-f="0">430</span> a <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span> ms por frame</h2>
-  <div class="opt">
-    <div><div class="head"><b>Qué hace cada parte del hardware en un frame</b><span class="muted" id="optPasoLbl">&nbsp;</span></div><svg class="ch" id="chOptHw" viewBox="0 0 640 318"></svg></div>
-    <div><div class="head"><b>ms por frame del GPT-S, en cada paso</b><span class="muted">clic en un paso</span></div><svg class="ch" id="chOptPasos" viewBox="0 0 520 318"></svg></div>
-  </div>
-  <p class="optcap" id="optCap">&nbsp;</p>
-  <p class="note" style="padding-bottom:1.1em">Modelo solo, p50, batch 1, fp16, RTX 3080 Ti; cada paso medido con su commit. La calidad no cambia: FVD a 3 s de <span data-d="opt.fvd3.0" data-f="1">468,5</span> antes y <span data-d="opt.fvd3.1" data-f="1">472,9</span> después. MaskGIT-S usa la misma red y también bajó (4 pasos: <span data-d="opt.maskgit_p4.0" data-f="1">9,3</span> → <span data-d="opt.maskgit_p4.1" data-f="1">6,4</span> ms); Genie ya llenaba la GPU (<span data-d="opt.genie_p4" data-f="1">5,7</span> ms).</p>
-</section>
-
 <!-- 6. QUÉ COMPARAMOS -->
 <section class="slide" data-name="Qué comparamos">
-  <div class="kicker">6 · Qué comparamos</div>
+  <div class="kicker">5 · Qué comparamos</div>
   <h2>Comparamos seis familias de modelos</h2>
   <div class="fam6" id="fam6"></div>
   <p class="note" style="padding:.5em 0 1.3em">Las que entrenamos usan la receta de su paper y <span data-d="datos.presupuesto" data-f="0">780.000</span> frames. gpt2m es el de comma.</p>
@@ -538,7 +531,7 @@
 
 <!-- 4. CÓMO MEDIMOS -->
 <section class="slide" data-anim="clip" data-name="Cómo medimos">
-  <div class="kicker">7 · Cómo medimos</div>
+  <div class="kicker">6 · Cómo medimos</div>
   <h2>El mismo protocolo para todos los modelos</h2>
   <div class="clipbar" id="clipbar">
     <div class="lbls"><div>1 s de contexto real (20 frames)</div><div>3 s generados (60 frames): el modelo se alimenta de sus propias predicciones</div></div>
@@ -573,7 +566,7 @@
 
 <!-- 5. VIDEO LADO A LADO -->
 <section class="slide" data-anim="race" data-name="Video">
-  <div class="head" style="font-size:1em;margin:0"><div class="kicker">8 · Qué genera cada modelo</div>
+  <div class="head" style="font-size:1em;margin:0"><div class="kicker">7 · Qué genera cada modelo</div>
     <div class="phase"><span id="ph1">1 · a la velocidad medida</span><span id="ph2">2 · todos a 20 FPS</span><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div></div>
   <h2>Cada modelo parte del mismo segundo real y genera a su velocidad</h2>
   <div class="race" id="race"></div>
@@ -582,7 +575,7 @@
 
 <!-- 6. CALIDAD CONTRA LATENCIA -->
 <section class="slide" data-anim="pareto" data-name="Calidad contra latencia">
-  <div class="kicker">9 · Resultado central</div>
+  <div class="kicker">8 · Resultado central</div>
   <h2>Los chicos entran en 50 ms: el GPT-S justo, la decodificación paralela con margen</h2>
   <div class="g2">
     <div><svg class="ch" id="chPareto" viewBox="0 0 640 400"></svg></div>
@@ -599,7 +592,7 @@
 
 <!-- 7. PASOS Y HORIZONTE -->
 <section class="slide" data-anim="pasos" data-name="Pasos y horizonte">
-  <div class="kicker">10 · Pasos y horizonte</div>
+  <div class="kicker">9 · Pasos y horizonte</div>
   <h2>Desde 4 pasos, la calidad se estabiliza</h2>
   <div class="pair">
     <div><div class="head"><b>FVD a 3 s según los pasos por frame</b><span class="muted">sombreado: IC del 95 %</span></div><svg class="ch" id="chPasos" viewBox="0 0 560 330"></svg></div>
@@ -613,7 +606,7 @@
 
 <!-- 8. LO QUE NO FUNCIONÓ -->
 <section class="slide" data-anim="quad" data-name="Lo que no funcionó">
-  <div class="kicker">11 · Lo que no funcionó</div>
+  <div class="kicker">10 · Lo que no funcionó</div>
   <h2>Cuatro resultados negativos</h2>
   <div class="quad">
     <div class="card"><b>Píxeles: el ConvLSTM queda peor que repetir el último frame</b>
@@ -642,20 +635,51 @@
   </div>
 </section>
 
-<!-- 11. CONCLUSIONES -->
+<!-- 11. OPTIMIZACIÓN: CÓMO CORRE EN LA GPU (Docs/optimizar-decode-gpt.md) -->
+<section class="slide" data-anim="opt" data-name="Cómo corre en la GPU">
+  <div class="head" style="font-size:1em;margin:0"><div class="kicker">11 · Optimización: cómo corre en la GPU</div><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
+  <h2>Sin cambiar el modelo, el GPT-S pasó de <span data-d="opt.pasos.gpt_s_kd.0" data-f="0">430</span> a <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span> ms por frame</h2>
+  <div class="opt">
+    <div><div class="head"><b>Qué hace cada parte del hardware en un frame</b><span class="muted" id="optPasoLbl">&nbsp;</span></div><svg class="ch" id="chOptHw" viewBox="0 0 640 318"></svg></div>
+    <div><div class="head"><b>ms por frame del GPT-S, en cada paso</b><span class="muted">clic en un paso</span></div><svg class="ch" id="chOptPasos" viewBox="0 0 520 318"></svg></div>
+  </div>
+  <p class="optcap" id="optCap">&nbsp;</p>
+  <p class="note" style="padding-bottom:1.1em">Modelo solo, p50, batch 1, fp16, RTX 3080 Ti; cada paso medido con su commit. La calidad no cambia: FVD a 3 s de <span data-d="opt.fvd3.0" data-f="1">468,5</span> antes y <span data-d="opt.fvd3.1" data-f="1">472,9</span> después. MaskGIT-S usa la misma red y también bajó (4 pasos: <span data-d="opt.maskgit_p4.0" data-f="1">9,3</span> → <span data-d="opt.maskgit_p4.1" data-f="1">6,4</span> ms); Genie usa otra atención y no cambió (<span data-d="opt.genie_p4" data-f="1">5,7</span> ms).</p>
+</section>
+
+<!-- 12. OPTIMIZACIÓN: LOS SM DE LA GPU, LA ATENCIÓN DEL DECODE, ANTES Y AHORA (Docs/atencion-decode.md) -->
+<section class="slide" data-anim="sms" data-name="Los SM de la GPU">
+  <div class="head" style="font-size:1em;margin:0"><div class="kicker">12 · Optimización: los SM de la GPU</div><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
+  <h2>La atención del GPT-S usaba <span data-d="opt.antes.att_bloques" data-f="0">6</span> de los <span data-d="opt.sm" data-f="0">80</span> SM; ahora el q·kᵀ los usa todos</h2>
+  <div class="smsl">
+    <div><svg class="ch" id="chSm" viewBox="0 0 640 306"></svg></div>
+    <div>
+      <div class="stat"><b><span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> → <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span><small>ms</small></b>
+        <p>GPT-S destilado, por frame. <span>Con <code>cached_attention</code>, <span data-d="opt.attn.gpt_s_kd" data-f="0">40</span> ms; con el ruido del muestreo en un solo lanzamiento, <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span>.</span></p></div>
+      <div class="stat"><b><span data-d="opt.pasos.gpt2m.2" data-f="0">730</span> → <span data-d="opt.pasos.gpt2m.3" data-f="0">291</span><small>ms</small></b>
+        <p>gpt2m, por frame. <span>Su atención usaba <span data-d="opt.perfil_gpt2m.antes.att_bloques" data-f="0">16</span> SM. Con <code>cached_attention</code>, <span data-d="opt.attn.gpt2m" data-f="0">313</span> ms; con el ruido, <span data-d="opt.pasos.gpt2m.3" data-f="0">291</span>.</span></p></div>
+      <div class="stat green"><b><span id="smGbA">25</span> → <span id="smGbB">266</span><small>GB/s</small></b>
+        <p>lectura de la caché en el GPT-S. <span>Cada llamada lee <span data-d="opt.mb_kv_capa" data-f="1">4,0</span> MB de k y v; la placa da <span data-d="opt.gbs_placa" data-f="0">912</span> GB/s.</span></p></div>
+    </div>
+  </div>
+  <p class="optcap" id="smCap">Cada kernel se lanza en bloques, y cada bloque corre entero en un SM. Con la caché y una sola query, SDPA armaba un bloque por cabeza, que recorría las <span data-d="opt.cache_len" data-f="0">2584</span> posiciones en serie, de a 64. <code>cached_attention</code> hace la misma cuenta en <span data-d="opt.despues.att_kernels" data-f="0">4</span> kernels: el q·kᵀ de cuBLAS reparte las posiciones de k en <span data-d="opt.despues.att_lista.1.bloques" data-f="0">1008</span> bloques y usa los <span data-d="opt.sm" data-f="0">80</span> SM.</p>
+  <p class="note" style="padding-bottom:1.1em">Abajo: una llamada a la atención del GPT-S, por capa y por token, en la misma escala, según el perfil por kernel (<code>torch.profiler</code>); la ubicación de los SM encendidos es ilustrativa. Latencias: modelo solo, p50, batch 1, fp16, RTX 3080 Ti; antes, con el frame ya en un CUDA graph.</p>
+</section>
+
+<!-- 13. CONCLUSIONES -->
 <section class="slide statement" data-anim="claims" data-name="Conclusiones">
-  <div class="kicker">12 · Conclusiones</div>
+  <div class="kicker">13 · Conclusiones</div>
   <h2>El GPT chico llega justo a 20 FPS; con margen, solo decodificando en paralelo</h2>
   <div class="claims">
-    <div class="claim"><span class="k">1</span><p class="t">Medir dónde se iba el tiempo cambió el resultado: sin tocar el modelo, el GPT de <span data-d="m.gpt_s_kd.params" data-f="0">12</span>M bajó de <span data-d="opt.pasos.gpt_s_kd.0" data-f="0">430</span> a <span data-d="m.gpt_s_kd.ms3080" data-f="0">38</span> ms por frame. Llega a 20 FPS, pero justo: con encoder y decoder, el p99 es de <span data-d="cadena.gpt_s_kd.p99_ritmo" data-f="1">48,4</span> ms.</p></div>
+    <div class="claim"><span class="k">1</span><p class="t">Medir dónde se iba el tiempo cambió el resultado: sin tocar el modelo, el GPT de <span data-d="m.gpt_s_kd.params" data-f="0">12</span>M bajó de <span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> a <span data-d="m.gpt_s_kd.ms3080" data-f="0">38</span> ms por frame. Llega a 20 FPS, pero justo: con encoder y decoder, el p99 es de <span data-d="cadena.gpt_s_kd.p99_ritmo" data-f="1">48,4</span> ms.</p></div>
     <div class="claim"><span class="k">2</span><p class="t">Con la misma red, decodificar en pocos pasos paralelos entra en los 50 ms con margen (<span data-d="m.maskgit_s_abs_p4.ms3080" data-f="1">6,4</span> ms con 4 pasos) y con la misma calidad a 3 s (4 pasos) o mejor (8 a 12 pasos). A 1 s, el GPT sigue siendo mejor.</p></div>
     <div class="claim"><span class="k">3</span><p class="t">El número de pasos se elige en inferencia, sin reentrenar: permite elegir el punto entre calidad y latencia. Con menos de 4 pasos, el video se degrada con el horizonte.</p></div>
   </div>
 </section>
 
-<!-- 12. LIMITACIONES -->
+<!-- 14. LIMITACIONES -->
 <section class="slide" data-name="Limitaciones">
-  <div class="kicker">13 · Cierre</div>
+  <div class="kicker">14 · Cierre</div>
   <h2>Limitaciones</h2>
   <ul class="limits">
     <li>780.000 frames por modelo entrenado, el <span data-d="datos.pct_commavq" data-f="2">0,65</span> % de commaVQ. Las conclusiones sobre arquitecturas valen para este régimen de pocos datos, y para video de una cámara a 128×256.</li>
@@ -1201,9 +1225,9 @@
       flujo.setAttribute('stroke-dasharray', k === 0 ? '3 4' : k === 1 ? '3 13' : '8 220');
       sms.forEach((s, j) => s.classList.toggle('on', j < p.smOn));
       if (k < 3) { smTxt1.textContent = `atención: ${A.att_bloques} bloques (1 por cabeza)`; smTxt2.textContent = `cada uno recorre ${fmt(O.cache_len, 0)} posiciones`;
-        smTxt3.textContent = `en serie: ${fmt(A.att_us, 0)} µs por capa`; }
+        smTxt3.textContent = `en serie: ${fmt(A.att_us_decode, 0)} µs por capa`; }
       else { smTxt1.textContent = `q·kᵀ: ${fmt(qk, 0)} bloques, todos los SM`; smTxt2.textContent = `y otros ${Z.att_kernels - 1} kernels cortos:`;
-        smTxt3.textContent = `${fmt(Z.att_us, 0)} µs por capa (antes ${fmt(A.att_us, 0)})`; }
+        smTxt3.textContent = `${fmt(Z.att_us, 0)} µs por capa (antes ${fmt(A.att_us_decode, 0)})`; }
       $('optCap').innerHTML = p.cap; $('optPasoLbl').textContent = `paso ${k + 1} de 4`;
     }
     ANIM.opt = {
@@ -1212,6 +1236,64 @@
       stop() { paso(3); }
     };
     paso(3);
+  }
+
+  // ===== 6. los SM de la GPU: una llamada a la atención, antes y ahora, con el mismo reloj =====
+  {
+    const O = D.opt, A = O.antes, Z = O.despues, L = Z.att_lista, svg = $('chSm');
+    const qk = L.find(k => k.n === 'q·kᵀ'), CS = 20, GX = [14, 330], GY = 46, vueltas = Math.ceil(O.cache_len / 64);
+    const gbs = us => O.mb_kv_capa * 1e3 / us;                    // MB por µs -> GB/s
+    $('smGbA').textContent = fmt(gbs(A.att_us_decode), 0); $('smGbB').textContent = fmt(gbs(Z.att_us), 0);
+    txt(svg, GX[0], 16, 'Antes: SDPA (mem-efficient)', { class: 'tt', style: 'font-size:15px' });
+    txt(svg, GX[0], 34, `${A.att_bloques} bloques, uno por cabeza`, { class: 'tk', style: 'font-size:12.5px' });
+    txt(svg, GX[1], 16, 'Ahora: cached_attention', { class: 'tt', style: 'font-size:15px' });
+    txt(svg, GX[1], 34, `${Z.att_kernels} kernels; q·kᵀ en ${fmt(qk.bloques, 0)} bloques`, { class: 'tk', style: 'font-size:12.5px' });
+    const ON_A = new Set([2, 15, 27, 44, 58, 71].slice(0, A.att_bloques)), PERM = Array.from({ length: O.sm }, (_, i) => (i * 37) % O.sm);
+    const cel = GX.map(x0 => Array.from({ length: O.sm }, (_, k) =>
+      el('rect', { x: x0 + (k % 10) * CS, y: GY + Math.floor(k / 10) * CS, width: CS - 3, height: CS - 3, rx: 2.5, class: 'sm' }, svg)));
+    const labA = txt(svg, GX[0], GY + 8 * CS + 18, '', { style: 'font-size:13px;font-weight:650' });
+    const labB = txt(svg, GX[1], GY + 8 * CS + 18, '', { style: 'font-size:13px;font-weight:650' });
+    // una llamada, por capa y por token, en la misma escala de µs
+    const U = 170, tl = { l: 74, r: 590 }, X = v => tl.l + (tl.r - tl.l) * v / U, y0 = GY + 8 * CS + 36;
+    txt(svg, 14, y0 + 13, 'antes', { class: 'tk' });
+    el('rect', { x: X(0), y: y0, width: X(A.att_us_decode) - X(0), height: 17, rx: 3, fill: css('--accent') }, svg);
+    txt(svg, X(A.att_us_decode) + 8, y0 + 13, `${fmt(A.att_us_decode, 0)} µs`, { style: 'font-size:13px;font-weight:650' });
+    txt(svg, 14, y0 + 37, 'ahora', { class: 'tk' });
+    let acc = 0;
+    L.forEach((k, i) => { el('rect', { x: X(acc), y: y0 + 24, width: Math.max(X(acc + k.us) - X(acc) - 1, 1), height: 17, fill: css('--accent'), opacity: i % 2 ? .55 : 1 }, svg); acc += k.us; });
+    txt(svg, X(acc) + 8, y0 + 37, `${fmt(Z.att_us, 1)} µs: ${L.map(k => `${k.n.replace(' del bias', '')} ${fmt(k.us, 1)}`).join(' · ')}`, { style: 'font-size:12.5px' });
+    [0, 40, 80, 120, 160].forEach(v => { el('line', { x1: X(v), x2: X(v), y1: y0 + 46, y2: y0 + 50, stroke: '#a8a29e' }, svg);
+      txt(svg, X(v), y0 + 63, v === 160 ? 'µs por llamada' : v, { class: 'tk', 'text-anchor': 'middle', style: 'font-size:12px' }); });
+    el('line', { x1: X(0), x2: X(U), y1: y0 + 46, y2: y0 + 46, class: 'ax' }, svg);
+    const cur = el('line', { x1: X(0), x2: X(0), y1: y0 - 4, y2: y0 + 45, stroke: '#1c1917', 'stroke-width': 2, opacity: 0 }, svg);
+
+    const TA = A.att_us_decode;                                     // una llamada del decode, sin las del prefill
+    function dibujar(t, reposo) {
+      if (t < 0) {                                                  // antes de arrancar: las dos grillas apagadas
+        cel.forEach(g => g.forEach(c => c.classList.remove('on'))); labA.textContent = labB.textContent = '';
+        cur.setAttribute('x1', X(0)); cur.setAttribute('x2', X(0)); cur.setAttribute('opacity', 1); return;
+      }
+      const pA = Math.min(t / TA, 1), corriendo = !reposo && t < TA;
+      cel[0].forEach((c, j) => c.classList.toggle('on', ON_A.has(j) && (reposo || corriendo)));
+      labA.textContent = reposo ? `cada uno, ${vueltas} vueltas en serie` : corriendo ? `vuelta ${Math.max(1, Math.ceil(pA * vueltas))} de ${vueltas}` : `terminó: ${fmt(TA, 0)} µs`;
+      let a0 = 0, k = null;
+      for (const x of L) { if (t >= a0 && t < a0 + x.us) { k = x; break; } a0 += x.us; }
+      if (reposo) k = qk;
+      const on = new Set(PERM.slice(0, k ? Math.min(k.bloques, O.sm) : 0));
+      cel[1].forEach((c, j) => c.classList.toggle('on', on.has(j)));
+      labB.textContent = reposo ? `q·kᵀ: ${Math.floor(qk.bloques / O.sm)} o ${Math.floor(qk.bloques / O.sm) + 1} bloques por SM` : k ? `${k.n}: ${fmt(k.bloques, 0)} bloques` : `terminó: ${fmt(Z.att_us, 1)} µs`;
+      cur.setAttribute('x1', X(Math.min(t, U))); cur.setAttribute('x2', X(Math.min(t, U))); cur.setAttribute('opacity', reposo ? 0 : 1);
+    }
+    ANIM.sms = {
+      start(s) { stopAll(); replayBtn(s).classList.remove('show'); dibujar(-1, false);
+        const MS = 28, t0 = performance.now() + 600;              // 1 µs de GPU = 28 ms en pantalla
+        const paso = now => { const t = (now - t0) / MS; dibujar(t < 0 ? -1 : Math.min(t, U), false);
+          if (t < U) raf = requestAnimationFrame(paso);
+          else { at(1500, () => dibujar(0, true)); replayBtn(s).classList.add('show'); } };   // al final, el reposo
+        raf = requestAnimationFrame(paso); },
+      stop() { dibujar(0, true); }
+    };
+    dibujar(0, true);
   }
 
   // ===== 8. calidad contra latencia =====
