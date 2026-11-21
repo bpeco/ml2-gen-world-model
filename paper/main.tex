@@ -3,10 +3,18 @@
 % Convención: \pend{...} marca lo que depende de corridas que todavía no terminaron (sale en rojo).
 \documentclass[10pt,twocolumn,a4paper]{article}
 
-\usepackage[utf8]{inputenc}
-\usepackage[T1]{fontenc}
+% Codificación y fuente según el motor: pdfLaTeX (Overleaf) usa inputenc + T1; XeTeX (tectonic) usa fontspec.
+% Con T1 bajo XeTeX, "¿" sale como "£".
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[utf8]{inputenc}
+  \usepackage[T1]{fontenc}
+  \usepackage{lmodern}
+\else
+  \usepackage{fontspec}
+\fi
 \usepackage[spanish,es-noshorthands,es-tabla]{babel}
-\usepackage{lmodern}
+\addto\captionsspanish{\renewcommand{\abstractname}{Abstract}}
 \usepackage[margin=2cm,columnsep=0.7cm]{geometry}
 \usepackage{amsmath,amssymb}
 \usepackage{booktabs}
@@ -17,21 +25,31 @@
 \usepackage[numbers,sort&compress]{natbib}
 \usepackage{caption}
 \captionsetup{font=small}
+\usepackage{tikz}
+\usetikzlibrary{arrows.meta,positioning,decorations.pathreplacing,calc}
 
 \sisetup{output-decimal-marker={,},group-separator={.}}
 \newcommand{\pend}[1]{\textcolor{red}{[#1]}}
+% \editado{...} marca el texto que cambiamos en la revisión. En este archivo no se ve;
+% main_azul.tex compila este mismo texto con esas partes en azul.
+\definecolor{editado}{RGB}{0,84,180}
+\ifdefined\conmarcas
+  \DeclareRobustCommand{\editado}[1]{\textcolor{editado}{#1}}
+\else
+  \DeclareRobustCommand{\editado}[1]{#1}
+\fi
 \newcommand{\ms}{\,ms}
 
 \title{¿Cuánto se puede achicar un world model de manejo?\\
 \large Calidad contra latencia de modelos autoregresivos, de decodificación paralela y de píxeles sobre commaVQ}
-\author{\pend{Autores} \\ Maestría en Inteligencia Artificial, Universidad de San Andrés}
+\author{\editado{Bautista Peco, Tomás Morales y Kevin Soulier} \\ Maestría en Inteligencia Artificial, Universidad de San Andrés}
 \date{}
 
 \begin{document}
 \maketitle
 
 \begin{abstract}
-Un world model de manejo sirve como simulador si genera video creíble y lo hace al ritmo de la cámara: a 20~FPS, en menos de 50\ms\ por frame. Sobre commaVQ, un dataset de video de manejo tokenizado por un VQ-VAE en 128 tokens por frame, estudiamos cuánta calidad se pierde al achicar el world model de referencia de comma.ai (un GPT de 307M de parámetros) a modelos de 8 a 15M, y al cambiar la decodificación token a token por la decodificación paralela de MaskGIT. Comparamos un GPT destilado, la dinámica de Genie con 1 a 25 pasos de decodificación, un MaskGIT con el mismo backbone que el GPT y un ConvLSTM sobre píxeles, contra baselines triviales, con un protocolo único de calidad (FVD, LPIPS y cross-entropy, con intervalos por bootstrap) y de latencia. Con 20 a 25 veces menos parámetros, el FVD a 3~s pasa de 105 a entre 410 y 470, muy por encima de todos los baselines; con 4 pasos de decodificación paralela se alcanza la calidad de 25 pasos, mientras que con 1 o 2 pasos el video se degrada con el horizonte. El GPT chico no llega a tiempo real (131 a 158\ms\ por frame), porque sigue generando los 128 tokens de a uno; con la misma red, MaskGIT con 4 pasos alcanza la misma calidad en 12,8\ms, 10 veces más rápido, y con 8 a 12 pasos es el mejor modelo chico a 3~s. Con Genie, la cadena completa (encoder, modelo y decoder) tiene un p99 de 22\ms\ a ritmo de cámara. Los modelos chicos vieron el 0,02\,\% de los datos del GPT de comma, y un estudio de escala sugiere que la brecha de calidad se debe en buena parte a la falta de datos. El código, los datos de evaluación y una bitácora de cada corrida permiten reproducir cada número.
+\editado{Un world model de manejo sirve como simulador si genera video creíble al ritmo de la cámara: 20~FPS, es decir, menos de 50\ms\ por frame. El world model público de comma.ai, un GPT de 307M de parámetros entrenado sobre commaVQ, tarda 733\ms\ por frame en una RTX 3080 Ti. Estudiamos cómo llevarlo a tiempo real y cuánta calidad conserva cada opción: modelos de 8 a 35M, destilación y decodificación paralela tipo MaskGIT en lugar de generar los 128 tokens de cada frame de a uno. Evaluamos todos los modelos sobre los mismos 400 clips, con FVD a 1, 2 y 3~s, intervalos por bootstrap y un mismo protocolo de latencia. Achicar el modelo no alcanza: el GPT destilado de 12M sigue tardando entre 131 y 158\ms. Lo que habilita el tiempo real es decodificar en paralelo. Con la misma red y en la misma GPU, MaskGIT con 4 pasos alcanza la misma calidad en 12,8\ms, 10 veces más rápido, y la cadena completa con Genie tiene un p99 de 22\ms\ a ritmo de cámara. Achicar tiene un costo en calidad. El FVD a 3~s pasa de 105 a entre 370 y 470, aunque queda lejos de los baselines (978 o más). Los modelos chicos vieron el 0,02\,\% de los datos de comma, y varios resultados indican que están limitados por datos.}
 \end{abstract}
 
 % ---------------------------------------------------------------------------------------------------------------
@@ -41,21 +59,52 @@ Un \emph{world model} aprende a predecir cómo evoluciona el entorno~\cite{ha201
 
 Para usarse en lazo cerrado, un simulador tiene que ser rápido además de creíble. La cámara de comma graba a 20~FPS, así que cada frame tiene que generarse en menos de 50\ms. Los world models basados en tokens, como IRIS~\cite{micheli2023iris} y el GPT de commaVQ~\cite{commavq}, generan cada frame como una secuencia de tokens discretos, uno por vez: en commaVQ son 128 tokens por frame, es decir, 128 pasadas secuenciales por la red. La calidad sube con el tamaño del modelo, pero cada pasada también se encarece.
 
-En este trabajo nos preguntamos \textbf{cuánto se puede achicar y acelerar un world model de video de manejo sin perder calidad}. Estudiamos tres ejes:
-\begin{itemize}
-  \item \textbf{Tamaño:} un GPT de 12M de parámetros destilado~\cite{hinton2015distilling} del GPT de comma (307M).
-  \item \textbf{Decodificación:} generar los 128 tokens de un frame en pocas pasadas paralelas, como MaskGIT~\cite{chang2022maskgit}, con la dinámica de Genie~\cite{bruce2024genie} y con un MaskGIT que comparte el backbone del GPT, para separar el efecto de la decodificación del de la arquitectura.
-  \item \textbf{Representación:} tokens discretos contra píxeles (ConvLSTM~\cite{shi2015convlstm}) y, como contraste, embeddings latentes no generativos (V-JEPA~2~\cite{assran2025vjepa2}, LeWorldModel~\cite{maes2026lewm}).
-\end{itemize}
+\editado{La Figura~\ref{fig:pipeline} muestra el sistema completo. Del pipeline de commaVQ reutilizamos fijos el encoder y el decoder del VQ-VAE, y el GPT de comma, que usamos como referencia y como maestro. Lo que cambiamos es el transformer que predice los tokens del frame siguiente. De ese transformer medimos la calidad del video que genera y la latencia, solo y dentro de la cadena completa.}
 
-Nuestros aportes son:
-\begin{enumerate}
-  \item Un benchmark reproducible sobre commaVQ: split, 400 clips fijos de evaluación, horizontes de 1 a 3~s, intervalos por bootstrap por segmento, temperatura elegida en un holdout y un protocolo único de latencia. \pend{Confirmar en Scholar/arXiv antes de afirmar que es el primero.}
-  \item La frontera calidad--latencia de modelos chicos contra el modelo de referencia, que muestra que la decodificación paralela, y no el tamaño, es lo que habilita los 20~FPS.
-  \item Un análisis del número de pasos de decodificación paralela y de su efecto sobre el drift a lo largo del horizonte.
-  \item Un estudio de escala del GPT chico, que separa cuánto de la brecha con la referencia se debe al tamaño y cuánto a la falta de datos de entrenamiento.
-  \item Lecciones de evaluación: el LPIPS por sí solo premia el video estático, y la comparación contra video real tiene que hacerse con cuidado.
-\end{enumerate}
+\begin{figure*}[t]
+\centering
+\tikzset{
+  >={Stealth[length=1.8mm]}, node distance=6mm,
+  caja/.style={draw, rounded corners=1pt, align=center, minimum height=12mm, text width=19mm, inner sep=2pt, font=\footnotesize},
+  fija/.style={caja, fill=black!12},
+  nuestra/.style={caja, line width=1.2pt, text width=27mm, minimum height=15mm},
+  nota/.style={font=\scriptsize, text=black!70, align=center},
+  panel/.style={font=\footnotesize\bfseries, anchor=south west}}
+\begin{tikzpicture}
+\node[fija, text width=27mm] (datos) {commaVQ\\video ya en tokens\\780.000 frames por modelo};
+\node[nuestra, right=of datos] (tra) {\textbf{Transformer}\\predice los tokens\\del frame siguiente};
+\node[caja, right=of tra, text width=31mm] (perd) {Pérdida: cross-entropy\\contra los tokens reales};
+\node[fija, right=18mm of perd] (ref) {\texttt{gpt2m} (307M)\\maestro};
+\draw[->] (datos) -- (tra);
+\draw[->] (tra) -- (perd);
+\draw[->, dashed] (ref) -- node[nota, above] {destilación} (perd);
+\node[nota, above=1mm of tra] {lo que cambiamos};
+\node[panel] at ($(datos.north west)+(0,5mm)$) {(a) Entrenamiento};
+\end{tikzpicture}
+
+\vspace{4mm}
+\begin{tikzpicture}
+\node[caja] (cam) {Cámara\\frame RGB\\$128\times256$};
+\node[fija, right=of cam, text width=15mm] (enc) {Encoder\\VQ-VAE};
+\node[caja, right=of enc] (ctx) {Contexto\\1~s de video\\en tokens};
+\node[nuestra, right=of ctx] (tra) {\textbf{Transformer}\\GPT: 128 pasadas\\Genie y MaskGIT:\\$S$ pasadas};
+\node[fija, right=of tra, text width=15mm] (dec) {Decoder\\VQ-VAE};
+\node[caja, right=of dec, text width=15mm] (gen) {Frame\\generado};
+\foreach \a/\b in {cam/enc, enc/ctx, ctx/tra, tra/dec, dec/gen} \draw[->] (\a) -- (\b);
+\draw[->] (tra.south) -- ++(0,-3mm) -| node[nota, pos=0.25, below] {el frame predicho se agrega al contexto} (ctx.south);
+\node[nota, above=1mm of tra] {lo que cambiamos};
+\node[panel] at ($(cam.north west)+(0,5mm)$) {(b) Inferencia};
+\draw[decorate, decoration={brace, mirror, amplitude=4pt}] ($(enc.west |- tra.south)+(0,-10mm)$) -- ($(dec.east |- tra.south)+(0,-10mm)$)
+  node[nota, midway, below=4pt] {latencia de la cadena completa: menos de 50~ms por frame para 20~FPS};
+\node[nota, below=2mm of gen] {calidad: FVD y LPIPS\\contra el video real};
+\end{tikzpicture}
+\caption{\editado{Pipeline de commaVQ y la parte que cambiamos. (a) Entrenamiento: commaVQ trae el video ya codificado en tokens, y cada transformer aprende a predecir los tokens del frame siguiente; en la destilación, la pérdida suma las probabilidades de \texttt{gpt2m}. (b) Inferencia: el encoder codifica el frame de la cámara, el transformer predice los 128 tokens del frame siguiente a partir del contexto, y el decoder los vuelve imagen; el frame predicho se agrega al contexto. En gris, lo que reutilizamos fijo de commaVQ; con borde grueso, lo que cambiamos. \texttt{gpt2m} es además la referencia de calidad y de latencia. El ConvLSTM es la excepción: predice píxeles directamente, sin encoder ni decoder.}}
+\label{fig:pipeline}
+\end{figure*}
+
+\editado{En este trabajo buscamos llevar a tiempo real un world model de video de manejo y medir cuánta calidad conserva en el camino. Trabajamos sobre tres ejes. El primero es el tamaño: destilamos~\cite{hinton2015distilling} el GPT de comma (307M) en uno de 12M. El segundo es la decodificación: generamos los 128 tokens de un frame en pocas pasadas paralelas, como MaskGIT~\cite{chang2022maskgit}, con la dinámica de Genie~\cite{bruce2024genie} y con un MaskGIT que comparte el backbone del GPT, para separar el efecto de la decodificación del de la arquitectura. El tercero es la representación: tokens discretos contra píxeles (ConvLSTM~\cite{shi2015convlstm}) y, como contraste, embeddings latentes no generativos (V-JEPA~2~\cite{assran2025vjepa2}, LeWorldModel~\cite{maes2026lewm}).}
+
+\editado{Para comparar estas opciones armamos un benchmark reproducible sobre commaVQ: 400 clips fijos de evaluación, horizontes de 1 a 3~s, intervalos por bootstrap por segmento, temperatura elegida en un holdout y el mismo protocolo de latencia para todos los modelos. Con él trazamos la frontera calidad--latencia de los modelos chicos contra la referencia, y encontramos que la decodificación paralela, y no el tamaño, es lo que habilita los 20~FPS. Medimos también cuántos pasos de decodificación hacen falta y cuánto limitan los datos a los modelos chicos. En el camino vimos que el LPIPS por sí solo premia el video estático.}
 
 % ---------------------------------------------------------------------------------------------------------------
 \section{Trabajo relacionado}
@@ -78,15 +127,15 @@ Nuestros aportes son:
 
 \paragraph{Presupuesto y recetas.} Todos los modelos entrenados ven el mismo presupuesto: 780.000 frames (unos 100M de tokens, a 129 tokens por frame contando el BOS). Cada modelo usa la receta de su paper de origen (optimizador, schedule, weight decay, precisión y batch); lo que el paper no publica, o lo que el presupuesto obliga a cambiar, queda declarado en una tabla de fidelidad por modelo. Donde el batch difiere del de la fuente, el learning rate se elige con corridas cortas de 300 pasos sobre tres o más candidatos.
 
-\paragraph{Evaluación de video.} Usamos 400 clips fijos: 100 segmentos de validación por 4 puntos de arranque. Cada modelo recibe 1~s de contexto real (20 frames) y genera 3~s (60 frames) de forma autoregresiva a nivel de frame, alimentándose de sus propias predicciones. Medimos:
+\paragraph{Evaluación de video.} Usamos 400 clips fijos: 100 segmentos de validación por 4 puntos de arranque. Cada modelo recibe 1~s de contexto real (20 frames) \editado{y usa los últimos que entran en su ventana: 19 los GPT y MaskGIT-S, 15 Genie y 10 el ConvLSTM. Con ese contexto} genera 3~s (60 frames) de forma autoregresiva a nivel de frame, alimentándose de sus propias predicciones. Medimos:
 \begin{itemize}
   \item \textbf{FVD}~\cite{unterthiner2018fvd}, con features de I3D~\cite{carreira2017i3d} sobre ventanas de 16 frames que terminan a 1, 2 y 3~s del horizonte. Es nuestra métrica principal: compara la distribución de los videos generados con la de los reales, y es sensible al movimiento. El crecimiento del FVD con el horizonte mide el \emph{drift}, es decir, la acumulación de errores cuando el modelo se alimenta de sus propias predicciones.
   \item \textbf{LPIPS}~\cite{zhang2018lpips} frame a frame contra la continuación real, como complemento perceptual.
   \item \textbf{Cross-entropy} por token sobre los segmentos de validación completos, con el protocolo de comma, solo para los modelos autoregresivos: la pérdida de los modelos enmascarados no mide lo mismo.
 \end{itemize}
-Los intervalos se obtienen por bootstrap por segmento, porque los cuatro clips de un segmento no son independientes. La temperatura de muestreo de cada familia se elige en el holdout (menor FVD a 3~s), nunca en validación.
+Los intervalos se obtienen por bootstrap por segmento, porque los cuatro clips de un segmento no son independientes. \editado{Para comparar dos modelos usamos diferencias pareadas sobre los mismos clips, con 200 remuestreos; con ese número, $p=0{,}01$ es el menor valor que se puede obtener.} La temperatura de muestreo de cada familia se elige en el holdout (menor FVD a 3~s), nunca en validación.
 
-\paragraph{Latencia.} La unidad es el tiempo de generar un frame con batch~1 y el contexto lleno, en fp16 con CUDA graphs, descartando el warm-up, y reportamos la mediana (p50) y el percentil 99. Medimos el modelo solo y la cadena completa (encoder VQ, world model y decoder VQ), esta última también a ritmo de cámara (un frame cada 50\ms), donde reportamos el porcentaje de frames que llegan tarde. Las latencias principales se miden en una NVIDIA RTX 3080 Ti (12~GB), sin otra carga; registramos además los parámetros y la memoria pico. Para comparar MaskGIT-S con el GPT y con Genie, medimos además los tres modelos chicos en una misma RTX 4060 Laptop (8~GB) con el mismo protocolo; como la latencia no depende del valor de los pesos, en esa GPU usamos pesos aleatorios para los modelos entrenados en la otra.
+\paragraph{Latencia.} La unidad es el tiempo de generar un frame con batch~1 y el contexto lleno, en fp16 con CUDA graphs \editado{(el ConvLSTM y la tabla de transición, en fp32 y sin graphs)}, descartando el warm-up, y reportamos la mediana (p50) y el percentil 99. Medimos el modelo solo y la cadena completa (encoder VQ, world model y decoder VQ), esta última también a ritmo de cámara (un frame cada 50\ms), donde reportamos el porcentaje de frames que llegan tarde. Las latencias principales se miden en una NVIDIA RTX 3080 Ti (12~GB), sin otra carga; registramos además los parámetros y la memoria pico. Para comparar MaskGIT-S con el GPT y con Genie, medimos además los tres modelos chicos en una misma RTX 4060 Laptop (8~GB) con el mismo protocolo; como la latencia no depende del valor de los pesos, en esa GPU usamos pesos aleatorios para los modelos entrenados en la otra.
 
 % ---------------------------------------------------------------------------------------------------------------
 \section{Modelos}
@@ -95,6 +144,7 @@ Los intervalos se obtienen por bootstrap por segmento, porque los cuatro clips d
 \begin{table}[t]
 \centering
 \small
+\resizebox{\columnwidth}{!}{%
 \begin{tabular}{@{}lll@{}}
 \toprule
 Modelo & Qué es & Params \\
@@ -111,12 +161,12 @@ Modelo & Qué es & Params \\
 \texttt{transicion} & tabla $p(y\mid x)$ por celda & -- \\
 \texttt{congelado} & repite el último frame & -- \\
 \bottomrule
-\end{tabular}
+\end{tabular}}
 \caption{Modelos evaluados. Los modelos latentes (V-JEPA~2, LeWorldModel) se tratan aparte.}
 \label{tab:modelos}
 \end{table}
 
-\paragraph{Referencia.} \texttt{gpt2m} es el world model publicado con commaVQ: un GPT de 307M de parámetros entrenado con unos 3M de minutos de manejo, con la receta de IRIS. Es nuestro techo de calidad y el maestro de la destilación.
+\paragraph{Referencia.} \texttt{gpt2m} es el world model publicado con commaVQ: un GPT de 307M de parámetros entrenado con unos 3M de minutos de manejo, con \editado{una receta similar a la de IRIS}. Es nuestro techo de calidad y el maestro de la destilación.
 
 \paragraph{GPT chico.} Usamos el diseño de comma escalado a 6 capas, 6 cabezas y dimensión 384 (S) u 8 capas y dimensión 512 (M), con posición absoluta y la receta de IRIS. Cada frame es un BOS más 128 tokens, con atención causal sobre todo el contexto, y la inferencia usa KV cache. El alumno destilado minimiza
 \[
@@ -144,7 +194,7 @@ con $\alpha=0{,}5$ y $\tau=1$, donde $p_t$ son las probabilidades de \texttt{gpt
 \centering
 \small
 \resizebox{\textwidth}{!}{\input{tablas/principal}}
-\caption{Calidad y latencia de todos los modelos sobre los mismos 400 clips de validación. CE: cross-entropy por token en validación (solo autoregresivos). FVD con features de I3D sobre la ventana de 16 frames que termina a 1, 2 y 3~s; IC del 95\,\% por bootstrap por segmento. \emph{Drift}: cociente entre el FVD a 3~s y a 1~s. Latencia: p50 del modelo solo, batch~1, fp16 con CUDA graphs; la columna 4060 compara los modelos chicos en una misma GPU (RTX 4060 Laptop).}
+\caption{Calidad y latencia de todos los modelos sobre los mismos 400 clips de validación. CE: cross-entropy por token en validación (solo autoregresivos). FVD con features de I3D sobre la ventana de 16 frames que termina a 1, 2 y 3~s; IC del 95\,\% por bootstrap por segmento. \emph{Drift}: cociente entre el FVD a 3~s y a 1~s. Latencia: p50 del modelo solo, batch~1, fp16 con CUDA graphs \editado{(ConvLSTM y transición: fp32 sin graphs)}; la columna 4060 compara los modelos chicos en una misma GPU (RTX 4060 Laptop).}
 \label{tab:principal}
 \end{table*}
 
@@ -153,7 +203,7 @@ con $\alpha=0{,}5$ y $\tau=1$, donde $p_t$ son las probabilidades de \texttt{gpt
 
 La Tabla~\ref{tab:principal} resume la calidad de todos los modelos. Achicar el world model 20 a 25 veces tiene un costo claro pero acotado: el FVD a 3~s pasa de 105 (\texttt{gpt2m}, 307M) a entre 370 y 470 en los mejores modelos chicos (12--15M), es decir, de 3,5 a 4,5 veces más. Aun así, todos los modelos de tokens chicos quedan muy por debajo de los baselines: el mejor baseline, el frame congelado, tiene un FVD a 3~s de 978, y la tabla de transición por celda, 1241.
 
-\paragraph{El GPT gana a corto plazo y la decodificación paralela a largo plazo.} A 1~s el GPT destilado es el mejor modelo chico (FVD 207), pero también el que más se degrada con el horizonte (drift de 2,3). La diferencia pareada con Genie-S a 8 pasos lo confirma: el GPT es mejor a 1~s ($\Delta=69$, IC [43, 96], $p=0{,}01$), empatan a 2~s ($p=0{,}58$) y Genie es mejor a 3~s ($\Delta=-43$, IC [$-83$, $-3$], $p=0{,}04$). MaskGIT-S con 8 a 12 pasos logra el menor FVD a 3~s entre los modelos chicos (380 y 370) con el menor drift (1,5 y 1,3, similar al de \texttt{gpt2m}). Las diferencias pareadas lo confirman. Contra el GPT-S destilado, MaskGIT-S con 8 pasos es peor a 1~s ($\Delta=40$, IC [17, 63], $p=0{,}02$) y mejor a 2 y 3~s ($\Delta=-77$ y $-81$, $p=0{,}01$); con 12 pasos el patrón se repite ($\Delta=77$ a 1~s y $-91$ a 3~s, $p=0{,}01$). Con 4 pasos, MaskGIT-S empata con el GPT a 1~s y a 3~s ($p=0{,}31$ y $0{,}82$) y es mejor a 2~s ($\Delta=-63$, $p=0{,}01$): es la misma calidad. Contra Genie-S con 4 pasos, MaskGIT-S con 8 empata a 1~s ($p=0{,}76$) y es mejor a 3~s ($\Delta=-54$, IC [$-89$, $-18$], $p=0{,}02$). Para estas comparaciones regeneramos los rollouts del GPT-S destilado y de Genie-S sobre los mismos 400 clips; sus FVD reproducen los de la Tabla~\ref{tab:principal} dentro del ruido de muestreo (462 y 434 a 3~s, contra 468 y 413).
+\paragraph{El GPT gana a corto plazo y la decodificación paralela a largo plazo.} A 1~s el GPT destilado es el mejor modelo chico (FVD 207), pero \editado{se degrada con el horizonte más que los modelos de decodificación paralela con 4 o más pasos (drift de 2,3, contra 1,3 a 2,1)}. La diferencia pareada con Genie-S a 8 pasos lo confirma: el GPT es mejor a 1~s ($\Delta=69$, IC [43, 96], $p=0{,}01$), empatan a 2~s ($p=0{,}58$) y Genie es mejor a 3~s ($\Delta=-43$, IC [$-83$, $-3$], $p=0{,}04$). MaskGIT-S con 8 a 12 pasos logra el menor FVD a 3~s entre los modelos chicos (380 y 370) con el menor drift (1,5 y 1,3, similar al de \texttt{gpt2m}). Las diferencias pareadas lo confirman. Contra el GPT-S destilado, MaskGIT-S con 8 pasos es peor a 1~s ($\Delta=40$, IC [17, 63], $p=0{,}02$) y mejor a 2 y 3~s ($\Delta=-77$ y $-81$, $p=0{,}01$); con 12 pasos el patrón se repite ($\Delta=77$ a 1~s y $-91$ a 3~s, $p=0{,}01$). Con 4 pasos, MaskGIT-S empata con el GPT a 1~s y a 3~s ($p=0{,}31$ y $0{,}82$) y es mejor a 2~s ($\Delta=-63$, $p=0{,}01$): es la misma calidad. Contra Genie-S con 4 pasos, MaskGIT-S con 8 empata a 1~s ($p=0{,}76$) y es mejor a 3~s ($\Delta=-54$, IC [$-89$, $-18$], $p=0{,}02$). Para estas comparaciones regeneramos los rollouts del GPT-S destilado y de Genie-S sobre los mismos 400 clips; sus FVD reproducen los de la Tabla~\ref{tab:principal} dentro del ruido de muestreo (462 y 434 a 3~s, contra 468 y 413).
 
 \paragraph{Tres semillas.} Genie-S a 8 pasos es estable entre semillas: $260\pm14$ a 1~s y $402\pm20$ a 3~s (Tabla~\ref{tab:semillas}). El ConvLSTM, en cambio, varía mucho ($1680\pm118$ a 1~s) y queda siempre peor que repetir el último frame: predecir píxeles con este presupuesto produce video borroso que se aleja rápido de la distribución real.
 
@@ -169,7 +219,7 @@ La Tabla~\ref{tab:principal} resume la calidad de todos los modelos. Achicar el 
 \begin{table}[t]
 \centering
 \small
-\input{tablas/semillas}
+\resizebox{\columnwidth}{!}{\input{tablas/semillas}}
 \caption{FVD, media $\pm$ desvío entre las semillas 0, 1 y 2.}
 \label{tab:semillas}
 \end{table}
@@ -179,7 +229,7 @@ La Tabla~\ref{tab:principal} resume la calidad de todos los modelos. Achicar el 
 
 La Figura~\ref{fig:pasos} muestra el FVD en función del número de pasos de decodificación paralela por frame. Hay dos regímenes. Con 1 o 2 pasos el modelo tiene que decidir casi todos los tokens a la vez, sin ver las decisiones de los demás: a 1~s el resultado es bueno, pero el error se acumula y el video colapsa con el horizonte (Genie-S con 1 paso pasa de 279 a 1307 entre 1 y 3~s). Desde 4 pasos el FVD a 3~s se estabiliza: con 4 pasos Genie-S alcanza la calidad de 25 pasos (413 contra 444), el valor que usa el paper original.
 
-El FVD a 1~s sigue la tendencia contraria: empeora al subir los pasos, de 214--232 con 2--4 pasos a 326 con 25. Más pasos producen frames más definidos de a uno, pero menos diversos, y el FVD lo penaliza a corto plazo. El mejor compromiso entre ambos horizontes está entre 4 y 8 pasos.
+El FVD a 1~s sigue la tendencia contraria: empeora al subir los pasos: \editado{en Genie-S, de 228--232} con 2--4 pasos a 326 con 25. \editado{No medimos la causa; una hipótesis es que} más pasos producen frames más definidos de a uno, pero menos diversos, \editado{y que} el FVD lo penaliza a corto plazo. El mejor compromiso entre ambos horizontes está entre 4 y 8 pasos.
 
 La arquitectura también importa en el régimen de pocos pasos: con 1 paso, MaskGIT-S (con el backbone del GPT) degrada la mitad que Genie-S (FVD a 3~s de 607 contra 1307), y Genie-M, con 2,3 veces más parámetros, degrada también la mitad (730). Desde 4 pasos, las tres variantes empatan dentro de los intervalos.
 
@@ -237,7 +287,7 @@ La arquitectura también importa en el régimen de pocos pasos: con 1 paso, Mask
 \subsection{Contraste: modelos latentes}
 \label{sec:latentes}
 
-Los modelos latentes no aprendieron una representación útil del movimiento con este presupuesto (Tabla~\ref{tab:latentes}). Un probe lineal sobre sus embeddings explica a lo sumo el 10\,\% de la varianza de la velocidad, igual que un encoder con pesos aleatorios y menos que los píxeles crudos (14\,\%); el giro no se puede predecir desde ninguna representación ($R^2\approx0$). Estos métodos se entrenan en sus papers con millones de videos, así que el resultado dice más de la escala de datos que de los métodos.
+Los modelos latentes no aprendieron una representación útil del movimiento con este presupuesto (Tabla~\ref{tab:latentes}). Un probe lineal sobre sus embeddings explica a lo sumo el 10\,\% de la varianza de la velocidad, igual que un encoder con pesos aleatorios y menos que los píxeles crudos (14\,\%); el giro no se puede predecir desde ninguna representación ($R^2\approx0$). \editado{En sus papers, V-JEPA~2 se preentrena con más de un millón de horas de video, y LeWorldModel, con 10.000 a 20.000 episodios de tareas de control simuladas, mucho más simples que el video de manejo. Por eso el resultado dice más de nuestro régimen de datos que de los métodos.}
 
 \begin{table}[t]
 \centering
@@ -263,11 +313,11 @@ La Figura~\ref{fig:frames} muestra un clip de validación con mucho movimiento. 
 \section{Discusión y limitaciones}
 \label{sec:discusion}
 
-\paragraph{La decodificación paralela es lo que habilita el tiempo real.} El resultado central es que el cuello de botella para generar a 20~FPS no es el tamaño del modelo sino la forma de decodificar. Un GPT 25 veces más chico sigue lejos del tiempo real porque mantiene las 128 pasadas por frame. Con la misma red, decodificar en 4 a 12 pasos paralelos baja la latencia 6 a 10 veces sin perder calidad, y además reduce el drift a largo plazo. La razón probable es que el GPT condiciona cada token solo en los anteriores del mismo frame, mientras que MaskGIT ve el frame completo en cada paso y puede corregir inconsistencias globales.
+\paragraph{La decodificación paralela es lo que habilita el tiempo real.} El resultado central es que el cuello de botella para generar a 20~FPS no es el tamaño del modelo sino la forma de decodificar. Un GPT 25 veces más chico sigue lejos del tiempo real porque mantiene las 128 pasadas por frame. Con la misma red, decodificar en 4 a 12 pasos paralelos baja la latencia 6 a 10 veces sin perder calidad, y además reduce el drift a largo plazo. \editado{Una explicación posible, que no pusimos a prueba, es} que el GPT condiciona cada token solo en los anteriores del mismo frame, mientras que MaskGIT, \editado{en cada paso, condiciona en todos los tokens ya fijados del frame, en cualquier posición}.
 
 \paragraph{Cuántos pasos usar.} El número de pasos es un hiperparámetro de inferencia que permite elegir el punto calidad--latencia sin reentrenar. Por debajo de 4 pasos el ahorro de tiempo es chico (de 12,8 a 9\ms\ en MaskGIT-S) y el costo en drift es grande. Por encima de 8, el FVD a 3~s ya no mejora y el de 1~s empeora.
 
-\paragraph{Escala, datos y la lectura de Chinchilla.} Chinchilla optimiza la calidad para un cómputo de entrenamiento fijo. Para un simulador, el costo dominante es la inferencia, que se paga en cada frame, y el óptimo se desplaza hacia modelos más chicos entrenados con muchos más datos que los de Chinchilla~\cite{sardana2024beyond}. Nuestros resultados son coherentes con esa lectura: los modelos chicos están limitados por datos y no por tamaño (Sección~\ref{sec:escala}). Entrenar un modelo de 12--15M con todo commaVQ (150 veces nuestro presupuesto) es barato y no cambia la latencia; es el siguiente experimento natural.
+\paragraph{Escala, datos y la lectura de Chinchilla.} Chinchilla optimiza la calidad para un cómputo de entrenamiento fijo. Para un simulador, el costo dominante es la inferencia, que se paga en cada frame, y el óptimo se desplaza hacia modelos más chicos entrenados con muchos más datos que los de Chinchilla~\cite{sardana2024beyond}. Nuestros resultados son coherentes con esa lectura: los modelos chicos están limitados por datos y no por tamaño (Sección~\ref{sec:escala}). Entrenar un modelo de 12--15M con todo commaVQ (150 veces nuestro presupuesto) \editado{no cambia la latencia, y es el siguiente experimento natural}.
 
 \paragraph{El FVD real contra real no es una cota inferior.} Al comparar 400 clips reales contra otros 400 clips reales de los mismos segmentos obtenemos un FVD a 1~s de 103, y \texttt{gpt2m} obtiene 67. El modelo puede quedar por debajo de esa referencia porque continúa exactamente los clips evaluados, mientras que la referencia usa otros tramos de los mismos segmentos. Con dos mitades disjuntas por segmento, la referencia es 317 y \texttt{gpt2m}, 130. Por eso interpretamos el FVD solo de forma comparativa, siempre sobre los mismos clips.
 
@@ -276,13 +326,15 @@ La Figura~\ref{fig:frames} muestra un clip de validación con mucho movimiento. 
   \item \textbf{Presupuesto.} Todos los modelos vieron 780.000 frames, una fracción mínima de lo que usan los papers de origen. Las conclusiones sobre arquitecturas valen para este régimen de pocos datos.
   \item \textbf{Temperatura de MaskGIT.} En el holdout, la temperatura óptima de MaskGIT-S fue 0,8 (FVD a 3~s de 493 contra 536 con $T=1$), pero sus evaluaciones usaron $T=1$. Sus números son, por lo tanto, conservadores. La temperatura importa: con la de su paper ($T=2$), Genie-S tiene un FVD a 3~s en el holdout más de tres veces mayor que con $T=1$.
   \item \textbf{Latencia.} Las latencias absolutas dependen de la GPU y no escalan igual para todos los modelos. Medimos todos los modelos en una RTX 3080 Ti, salvo MaskGIT-S, que comparamos con el resto en una RTX 4060 Laptop.
-  \item \textbf{Ruido del FVD.} Con 400 clips de 100 segmentos, los intervalos son anchos (del orden de $\pm40$ a 3~s), y solo tres semillas de dos modelos. Por eso las comparaciones clave usan diferencias pareadas por bootstrap.
+  \item \textbf{Ruido del FVD.} Con 400 clips de 100 segmentos, los intervalos son anchos (\editado{unos $\pm40$ a 1~s y de $\pm50$ a $\pm90$ a 3~s en los modelos chicos; más con 1 o 2 pasos}), y solo tres semillas de dos modelos. Por eso las comparaciones clave usan diferencias pareadas por bootstrap.
   \item \textbf{Alcance.} No evaluamos difusión, que hoy domina la calidad~\cite{alonso2024diamond,goff2025learning}, ni condicionamiento por acciones en los modelos generativos. Los modelos latentes se entrenan sobre frames reconstruidos por el VQ-VAE, no sobre el video original.
 \end{itemize}
 
 \section{Conclusión}
 
-Un world model de manejo puede achicarse de 307M a 12--15M de parámetros y generar video a 20~FPS con la cadena completa en menos de la mitad del presupuesto, pero solo si cambia la forma de decodificar. El GPT chico sigue siendo autoregresivo token a token y no llega a tiempo real (131--158\ms\ por frame). Con la misma red, MaskGIT con 4 pasos alcanza la misma calidad 10 veces más rápido, y con 8 a 12 pasos es el mejor modelo chico a 3~s. El costo de achicar es un FVD a 3~s de 3,5 a 4,5 veces el de la referencia, pero ese costo se debe en buena parte a la falta de datos: los modelos chicos vieron el 0,02\,\% de lo que vio el GPT de comma, y nuestro estudio de escala sugiere que entrenarlos con más datos, que no cambia la latencia, es la forma más barata de cerrar la brecha.
+\editado{Para que un world model de manejo genere video a ritmo de cámara no alcanza con achicarlo: hay que cambiar la forma de decodificar. Un GPT de 12M sigue haciendo 128 pasadas por frame y no llega a 20~FPS. Con la misma red, decodificar en pocos pasos paralelos entra en el presupuesto con la misma calidad a 3~s (4 pasos) o mejor (8 a 12 pasos), aunque a 1~s el GPT sigue siendo mejor. El número de pasos es un parámetro de inferencia: permite elegir el punto calidad--latencia sin reentrenar, y por debajo de 4 pasos el video se degrada con el horizonte.}
+
+\editado{Estos resultados valen para un régimen de pocos datos (780.000 frames por modelo, el 0,65\,\% de commaVQ), para video de una cámara a $128\times256$ y para latencias medidas con batch~1 en una GPU de escritorio y una de notebook. No evaluamos difusión ni condicionamiento por acciones. El paso siguiente es entrenar los modelos chicos con todo commaVQ, que no cambia la latencia y permite medir cuánto de la brecha cierran los datos. Después, condicionar el modelo en las acciones del auto, para usarlo como simulador de una política.}
 
 \paragraph{Reproducibilidad.} Todo resultado sale de un comando de la CLI del repositorio y queda registrado, con su commit, en una bitácora. \pend{link al repositorio}
 

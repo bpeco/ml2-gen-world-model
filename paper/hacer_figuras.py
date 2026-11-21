@@ -244,9 +244,9 @@ def fig_datos_escala():
   a.set_xlim(1e5, 1e13)
   a.set_xlabel("frames (escala log)")
   a.set_title("(a) Frames de entrenamiento", loc="left")
-  a.text(0.98, 0.30, f"presupuesto = {100 * FRAMES_PRESUPUESTO / FRAMES_COMMAVQ:.2f} % de commaVQ\n"
+  a.text(0.98, 0.50, f"presupuesto = {100 * FRAMES_PRESUPUESTO / FRAMES_COMMAVQ:.2f} % de commaVQ\n"
          f"y {100 * FRAMES_PRESUPUESTO / FRAMES_GPT2M:.3f} % de los datos de gpt2m".replace(".", ","),
-         transform=a.transAxes, ha="right", va="top", fontsize=6.5, color=TINTA2)
+         transform=a.transAxes, ha="right", va="center", fontsize=6.5, color=TINTA2)
   a.grid(axis="y", visible=False)
   # (b) escala
   pts = puntos_escala()
@@ -266,7 +266,8 @@ def fig_datos_escala():
   for t, ce, run in pts:
     b.plot([t], [ce], marker="o", color=COLOR["gpt"], ms=6, mec="white", mew=0.6, zorder=4)
     b.annotate(run.replace("gpt_s_d0", "").replace("gpt_s", "100") + " %" if run != "gpt_s" else "100 %",
-               (t, ce), textcoords="offset points", xytext=(-6, -11), fontsize=6.5, color=TINTA)
+               (t, ce), textcoords="offset points", xytext=(-5, -4), ha="right", va="top", fontsize=6.5,
+               color=TINTA)  # abajo a la izquierda del punto: la curva baja hacia la derecha y no lo pisa
   kd = SUM["gpt_s_kd"]["ce_all"]
   b.plot([1.008e8], [kd], marker="o", color=COLOR["maskgit"], ms=6, mec="white", mew=0.6, ls="",
          label=f"GPT-S destilado (1×): {kd:.2f}".replace(".", ","))
@@ -367,6 +368,10 @@ def tabla_semillas():
   print("tabla", OUT_T / "semillas.tex")
 
 
+NOMBRE_CADENA = {"convlstm_px": "ConvLSTM (píxeles)", "genie_m_p4": "Genie-M, 4 pasos", "genie_s_p4": "Genie-S, 4 pasos",
+                 "gpt_s_kd": "GPT-S destilado", "transicion": "Transición por celda"}
+
+
 def tabla_cadena():
   L = [r"\begin{tabular}{lrrrrr}", r"\toprule",
        r"Configuración & encoder & modelo & decoder & p99 a ritmo & tarde \\",
@@ -375,7 +380,8 @@ def tabla_cadena():
     d = leer(f)
     st = d["cadena_cerrada"].get("stages_p50_ms") or {}
     cr = d["cadena_ritmo"]
-    L.append(f"{d['name'].replace('_', chr(92) + '_')} & {num(st.get('encoder'))} & {num(st.get('model'))} & "
+    nombre = NOMBRE_CADENA.get(d["name"], d["name"].replace("_", chr(92) + "_"))
+    L.append(f"{nombre} & {num(st.get('encoder'))} & {num(st.get('model'))} & "
              f"{num(st.get('decoder'))} & {num(cr['p99'])} & {num(cr.get('late_pct'))} \\\\")
   L += [r"\bottomrule", r"\end{tabular}"]
   (OUT_T / "cadena.tex").write_text("\n".join(L) + "\n", encoding="utf-8")
