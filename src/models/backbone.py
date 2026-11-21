@@ -43,6 +43,28 @@ def make_mask(n: int, attn: str) -> torch.Tensor:
   raise ValueError(f"attn no soportado: {attn}")
 
 
+def additive_mask(mask: torch.Tensor, dtype) -> torch.Tensor:
+  """Máscara bool -> aditiva (0 donde se mira, -inf donde no), la conversión que SDPA hace por dentro en cada capa."""
+  return torch.zeros(mask.shape, dtype=dtype, device=mask.device).masked_fill_(~mask, float("-inf"))
+
+
+def cached_attention(q, k, v, bias):
+  """softmax(q kᵀ / sqrt(hd) + bias) v contra la caché KV, con un producto de cuBLAS, un softmax y otro producto.
+
+  Es la misma cuenta que SDPA (la de su backend math, el que fuerza el decode de comma en utils/gpt.py), en el dtype
+  de la caché. Con máscara y pocas queries (decode: 1; pasada de MaskGIT: 129), SDPA elige mem-efficient, que lanza un
+  bloque por cabeza y lo hace recorrer la caché entera en serie: ~170 µs por capa con 6 bloques en una GPU de 80 SM
+  (results/perfil/gpt_s_kd_perfil.json; el torch de Windows no trae flash). Acá los productos se reparten
+  sobre las posiciones de la caché.
+  q (B, H, T, hd); k, v (B, H, S, hd); bias aditivo (0 / -inf) con forma (T, S) o (1, 1, T, S). -> (B, H, T, hd).
+  """
+  B, H, T, hd = q.shape
+  S = k.shape[2]
+  s = torch.baddbmm(bias.reshape(1, T, S).expand(B * H, T, S), q.reshape(B * H, T, hd),
+                    k.reshape(B * H, S, hd).transpose(1, 2), alpha=hd ** -0.5)
+  return torch.bmm(torch.softmax(s, -1), v.reshape(B * H, S, hd)).view(B, H, T, hd)
+
+
 class Attention(nn.Module):
   def __init__(self, cfg: BackboneConfig):
     super().__init__()
@@ -60,6 +82,9 @@ class Attention(nn.Module):
       self.k_cache.index_copy_(2, input_pos, k)
       self.v_cache.index_copy_(2, input_pos, v)
       k, v = self.k_cache, self.v_cache
+      if T <= TPF:  # decode del GPT (T = 1) y pasadas de MaskGIT (T = 129); el prefill sigue por SDPA
+        y = cached_attention(q, k, v, attn_mask)
+        return self.proj(y.transpose(1, 2).reshape(B, T, C))
     y = F.scaled_dot_product_attention(q, k, v, attn_mask=attn_mask, is_causal=is_causal,
                                        dropout_p=self.dropout if self.training else 0.0)
     return self.proj(y.transpose(1, 2).reshape(B, T, C))
@@ -98,6 +123,7 @@ class Backbone(nn.Module):
     # alineada a 8; las posiciones >= block_size nunca se escriben y quedan "en el futuro" (enmascaradas)
     self.register_buffer("mask", make_mask(mult8(cfg.block_size), cfg.attn), persistent=False)
     self.cache_len = 0
+    self.mask_bias = None   # máscara aditiva en el dtype de la caché (setup_cache)
     self.apply(self._init)
     for b in self.blocks if cfg.res_scale else ():  # proyecciones residuales escaladas (GPT-2)
       for lin in (b.attn.proj, b.proj):
@@ -130,9 +156,12 @@ class Backbone(nn.Module):
       shape = (batch_size, c.n_head, self.cache_len, c.dim // c.n_head)
       b.attn.k_cache = torch.zeros(shape, dtype=dtype, device=device)
       b.attn.v_cache = torch.zeros(shape, dtype=dtype, device=device)
+    # la máscara aditiva, una vez: sin la conversión bool -> float de SDPA en cada capa y en cada paso
+    self.mask_bias = additive_mask(self.mask[:, :self.cache_len].to(device), dtype)
 
   def clear_cache(self):
     self.cache_len = 0
+    self.mask_bias = None
     for b in self.blocks:
       b.attn.k_cache = b.attn.v_cache = None
 
@@ -143,7 +172,7 @@ class Backbone(nn.Module):
     T = (emb if emb is not None else idx).shape[1]
     if self.blocks[0].attn.k_cache is not None:
       assert input_pos is not None, "con caché hay que pasar input_pos"
-      kw = dict(input_pos=input_pos, attn_mask=self.mask[input_pos, :self.cache_len])
+      kw = dict(input_pos=input_pos, attn_mask=self.mask_bias[input_pos])
     elif input_pos is None:
       input_pos = torch.arange(T, device=self.mask.device)
       kw = dict(is_causal=True) if self.cfg.attn == "causal" else dict(attn_mask=self.mask[:T, :T])

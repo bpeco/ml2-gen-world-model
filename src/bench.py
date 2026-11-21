@@ -29,6 +29,7 @@ DTYPES = {"fp32": torch.float32, "fp16": torch.float16, "bf16": torch.bfloat16}
 CLIPS = Path("results/clips_eval.json")
 VAL = Path("data/val_tokens.npy")
 OUT = Path("results/bench")
+PERFIL = Path("results/perfil")   # diagnóstico (--perfil): no es un resultado con estado
 
 
 def load_context(k=None):
@@ -144,6 +145,92 @@ def medir_modelo(model, ctx, n, warmup, dev, graphs, steps=None, ctx_frames=None
         model.use_cuda_graphs(False)
 
 
+PERFIL_PASOS = 5
+# categoría de un kernel por su nombre (en orden: la primera que coincide); "atencion" incluye los tres backends de SDPA
+CATEGORIAS = [("atencion", ("fmha", "attention", "flash", "cudnn")), ("matmul", ("gemm", "gemv", "cublas", "cutlass", "xmma")),
+              ("softmax", ("softmax",)), ("layer_norm", ("layer_norm", "layernorm")), ("copia", ("memcpy", "memset")),
+              ("indexado", ("index", "gather", "scatter")), ("muestreo", ("exponential", "argmax", "reduce"))]
+
+
+def categoria(nombre):
+  n = nombre.lower()
+  return next((c for c, claves in CATEGORIAS if any(k in n for k in claves)), "elementwise/otros")
+
+
+def backend_sdpa(kernels):
+  """El backend de SDPA que se usó, por el nombre de los kernels: flash, mem-efficient (cutlass), cudnn o math."""
+  nombres = " ".join(k.lower() for k in kernels)
+  if "flash" in nombres:
+    return "flash"
+  if "fmha" in nombres or "efficient_attention" in nombres:
+    return "mem-efficient"
+  if "cudnn" in nombres and "attention" in nombres:
+    return "cudnn"
+  return "math o atención explícita (gemm + softmax)"
+
+
+def perfilar(model, ctx, dev, graphs, warmup, steps=None, ctx_frames=None, k=PERFIL_PASOS):
+  """Perfil de CUDA (torch.profiler) de k pasos del stream con el contexto lleno, después de `warmup` pasos.
+  Devuelve el resumen por kernel: tiempo y cantidad por paso, participación por categoría y top 15."""
+  from torch.autograd import DeviceType
+  from torch.profiler import ProfilerActivity, profile
+  with torch.no_grad():
+    _, paso = preparar_stream(model, ctx, dev, graphs, steps, ctx_frames)
+    for _ in range(warmup):
+      paso()
+    sync(dev)
+    with profile(activities=[ProfilerActivity.CPU, ProfilerActivity.CUDA]) as prof:
+      for _ in range(k):
+        paso()
+      sync(dev)
+  tot = {}
+  for e in prof.events():
+    if getattr(e, "device_type", None) == DeviceType.CUDA:
+      t, c = tot.get(e.name, (0.0, 0))
+      tot[e.name] = (t + e.time_range.elapsed_us(), c + 1)
+  total_us = sum(t for t, _ in tot.values())
+  cats = {}
+  for nombre, (t, c) in tot.items():
+    cat = cats.setdefault(categoria(nombre), {"us_por_paso": 0.0, "kernels_por_paso": 0.0})
+    cat["us_por_paso"] += t / k
+    cat["kernels_por_paso"] += c / k
+  for cat in cats.values():
+    cat["fraccion"] = cat["us_por_paso"] * k / total_us if total_us else None
+  top = sorted(tot.items(), key=lambda kv: -kv[1][0])[:15]
+  return {
+    "graphs_usados": graphs, "pasos_perfilados": k,
+    "ms_gpu_por_paso": total_us / k / 1000, "kernels_por_paso": sum(c for _, c in tot.values()) / k,
+    "backend_sdpa": backend_sdpa(tot), "por_categoria": dict(sorted(cats.items(), key=lambda kv: -kv[1]["us_por_paso"])),
+    "top": [{"kernel": nombre[:160], "categoria": categoria(nombre), "us_por_paso": t / k, "llamadas_por_paso": c / k,
+             "us_por_llamada": t / c, "fraccion": t / total_us if total_us else None} for nombre, (t, c) in top],
+  }
+
+
+def escribir_perfil(model, ctx, dev, a, name):
+  """--perfil: el desglose por kernel con los graphs pedidos y en eager (sin graphs por paso), en
+  results/perfil/<name>[__<tag>].json. No escribe el JSON de latencia: el profiler agrega overhead."""
+  if dev.type != "cuda":
+    raise SystemExit("--perfil necesita CUDA")
+  res = {"name": name, "model": a.model, "dtype": a.dtype, "steps": a.steps, "ctx_frames": a.ctx_frames,
+         "unidad": unidad(model), "params": sum(p.numel() for p in model.parameters()), "variantes": {}}
+  if a.graphs:
+    res["variantes"]["graphs"] = perfilar(model, ctx, dev, True, a.warmup, a.steps, a.ctx_frames)
+  if hasattr(model, "use_cuda_graphs"):
+    model.use_cuda_graphs(False)   # eager de verdad: sin el graph por paso del decode
+  res["variantes"]["eager"] = perfilar(model, ctx, dev, False, min(a.warmup, 3), a.steps, a.ctx_frames)
+  res.update({"device": device_info(dev), "tag": a.tag, "torch": torch.__version__,
+              "timestamp": datetime.now().isoformat(timespec="seconds")})
+  PERFIL.mkdir(parents=True, exist_ok=True)
+  path = PERFIL / f"{name}{f'__{a.tag}' if a.tag else ''}.json"
+  path.write_text(json.dumps(res, indent=1))
+  for var, r in res["variantes"].items():
+    att = r["por_categoria"].get("atencion", {}).get("fraccion") or 0
+    print(f"{name} perfil {var}: {r['ms_gpu_por_paso']:.2f} ms de GPU por paso, {r['kernels_por_paso']:.0f} kernels, "
+          f"atención {100 * att:.0f} % ({r['backend_sdpa']})")
+  print(f"-> {path}")
+  return res
+
+
 def timed(step_iter, n, dev):
   """Tiempo en ms de cada next() de un iterador, con CUDA events o perf_counter."""
   ms = []
@@ -179,9 +266,13 @@ def main(argv=None):
   ap.add_argument("--tag", help="nombre del dispositivo (radeon860m...): se agrega al nombre del JSON para no pisar el de otra máquina")
   ap.add_argument("--decoder", action="store_true", help="medir el decoder del VQ-VAE (1 frame por llamada)")
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent); repetible")
+  ap.add_argument("--perfil", action="store_true", help="desglose por kernel (torch.profiler) en vez de la latencia: "
+                  "results/perfil/<name>.json")
   a = ap.parse_args(argv)
   if not a.decoder and not a.model:
     ap.error("falta --model (o --decoder)")
+  if a.perfil and a.decoder:
+    ap.error("--perfil es para el paso de un modelo, no para el decoder")
   dev = backends.dispositivo(a.device)
   # defaults explícitos de PyTorch: el fp32 depende de TF32
   torch.backends.cuda.matmul.allow_tf32 = False
@@ -220,6 +311,8 @@ def main(argv=None):
         model.use_cuda_graphs(True)
     name, ctx_frames = a.name or model.name, a.ctx_frames
     ctx = load_context(a.ctx_frames).to(dev)
+    if a.perfil:
+      return escribir_perfil(model, ctx, dev, a, name)
     ms, info = medir_modelo(model, ctx, n, a.warmup, dev, a.graphs, a.steps, a.ctx_frames)
 
   if a.decoder:

@@ -8,8 +8,10 @@
     ...
 
 Adaptadores (make_stream elige):
-- TokenStream (genérico: GPT, gpt2m, baselines, cualquier WorldModel): buffer de los últimos ctx_frames
+- TokenStream (genérico: baselines, cualquier WorldModel): buffer de los últimos ctx_frames
   frames de tokens en el device y model.next_frame.
+- GPTStream (GPT, gpt2m): como TokenStream, pero con el contexto lleno el frame entero (prefill, 127 pasos de
+  decode y el muestreo de los 128 tokens) es un solo CUDA graph. El ruido entra como dato, en el orden de next_frame.
 - MaskGITStream: como TokenStream, pero con el contexto lleno el frame entero (prefill + S pasadas + muestreo)
   es un solo CUDA graph. El ruido del muestreo se genera afuera, en el mismo orden que next_frame, y entra
   como dato: mismos tokens que model.next_frame con el mismo generador.
@@ -181,6 +183,47 @@ class MaskGITStream(TokenStream):
     g = self._g.get(B)
     if g is None or self.m._graphs is not g[1]:  # _ensure_cache rehízo la caché: el graph apunta a la vieja
       g = self._g[B] = (GraphedStep(self._frame, self.ctx, *noise), self.m._graphs)
+    return g[0](self.ctx, *noise), None
+
+
+class GPTStream(TokenStream):
+  """GPT y gpt2m: con el contexto lleno el frame entero (prefill, 127 pasos de decode y los 128 muestreos) es un solo
+  CUDA graph. Antes solo el paso de decode de un token era graph y el bucle de 128 tokens, el muestreo y las copias a
+  los buffers estáticos corrían en Python. El ruido del muestreo se genera afuera, token por token y en el orden de
+  next_frame, y entra como dato: mismos tokens que model.next_frame con el mismo generador."""
+
+  def __init__(self, model, **kw):
+    super().__init__(model, **kw)
+    cfg = getattr(model, "cfg", None)
+    if cfg is not None:   # como next_frame: el frame nuevo cabe en el bloque (un GPT chico de los tests)
+      self.ctx_frames = min(self.ctx_frames, cfg.block_size // TPF - 1)
+    self._g = {}
+
+  def _noise(self, B):
+    """Una tirada Exp(1) por token (128, B, 1024), una llamada por token: el orden de consumo del generador de
+    next_frame. Con temperatura 0 no hace falta."""
+    if self.temperature == 0:
+      return []
+    buf = torch.empty(CODES, B, 1024, device=self.dev)
+    for i in range(CODES):
+      buf[i].exponential_(1, generator=self.gen)
+    return [buf]
+
+  def _frame(self, ctx, *noise):
+    """ctx (B, ctx_frames, 128) -> tokens (B, 128). Puro salvo la caché KV (se reescribe entera)."""
+    return self.m.next_frame(ctx, self.temperature, noise=noise[0] if noise else None, graphs=False)
+
+  def _sample_next(self, pose):
+    if not (self.graphs and self.full):
+      return self.m.next_frame(self.ctx, self.temperature, self.steps, self.gen), None
+    B = self.ctx.shape[0]
+    p = next(self.m.parameters())
+    self.m._ensure_cache(B, p.dtype, p.device)  # no-op salvo la primera vez (antes de capturar)
+    noise = self._noise(B)
+    key = (B, self.ctx.shape[1])   # el graph tiene la forma del contexto con que se capturó
+    g = self._g.get(key)
+    if g is None or self.m._graphs is not g[1]:  # _ensure_cache rehízo la caché: el graph apunta a la vieja
+      g = self._g[key] = (GraphedStep(self._frame, self.ctx, *noise), self.m._graphs)
     return g[0](self.ctx, *noise), None
 
 
@@ -530,5 +573,8 @@ def make_stream(model, **kw) -> Stream:
   if isinstance(model, MaskGIT):
     return MaskGITStream(model, **kw)
   if kw.get("graphs", True) and hasattr(model, "use_cuda_graphs"):
-    model.use_cuda_graphs(True)
+    model.use_cuda_graphs(True)   # el primer segundo (contexto incompleto) sigue por el decode con un graph por paso
+  from src.models.gpt import GPT
+  if isinstance(model, GPT) or type(model).__name__ == "Gpt2m":   # gpt2m se importa recién al usarlo (third_party/commavq)
+    return GPTStream(model, **kw)
   return TokenStream(model, **kw)
