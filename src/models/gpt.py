@@ -142,7 +142,11 @@ class GPT(WorldModel):
     return self.net(tok, pos)[:, -1]
 
   @torch.no_grad()
-  def next_frame(self, ctx, temperature=1.0, steps=None, generator=None):
+  def next_frame(self, ctx, temperature=1.0, steps=None, generator=None, noise=None, graphs=None):
+    """noise: (128, B, 1024) float32, una tirada Exp(1) por token (la que sample_logits sacaría del generador, en el
+    mismo orden): el muestreo no toca el generador y el frame entero se puede capturar en un CUDA graph
+    (GPTStream). graphs: None = lo que dice use_cuda_graphs; False fuerza el decode sin graph por paso (los graphs
+    no se anidan)."""
     B = ctx.shape[0]
     p = next(self.parameters())
     self._ensure_cache(B, p.dtype, p.device)
@@ -152,9 +156,9 @@ class GPT(WorldModel):
     pos_all = torch.arange(self.cfg.block_size, device=p.device)
     lg = self.net(seq, pos_all[:P])[:, -1]  # prefill; el contexto se re-prefillea en cada frame
     out = []
-    use_graph = self._graphs_on and p.device.type == "cuda"
+    use_graph = (self._graphs_on if graphs is None else graphs) and p.device.type == "cuda"
     for i in range(TPF - 1):
-      tok = sample_logits(lg[:, :BOS], temperature, generator)  # nunca emite BOS
+      tok = sample_logits(lg[:, :BOS], temperature, generator, None if noise is None else noise[i])  # nunca emite BOS
       out.append(tok)
       if i == TPF - 2:
         break

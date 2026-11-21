@@ -127,16 +127,18 @@ def frame_logits_to_seq(frame_logits: torch.Tensor) -> torch.Tensor:
 
 
 def sample_logits(logits: torch.Tensor, temperature: float = 1.0,
-                  generator: Optional[torch.Generator] = None) -> torch.Tensor:
+                  generator: Optional[torch.Generator] = None,
+                  noise: Optional[torch.Tensor] = None) -> torch.Tensor:
   """logits (..., V) -> índices (...). temperature 0 = argmax.
 
   Muestrea con el truco de la exponencial (argmax de p / q con q ~ Exp(1)), que equivale a
-  muestrear de p sin sincronizar con la GPU.
+  muestrear de p sin sincronizar con la GPU. Si llega `noise` (float32, la forma de los logits), es el q ya
+  tirado: el mismo cálculo sin tocar el generador, así el muestreo cabe dentro de un CUDA graph.
   """
   if temperature == 0:
     return logits.argmax(-1)
   probs = torch.softmax(logits.float() / temperature, -1)
-  q = torch.empty_like(probs).exponential_(1, generator=generator)
+  q = noise if noise is not None else torch.empty_like(probs).exponential_(1, generator=generator)
   return (probs / q).argmax(-1)
 
 
