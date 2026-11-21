@@ -3,18 +3,18 @@
  "model": "gpt2m",
  "variant": "fp16_graphs",
  "decoder": false,
- "median_ms": 732.9463806152344,
- "p50_ms": 732.9463806152344,
- "p99_ms": 734.4040447998046,
- "p10_ms": 732.5666564941406,
- "p90_ms": 733.5957458496093,
- "max_ms": 734.4515991210938,
- "mean_ms": 732.9958068847657,
- "fps": 1.364356283689676,
+ "median_ms": 290.75144958496094,
+ "p50_ms": 290.75144958496094,
+ "p99_ms": 292.0421340942383,
+ "p10_ms": 290.28638610839846,
+ "p90_ms": 291.66162109375,
+ "max_ms": 292.30694580078125,
+ "mean_ms": 290.8764212036133,
+ "fps": 3.439363763886544,
  "realtime": false,
  "unidad": "frame",
  "params": 307052544,
- "peak_mem_mb": 929.9794921875,
+ "peak_mem_mb": 934.5869140625,
  "dtype": "fp16",
  "graphs": true,
  "graphs_usados": true,
@@ -36,11 +36,12 @@
   "backend": "cuda",
   "backend_version": "12.8"
  },
+ "tag": null,
  "torch": "2.11.0+cu128",
- "timestamp": "2026-11-18T23:02:16",
+ "timestamp": "2026-11-21T02:59:47",
  "_bitacora": {
-  "id": "20261118-230043-6b72",
+  "id": "20261121-025901-3f2e",
   "comando": "python -m src.cli gpt2m bench",
-  "commit": "06a0fda5e1c17a8652af7e54c292b4ed630b614e"
+  "commit": "c7963139435096bc6acda441a5f10f1a3c08e2cb"
  }
 }

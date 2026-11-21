@@ -42,54 +42,44 @@ def fvd(n):
           for h in ("1", "2", "3")}
 
 
-def bench_ms(nombre):
-  """p50 de results/bench/<nombre>__*.json (fp16 + CUDA graphs si existe), igual que paper/hacer_figuras.py."""
-  cands = sorted((R / "bench").glob(f"{nombre}__*.json"))
-  cands = [c for c in cands if "graphs" in c.name] or cands
-  if not cands:
-    return None
-  b = leer(cands[0])
-  return b["p50_ms"]
-
-
-def fila(clave, nombre, run_video, bench_4060=None, familia=""):
+def fila(clave, nombre, run_video, familia=""):
+  """Una fila de la tabla. La latencia es la de la RTX 3080 Ti (summary.json): las de la 4060 son del código de antes
+  de la atención explícita y no se volvieron a medir."""
   c = SUM.get(clave, {})
   f = fvd(run_video)
   if f is None:
     return None
   return {"clave": run_video, "nombre": nombre, "familia": familia, "params": c.get("params_M"),
           "ce": c.get("ce_all"), "lpips1": c.get("lpips_1s"), "fvd": f,
-          "drift": f["3"]["v"] / f["1"]["v"], "ms3080": c.get("ms_frame"),
-          "ms4060": bench_ms(bench_4060) if bench_4060 else None}
+          "drift": f["3"]["v"] / f["1"]["v"], "ms3080": c.get("ms_frame")}
 
 
 def tabla():
   """Las filas de la tabla principal del informe (paper/tablas/principal.tex)."""
-  filas = [fila("gpt2m", "gpt2m (comma)", "gpt2m", "gpt2m_4060", "gpt2m"),
-           fila("gpt_s_kd", "GPT-S destilado", "gpt_s_kd", "gpt_s_kd_4060", "gpt"),
-           fila("gpt_s_d050", "GPT-S de cero, 50 %", "gpt_s_d050", None, "gpt"),
-           fila("gpt_s_d025", "GPT-S de cero, 25 %", "gpt_s_d025", None, "gpt")]
-  filas += [fila(f"maskgit_s_abs_p{s}", f"MaskGIT-S, {s} paso{'s' * (s > 1)}", f"maskgit_s_abs_p{s}",
-                 f"maskgit_s_abs_p{s}", "maskgit") for s in (1, 2, 4, 8, 12)]
-  filas += [fila(f"genie_s_p{s}", f"Genie-S, {s} paso{'s' * (s > 1)}", f"genie_s_p{s}", f"genie_s_4060_p{s}", "genie")
-            for s in (1, 2, 4, 8, 12, 25)]
-  filas += [fila(f"genie_m_p{s}", f"Genie-M, {s} pasos", f"genie_m_p{s}", None, "genie_m") for s in (4, 8)]
-  filas += [fila("convlstm_px", "ConvLSTM (píxeles)", "convlstm_px", None, "convlstm"),
-            fila("Transición por celda", "Transición por celda", "transicion", None, "base"),
-            fila("Frame congelado", "Frame congelado", "congelado", None, "base"),
-            fila("Unigrama", "Unigrama", "unigram", None, "base")]
+  filas = [fila("gpt2m", "gpt2m (comma)", "gpt2m", "gpt2m"),
+           fila("gpt_s_kd", "GPT-S destilado", "gpt_s_kd", "gpt"),
+           fila("gpt_s_d050", "GPT-S de cero, 50 %", "gpt_s_d050", "gpt"),
+           fila("gpt_s_d025", "GPT-S de cero, 25 %", "gpt_s_d025", "gpt")]
+  filas += [fila(f"maskgit_s_abs_p{s}", f"MaskGIT-S, {s} paso{'s' * (s > 1)}", f"maskgit_s_abs_p{s}", "maskgit")
+            for s in (1, 2, 4, 8, 12)]
+  filas += [fila(f"genie_s_p{s}", f"Genie-S, {s} paso{'s' * (s > 1)}", f"genie_s_p{s}", "genie") for s in (1, 2, 4, 8, 12, 25)]
+  filas += [fila(f"genie_m_p{s}", f"Genie-M, {s} pasos", f"genie_m_p{s}", "genie_m") for s in (4, 8)]
+  filas += [fila("convlstm_px", "ConvLSTM (píxeles)", "convlstm_px", "convlstm"),
+            fila("Transición por celda", "Transición por celda", "transicion", "base"),
+            fila("Frame congelado", "Frame congelado", "congelado", "base"),
+            fila("Unigrama", "Unigrama", "unigram", "base")]
   return [f for f in filas if f]
 
 
 def pareto():
-  """FVD a 3 s contra ms por frame (modelo solo, p50), todos en la misma RTX 4060 Laptop (figura del informe)."""
-  def pt(bench, run, pasos=None):
-    ms, f = bench_ms(bench), fvd(run)
+  """FVD a 3 s contra ms por frame (modelo solo, p50), todos en la misma RTX 3080 Ti (summary.json)."""
+  def pt(clave, pasos=None):
+    ms, f = SUM.get(clave, {}).get("ms_frame"), fvd(clave)
     return None if ms is None or f is None else {"ms": ms, "fvd3": f["3"]["v"], "pasos": pasos}
-  return {"gpt2m": [pt("gpt2m_4060", "gpt2m")],
-          "gpt": [pt("gpt_s_kd_4060", "gpt_s_kd")],
-          "maskgit": [pt(f"maskgit_s_abs_p{s}", f"maskgit_s_abs_p{s}", s) for s in (1, 2, 4, 8, 12)],
-          "genie": [pt(f"genie_s_4060_p{s}", f"genie_s_p{s}", s) for s in (1, 2, 4, 8, 12)]}
+  return {"gpt2m": [pt("gpt2m")],
+          "gpt": [pt("gpt_s_kd")],
+          "maskgit": [pt(f"maskgit_s_abs_p{s}", s) for s in (1, 2, 4, 8, 12)],
+          "genie": [pt(f"genie_s_p{s}", s) for s in (1, 2, 4, 8, 12)]}
 
 
 def pasos():
@@ -114,10 +104,13 @@ def horizonte():
 
 
 def cadena():
-  """Cadena completa en la 3080 Ti: p50 por etapa con la cadena cerrada y p99 a ritmo de cámara (tabla cadena)."""
+  """Cadena completa en la 3080 Ti: p50 por etapa con la cadena cerrada y p99 a ritmo de cámara (tabla cadena).
+  Sin las mediciones de antes y después de la optimización (OPT_SUFIJOS): esas van en optimizacion()."""
   out = {}
   for f in sorted((R / "infer").glob("latencia_*__rtx3080ti.json")):
     d = leer(f)
+    if d["name"].endswith(OPT_SUFIJOS):
+      continue
     st = d["cadena_cerrada"].get("stages_p50_ms") or {}
     out[d["name"]] = {"encoder": round(st.get("encoder", 0), 2), "modelo": round(st.get("model", 0), 2),
                       "decoder": round(st.get("decoder", 0), 2), "p50": round(d["cadena_cerrada"]["p50"], 2),
@@ -211,10 +204,77 @@ def datos():
 
 
 def carrera():
-  """ms por frame del modelo solo (p50) para la carrera del video: 3080 Ti; MaskGIT-S solo se midió en la 4060."""
+  """ms por frame del modelo solo (p50) para la carrera del video, todos en la RTX 3080 Ti."""
   return {"gpt2m": SUM["gpt2m"]["ms_frame"], "gpt_s_kd": SUM["gpt_s_kd"]["ms_frame"],
           "genie_s_p4": SUM["genie_s_p4"]["ms_frame"], "convlstm_px": SUM["convlstm_px"]["ms_frame"],
-          "maskgit_s_abs_p8": bench_ms("maskgit_s_abs_p8"), "camara": 1000 / FPS}
+          "maskgit_s_abs_p8": SUM["maskgit_s_abs_p8"]["ms_frame"], "camara": 1000 / FPS}
+
+
+# ---- optimización de la inferencia (Docs/optimizar-decode-gpt.md): cada paso medido con su commit, en la 3080 Ti
+OPT_SUFIJOS = ("_eager", "_base_hoy", "_base_hoy_r2", "_framegraph", "_framegraph_r2", "_attn", "_attn_r2")
+FRAME_BYTES = 128 * 256 * 3          # un frame de cámara uint8: lo único que cruza el PCIe en cada sentido
+CACHE_LEN = 2584                     # caché KV estática: 20 frames x 129 tokens, alineada a 8
+GPT2M_CFG = {"n_layer": 24, "n_head": 16, "dim": 1024}   # commaVQ utils/gpt.py, GPTConfig
+
+
+def perfil(nombre, variante="graphs"):
+  d = leer(R / "perfil" / f"{nombre}.json")
+  return (d["variantes"].get(variante), d) if d else (None, None)
+
+
+def resumen_perfil(antes, despues, n_layer):
+  """Tiempo de GPU por frame en la atención y en el resto de la red, antes y después de cached_attention.
+  Antes, la atención es el kernel de SDPA (prefill y decode). Después, los kernels de cached_attention (los que se
+  llaman n_layer x 127 veces por frame, solo en el decode) más el SDPA del prefill."""
+  att = next(k for k in antes["top"] if k["categoria"] == "atencion")
+  nuevos = [k for k in despues["top"] if round(k["llamadas_por_paso"]) == n_layer * (CODES - 1)]
+  prefill = despues["por_categoria"].get("atencion", {}).get("us_por_paso", 0)
+  att_d = (sum(k["us_por_paso"] for k in nuevos) + prefill) / 1000
+  return {
+    "antes": {"ms_gpu": round(antes["ms_gpu_por_paso"], 1), "kernels": round(antes["kernels_por_paso"]),
+              "att_ms": round(att["us_por_paso"] / 1000, 1), "att_pct": round(100 * att["fraccion"]),
+              "att_us": round(att["us_por_llamada"], 1), "att_llamadas": round(att["llamadas_por_paso"]),
+              "att_bloques": att.get("bloques"), "resto_ms": round(antes["ms_gpu_por_paso"] - att["us_por_paso"] / 1000, 1)},
+    "despues": {"ms_gpu": round(despues["ms_gpu_por_paso"], 1), "kernels": round(despues["kernels_por_paso"]),
+                "att_ms": round(att_d, 1), "att_pct": round(100 * att_d / despues["ms_gpu_por_paso"]),
+                "att_us": round(sum(k["us_por_llamada"] for k in nuevos), 1), "att_kernels": len(nuevos),
+                "att_bloques": [k.get("bloques") for k in nuevos], "resto_ms": round(despues["ms_gpu_por_paso"] - att_d, 1)},
+  }
+
+
+def optimizacion():
+  """Los cuatro pasos (p50 del modelo solo en la RTX 3080 Ti) y los perfiles por kernel de antes y después.
+  Pasos: eager (la CPU lanza cada kernel), un CUDA graph por token (código de main antes de la optimización), el frame
+  entero en un graph (GPTStream) y la atención explícita contra la caché (cached_attention, lo vigente)."""
+  def p50(n):
+    b = leer(n)
+    return round(b["p50_ms"], 1) if b else None
+  B = R / "bench"
+  pasos = {m: [p50(B / f"{m}_eager__fp16.json"), p50(B / f"{m}_base_hoy__fp16_graphs.json"),
+               p50(B / f"{m}_framegraph__fp16_graphs.json"), p50(B / f"{m}__fp16_graphs.json")]
+           for m in ("gpt_s_kd", "gpt2m")}
+  cfg = leer(R / "checkpoints.json")["gpt_s_kd"]["config"]
+  kv_mb = lambda c: 2 * c["n_layer"] * CACHE_LEN * c["dim"] * 2 / 1e6          # k y v, fp16
+  # perfiles: antes de cambiar la atención (el frame en un graph, con el grid de cada kernel) y después
+  antes, dA = perfil("gpt_s_kd_perfil")
+  despues, _ = perfil("gpt_s_kd_perfil_attn")
+  gpt = resumen_perfil(antes, despues, cfg["n_layer"])
+  g2a, _ = perfil("gpt2m_perfil")
+  g2d, _ = perfil("gpt2m_perfil_attn")
+  gpt2m = resumen_perfil(g2a, g2d, GPT2M_CFG["n_layer"]) if g2a and g2d else None
+  cad = {k: leer(R / "infer" / f"latencia_gpt_s_kd{s}__rtx3080ti.json") for k, s in (("antes", "_base_hoy"), ("despues", ""))}
+  return {
+    "pasos": pasos, "gpu": "RTX 3080 Ti", "sm": dA["sm"], "perfil_gpt2m": gpt2m,
+    "maskgit_p4": [p50(B / "maskgit_s_abs_p4_base_hoy__fp16_graphs_s4.json"), p50(B / "maskgit_s_abs_p4__fp16_graphs_s4.json")],
+    "genie_p4": SUM["genie_s_p4"]["ms_frame"],
+    "cadena": {k: {"p50": round(d["cadena_cerrada"]["p50"], 1), "p99_ritmo": round(d["cadena_ritmo"]["p99"], 1),
+                   "tarde": round(d["cadena_ritmo"]["late_pct"], 1)} for k, d in cad.items() if d},
+    "kb_frame": round(FRAME_BYTES / 1e3), "mb_pesos": round(SUM["gpt_s_kd"]["params_M"] * 2, 1), "mb_kv": round(kv_mb(cfg), 1),
+    "mb_pesos_gpt2m": round(SUM["gpt2m"]["params_M"] * 2), "mb_kv_gpt2m": round(kv_mb(GPT2M_CFG)),
+    "cache_len": CACHE_LEN, "capas": cfg["n_layer"], "cabezas": cfg["n_head"],
+    "antes": gpt["antes"], "despues": gpt["despues"],
+    "fvd3": [fvd("gpt_s_kd")["3"]["v"], fvd("gpt_s_kd_stream")["3"]["v"]] if fvd("gpt_s_kd_stream") else None,
+  }
 
 
 def main():
@@ -223,6 +283,7 @@ def main():
   d = {"tabla": t, "pareto": pareto(), "pasos": pasos(), "horizonte": horizonte(), "cadena": cadena(),
        "latentes": latentes(), "diferencias": diferencias(), "semillas": semillas(), "piso": piso(),
        "temperaturas": temperaturas(), "escala": escala(), "datos": datos(), "carrera": carrera(),
+       "opt": optimizacion(),
        "ce_fvd": {k: round(v, 3) if isinstance(v, float) else v
                   for k, v in leer(R / "summary.json")["ce_vs_fvd1"].items()},
        "m": porclave}
@@ -230,7 +291,7 @@ def main():
   m = porclave
   d["cocientes"] = {
     "gpt2m_vs_camara": round(m["gpt2m"]["ms3080"] / 50, 1),
-    "maskgit4_vs_gpt_4060": round(m["gpt_s_kd"]["ms4060"] / m["maskgit_s_abs_p4"]["ms4060"], 1),
+    "maskgit4_vs_gpt": round(m["gpt_s_kd"]["ms3080"] / m["maskgit_s_abs_p4"]["ms3080"], 1),
     "params_gpt2m_vs_chicos": [round(m["gpt2m"]["params"] / m["genie_s_p4"]["params"], 1),
                                round(m["gpt2m"]["params"] / m["gpt_s_kd"]["params"], 1)],
     "fvd3_chicos_vs_gpt2m": [round(m["maskgit_s_abs_p12"]["fvd"]["3"]["v"] / m["gpt2m"]["fvd"]["3"]["v"], 1),
@@ -239,10 +300,14 @@ def main():
     # slide del problema: FPS de gpt2m y frames que graba la cámara (uno cada 50 ms, desde t = 0) mientras genera uno
     "gpt2m_fps": 1000 / m["gpt2m"]["ms3080"],
     "frames_camara_gpt2m": int(m["gpt2m"]["ms3080"] // 50) + 1,
-    # slide 4: dónde está cada uno a los 50 ms, con los ms de la 4060
-    "gpt_tokens_en_50ms": int(50 / m["gpt_s_kd"]["ms4060"] * 128),
-    "mg_frames_en_50ms": int(50 // m["maskgit_s_abs_p4"]["ms4060"]),
-    "mg_frames_en_un_gpt": int(m["gpt_s_kd"]["ms4060"] // m["maskgit_s_abs_p4"]["ms4060"]),
+    # slide 4: qué completa cada uno, con los ms de la 3080 Ti
+    "gpt_frames_en_50ms": int(50 // m["gpt_s_kd"]["ms3080"]),
+    "mg_frames_en_50ms": int(50 // m["maskgit_s_abs_p4"]["ms3080"]),
+    "mg_frames_en_un_gpt": int(m["gpt_s_kd"]["ms3080"] // m["maskgit_s_abs_p4"]["ms3080"]),
+    # slide de la optimización: cuántas veces más rápido quedó cada uno, del primer paso al último y del segundo al último
+    "opt_gpt_total": round(d["opt"]["pasos"]["gpt_s_kd"][0] / d["opt"]["pasos"]["gpt_s_kd"][3], 1),
+    "opt_gpt_att": round(d["opt"]["pasos"]["gpt_s_kd"][2] / d["opt"]["pasos"]["gpt_s_kd"][3], 1),
+    "opt_gpt2m_att": round(d["opt"]["pasos"]["gpt2m"][2] / d["opt"]["pasos"]["gpt2m"][3], 1),
   }
   OUT.write_text("// Generado por presentacion/generar_datos.py a partir de results/*.json. No editar a mano.\n"
                  "window.DATOS = " + json.dumps(d, ensure_ascii=False, separators=(",", ":")) + ";\n", encoding="utf-8")

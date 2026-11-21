@@ -27,51 +27,51 @@
   "backend_version": "12.8"
  },
  "tag": "rtx3080ti",
- "timestamp": "2026-11-18T23:45:39",
+ "timestamp": "2026-11-21T03:03:42",
  "graphs": true,
  "modelo_solo": {
-  "p50": 158.9944305419922,
-  "p99": 163.45921920776368,
-  "max": 163.8901824951172,
-  "late_pct": 100.0,
+  "p50": 38.01087951660156,
+  "p99": 38.14172969818115,
+  "max": 38.179840087890625,
+  "late_pct": 0.0,
   "n": 3000,
   "graphs": true,
   "graphs_usados": true,
   "graphs_error": null
  },
  "cadena_cerrada": {
-  "p50": 168.06774999713525,
-  "p99": 171.59121293574572,
-  "max": 179.64029998984188,
-  "late_pct": 100.0,
+  "p50": 48.18579996936023,
+  "p99": 48.35001893923618,
+  "max": 48.4318999806419,
+  "late_pct": 0.0,
   "n": 3000,
   "stages_p50_ms": {
-   "encoder": 3.851136088371277,
-   "model": 156.8568344116211,
-   "decoder": 6.046720027923584
+   "encoder": 3.795632004737854,
+   "model": 38.2474250793457,
+   "decoder": 6.097919940948486
   },
   "pace_ms": 0,
   "graphs_usados": true,
   "graphs_error": null
  },
  "cadena_ritmo": {
-  "p50": 166.77680000429973,
-  "p99": 171.35641700820997,
-  "max": 180.24440004955977,
-  "late_pct": 100.0,
+  "p50": 48.20710001513362,
+  "p99": 48.366809950675815,
+  "max": 48.434600001201034,
+  "late_pct": 0.0,
   "n": 3000,
   "stages_p50_ms": {
-   "encoder": 3.8440959453582764,
-   "model": 156.727294921875,
-   "decoder": 6.045695781707764
+   "encoder": 3.796992063522339,
+   "model": 38.242305755615234,
+   "decoder": 6.099967956542969
   },
   "pace_ms": 50.0,
   "graphs_usados": true,
   "graphs_error": null
  },
  "_bitacora": {
-  "id": "20261118-234537-0b29",
+  "id": "20261121-030340-a7dc",
   "comando": "python -m src.cli gpt bench '--tamaño' s --variante kd --cadena --ritmo 50",
-  "commit": "8d866e0098ff3449e23c9a181be5b4c670c55c70"
+  "commit": "c7963139435096bc6acda441a5f10f1a3c08e2cb"
  }
 }

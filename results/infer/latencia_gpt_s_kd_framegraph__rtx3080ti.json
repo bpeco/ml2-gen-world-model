@@ -1,0 +1,77 @@
+{
+ "name": "gpt_s_kd_framegraph",
+ "model": "gpt_s_kd",
+ "mode": "online",
+ "k": 1,
+ "steps": null,
+ "temperature": 1.0,
+ "dtype": "fp16",
+ "codec_dtype": "fp16",
+ "dtype_pedido": {
+  "dtype": "fp16",
+  "codec_dtype": "fp16"
+ },
+ "budget_ms": 50.0,
+ "opts": null,
+ "params": 12425472,
+ "unidad": "frame",
+ "warmup": 50,
+ "frames": 3000,
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "AMD64 Family 25 Model 33 Stepping 0, AuthenticAMD",
+  "gpu": "NVIDIA GeForce RTX 3080 Ti",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "tag": "rtx3080ti",
+ "timestamp": "2026-11-21T02:07:24",
+ "graphs": true,
+ "modelo_solo": {
+  "p50": 156.2992172241211,
+  "p99": 160.03076721191405,
+  "max": 253.65606689453125,
+  "late_pct": 100.0,
+  "n": 3000,
+  "graphs": true,
+  "graphs_usados": true,
+  "graphs_error": null
+ },
+ "cadena_cerrada": {
+  "p50": 163.54950005188584,
+  "p99": 163.85220502852462,
+  "max": 163.98369998205453,
+  "late_pct": 100.0,
+  "n": 3000,
+  "stages_p50_ms": {
+   "encoder": 3.788800001144409,
+   "model": 153.62559509277344,
+   "decoder": 6.051839828491211
+  },
+  "pace_ms": 0,
+  "graphs_usados": true,
+  "graphs_error": null
+ },
+ "cadena_ritmo": {
+  "p50": 163.5549499769695,
+  "p99": 163.85610605822876,
+  "max": 164.39379996154457,
+  "late_pct": 100.0,
+  "n": 3000,
+  "stages_p50_ms": {
+   "encoder": 3.79801607131958,
+   "model": 153.61740112304688,
+   "decoder": 6.054912090301514
+  },
+  "pace_ms": 50.0,
+  "graphs_usados": true,
+  "graphs_error": null
+ },
+ "_bitacora": {
+  "id": "20261121-020721-dd66",
+  "comando": "python -m src.cli gpt bench '--tamaño' s --variante kd --cadena --ritmo 50 -- --name gpt_s_kd_framegraph",
+  "commit": "e142b9cdc63a343acbb74a2e4ca3f2a7ee120274"
+ }
+}

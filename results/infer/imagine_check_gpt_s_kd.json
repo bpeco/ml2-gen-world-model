@@ -1,0 +1,18 @@
+{
+ "name": "gpt_s_kd",
+ "seconds": 204.72615027427673,
+ "tokens_equal": 0.06750455729166667,
+ "first_frame_equal": 0.342578125,
+ "clips_identical": 0.0,
+ "_bitacora": {
+  "id": "20261121-031051-b4e3",
+  "comando": "python -m src.cli gpt evaluar '--tamaño' s --variante kd --cadena --limite 5",
+  "commit": "c7963139435096bc6acda441a5f10f1a3c08e2cb",
+  "meta": {
+   "temperatura": {
+    "valor": 0.9,
+    "origen": "results/temperatura_gpt_s_kd.json (barrido en el holdout, corrida de referencia de la familia gpt)"
+   }
+  }
+ }
+}

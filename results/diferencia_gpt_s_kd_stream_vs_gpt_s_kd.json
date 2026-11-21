@@ -1,0 +1,45 @@
+{
+ "a": "gpt_s_kd_stream",
+ "b": "gpt_s_kd",
+ "n_clips": 400,
+ "fvd": {
+  "1": {
+   "fvd_a": 219.35572057654963,
+   "fvd_b": 206.7484570225347,
+   "diff": 12.607263554014935,
+   "lo": -6.635357762198616,
+   "hi": 31.849884870228486,
+   "sd": 9.81766393684365,
+   "p": 0.1791044776119403,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "2": {
+   "fvd_a": 384.7862623513088,
+   "fvd_b": 357.82714463603816,
+   "diff": 26.959117715270622,
+   "lo": 1.384005432839654,
+   "hi": 52.53422999770159,
+   "sd": 13.048526674709677,
+   "p": 0.04975124378109453,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "3": {
+   "fvd_a": 472.90095025415667,
+   "fvd_b": 468.46218230082786,
+   "diff": 4.4387679533288065,
+   "lo": -28.821908790943368,
+   "hi": 37.69944469760098,
+   "sd": 16.969733032791925,
+   "p": 0.7562189054726368,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  }
+ },
+ "_bitacora": {
+  "id": "20261121-031958-9c42",
+  "comando": "python -m src.cli estadistica -- diferencia --a gpt_s_kd_stream --b gpt_s_kd",
+  "commit": "b5b77899304c2df5f08e84c255883f4aac7c83c8"
+ }
+}

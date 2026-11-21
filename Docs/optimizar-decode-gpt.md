@@ -1,60 +1,84 @@
 # Optimizar el decode de GPT y gpt2m
 
-Surgió de revisar las métricas de la presentación (`presentacion/`) el 20 de noviembre de 2026. **Estado (21/11/2026): implementado y medido en la 3080 Ti, en la rama `optimizar-decode-gpt` (commit `8b3ee3c`).** La hipótesis original (overhead del host) resultó falsa. El tiempo lo dominaba un kernel de atención con la GPU casi vacía, y cambiarlo bajó el GPT-S de 154 a 40 ms y gpt2m de 767 a 313 ms (ver "Resultado"). <!-- ok-numero --> Las secciones de más abajo son la propuesta original. Cuando se decida qué hacer con esto, este documento se borra o se archiva: lo vigente son los JSON de `results/`.
+Surgió de revisar las métricas de la presentación (`presentacion/`) el 20 de noviembre de 2026. **Estado (21/11/2026): implementado, medido en la RTX 3080 Ti y en `main`.** La hipótesis original (overhead del host) resultó falsa: el tiempo lo dominaba un kernel de atención con la GPU casi vacía. Cambiarlo bajó el GPT-S destilado de 154 a 38 ms por frame y gpt2m de 767 a 291 ms, sin tocar los modelos (ver "Resultado"). <!-- ok-numero --> La presentación ya está actualizada (slide 5, nueva, y respaldo 3). Las secciones de más abajo son la propuesta original. Cuando se decida qué hacer con esto, este documento se borra o se archiva: lo vigente son los JSON de `results/`.
 
-## Resultado: la atención de decode (21/11/2026)
+## Resultado (21/11/2026)
 
-**Diagnóstico.** `python -m src.cli gpt bench --tamaño s --variante kd -- --perfil` (nuevo: desglose por kernel con `torch.profiler`, en `results/perfil/`) mostró que la atención del decode era el 81 % del tiempo de GPU del GPT-S: 128,7 de 159 ms por frame, en 768 llamadas (6 capas × 128 tokens) a `fmha_cutlassF`, de 167,5 µs cada una (`results/perfil/gpt_s_kd_perfil.json`). <!-- ok-numero -->
+Cada paso tiene su commit y está medido con la CLI, con el árbol limpio, en la RTX 3080 Ti (modelo solo, p50, batch 1, fp16; ms por frame). Los commits de los pasos 0 y 2 están en la rama `pasos-optimizacion`, unida a `main` con `-s ours`: no cambia el código de `main`, y así esas mediciones cuentan como vigentes. <!-- ok-numero -->
 
-- Con caché, cada paso atiende 1 query contra las 2584 posiciones de la caché estática, con máscara.
-- Este torch (2.11+cu128, Windows) no trae FlashAttention. Con máscara, SDPA elige el kernel mem-efficient, que lanza un bloque por cabeza (6 a 16 de los 80 SM de la 3080 Ti), y cada bloque recorre la caché en serie.
-- Además, SDPA convierte la máscara bool a float en cada capa y en cada token.
-- Eso explica la evidencia de abajo:
-  - el costo es ~200 µs por capa y por token en S, M, L y gpt2m, porque todos tienen head_dim 64 y la misma caché;
-  - no depende del contexto, porque se recorre la caché entera igual;
-  - la 4060 gana, porque los kernels con poca ocupación dependen del reloj por SM y de la L2.
-
-**Cambio** (`src/models/backbone.py`, `src/models/gpt2m.py`):
-- `cached_attention` hace la misma cuenta que SDPA (la del backend math, el que fuerza `decode_n_tokens` de comma) con `baddbmm`, `softmax` y `bmm`, que se reparten sobre las posiciones de la caché.
-- La máscara aditiva se calcula una vez, en `setup_cache`.
-- Se usa con caché y T ≤ 129: el decode del GPT y las pasadas de MaskGIT. El prefill sigue por SDPA.
-- En gpt2m, el `forward` de la atención de comma se reemplaza solo mientras la caché está enganchada (`next_frame`), sin tocar `third_party`.
-
-| Medición en la 3080 Ti (p50, p99 entre paréntesis) | Antes | Después |
-|---|---|---|
-| GPT-S destilado, modelo solo | 154,0 (158,6) y 155,0 (160,0) | **40,1 (48,3) y 40,0 (47,1)** |
-| gpt2m, modelo solo | 767,1 (779,2) | **312,7 (317,7) y 312,3 (326,4)** |
-| MaskGIT-S, 4 pasos, modelo solo (pesos al azar) | 9,32 (10,60) | **6,40 (7,46)** |
-| GPT-S, cadena cerrada | 172,6 (187,0) | **49,1 (57,0)**: 9,6 % de frames tarde |
-| GPT-S, cadena a ritmo de cámara | 165,1 (165,4) | **49,2 (58,1)**: 14,1 % de frames tarde |
+| Paso | Commit | GPT-S destilado | gpt2m | Qué cambia en el hardware |
+|---|---|---|---|---|
+| 0. PyTorch eager | `42f563f` (`--sin-graphs`) | 430,2 | 1595,1 | La CPU lanza desde Python ~13.000 kernels por frame (gpt2m: ~47.600); con graphs, esos kernels ocupan ~153 ms de GPU, así que el resto es lanzar |
+| 1. Un CUDA graph por token (`GraphedStep`) | `79b6cae` (lo que había) | 154,0 y 155,0 | 767,1 | La CPU dispara 128 graphs por frame; el muestreo de cada token sigue afuera |
+| 2. El frame entero en un graph (`GPTStream`) | `e142b9c` | 156,0 y 157,6 | 730,4 | La CPU dispara un graph, más 128 lanzamientos del ruido del muestreo; no cambia nada: el límite ya era la GPU |
+| 3. Atención explícita (`cached_attention`) | `8b3ee3c` | 40,1, 40,0, 44,7 y 44,3 | 312,7 y 312,3 | La atención pasa a 4 kernels cortos (el q·kᵀ, en 1008 bloques), sin un bloque por cabeza que recorra la caché en serie |
+| 4. El ruido del muestreo en un lanzamiento (`frame_noise`) | `c796313` | **37,6, 37,6 y 37,9** | **289,7 y 290,8** | La CPU ya no demora el graph del frame |
 <!-- ok-numero -->
 
-- **Tiempo de GPU por frame** (`results/perfil/gpt_s_kd_perfil_attn.json`): de 159 a 38,7 ms en el GPT-S. La atención de decode baja de 167,5 µs a ~13 µs por capa (un gemv, un softmax y un gemm). Lo que queda son matmul (53 %), layer norm, indexado y elementwise: ~13.000 kernels chicos por frame. En gpt2m queda en 307 ms de GPU por frame, con la atención en 5 % (`results/perfil/gpt2m_perfil_attn.json`). <!-- ok-numero -->
-- **Equivalencia** (`gpt evaluar --tamaño s --variante kd --cadena --limite 5`, T = 0,9): el FVD es el mismo, 205,3 / 350,2 / 468,5 contra 206,7 / 357,8 / 468,5 a 1, 2 y 3 s, dentro de los IC (`results/video_gpt_s_kd_stream.json` contra `results/video_gpt_s_kd.json`). El LPIPS es igual en toda la curva. Los tokens coinciden en un 92,7 % (`results/infer/imagine_check_gpt_s_kd.json`): el redondeo fp16 del kernel nuevo cambia algún token, y a T = 0,9 eso se propaga por el rollout. <!-- ok-numero -->
-- **La cadena del GPT-S queda en el borde.** Encoder 3,8 + modelo 39,2 + decoder 6,1 ms dan 49,1 ms de p50, con el p99 en 57 a 58 ms: entra en los 50 ms en la mediana, pero no siempre. <!-- ok-numero -->
-- **El cociente con MaskGIT-S baja.** En la misma GPU, el GPT-S era 16,5 veces más lento que MaskGIT-S con 4 pasos (154 contra 9,32 ms) y ahora lo es 6,3 veces (40 contra 6,4 ms). <!-- ok-numero -->
-- **Dónde están los números.**
-  - Después: `results/bench/gpt_s_kd_attn__fp16_graphs{,_r2}`, `gpt2m_attn__fp16_graphs{,_r2}`, `maskgit_s_abs_p4_attn__fp16_graphs_s4` y `results/infer/latencia_gpt_s_kd_attn__rtx3080ti.json`.
-  - Antes, con el código de `main` (`79b6cae`): `gpt_s_kd_base_hoy`, `gpt2m_base_hoy`, `maskgit_s_abs_p4_base_hoy` y `latencia_gpt_s_kd_base_hoy`.
-  - Los JSON viejos de la tabla no se tocaron.
-  - Lo de después está medido con el árbol limpio, pero en una rama: cuenta como `vigente` cuando el commit llegue a `main`.
-- **Para la presentación** (slides 1, 3, 4, 7, 8 y 11, y la tabla de respaldo): cambian las cifras del GPT-S, gpt2m y MaskGIT-S, el título de la slide 8 ("El GPT chico no llega a 20 FPS") y la conclusión 1. La decodificación paralela sigue siendo más rápida, pero la brecha con el GPT era en gran parte de implementación. Las cifras de la 4060 quedaron viejas.
+**Diagnóstico** (`python -m src.cli gpt bench --tamaño s --variante kd -- --perfil`: desglose por kernel con `torch.profiler` y el grid de cada kernel del trace de CUPTI, en `results/perfil/`).
+- Con el código del paso 2 (`f58358b`, `results/perfil/gpt_s_kd_perfil.json`), la atención era el 81 % del tiempo de GPU del GPT-S: 123,7 de 153,1 ms por frame, en 768 llamadas de 161 µs a `fmha_cutlassF` (el kernel mem-efficient de SDPA). <!-- ok-numero -->
+- En las 762 llamadas del decode, ese kernel lanza un grid de 1 × 6 × 1: **6 bloques, uno por cabeza, para los 80 SM** de la GPU, con una ocupación media del 1,2 %. Cada bloque recorre en serie las 2584 posiciones de la caché estática. En gpt2m son 16 bloques, y la atención era el 70 % (`results/perfil/gpt2m_perfil.json`). <!-- ok-numero -->
+- Este torch (2.11+cu128, Windows) no trae FlashAttention. Con máscara y una sola query, SDPA no tiene un kernel que reparta la caché entre bloques.
+- Eso explica la evidencia de la propuesta:
+  - el costo era ~200 µs por capa y por token en S, M, L y gpt2m (todos tienen head_dim 64 y la misma caché);
+  - no dependía del contexto (se recorre la caché entera igual);
+  - la 4060 le ganaba a la 3080 Ti (los kernels con poca ocupación dependen del reloj por SM y de la L2).
+
+**Cambios.**
+- `cached_attention` (`src/models/backbone.py`, y en gpt2m un `forward` propio solo mientras la caché está enganchada, sin tocar `third_party`) hace la misma cuenta que SDPA, la del backend math que fuerza `decode_n_tokens` de comma.
+  - Son 4 kernels por capa: q·kᵀ con `baddbmm` (1008 bloques), el softmax, el producto con v y una copia.
+  - Tardan 14,9 µs en total, contra 161 (`results/perfil/gpt_s_kd_perfil_attn.json`). <!-- ok-numero -->
+  - Se usa con caché y T ≤ 129: el decode del GPT y las pasadas de MaskGIT. El prefill sigue por SDPA.
+  - La máscara aditiva se calcula una vez, en `setup_cache`.
+- `frame_noise` (`src/models/base.py`): las 128 tiradas Exp(1) de un frame salen de una sola llamada al generador.
+  - Con 128 llamadas, la CPU hacía 128 lanzamientos antes del graph del frame y la GPU los esperaba.
+  - Según el núcleo en que quedaba el proceso, el GPT-S daba 40 o 44,5 ms: muy estable dentro de una corrida, distinto entre corridas.
+  - Con una sola llamada quedan 37,6 a 37,9 ms en todas las corridas. <!-- ok-numero -->
+  - `next_frame` tira igual, así que el stream y `next_frame` siguen dando los mismos tokens con el mismo generador.
+
+**Tiempo de GPU por frame, después:** 38,9 ms en el GPT-S y 292,3 en gpt2m. Lo que queda son ~12.900 kernels chicos por frame en el GPT-S (matmul, layer norm, indexado, elementwise). Bajar de ahí pide fusionarlos (`torch.compile`, que en Windows necesita Triton) o menos pasos por frame. <!-- ok-numero -->
+
+**Cadena completa del GPT-S** (`results/infer/latencia_gpt_s_kd__rtx3080ti.json`):
+- Encoder 3,8 + modelo 38,2 + decoder 6,1 ms: 48,2 ms de p50 y 48,4 de p99, tanto en bucle cerrado como a ritmo de cámara, con 0 % de frames tarde. <!-- ok-numero -->
+- Entra en los 50 ms, sin margen. Antes daba 172,6 ms de p50 (`latencia_gpt_s_kd_base_hoy`). <!-- ok-numero -->
+- Una corrida anterior con el paso 3 (`latencia_gpt_s_kd_attn`) dio p99 de 57 a 58 ms y 10 a 14 % de frames tarde. Coincidió con scripts de Python en la CPU: las latencias se miden con la máquina quieta. <!-- ok-numero -->
+
+**Otros modelos.**
+- MaskGIT-S usa la misma red y también bajó, con 4 pasos de 9,32 a 6,39 ms (`maskgit_s_abs_p4_base_hoy` contra `maskgit_s_abs_p4`, pesos al azar). <!-- ok-numero -->
+  - Con 1 a 12 pasos va de 3,9 a 13,0 ms. Ahora está medido en la 3080 Ti; antes, solo en la 4060. <!-- ok-numero -->
+  - El GPT-S pasa de ser 16,5 veces más lento que MaskGIT-S con 4 pasos a serlo 5,9 veces. <!-- ok-numero -->
+- Genie no cambia: su atención (espacial sobre 128 tokens y temporal sobre ≤ 20 frames, sin máscara) ya lanzaba cientos de bloques, 13,5 µs por llamada (`results/perfil/genie_s_p4_perfil.json`). <!-- ok-numero -->
+
+**Calidad.** El modelo es el mismo; cambian el redondeo fp16 del kernel y la secuencia de números al azar, no la distribución.
+- `gpt evaluar --tamaño s --variante kd --cadena --limite 5` (T = 0,9) da un FVD de 219,4 / 384,8 / 472,9 a 1, 2 y 3 s, contra 206,7 / 357,8 / 468,5 de los rollouts de la tabla. <!-- ok-numero -->
+- La diferencia pareada (`results/diferencia_gpt_s_kd_stream_vs_gpt_s_kd.json`) es +12,6 (p = 0,18), +27,0 (p = 0,05) y +4,4 (p = 0,76). Son dos muestras del mismo modelo. A 1 y 3 s no hay diferencia; a 2 s queda en el borde (IC del 95 % de 1,4 a 52,5), y con tres horizontes no alcanza para distinguirla del ruido. <!-- ok-numero -->
+- La tabla de calidad no se rehace.
+
+**Dónde están los números y su estado.**
+- Las latencias canónicas son lo vigente, y de ahí salen el reporte y la presentación: `gpt_s_kd__fp16_graphs`, `gpt2m__fp16_graphs`, `maskgit_s_abs_p{1,2,4,8,12}` y `latencia_gpt_s_kd__rtx3080ti`.
+- Los pasos intermedios conviven con su nombre: `*_eager`, `*_base_hoy`, `*_framegraph` y `*_attn`.
+- Las mediciones de la RTX 4060 Laptop del GPT-S, gpt2m y MaskGIT-S son del código de antes y pasaron a `protocolo anterior`.
+  - Las de MaskGIT-S estaban guardadas sin etiqueta de dispositivo, como si fueran de la 3080 Ti, y ahora se llaman `maskgit_s_abs_4060_p*`.
+  - Hay que volver a medirlas en esa máquina.
+- Genie en la 4060 sigue vigente.
+
+**Pendiente.** El informe (`paper/`) todavía tiene las cifras viejas (733, 158, 131 y 916 ms, el "10 veces más rápido" y "Los GPT no llegan a tiempo real"). Hay que regenerar las figuras (`python paper/hacer_figuras.py`) y revisar el texto a mano, como dice la sección "Después de tener las cifras". <!-- ok-numero -->
 
 ## Primer intento: el frame entero en un CUDA graph (21/11/2026)
 
 Se implementó `GPTStream` como estaba propuesto (`sample_logits(noise=)`, `next_frame(noise=, graphs=)`, `Gpt2m._ensure_cache`, `GPTStream` y el despacho en `make_stream`) y se midió con la CLI, en la 3080 Ti, fp16 con graphs, batch 1 y contexto lleno. **El frame entero en un graph no reduce la latencia: los ~130 ms fijos no eran overhead de Python del host.**
 
-| Medición (p50, p99 entre paréntesis) | Código viejo, hoy | Frame en un graph | Medición vieja guardada |
+| Medición (p50, p99 entre paréntesis) | Código viejo, hoy (`79b6cae`) | Frame en un graph (`e142b9c`) | Medición vieja guardada |
 |---|---|---|---|
-| GPT-S destilado, modelo solo | 154,0 (158,6) y 155,0 (160,0) | 153,0 (157,0) y 153,4 (158,6) | 158,2 |
-| gpt2m, modelo solo | 767,1 (779,2) | 770,5 (774,7) | 733,0 |
-| GPT-S, cadena cerrada | 172,6 (187,1) | 163,6 (174,2) | 168,1 |
-| GPT-S, cadena a ritmo de cámara (50 ms) | 165,1 (165,4) | 171,2 (193,0) | no guardada |
+| GPT-S destilado, modelo solo | 154,0 (158,6) y 155,0 (160,0) | 156,0 (168,5) y 157,6 (169,9) | 158,2 |
+| gpt2m, modelo solo | 767,1 (779,2) | 730,4 (735,3) | 733,0 |
+| GPT-S, cadena cerrada | 172,6 (187,0) | 163,5 (163,9) | 168,1 |
+| GPT-S, cadena a ritmo de cámara (50 ms) | 165,1 (165,4) | 163,6 (163,9) | no guardada |
+<!-- ok-numero -->
 
-- Las diferencias son de ±1 % en el modelo solo y de ±5 % en la cadena, que cambian de signo de una modalidad a otra: ruido. Con el código viejo, la medición de hoy (154–155 ms) reproduce la guardada (158 ms), así que la máquina está en el mismo estado que cuando se midió.
-- **Equivalencia con pesos reales** (`gpt evaluar --tamaño s --variante kd --cadena`, T = 0,9, fp16): `tokens_equal` = 1,0 y `clips_identical` = 1,0 sobre 400 clips de 60 frames, contra `results/rollouts/gpt_s_kd.npy`. El FVD del camino nuevo es idéntico (206,7 / 357,8 / 468,5 a 1, 2 y 3 s). La captura del frame entero de gpt2m (~48.000 nodos) funciona sin partirla.
-- **Dónde están los números.** `results/bench/gpt_s_kd_framegraph__fp16_graphs{,_r2}`, `gpt_s_kd_base_hoy__fp16_graphs{,_r2}`, `gpt2m_framegraph__fp16_graphs` y `gpt2m_base_hoy__fp16_graphs`; `results/infer/latencia_gpt_s_kd_framegraph__rtx3080ti.json` y `latencia_gpt_s_kd_base_hoy__rtx3080ti.json`. Los JSON viejos (`gpt_s_kd__fp16_graphs`, `gpt2m__fp16_graphs`, los de la 4060 y `latencia_gpt_s_kd__rtx3080ti`) no se tocaron. Las corridas hechas con otros procesos en la CPU (la primera tanda dio 181, 870 y 415 ms) se repitieron en silencio; sus líneas quedan en `results/bitacora.jsonl`.
-- Hecho con el árbol sucio (el código no estaba commiteado): la bitácora lo anota y estos resultados no cuentan como `vigente`.
+- Las diferencias son de unos pocos por ciento y cambian de signo de una medición a otra: ruido. Con el código viejo, la medición de hoy (154–155 ms) reproduce la guardada (158 ms). <!-- ok-numero -->
+- **Equivalencia con pesos reales**: con el frame en un graph, `tokens_equal` = 1,0 y `clips_identical` = 1,0 sobre los 400 clips, contra `results/rollouts/gpt_s_kd.npy` (corrida de la otra sesión, con el árbol sucio). La captura del frame entero de gpt2m (~48.000 nodos) funciona sin partirla.
+- Las primeras corridas, hechas con otros procesos en la CPU (181, 870 y 415 ms) y con el árbol sucio, se repitieron; sus líneas quedan en `results/bitacora.jsonl`. <!-- ok-numero -->
 
 **Qué significa.** El tiempo de decode es de GPU, no del host: el paso de decode ya corría como graph, y juntar los 128 en uno no cambia nada. El perfil de la sección anterior mostró qué lo dominaba. El frame en un graph se queda igual, porque saca a la CPU del camino: con la CPU cargada, el decode viejo midió 415 ms en vez de 154. <!-- ok-numero -->
 
@@ -144,13 +168,13 @@ Regenerar, en este orden:
 
 Son independientes de la optimización, y quedan para decidir con el equipo.
 
-1. **GPU sin etiquetar.** El GPT-S aparece con 131 ms (slides 4 y 8; 4060) y con 158 ms (slides 7 y 11; 3080 Ti), y gpt2m con 733 ms (slides 1, 3 y 7; 3080 Ti) y 916 ms (slide 8, "casi un segundo"; 4060). En la slide 8, el 131 ms de la 4060 está junto al 22 ms de la 3080 Ti, sin GPU en ninguno. La slide 6 dice "siempre la misma GPU".
+1. **GPU sin etiquetar.** *(Resuelto el 21/11: la presentación usa solo la RTX 3080 Ti.)* El GPT-S aparece con 131 ms (slides 4 y 8; 4060) y con 158 ms (slides 7 y 11; 3080 Ti), y gpt2m con 733 ms (slides 1, 3 y 7; 3080 Ti) y 916 ms (slide 8, "casi un segundo"; 4060). En la slide 8, el 131 ms de la 4060 está junto al 22 ms de la 3080 Ti, sin GPU en ninguno. La slide 6 dice "siempre la misma GPU".
 2. **Spearman (respaldo R3).** El p de 0,04 sale de `scipy.spearmanr`, que usa una aproximación t (`src/report.py`, `results/summary.json`). Con n = 5 y rho de 0,90, el p exacto por permutación es 0,083 a dos colas. <!-- ok-numero -->
 3. **MaskGIT a 20 FPS.** MaskGIT-S se midió solo como modelo solo, en la 4060, sin encoder, decoder ni p99. `Docs/resultados.md` dice que con la cadena completa sostienen 20 FPS solo Genie y el ConvLSTM. El título de la slide 8 y la conclusión 2 lo extienden a MaskGIT.
 4. **Diferencia pareada de la slide 9.** El "−81 a 3 s" sale de la re-corrida `results/video_gpt_s_kd_r.json`, y la tabla y la slide 8 usan `results/video_gpt_s_kd.json`. Restando se obtiene −88. Falta aclarar que es la re-corrida pareada.
 5. **p-valores en el piso.** Los "p = 0,01" son el mínimo del bootstrap con 200 remuestreos (2/201 = 0,00995): debería decir "p ≤ 0,01". El "p ≥ 0,33" de Genie-M contra Genie-S es en rigor 0,328.
 6. **Latentes (slide 10).** "Lo mismo que el encoder sin entrenar" no vale para todos: LeWM entrenado da R² de 0,08 a 0,10 contra 0,04 sin entrenar, y V-JEPA 2-S entrenado da 0,03 contra 0,09. <!-- ok-numero -->
 7. **"Los mejores chicos" (slide 8).** El rango 370–468 incluye al GPT-S destilado, que a 3 s no es de los mejores; los mejores van de 370 a 425.
-8. **Notas del orador.** `presentacion/guion.md` conserva un `[pendiente: falta el rollout de MaskGIT-S]` en la slide 7, aunque el sprite ya está.
+8. **Notas del orador.** *(Resuelto el 21/11: ya no está el pendiente.)* `presentacion/guion.md` conserva un `[pendiente: falta el rollout de MaskGIT-S]` en la slide 7, aunque el sprite ya está.
 
 Verificado sin error: los FVD y sus IC, las diferencias pareadas, los 780.000 frames, el LPIPS, los porcentajes del dataset, el ajuste de escala, las temperaturas, el piso real contra real, los 400 clips, el encoder (3,8 ms) y el decoder (6,1 ms), el p99 de 22 ms de la cadena de Genie-S, y los conteos de las slides 1, 4 y 7. `datos.js`, `presentacion.html` y `notas.js` se regeneran idénticos a los commiteados.

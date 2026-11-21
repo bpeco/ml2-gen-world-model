@@ -100,54 +100,149 @@
   "fecha": "2026-11-19"
  },
  "results/bench/gpt2m_4060__fp16_graphs.json": {
-  "estado": "vigente",
-  "motivo": "RTX 4060 Laptop: latencia de gpt2m para la comparación en la misma GPU",
-  "fecha": "2026-11-20"
+  "estado": "protocolo anterior",
+  "motivo": "RTX 4060 Laptop, medido con el código de antes de la atención explícita (commit 8b3ee3c): hay que volver a medirlo en esa máquina",
+  "fecha": "2026-11-21"
  },
  "results/bench/gpt2m__fp16_graphs.json": {
   "estado": "vigente",
-  "motivo": "bitácora 20261118-230043-6b72: python -m src.cli gpt2m bench",
-  "fecha": "2026-11-19"
+  "motivo": "bitácora 20261121-025813-997d: python -m src.cli gpt2m bench",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt2m_attn__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-012257-a245: python -m src.cli gpt2m bench -- --name gpt2m_attn",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt2m_attn_r2__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-014134-cd11: python -m src.cli gpt2m bench -- --name gpt2m_attn_r2",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt2m_base_hoy__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-000658-ea69: python -m src.cli gpt2m bench -- --name gpt2m_base_hoy",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt2m_eager__fp16.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-024932-3e9d: python -m src.cli gpt2m bench -- --sin-graphs --name gpt2m_eager",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt2m_framegraph__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-020449-c410: python -m src.cli gpt2m bench -- --name gpt2m_framegraph",
+  "fecha": "2026-11-21"
  },
  "results/bench/gpt_s_kd_4060__fp16_graphs.json": {
-  "estado": "vigente",
-  "motivo": "RTX 4060 Laptop, pesos aleatorios (la latencia no depende de los pesos): comparación en la misma placa de gpt_s_kd, genie_s y maskgit_s_abs",
-  "fecha": "2026-11-19"
+  "estado": "protocolo anterior",
+  "motivo": "RTX 4060 Laptop, medido con el código de antes de la atención explícita (commit 8b3ee3c): hay que volver a medirlo en esa máquina",
+  "fecha": "2026-11-21"
  },
  "results/bench/gpt_s_kd__fp16_graphs.json": {
   "estado": "vigente",
-  "motivo": "bitácora 20261118-230217-89d2: python -m src.cli gpt bench '--tamaño' s --variante kd",
-  "fecha": "2026-11-19"
+  "motivo": "bitácora 20261121-025750-5de3: python -m src.cli gpt bench '--tamaño' s --variante kd",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt_s_kd_attn__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-012232-f90b: python -m src.cli gpt bench '--tamaño' s --variante kd -- --name gpt_s_kd_attn",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt_s_kd_attn_r2__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-012244-09b7: python -m src.cli gpt bench '--tamaño' s --variante kd -- --name gpt_s_kd_attn_r2",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt_s_kd_base_hoy__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-000511-ffbc: python -m src.cli gpt bench '--tamaño' s --variante kd -- --name gpt_s_kd_base_hoy",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt_s_kd_base_hoy_r2__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-000601-7bd6: python -m src.cli gpt bench '--tamaño' s --variante kd -- --name gpt_s_kd_base_hoy_r2",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt_s_kd_eager__fp16.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-025346-916c: python -m src.cli gpt bench '--tamaño' s --variante kd -- --sin-graphs --name gpt_s_kd_eager",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt_s_kd_framegraph__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-020356-8160: python -m src.cli gpt bench '--tamaño' s --variante kd -- --name gpt_s_kd_framegraph",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/gpt_s_kd_framegraph_r2__fp16_graphs.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-020422-0e67: python -m src.cli gpt bench '--tamaño' s --variante kd -- --name gpt_s_kd_framegraph_r2",
+  "fecha": "2026-11-21"
  },
  "results/bench/lewm__fp32.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261118-230312-66d4: python -m src.cli lewm bench",
   "fecha": "2026-11-19"
  },
+ "results/bench/maskgit_s_abs_4060_p12__fp16_graphs_s12.json": {
+  "estado": "protocolo anterior",
+  "motivo": "RTX 4060 Laptop, medido con el código de antes de la atención explícita (commit 8b3ee3c): hay que volver a medirlo en esa máquina",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/maskgit_s_abs_4060_p1__fp16_graphs_s1.json": {
+  "estado": "protocolo anterior",
+  "motivo": "RTX 4060 Laptop, medido con el código de antes de la atención explícita (commit 8b3ee3c): hay que volver a medirlo en esa máquina",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/maskgit_s_abs_4060_p2__fp16_graphs_s2.json": {
+  "estado": "protocolo anterior",
+  "motivo": "RTX 4060 Laptop, medido con el código de antes de la atención explícita (commit 8b3ee3c): hay que volver a medirlo en esa máquina",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/maskgit_s_abs_4060_p4__fp16_graphs_s4.json": {
+  "estado": "protocolo anterior",
+  "motivo": "RTX 4060 Laptop, medido con el código de antes de la atención explícita (commit 8b3ee3c): hay que volver a medirlo en esa máquina",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/maskgit_s_abs_4060_p8__fp16_graphs_s8.json": {
+  "estado": "protocolo anterior",
+  "motivo": "RTX 4060 Laptop, medido con el código de antes de la atención explícita (commit 8b3ee3c): hay que volver a medirlo en esa máquina",
+  "fecha": "2026-11-21"
+ },
  "results/bench/maskgit_s_abs_p12__fp16_graphs_s12.json": {
   "estado": "vigente",
-  "motivo": "medido en la RTX 4060 Laptop (no en la 3080 Ti del protocolo): solo para comparar contra otros benchmarks de la 4060; falta repetirlo en la 3080 Ti",
-  "fecha": "2026-11-19"
+  "motivo": "bitácora 20261121-023320-7730: python -m src.cli maskgit bench '--tamaño' s --variante abs --pasos 1,2,4,8,12 --aleatorio",
+  "fecha": "2026-11-21"
  },
  "results/bench/maskgit_s_abs_p1__fp16_graphs_s1.json": {
   "estado": "vigente",
-  "motivo": "medido en la RTX 4060 Laptop (no en la 3080 Ti del protocolo): solo para comparar contra otros benchmarks de la 4060; falta repetirlo en la 3080 Ti",
-  "fecha": "2026-11-19"
+  "motivo": "bitácora 20261121-023320-7730: python -m src.cli maskgit bench '--tamaño' s --variante abs --pasos 1,2,4,8,12 --aleatorio",
+  "fecha": "2026-11-21"
  },
  "results/bench/maskgit_s_abs_p2__fp16_graphs_s2.json": {
   "estado": "vigente",
-  "motivo": "medido en la RTX 4060 Laptop (no en la 3080 Ti del protocolo): solo para comparar contra otros benchmarks de la 4060; falta repetirlo en la 3080 Ti",
-  "fecha": "2026-11-19"
+  "motivo": "bitácora 20261121-023320-7730: python -m src.cli maskgit bench '--tamaño' s --variante abs --pasos 1,2,4,8,12 --aleatorio",
+  "fecha": "2026-11-21"
  },
  "results/bench/maskgit_s_abs_p4__fp16_graphs_s4.json": {
   "estado": "vigente",
-  "motivo": "medido en la RTX 4060 Laptop (no en la 3080 Ti del protocolo): solo para comparar contra otros benchmarks de la 4060; falta repetirlo en la 3080 Ti",
-  "fecha": "2026-11-19"
+  "motivo": "bitácora 20261121-023320-7730: python -m src.cli maskgit bench '--tamaño' s --variante abs --pasos 1,2,4,8,12 --aleatorio",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/maskgit_s_abs_p4_attn__fp16_graphs_s4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-014103-9d84: python -m src.cli maskgit bench '--tamaño' s --variante abs --pasos 4 --aleatorio -- --name maskgit_s_abs_p4_attn",
+  "fecha": "2026-11-21"
+ },
+ "results/bench/maskgit_s_abs_p4_base_hoy__fp16_graphs_s4.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-014119-fef8: python -m src.cli maskgit bench '--tamaño' s --variante abs --pasos 4 --aleatorio -- --name maskgit_s_abs_p4_base_hoy",
+  "fecha": "2026-11-21"
  },
  "results/bench/maskgit_s_abs_p8__fp16_graphs_s8.json": {
   "estado": "vigente",
-  "motivo": "medido en la RTX 4060 Laptop (no en la 3080 Ti del protocolo): solo para comparar contra otros benchmarks de la 4060; falta repetirlo en la 3080 Ti",
-  "fecha": "2026-11-19"
+  "motivo": "bitácora 20261121-023320-7730: python -m src.cli maskgit bench '--tamaño' s --variante abs --pasos 1,2,4,8,12 --aleatorio",
+  "fecha": "2026-11-21"
  },
  "results/bench/transicion__fp32.json": {
   "estado": "vigente",
@@ -178,6 +273,11 @@
   "estado": "vigente",
   "motivo": "bitácora 20261119-063224-64c7: python -m src.cli estadistica diferencia --a genie_s_p8 --b gpt_s_kd",
   "fecha": "2026-11-19"
+ },
+ "results/diferencia_gpt_s_kd_stream_vs_gpt_s_kd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-031958-9c42: python -m src.cli estadistica -- diferencia --a gpt_s_kd_stream --b gpt_s_kd",
+  "fecha": "2026-11-21"
  },
  "results/diferencia_maskgit_s_abs_p12_vs_gpt_s_kd_r.json": {
   "estado": "vigente",
@@ -299,6 +399,11 @@
   "motivo": "bitácora 20261119-002256-2364: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
   "fecha": "2026-11-19"
  },
+ "results/infer/imagine_check_gpt_s_kd.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-031051-b4e3: python -m src.cli gpt evaluar '--tamaño' s --variante kd --cadena --limite 5",
+  "fecha": "2026-11-21"
+ },
  "results/infer/imagine_check_transicion.json": {
   "estado": "vigente",
   "motivo": "bitácora 20261119-003129-76d3: python -m src.cli transicion evaluar --cadena",
@@ -321,8 +426,23 @@
  },
  "results/infer/latencia_gpt_s_kd__rtx3080ti.json": {
   "estado": "vigente",
-  "motivo": "bitácora 20261118-234537-0b29: python -m src.cli gpt bench '--tamaño' s --variante kd --cadena --ritmo 50",
-  "fecha": "2026-11-19"
+  "motivo": "bitácora 20261121-030340-a7dc: python -m src.cli gpt bench '--tamaño' s --variante kd --cadena --ritmo 50",
+  "fecha": "2026-11-21"
+ },
+ "results/infer/latencia_gpt_s_kd_attn__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-013305-8103: python -m src.cli gpt bench '--tamaño' s --variante kd --cadena --ritmo 50 -- --name gpt_s_kd_attn",
+  "fecha": "2026-11-21"
+ },
+ "results/infer/latencia_gpt_s_kd_base_hoy__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-003617-9120: python -m src.cli gpt bench '--tamaño' s --variante kd --cadena --ritmo 50 -- --name gpt_s_kd_base_hoy",
+  "fecha": "2026-11-21"
+ },
+ "results/infer/latencia_gpt_s_kd_framegraph__rtx3080ti.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-020721-dd66: python -m src.cli gpt bench '--tamaño' s --variante kd --cadena --ritmo 50 -- --name gpt_s_kd_framegraph",
+  "fecha": "2026-11-21"
  },
  "results/infer/latencia_transicion__rtx3080ti.json": {
   "estado": "vigente",
@@ -333,6 +453,11 @@
   "estado": "vigente",
   "motivo": "bitácora 20261119-070121-d385: python -m src.cli genie evaluar '--tamaño' s --pasos 4 --cadena",
   "fecha": "2026-11-19"
+ },
+ "results/infer/online_gpt_s_kd_t0.9.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-031051-b4e3: python -m src.cli gpt evaluar '--tamaño' s --variante kd --cadena --limite 5",
+  "fecha": "2026-11-21"
  },
  "results/infer/online_transicion.json": {
   "estado": "vigente",
@@ -698,6 +823,11 @@
   "estado": "vigente",
   "motivo": "réplica en la 4060 (mismos 400 clips, otra muestra) para las diferencias pareadas con maskgit_s_abs",
   "fecha": "2026-11-20"
+ },
+ "results/video_gpt_s_kd_stream.json": {
+  "estado": "vigente",
+  "motivo": "bitácora 20261121-031051-b4e3: python -m src.cli gpt evaluar '--tamaño' s --variante kd --cadena --limite 5",
+  "fecha": "2026-11-21"
  },
  "results/video_maskgit_s_abs_p1.json": {
   "estado": "vigente",

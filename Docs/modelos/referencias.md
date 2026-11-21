@@ -20,7 +20,7 @@ Las entradas que no se entrenan con la CLI, pero que van en la tabla de resultad
 |---|---|---|---|---|
 | Modelo | commaai/commavq-gpt2m: 24 capas, 16 cabezas, 1024, MLP 4096, vocab 1025, bloque 2580 | el código y los pesos de comma, sin cambios (third_party/commavq/utils/gpt.py) | fiel | commaVQ utils/gpt.py L26-123; config.json |
 | Pesos | pytorch_model.bin de Hugging Face | data/raw/pytorch_model.bin, bajado por src.data | fiel | HF commaai/commavq-gpt2m |
-| Muestreo y KV caché | generación autoregresiva con KV caché | la misma con caché estática propia (y CUDA graphs opcional); mismas distribuciones | propio | src/models/gpt2m.py: adaptación a la interfaz WorldModel |
+| Muestreo y KV caché | generación autoregresiva con KV caché; el decode fuerza el backend math de SDPA (atención explícita) | la misma con caché estática propia (y CUDA graphs opcional); mismas distribuciones. La atención de decode es la cuenta explícita (cached_attention), como la del backend math que fuerza comma; SDPA sin forzar elige mem-efficient, que con una query deja la GPU casi vacía | propio | commaVQ utils/gpt.py L162-171 (decode_n_tokens); src/models/gpt2m.py: adaptación a la interfaz WorldModel |
 | Receta de entrenamiento | 'a similar recipe to IRIS' (no publicada) | no se entrena aquí; es la referencia y el maestro de la destilación | fiel | commaVQ README L354 |
 <!-- /auto -->
 
