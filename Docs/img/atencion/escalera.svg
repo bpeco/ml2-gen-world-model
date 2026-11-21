@@ -1,0 +1,80 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 516" width="720" height="516" role="img" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<title>Los cuatro pasos de la optimización</title>
+<desc>Latencia por frame del GPT-S y de gpt2m en cada paso, y la cadena completa del GPT-S contra el presupuesto de 50 ms.</desc>
+<defs><marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#5f5e5a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker><pattern id="rayas" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#8a8984" stroke-width="1.5"/></pattern></defs>
+<rect x="0.5" y="0.5" width="719.0" height="515.0" rx="10" fill="#fcfcfb" stroke="#e1e0d9" stroke-width="1" />
+<text x="24.0" y="30.0" font-size="13" fill="#1f1e1c" text-anchor="start" font-weight="600">GPT-S destilado (ms por frame, modelo solo)</text>
+<text x="24.0" y="57.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">eager</text>
+<rect x="170.0" y="42.0" width="449.7" height="20.0" rx="3" fill="#b4b2a9" />
+<text x="627.7" y="57.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">430,2 ms</text>
+<text x="24.0" y="85.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">1 graph por token</text>
+<rect x="170.0" y="70.0" width="161.0" height="20.0" rx="3" fill="#b4b2a9" />
+<text x="339.0" y="85.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">154,0 ms</text>
+<text x="24.0" y="113.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">el frame en 1 graph</text>
+<rect x="170.0" y="98.0" width="163.1" height="20.0" rx="3" fill="#b4b2a9" />
+<text x="341.1" y="113.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">156,0 ms</text>
+<text x="24.0" y="141.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">atención y ruido</text>
+<rect x="170.0" y="126.0" width="39.6" height="20.0" rx="3" fill="#2a78d6" />
+<text x="217.6" y="141.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">37,9 ms</text>
+<line x1="170.0" y1="154.0" x2="630.0" y2="154.0" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<line x1="170.0" y1="154.0" x2="170.0" y2="158.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="170.0" y="171.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">0</text>
+<line x1="274.5" y1="154.0" x2="274.5" y2="158.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="274.5" y="171.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">100</text>
+<line x1="379.1" y1="154.0" x2="379.1" y2="158.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="379.1" y="171.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">200</text>
+<line x1="483.6" y1="154.0" x2="483.6" y2="158.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="483.6" y="171.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">300</text>
+<line x1="588.2" y1="154.0" x2="588.2" y2="158.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="588.2" y="171.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">400 ms</text>
+<text x="24.0" y="206.0" font-size="13" fill="#1f1e1c" text-anchor="start" font-weight="600">gpt2m</text>
+<text x="24.0" y="233.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">eager</text>
+<rect x="170.0" y="218.0" width="444.7" height="20.0" rx="3" fill="#b4b2a9" />
+<text x="622.7" y="233.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">1595,1 ms</text>
+<text x="24.0" y="261.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">1 graph por token</text>
+<rect x="170.0" y="246.0" width="213.9" height="20.0" rx="3" fill="#b4b2a9" />
+<text x="391.9" y="261.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">767,1 ms</text>
+<text x="24.0" y="289.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">el frame en 1 graph</text>
+<rect x="170.0" y="274.0" width="203.6" height="20.0" rx="3" fill="#b4b2a9" />
+<text x="381.6" y="289.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">730,4 ms</text>
+<text x="24.0" y="317.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">atención y ruido</text>
+<rect x="170.0" y="302.0" width="81.1" height="20.0" rx="3" fill="#2a78d6" />
+<text x="259.1" y="317.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">290,8 ms</text>
+<line x1="170.0" y1="330.0" x2="630.0" y2="330.0" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<line x1="170.0" y1="330.0" x2="170.0" y2="334.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="170.0" y="347.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">0</text>
+<line x1="281.5" y1="330.0" x2="281.5" y2="334.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="281.5" y="347.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">400</text>
+<line x1="393.0" y1="330.0" x2="393.0" y2="334.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="393.0" y="347.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">800</text>
+<line x1="504.5" y1="330.0" x2="504.5" y2="334.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="504.5" y="347.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">1200</text>
+<line x1="616.1" y1="330.0" x2="616.1" y2="334.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="616.1" y="347.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">1600 ms</text>
+<text x="24.0" y="382.0" font-size="13" fill="#1f1e1c" text-anchor="start" font-weight="600">GPT-S, cámara → encoder → modelo → decoder, a ritmo de cámara (mediana de cada etapa)</text>
+<rect x="24.0" y="396.0" width="12.0" height="12.0" rx="2" fill="#2a78d6" />
+<text x="42.0" y="406.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">modelo</text>
+<rect x="104.3" y="396.0" width="12.0" height="12.0" rx="2" fill="#b4b2a9" />
+<text x="122.3" y="406.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">encoder y decoder</text>
+<text x="24.0" y="435.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">antes</text>
+<rect x="170.0" y="420.0" width="6.3" height="20.0" rx="0" fill="#b4b2a9" />
+<rect x="178.3" y="420.0" width="256.7" height="20.0" rx="0" fill="#2a78d6" />
+<rect x="437.0" y="420.0" width="8.1" height="20.0" rx="3" fill="#b4b2a9" />
+<text x="453.0" y="435.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">165,1 ms · p99 165,4 · 100 % tarde</text>
+<text x="24.0" y="463.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">ahora</text>
+<rect x="170.0" y="448.0" width="6.3" height="20.0" rx="0" fill="#b4b2a9" />
+<rect x="178.3" y="448.0" width="61.7" height="20.0" rx="0" fill="#2a78d6" />
+<rect x="242.1" y="448.0" width="8.2" height="20.0" rx="3" fill="#b4b2a9" />
+<text x="261.3" y="463.0" font-size="12" fill="#1f1e1c" text-anchor="start" font-weight="400">48,2 ms · p99 48,4 · 0 % tarde</text>
+<line x1="253.3" y1="412.0" x2="253.3" y2="478.0" stroke="#5f5e5a" stroke-width="1.5" stroke-linecap="round" stroke-dasharray="4 3"/>
+<text x="257.3" y="408.0" font-size="11" fill="#5f5e5a" text-anchor="start" font-weight="400">50 ms: 20 FPS</text>
+<line x1="170.0" y1="480.0" x2="470.0" y2="480.0" stroke="#e1e0d9" stroke-width="1" stroke-linecap="round"/>
+<line x1="170.0" y1="480.0" x2="170.0" y2="484.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="170.0" y="497.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">0</text>
+<line x1="253.3" y1="480.0" x2="253.3" y2="484.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="253.3" y="497.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">50</text>
+<line x1="336.7" y1="480.0" x2="336.7" y2="484.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="336.7" y="497.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">100</text>
+<line x1="420.0" y1="480.0" x2="420.0" y2="484.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round"/>
+<text x="420.0" y="497.0" font-size="11" fill="#8a8984" text-anchor="middle" font-weight="400">150 ms</text>
+</svg>

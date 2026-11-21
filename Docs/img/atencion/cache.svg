@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 266" width="720" height="266" role="img" font-family="Inter, -apple-system, 'Segoe UI', Helvetica, Arial, sans-serif">
+<title>Un paso de decode lee toda la caché KV</title>
+<desc>La query del token nuevo se compara con las 2584 posiciones de la caché de una capa: el contexto, el frame nuevo a medio escribir y las posiciones vacías que la máscara anula.</desc>
+<defs><marker id="f" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M1 1L9 5L1 9" fill="none" stroke="#5f5e5a" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></marker><pattern id="rayas" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)"><line x1="0" y1="0" x2="0" y2="5" stroke="#8a8984" stroke-width="1.5"/></pattern></defs>
+<rect x="0.5" y="0.5" width="719.0" height="265.0" rx="10" fill="#fcfcfb" stroke="#e1e0d9" stroke-width="1" />
+<line x1="360.0" y1="64.0" x2="46.5" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="79.4" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="112.4" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="145.3" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="178.3" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="211.2" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="244.2" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="277.1" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="310.1" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="343.0" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="376.0" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="408.9" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="441.9" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="474.8" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="507.8" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="540.7" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="573.7" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="606.6" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="639.6" y2="108.0" stroke="#eb6834" stroke-width="1" stroke-linecap="round" opacity="0.4"/>
+<line x1="360.0" y1="64.0" x2="664.3" y2="108.0" stroke="#eb6834" stroke-width="1.2" stroke-linecap="round"/>
+<line x1="360.0" y1="64.0" x2="681.3" y2="108.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3"/>
+<rect x="265.0" y="24.0" width="190.0" height="40.0" rx="6" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<text x="360.0" y="49.0" font-size="14" fill="#1f1e1c" text-anchor="middle" font-weight="600">query del token t</text>
+<text x="470.0" y="49.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">lee las 2584 posiciones</text>
+<rect x="30.0" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="62.9" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="95.9" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="128.8" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="161.8" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="194.7" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="227.7" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="260.6" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="293.6" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="326.5" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="359.5" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="392.4" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="425.4" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="458.3" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="491.3" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="524.2" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="557.2" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="590.1" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="623.1" y="110.0" width="31.4" height="40.0" rx="2" fill="#dbe8f8" stroke="#2a78d6" stroke-width="1" />
+<rect x="656.0" y="110.0" width="16.6" height="40.0" rx="2" fill="#fbe3d8" stroke="#eb6834" stroke-width="1" />
+<rect x="673.1" y="110.0" width="16.9" height="40.0" rx="2" fill="url(#rayas)" stroke="#8a8984" stroke-width="1" />
+<path d="M30 158 V164 H654.5 V158" fill="none" stroke="#5f5e5a" stroke-width="0.8"/>
+<text x="342.3" y="182.0" font-size="12" fill="#5f5e5a" text-anchor="middle" font-weight="400">19 frames de contexto: 2451 posiciones, del prefill</text>
+<line x1="664.0" y1="154.0" x2="664.0" y2="196.0" stroke="#8a8984" stroke-width="1" stroke-linecap="round" stroke-dasharray="3 3"/>
+<text x="690.0" y="212.0" font-size="12" fill="#5f5e5a" text-anchor="end" font-weight="400">frame nuevo: el decode escribe 1 posición por paso</text>
+<rect x="30.0" y="236.0" width="12.0" height="12.0" rx="2" fill="#dbe8f8" />
+<text x="48.0" y="246.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">escrita en el prefill</text>
+<rect x="211.1" y="236.0" width="12.0" height="12.0" rx="2" fill="#fbe3d8" />
+<text x="229.1" y="246.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">escrita en este frame</text>
+<rect x="372.0" y="236.0" width="12.0" height="12.0" rx="2" fill="url(#rayas)" stroke="#8a8984" stroke-width="1" />
+<text x="390.0" y="246.0" font-size="12" fill="#5f5e5a" text-anchor="start" font-weight="400">vacía: −∞ en la máscara, pero se lee igual</text>
+</svg>

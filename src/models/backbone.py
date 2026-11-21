@@ -53,7 +53,7 @@ def cached_attention(q, k, v, bias):
 
   Es la misma cuenta que SDPA (la de su backend math, el que fuerza el decode de comma en utils/gpt.py), en el dtype
   de la caché. Con máscara y pocas queries (decode: 1; pasada de MaskGIT: 129), SDPA elige mem-efficient, que lanza un
-  bloque por cabeza y lo hace recorrer la caché entera en serie: ~170 µs por capa con 6 bloques en una GPU de 80 SM
+  bloque por cabeza y lo hace recorrer la caché entera en serie: ~160 µs por capa con 6 bloques en una GPU de 80 SM
   (results/perfil/gpt_s_kd_perfil.json; el torch de Windows no trae flash). Acá los productos se reparten
   sobre las posiciones de la caché.
   q (B, H, T, hd); k, v (B, H, S, hd); bias aditivo (0 / -inf) con forma (T, S) o (1, 1, T, S). -> (B, H, T, hd).

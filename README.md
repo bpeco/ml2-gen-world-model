@@ -8,6 +8,7 @@ Pregunta del proyecto: ¿cuánto se puede achicar y acelerar un world model de v
 - **Resultados (tabla modelo → performance):** [`Docs/resultados.md`](Docs/resultados.md).
 - **Cómo usar el framework (CLI, cola, bitácora, dispositivos):** [`Docs/uso.md`](Docs/uso.md).
 - **Una guía por modelo (receta, fidelidad, acciones):** [`Docs/modelos/`](Docs/modelos/README.md).
+- **Cómo corre el GPT en la GPU (kernels y la atención del decode, con diagramas):** [`Docs/atencion-decode.md`](Docs/atencion-decode.md).
 - **Cómo contribuir:** [`CONTRIBUTING.md`](CONTRIBUTING.md).
 - **Los papers del camino:** [`Docs/world-models-conduccion-papers.md`](Docs/world-models-conduccion-papers.md).
 
