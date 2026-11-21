@@ -222,6 +222,10 @@ def perfil(nombre, variante="graphs"):
   return (d["variantes"].get(variante), d) if d else (None, None)
 
 
+NOMBRES_ATT = (("direct_copy", "copia del bias"), ("gemv", "p·v"), ("SoftMax", "softmax"), ("gemm", "q·kᵀ"))
+ORDEN_ATT = ("copia del bias", "q·kᵀ", "softmax", "p·v")    # el orden en que corren (Docs/atencion-decode.md)
+
+
 def resumen_perfil(antes, despues, n_layer):
   """Tiempo de GPU por frame en la atención y en el resto de la red, antes y después de cached_attention.
   Antes, la atención es el kernel de SDPA (prefill y decode). Después, los kernels de cached_attention (los que se
@@ -229,17 +233,31 @@ def resumen_perfil(antes, despues, n_layer):
   att = next(k for k in antes["top"] if k["categoria"] == "atencion")
   nuevos = [k for k in despues["top"] if round(k["llamadas_por_paso"]) == n_layer * (CODES - 1)]
   prefill = despues["por_categoria"].get("atencion", {}).get("us_por_paso", 0)
+  # una llamada del decode (el promedio del perfil mezcla las del prefill, más largas; el prefill sigue por SDPA después)
+  grids = sorted(att.get("grids", {}).items(), key=lambda kv: -kv[1])
+  pasos = antes.get("pasos_perfilados") or 1
+  pre = next((k for k in despues["top"] if k["categoria"] == "atencion"), None)
+  us_dec = ((att["us_por_paso"] - sum(n for _, n in grids[1:]) / pasos * pre["us_por_llamada"]) / (grids[0][1] / pasos)
+            if grids and pre else att["us_por_llamada"])
   att_d = (sum(k["us_por_paso"] for k in nuevos) + prefill) / 1000
   return {
     "antes": {"ms_gpu": round(antes["ms_gpu_por_paso"], 1), "kernels": round(antes["kernels_por_paso"]),
               "att_ms": round(att["us_por_paso"] / 1000, 1), "att_pct": round(100 * att["fraccion"]),
-              "att_us": round(att["us_por_llamada"], 1), "att_llamadas": round(att["llamadas_por_paso"]),
+              "att_us": round(att["us_por_llamada"], 1), "att_us_decode": round(us_dec, 1),
+              "att_llamadas": round(att["llamadas_por_paso"]),
               "att_bloques": att.get("bloques"), "resto_ms": round(antes["ms_gpu_por_paso"] - att["us_por_paso"] / 1000, 1)},
     "despues": {"ms_gpu": round(despues["ms_gpu_por_paso"], 1), "kernels": round(despues["kernels_por_paso"]),
                 "att_ms": round(att_d, 1), "att_pct": round(100 * att_d / despues["ms_gpu_por_paso"]),
                 "att_us": round(sum(k["us_por_llamada"] for k in nuevos), 1), "att_kernels": len(nuevos),
-                "att_bloques": [k.get("bloques") for k in nuevos], "resto_ms": round(despues["ms_gpu_por_paso"] - att_d, 1)},
+                "att_bloques": [k.get("bloques") for k in nuevos], "resto_ms": round(despues["ms_gpu_por_paso"] - att_d, 1),
+                "att_lista": lista_att(nuevos)},
   }
+
+
+def lista_att(nuevos):
+  """Los kernels de cached_attention en el orden en que corren: nombre, µs por llamada y bloques (del perfil)."""
+  por = {next(n for clave, n in NOMBRES_ATT if clave in k["kernel"]): k for k in nuevos}
+  return [{"n": n, "us": round(por[n]["us_por_llamada"], 2), "bloques": por[n].get("bloques")} for n in ORDEN_ATT if n in por]
 
 
 def optimizacion():
@@ -272,6 +290,12 @@ def optimizacion():
     "kb_frame": round(FRAME_BYTES / 1e3), "mb_pesos": round(SUM["gpt_s_kd"]["params_M"] * 2, 1), "mb_kv": round(kv_mb(cfg), 1),
     "mb_pesos_gpt2m": round(SUM["gpt2m"]["params_M"] * 2), "mb_kv_gpt2m": round(kv_mb(GPT2M_CFG)),
     "cache_len": CACHE_LEN, "capas": cfg["n_layer"], "cabezas": cfg["n_head"],
+    # solo la atención (cached_attention, antes de frame_noise), para separar su efecto del ruido
+    "attn": {m: p50(B / f"{m}_attn__fp16_graphs.json") for m in ("gpt_s_kd", "gpt2m")},
+    # MB de k y v que lee cada llamada del decode (una capa entera de la caché, fp16)
+    "mb_kv_capa": round(2 * cfg["n_head"] * CACHE_LEN * (cfg["dim"] // cfg["n_head"]) * 2 / 1e6, 2),
+    "mb_kv_capa_gpt2m": round(2 * GPT2M_CFG["n_head"] * CACHE_LEN * (GPT2M_CFG["dim"] // GPT2M_CFG["n_head"]) * 2 / 1e6, 2),
+    "gbs_placa": 912,                  # RTX 3080 Ti: 384 bits a 19 Gbps (especificación de NVIDIA)
     "antes": gpt["antes"], "despues": gpt["despues"],
     "fvd3": [fvd("gpt_s_kd")["3"]["v"], fvd("gpt_s_kd_stream")["3"]["v"]] if fvd("gpt_s_kd_stream") else None,
   }

@@ -1,24 +1,25 @@
 # Guion de la presentación final
 
-Diez minutos más preguntas; con la slide 5 nueva, el estimado es 10:45, así que hay que recortar unos 45 segundos. Los segundos están estimados a unas 140 palabras por minuto. Las slides de respaldo (después de la 13) no cuentan: son para las preguntas. Este texto es también el de las notas del orador: en la presentación, la tecla N las muestra con el tiempo objetivo y un cronómetro (`python presentacion/armar.py` las actualiza).
+Diez minutos más preguntas; con las dos slides de optimización (11 y 12), el texto completo lleva unos 11:50, así que hay que recortar unos 110 segundos. Los segundos están estimados a unas 140 palabras por minuto, redondeados de a 5. Las slides de respaldo (después de la 14) no cuentan: son para las preguntas. Este texto es también el de las notas del orador: en la presentación, la tecla N las muestra con el tiempo objetivo y un cronómetro (`python presentacion/armar.py` las actualiza).
 
 | Slide | Segundos |
 |---|---|
 | 0 · Portada | 20 |
 | 1 · El problema | 35 |
 | 2 · Pipeline | 60 |
-| 3 · Qué cambió | 50 |
-| 4 · Cómo se genera un frame | 45 |
-| 5 · Cómo corre en la GPU | 60 |
-| 6 · Qué comparamos | 35 |
-| 7 · Cómo medimos | 30 |
-| 8 · Video lado a lado | 45 |
-| 9 · Calidad contra latencia | 65 |
-| 10 · Pasos y horizonte | 50 |
-| 11 · Lo que no funcionó | 60 |
-| 12 · Conclusiones | 45 |
-| 13 · Limitaciones | 45 |
-| **Total** | **645 (10:45)** |
+| 3 · Qué cambió | 60 |
+| 4 · Cómo se genera un frame | 40 |
+| 5 · Qué comparamos | 35 |
+| 6 · Cómo medimos | 30 |
+| 7 · Video lado a lado | 40 |
+| 8 · Calidad contra latencia | 70 |
+| 9 · Pasos y horizonte | 55 |
+| 10 · Lo que no funcionó | 65 |
+| 11 · Optimización: cómo corre en la GPU | 50 |
+| 12 · Optimización: los SM de la GPU | 50 |
+| 13 · Conclusiones | 50 |
+| 14 · Limitaciones | 50 |
+| **Total** | **710 (11:50)** |
 
 Teclas: flechas o clic para avanzar, R repite la animación de la slide, N muestra las notas, T reinicia el cronómetro, F pone pantalla completa, Fin va a la última slide.
 
@@ -32,7 +33,7 @@ Un world model predice cómo sigue un video de manejo. Si lo hace bien, sirve co
 
 *La línea de tiempo se arma sola.*
 
-El problema es la velocidad. La cámara saca un frame cada 50 milisegundos. gpt2m, el GPT que publicó comma, tarda 291 milisegundos en generar uno, y eso después de optimizar cómo corre en la GPU: mientras tanto, la cámara grabó 6. Son 3,4 frames por segundo. Además, genera los 128 tokens de cada frame de a uno: son 128 pasadas en fila.
+El problema es la velocidad. La cámara saca un frame cada 50 milisegundos. gpt2m, el GPT que publicó comma, tarda 291 milisegundos en generar uno, y eso ya con la optimización de la GPU que contamos al final: mientras tanto, la cámara grabó 6. Son 3,4 frames por segundo. Además, genera los 128 tokens de cada frame de a uno: son 128 pasadas en fila.
 
 En la pre-entrega nos preguntamos cuánto se puede achicar y acelerar un world model sin perder calidad. Hoy les contamos qué encontramos.
 
@@ -48,7 +49,7 @@ Abajo, la generación. Entra un segundo de video real. El encoder de comma lo pa
 
 El ConvLSTM y los modelos latentes quedan afuera de este esquema: uno predice píxeles y los otros no tienen decoder.
 
-## 3 · Qué cambió (50 s)
+## 3 · Qué cambió (60 s)
 
 Este es el roadmap de la pre-entrega. Lo completamos, pero en el camino cambiamos cosas.
 
@@ -56,9 +57,9 @@ Se mantuvo la pregunta, el dataset, el encoder y el decoder de comma, y gpt2m co
 
 Cambió la métrica principal: ahora es FVD, porque la cross-entropy no se puede comparar entre modelos con máscara y autorregresivos. Para la decodificación paralela usamos la dinámica de Genie, como en su paper, y un MaskGIT con la misma red que el GPT. El ConvLSTM ahora trabaja sobre píxeles. Y medimos de nuevo la latencia de comma con un protocolo fijo: 767 milisegundos, y 291 después de optimizar la inferencia. El 1,25 segundos de la pre-entrega no tenía el hardware documentado.
 
-Sumamos Genie-M, la cadena completa, la estadística, los modelos latentes y la optimización de la inferencia, que cuento en dos slides.
+Sumamos Genie-M, la cadena completa, la estadística, los modelos latentes y la optimización de la inferencia, que contamos al final, en dos slides.
 
-## 4 · Cómo se genera un frame (45 s)
+## 4 · Cómo se genera un frame (40 s)
 
 *Las dos grillas corren con el mismo reloj.*
 
@@ -66,25 +67,15 @@ Las dos son la misma red, de 12,4 millones de parámetros, y corren con el mismo
 
 A la derecha, MaskGIT arranca con el frame enmascarado y en cada paso fija los tokens más confiables, mirando el frame entero. Con 4 pasos tarda 6,4. Mientras el GPT completa un frame, MaskGIT genera 5; a los 50 milisegundos de la cámara, el GPT terminó uno y MaskGIT, 7.
 
-## 5 · Cómo corre en la GPU (60 s)
-
-*Los cuatro pasos aparecen de a uno. Un clic en una barra vuelve a ese paso.*
-
-Antes de los resultados, algo que no es aprendizaje automático pero los cambió: cómo corre el modelo en la GPU. Es el mismo GPT-S, con los mismos pesos.
-
-En PyTorch normal, la CPU lanza desde Python cada operación: unos 13 mil kernels por frame. Tarda 430 milisegundos, aunque esos kernels ocupan unos 150 de GPU: el resto es la CPU lanzando. Con un CUDA graph por token, la CPU dispara cada paso con una sola llamada: 154. Llevar el frame entero a un solo graph, salvo el ruido del muestreo, no cambió nada, 156: el límite ya no era la CPU.
-
-Entonces medimos kernel por kernel: la atención era el 81 % del tiempo. Con la caché, PyTorch elegía un kernel que en cada token lanza 6 bloques, uno por cabeza, para los 80 multiprocesadores de la GPU. Escribimos la misma cuenta en cuatro kernels cortos de cuBLAS y PyTorch, donde el producto más grande se reparte en mil bloques, y tiramos el ruido del muestreo de una vez: 38 milisegundos, con la misma calidad. gpt2m baja de 767 a 291.
-
-## 6 · Qué comparamos (35 s)
+## 5 · Qué comparamos (35 s)
 
 Comparamos seis familias. Las que entrenamos usan la receta de su paper y el mismo presupuesto: 780 mil frames. El GPT de comma es la referencia, y el GPT-S es su versión 25 veces más chica. MaskGIT-S usa la misma red que el GPT-S: entre los dos cambia solo la forma de decodificar. Genie suma atención espacio-temporal. El ConvLSTM predice píxeles. Las referencias simples miden qué tan difícil es la tarea, y los latentes son un contraste: no generan video.
 
-## 7 · Cómo medimos (30 s)
+## 6 · Cómo medimos (30 s)
 
 Todos se miden igual. Cada modelo recibe un segundo de video real y genera tres, alimentándose de sus propias predicciones. Son 400 clips de validación. La métrica principal es FVD: compara la distribución de los videos generados con la de los reales, con el movimiento incluido. La medimos a 1, 2 y 3 segundos. La latencia es el tiempo de generar un frame con batch 1, y para comparar usamos siempre la misma GPU.
 
-## 8 · Video lado a lado (45 s)
+## 7 · Video lado a lado (40 s)
 
 *Primero corre el segundo de contexto real en los seis.*
 
@@ -94,7 +85,7 @@ Este es el mismo clip para todos. Ahora cada modelo genera a la velocidad que me
 
 Ahora los pasamos todos a 20 frames por segundo, para comparar la calidad. gpt2m sigue de cerca la escena real: mantiene los postes y la calle. Los chicos de tokens generan una calle creíble desde el principio, pero se apartan de la escena real. El ConvLSTM da un promedio borroso.
 
-## 9 · Calidad contra latencia (65 s)
+## 8 · Calidad contra latencia (70 s)
 
 *El gráfico se arma por partes.*
 
@@ -106,13 +97,13 @@ Las curvas son la decodificación paralela; cada punto es un número de pasos. T
 
 A la derecha, el costo de achicar: el FVD pasa de 105 a entre 370 y 468. Y con Genie-S a 4 pasos, la cadena completa, con encoder y decoder, tiene un p99 de 22 milisegundos: ningún frame llega tarde.
 
-## 10 · Pasos y horizonte (50 s)
+## 9 · Pasos y horizonte (55 s)
 
 A la izquierda, el FVD a 3 segundos según los pasos; el sombreado es el intervalo del 95 %. Con 1 o 2 pasos, el modelo decide casi todos los tokens a la vez, sin ver los de al lado, y el error se acumula: Genie con 1 paso pasa de 279 a 1307 entre 1 y 3 segundos. Desde 4 pasos se estabiliza y alcanza la calidad de 25, que es lo que usa el paper.
 
 A la derecha, el FVD según el horizonte. El GPT-S es el mejor chico a 1 segundo, pero se degrada más que los de decodificación paralela con 4 o más pasos. A 3 segundos gana la decodificación paralela con 8 o más pasos: MaskGIT-S con 8 le saca 81 de FVD, y la diferencia pareada es significativa.
 
-## 11 · Lo que no funcionó (60 s)
+## 10 · Lo que no funcionó (65 s)
 
 Cuatro cosas no funcionaron, y las contamos como resultado.
 
@@ -124,17 +115,33 @@ Tercero, el LPIPS. Con LPIPS, el frame congelado le gana a todos los modelos chi
 
 Cuarto, agrandar sin más datos. Genie-M tiene más del doble de parámetros y empata con Genie-S. Cada modelo vio 780 mil frames; gpt2m vio 4.600 veces más. El GPT-S tiene 8 tokens por parámetro y Genie-M, unos 3; Chinchilla sugiere unos 20.
 
-## 12 · Conclusiones (45 s)
+## 11 · Optimización: cómo corre en la GPU (50 s)
+
+*Los cuatro pasos aparecen de a uno. Un clic en una barra vuelve a ese paso.*
+
+Ahora, otro tema: cómo llegamos a esas latencias. No es aprendizaje automático, pero cambió los resultados. Es el mismo GPT-S, con los mismos pesos.
+
+En PyTorch normal, la CPU lanza desde Python cada operación: unos 13 mil kernels por frame, y tarda 430 milisegundos. Con un CUDA graph por token, la CPU dispara cada paso con una sola llamada: 154. Llevar el frame entero a un solo graph no cambió nada, 156: el límite ya no era la CPU. Entonces medimos kernel por kernel, y la atención era el 81 % del tiempo de GPU. Cambiarla bajó el frame a 40 milisegundos, y tirar el ruido del muestreo de una sola vez, a 38, con la misma calidad.
+
+## 12 · Optimización: los SM de la GPU (50 s)
+
+*La animación corre las dos versiones con el mismo reloj.*
+
+La GPU tiene 80 multiprocesadores, los SM. En el GPT-S, con la caché y un solo token, PyTorch elegía un kernel de atención que lanza 6 bloques, uno por cabeza: 74 SM quedaban sin trabajo, y cada bloque recorría la caché en 41 vueltas, una detrás de la otra. Eran unos 160 microsegundos por capa.
+
+Escribimos la misma cuenta con multiplicaciones de matrices de cuBLAS. El producto de q por k se reparte en mil bloques y usa toda la GPU: los cuatro kernels tardan 15 microsegundos. Con eso, y el ruido del muestreo en un solo lanzamiento, el GPT-S pasó de 156 a 38 milisegundos por frame, y gpt2m, de 730 a 291.
+
+## 13 · Conclusiones (50 s)
 
 *Las conclusiones aparecen de a una.*
 
-Uno: medir dónde se iba el tiempo cambió el resultado. Sin tocar el modelo, el GPT de 12 millones de parámetros bajó de 430 a 38 milisegundos por frame. Llega a 20 frames por segundo, pero justo: con encoder y decoder, 48 milisegundos.
+Uno: medir dónde se iba el tiempo cambió el resultado. Sin tocar el modelo, el GPT de 12 millones de parámetros bajó de 156 a 38 milisegundos por frame. Llega a 20 frames por segundo, pero justo: con encoder y decoder, 48 milisegundos.
 
 Dos: con la misma red, decodificar en pocos pasos paralelos entra en los 50 milisegundos con margen, 6,4 milisegundos con 4 pasos, y con la misma calidad a 3 segundos, o mejor, con 8 a 12 pasos. A 1 segundo, el GPT sigue siendo mejor.
 
 Tres: el número de pasos se elige en inferencia, sin reentrenar. Permite elegir el punto entre calidad y latencia. Con menos de 4 pasos, el video se degrada con el horizonte.
 
-## 13 · Limitaciones (45 s)
+## 14 · Limitaciones (50 s)
 
 Estos resultados valen para pocos datos: 780 mil frames por modelo, el 0,65 % de commaVQ. También para video de una cámara a 128 por 256, y para latencias con batch 1 en una RTX 3080 Ti, que dependen de los kernels que trae PyTorch. La temperatura de MaskGIT deja sus números conservadores, y el FVD es ruidoso. No evaluamos difusión, ni acciones en los modelos generativos.
 
