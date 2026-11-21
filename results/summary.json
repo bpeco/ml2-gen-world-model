@@ -844,6 +844,75 @@
    "pareto": null
   },
   {
+   "label": "maskgit_s_abs_shard0",
+   "family": "maskgit",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 2.867,
+   "lpips_1s": null,
+   "fvd_1s": null,
+   "fvd_1s_ci": null,
+   "fvd_3s": null,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": null,
+   "fvd_1s_mitades": null,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "ablación",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
+   "label": "maskgit_s_abs_shard0_p4",
+   "family": "maskgit",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 2.867,
+   "lpips_1s": 0.29,
+   "fvd_1s": 298.6,
+   "fvd_1s_ci": [
+    257.2,
+    339.9
+   ],
+   "fvd_3s": 498.5,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": 316.8,
+   "fvd_1s_mitades": 396.6,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "ablación",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
+   "label": "maskgit_s_abs_shard0_p8",
+   "family": "maskgit",
+   "params_M": 12.4,
+   "ce_all": null,
+   "ce_last": 2.867,
+   "lpips_1s": 0.262,
+   "fvd_1s": 379.3,
+   "fvd_1s_ci": [
+    338.8,
+    419.8
+   ],
+   "fvd_3s": 523.5,
+   "fvd_piso_1s": 103.3,
+   "fvd_piso_mitades_1s": 316.8,
+   "fvd_1s_mitades": 474.5,
+   "ms_frame": null,
+   "e2e_p99_ms": null,
+   "fps": null,
+   "realtime": null,
+   "group": "ablación",
+   "estado": "vigente",
+   "pareto": null
+  },
+  {
    "label": "Real (piso)",
    "family": "baseline",
    "params_M": null,
@@ -988,8 +1057,8 @@
   "n": 5
  },
  "_bitacora": {
-  "id": "20261121-032305-1324",
+  "id": "20261121-182803-0bfb",
   "comando": "python -m src.cli reporte",
-  "commit": "b5b77899304c2df5f08e84c255883f4aac7c83c8"
+  "commit": "6c6548c58a80717c009549f28f623752b0eb6d2a"
  }
 }

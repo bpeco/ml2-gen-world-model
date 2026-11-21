@@ -38,6 +38,9 @@ Pareto: no dominada en (ms/frame, FVD a 1 s) entre las configuraciones principal
 | maskgit_s_abs_p2 | maskgit | 12.4 | – | 3.179 | 0.327 | 214.2 [179.8, 248.5] | 544.9 | 103.3 | 316.8 (308.5) | 4.71 | 212.3 | sí | – | – | vigente |
 | maskgit_s_abs_p4 | maskgit | 12.4 | – | 3.179 | 0.298 | 220.1 [180.9, 259.3] | 467.6 | 103.3 | 316.8 (312.7) | 6.39 | 156.6 | sí | – | – | vigente |
 | maskgit_s_abs_p8 | maskgit | 12.4 | – | 3.179 | 0.278 | 247.3 [211.7, 283.0] | 380.4 | 103.3 | 316.8 (335.4) | 10.35 | 96.6 | sí | – | – | vigente |
+| maskgit_s_abs_shard0 | maskgit | 12.4 | – | 2.867 | – | – | – | 103.3 | – | – | – | – | – | – | vigente |
+| maskgit_s_abs_shard0_p4 | maskgit | 12.4 | – | 2.867 | 0.29 | 298.6 [257.2, 339.9] | 498.5 | 103.3 | 316.8 (396.6) | – | – | – | – | – | vigente |
+| maskgit_s_abs_shard0_p8 | maskgit | 12.4 | – | 2.867 | 0.262 | 379.3 [338.8, 419.8] | 523.5 | 103.3 | 316.8 (474.5) | – | – | – | – | – | vigente |
 | Real (piso) | baseline | – | – | – | 0.0 | 0.0 [0.0, 0.0] | 0.0 | 103.3 | 316.8 (0.0) | – | – | – | – | – | vigente |
 | real_eval_b | otro | – | – | – | 0.0 | 0.0 [0.0, 0.0] | 0.0 | 103.3 | 319.2 (0.0) | – | – | – | – | – | vigente |
 | Transición por celda | baseline | – | 3.48 | 3.331 | 0.522 | 729.4 [656.3, 802.5] | 1241.4 | 103.3 | 316.8 (821.5) | 0.34 | 2925.8 | sí | sí | 20.6 | vigente |

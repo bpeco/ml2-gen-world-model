@@ -1,0 +1,315 @@
+{
+ "run": "maskgit_s_abs_shard0",
+ "kind": "maskgit",
+ "size": "s",
+ "config": {
+  "n_layer": 6,
+  "n_head": 6,
+  "dim": 384,
+  "dropout": 0.0,
+  "block_size": 2580,
+  "mask_schedule": "cosine",
+  "mask_min": 0.5,
+  "mask_max": 1.0,
+  "default_steps": 8,
+  "choice_temp": 1.0,
+  "pos": "abs",
+  "p_clean": 0.0
+ },
+ "params": 12425472,
+ "tokens": 379280640,
+ "frames": 2940160,
+ "steps": 9188,
+ "seconds": 4821.566440105438,
+ "tokens_per_s": 78663.36484449769,
+ "final_monitor_ce": 3.9467930793762207,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 10320000,
+   "monitor_ce": 6.848232269287109
+  },
+  {
+   "step": 500,
+   "tokens": 20640000,
+   "monitor_ce": 6.355671405792236
+  },
+  {
+   "step": 750,
+   "tokens": 30960000,
+   "monitor_ce": 5.123915672302246
+  },
+  {
+   "step": 1000,
+   "tokens": 41280000,
+   "monitor_ce": 4.658346652984619
+  },
+  {
+   "step": 1250,
+   "tokens": 51600000,
+   "monitor_ce": 4.522541046142578
+  },
+  {
+   "step": 1500,
+   "tokens": 61920000,
+   "monitor_ce": 4.476213455200195
+  },
+  {
+   "step": 1750,
+   "tokens": 72240000,
+   "monitor_ce": 4.463201522827148
+  },
+  {
+   "step": 2000,
+   "tokens": 82560000,
+   "monitor_ce": 4.422772407531738
+  },
+  {
+   "step": 2250,
+   "tokens": 92880000,
+   "monitor_ce": 4.40252685546875
+  },
+  {
+   "step": 2500,
+   "tokens": 103200000,
+   "monitor_ce": 4.353577613830566
+  },
+  {
+   "step": 2750,
+   "tokens": 113520000,
+   "monitor_ce": 4.324756145477295
+  },
+  {
+   "step": 3000,
+   "tokens": 123840000,
+   "monitor_ce": 4.281102657318115
+  },
+  {
+   "step": 3250,
+   "tokens": 134160000,
+   "monitor_ce": 4.242010593414307
+  },
+  {
+   "step": 3500,
+   "tokens": 144480000,
+   "monitor_ce": 4.224983215332031
+  },
+  {
+   "step": 3750,
+   "tokens": 154800000,
+   "monitor_ce": 4.1915130615234375
+  },
+  {
+   "step": 4000,
+   "tokens": 165120000,
+   "monitor_ce": 4.182640075683594
+  },
+  {
+   "step": 4250,
+   "tokens": 175440000,
+   "monitor_ce": 4.152284622192383
+  },
+  {
+   "step": 4500,
+   "tokens": 185760000,
+   "monitor_ce": 4.135242938995361
+  },
+  {
+   "step": 4750,
+   "tokens": 196080000,
+   "monitor_ce": 4.112905979156494
+  },
+  {
+   "step": 5000,
+   "tokens": 206400000,
+   "monitor_ce": 4.098853588104248
+  },
+  {
+   "step": 5250,
+   "tokens": 216720000,
+   "monitor_ce": 4.074425220489502
+  },
+  {
+   "step": 5500,
+   "tokens": 227040000,
+   "monitor_ce": 4.063584327697754
+  },
+  {
+   "step": 5750,
+   "tokens": 237360000,
+   "monitor_ce": 4.047197341918945
+  },
+  {
+   "step": 6000,
+   "tokens": 247680000,
+   "monitor_ce": 4.038032531738281
+  },
+  {
+   "step": 6250,
+   "tokens": 258000000,
+   "monitor_ce": 4.024097442626953
+  },
+  {
+   "step": 6500,
+   "tokens": 268320000,
+   "monitor_ce": 4.0127363204956055
+  },
+  {
+   "step": 6750,
+   "tokens": 278640000,
+   "monitor_ce": 4.008371353149414
+  },
+  {
+   "step": 7000,
+   "tokens": 288960000,
+   "monitor_ce": 3.989699363708496
+  },
+  {
+   "step": 7250,
+   "tokens": 299280000,
+   "monitor_ce": 3.988347291946411
+  },
+  {
+   "step": 7500,
+   "tokens": 309600000,
+   "monitor_ce": 3.9794397354125977
+  },
+  {
+   "step": 7750,
+   "tokens": 319920000,
+   "monitor_ce": 3.9741954803466797
+  },
+  {
+   "step": 8000,
+   "tokens": 330240000,
+   "monitor_ce": 3.965953826904297
+  },
+  {
+   "step": 8250,
+   "tokens": 340560000,
+   "monitor_ce": 3.958071231842041
+  },
+  {
+   "step": 8500,
+   "tokens": 350880000,
+   "monitor_ce": 3.9530997276306152
+  },
+  {
+   "step": 8750,
+   "tokens": 361200000,
+   "monitor_ce": 3.950845241546631
+  },
+  {
+   "step": 9000,
+   "tokens": 371520000,
+   "monitor_ce": 3.9440159797668457
+  },
+  {
+   "step": 9188,
+   "tokens": 379280640,
+   "monitor_ce": 3.9467930793762207
+  }
+ ],
+ "args": {
+  "kind": "maskgit",
+  "size": "s",
+  "config": "{}",
+  "run": "maskgit_s_abs_shard0",
+  "receta": null,
+  "set": [],
+  "presupuesto": "2940000",
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": null,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [],
+  "receta_hash": "aa590b03a28f",
+  "receta_nombre": "maskgit_propia"
+ },
+ "receta": {
+  "name": "maskgit_propia",
+  "fuente": "propia (ablación del repo; MaskGIT no publica el entrenamiento)",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.95
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "warmup",
+    "forma": "linear",
+    "ini": 0.0,
+    "fin": 0.001,
+    "pasos": 200
+   },
+   {
+    "nombre": "cosine",
+    "forma": "cosine",
+    "ini": 0.001,
+    "min_frac": 0.1
+   }
+  ],
+  "wd_ini": 0.1,
+  "wd_fin": null,
+  "wd_on": "matrices",
+  "ema_segs": null,
+  "grad_clip": 1.0,
+  "amp": "fp16",
+  "batch": 16,
+  "frames": 20,
+  "frameskip": 1,
+  "accum": 1,
+  "presupuesto": 780000,
+  "extras": {},
+  "paper_steps": null,
+  "batch_fuente": 16,
+  "forzado": [
+   [
+    "toda la receta",
+    "ablación propia: no hay receta publicada que seguir",
+    "propio"
+   ]
+  ]
+ },
+ "receta_hash": "aa590b03a28f",
+ "desviaciones": [],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261121-162733-2ad8",
+  "comando": "python -m src.cli maskgit entrenar '--tamaño' s --variante abs_shard0 --presupuesto 2940000",
+  "commit": "6c6548c58a80717c009549f28f623752b0eb6d2a"
+ }
+}
