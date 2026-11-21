@@ -25,7 +25,6 @@ from src import toolkit as T
 from src.toolkit import ACCIONES_TODAS, OPCIONES, Toolkit, ToolkitError
 
 GENERALES = ("cola", "listar", "resultados", "reporte", "estadistica", "bitacora", "docs", "verificar", "backends", "evaluadores")
-PENDIENTES = {}
 HOOKS_VERIFICAR = [  # (nombre, archivo que lo implementa, comando): se corren cuando el paquete que los agrega ya está
   ("docs --check", "src/docs_gen.py", ["python", "-m", "src.docs_gen", "--check"]),
   ("make_notebooks --check", "scripts/make_notebooks.py", ["python", "scripts/make_notebooks.py", "--check"]),
@@ -149,10 +148,8 @@ def _con_dry_run(args):
 
 
 def _expandir(cmd):
-  """Líneas que ejecutaría un comando de la cola (su --dry-run), o una nota si lo resuelve otro paquete."""
+  """Líneas que ejecutaría un comando de la cola (su --dry-run)."""
   args = shlex.split(cmd)
-  if args and args[0] in PENDIENTES:
-    return 0, [f"(`{args[0]}` todavía no está en la CLI: {PENDIENTES[args[0]]})"]
   buf = io.StringIO()
   with contextlib.redirect_stdout(buf), contextlib.redirect_stderr(buf):
     try:
@@ -215,9 +212,6 @@ def cola_correr(archivo, dry_run=False, trabajos=None, desde=None, salida=print,
     salida(f"== trabajo {j['id']}: {j.get('nombre', '')}")
     for cmd in j["comandos"]:
       args = shlex.split(cmd)
-      if args and args[0] in PENDIENTES:
-        salida(f"la cola se frena: `{args[0]}` todavía no está en la CLI")
-        return 2
       salida(f"-- python -m src.cli {cmd}")
       rc = main(args, _esperar=True, _desde_cola=True)
       if rc != 0:
@@ -389,9 +383,6 @@ def main(argv=None, _esperar=False, _desde_cola=False, _meta=None, _anidado=Fals
     parser_principal().print_help()
     return 0
   cmd, resto = argv[0], argv[1:]
-  if cmd in PENDIENTES:
-    print(f"`{cmd}` todavía no está en la CLI: {PENDIENTES[cmd]}; lo agrega otro paquete", file=sys.stderr)
-    return 2
   if cmd == "cola":
     return comando_cola(resto)
   if cmd == "listar":

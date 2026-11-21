@@ -65,7 +65,7 @@ def main(argv=None):
   a = ap.parse_args(argv)
 
   dev = device()
-  info = log_device(dev)
+  log_device(dev)
   from src.models import apply_opts, load_model
   model = apply_opts(load_model(a.model, dev), a.opt).eval().to(DTYPES[a.dtype])
   rechazar_latente(model, "src.temperatura")

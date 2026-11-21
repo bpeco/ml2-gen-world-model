@@ -89,10 +89,3 @@ class LatentWM(WorldModel):
   def num_params(self) -> int:
     """Parámetros de inferencia: sin el encoder target (solo entrenamiento, V-JEPA 2)."""
     return sum(p.numel() for n, p in self.named_parameters() if not n.startswith("tgt."))
-
-  def make_target(self):
-    """Copia EMA del encoder, sin gradiente (para V-JEPA 2; LeWM no la usa)."""
-    tgt = copy.deepcopy(self.encoder)
-    for p in tgt.parameters():
-      p.requires_grad_(False)
-    return tgt

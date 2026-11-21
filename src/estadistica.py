@@ -162,20 +162,6 @@ def diferencia_pareada(real, fake_a, fake_b, seg, reps=200, seed=2, fvd_fn=None)
           "p": float(p), "reps": reps, "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"}
 
 
-def diferencia_media_pareada(x, y, seg, reps=1000, seed=3):
-  """Diferencia pareada de la media de una métrica por clip (p. ej. LPIPS): x - y, IC percentil y p por segmento."""
-  x, y = np.asarray(x, dtype=np.float64), np.asarray(y, dtype=np.float64)
-  dif = x - y
-  r = ic_segmento(lambda i: dif[i].mean(), seg, reps, seed)
-  # p por bootstrap: fracción de remuestreos del otro lado de cero
-  grupos = grupos_de(seg)
-  rng = np.random.default_rng(seed)
-  d = np.array([dif[remuestrear(grupos, rng)].mean() for _ in range(reps)])
-  cola = min(int((d >= 0).sum()), int((d <= 0).sum()))
-  return {"diff": float(dif.mean()), "lo": r["lo"], "hi": r["hi"], "p": float(min(1.0, 2 * (cola + 1) / (reps + 1))),
-          "reps": reps, "metodo": "bootstrap pareado por segmento; IC percentil"}
-
-
 # ---- semillas
 def resumen_semillas(valores):
   """Lista de números (uno por corrida) -> {"mean", "std" (ddof 1), "n", "values"}. Sin None; con 1 valor, std = None."""

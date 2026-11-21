@@ -169,7 +169,6 @@ def chequear_numeros(mds, problemas):
 
 # ---------------------------------------------------------------- ejemplos
 
-SOLO_AYUDA = ("listar", "resultados")
 CON_DRY_RUN_GENERAL = {"reporte", "estadistica", "verificar", "docs", "resultados"}
 
 

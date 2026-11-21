@@ -26,7 +26,6 @@ from pathlib import Path
 from src import rutas
 
 PENDIENTE = "pendiente"
-ESTADOS_RUN = ("en curso", "lista", "fallada", "colgada")
 
 
 # ---------------------------------------------------------------- display
@@ -55,14 +54,6 @@ def mostrar_html(texto):
     display(HTML(texto))
   else:
     print(re.sub(r"<[^>]+>", " ", texto).replace("&amp;", "&").replace("&lt;", "<").replace("&gt;", ">").strip())
-
-
-def mostrar_md(texto):
-  if _en_notebook():
-    from IPython.display import Markdown, display
-    display(Markdown(texto))
-  else:
-    print(texto)
 
 
 def pendiente(que="", detalle=""):
@@ -507,7 +498,6 @@ BASELINES = ("unigram", "transicion", "congelado", "real")
 # corridas que la cola produce (plan, decisiones del 17-18/11): lo que el notebook de resultados espera ver
 ESPERADOS = ("unigram", "transicion", "congelado", "gpt2m", "real", "gpt_s_kd", "genie_s", "convlstm_px", "lewm", "vjepa2_s", "vjepa2_ac")
 LATENTES = ("lewm", "vjepa2_s", "vjepa2_ac")
-FUERA_DE_COLA = ("gpt_s", "gpt_m", "genie_m", "maskgit_s")
 FAMILIAS = {"gpt": "GPT", "gpt2m": "gpt2m (comma)", "maskgit": "MaskGIT propio", "genie": "Genie (MaskGIT)", "convlstm": "ConvLSTM",
             "lewm": "LeWM", "vjepa2": "V-JEPA 2", "baseline": "referencia"}
 

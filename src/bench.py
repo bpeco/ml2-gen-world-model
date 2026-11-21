@@ -109,7 +109,6 @@ def preparar_stream(model, ctx, dev, graphs, steps=None, ctx_frames=None):
   if es_latente(model):                                  # un paso de modelo = frameskip frames de cámara
     cam = render(ctx)[0]
     stream = make_stream(model, **kw)
-    k = getattr(stream, "k", None) or getattr(stream, "cada", 1)
     j = 0
     while not stream.full:                               # llena el estado con el video de cámara
       stream.observe_pixels(cam[j % len(cam)][None])

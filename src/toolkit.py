@@ -28,7 +28,6 @@ from src.infer import backends
 
 PY = ejecutor.PY
 ACCIONES_TODAS = ("receta", "entrenar", "continuar", "evaluar", "bench", "demo", "exportar", "estado")
-ACCIONES_GPU = ("entrenar", "continuar", "evaluar", "bench", "demo")
 GENERALES_SCRIPT = {"reporte": "src.report", "resultados": "src.resultados", "estadistica": "src.estadistica"}
 ESPECIALES = {  # entradas que no son KINDS: spec de load_model -> acciones
   "gpt2m": ("evaluar", "bench"),
@@ -42,7 +41,7 @@ CON_PASOS = ("maskgit", "genie")
 FAMILIA_REF = {"gpt": "gpt_s_kd", "genie": "genie_s"}   # corrida cuyo barrido de temperatura (results/temperatura_<run>.json) elige la T de la familia
 LEGACY = {"transicion": "copy", "congelado": "frozen"}    # nombres que tienen en disco los resultados viejos (--desde-cache)
 LEGACY_CE = {"transicion": "copy", "congelado": "copy_mix"}
-COLAPSO = ("vjepa2", "vjepa2_ac", "lewm")           # modelos con decodificación por pasos (--pasos)
+COLAPSO = ("vjepa2", "vjepa2_ac", "lewm")           # modelos a los que el humo les pasa --colapso (src.humo)
 DTYPE_VIDEO = {"gpt": "fp16", "maskgit": "fp16", "genie": "fp16", "gpt2m": "fp16"}  # dtype de los rollouts de la tabla (en CUDA)
 PASOS_HUMO = 300                           # pasos de cada entrenamiento del humo
 

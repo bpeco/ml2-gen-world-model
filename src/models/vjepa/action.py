@@ -128,7 +128,6 @@ class VJEPA2AC(WorldModel):
   def __init__(self, cfg: Config):
     super().__init__()
     self.cfg = cfg
-    enc_cfg = None
     parent = None
     if cfg.cargar_encoder and cfg.encoder_run:
       from src.models import load_model
@@ -232,11 +231,6 @@ class VJEPA2AC(WorldModel):
   def planear(self, z, acciones, estados, objetivo, horizonte=1, **kw):
     """CEM (800 muestras, top-10, 10 iteraciones por defecto): acciones normalizadas (B, horizonte, A). Ver plan.py."""
     return planificar(self, z, acciones, estados, objetivo, horizonte, **kw)
-
-  def a_pose(self, accion_norm, estado_norm):
-    """Estado siguiente en unidades normalizadas (estado + acción), para encadenar planes."""
-    return estado_norm + accion_norm
-
 
   # ---- lectura para src/eval_latent.py. Entrada: ventana uint8 (B, F, H, W, 3) ya a 4 Hz y poses crudas (B, F, n_pose).
   lat_aplica = ("probes", "horizonte", "sorpresa", "plan")
