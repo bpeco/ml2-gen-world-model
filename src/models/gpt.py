@@ -10,7 +10,7 @@ import torch
 
 from src.common import BLOCK, BOS, TPF, VOCAB, with_bos
 from src.models.backbone import Backbone, BackboneConfig
-from src.models.base import WorldModel, lm_loss, sample_logits
+from src.models.base import WorldModel, frame_noise, lm_loss, sample_logits
 from src.models.cudagraph import GraphedStep
 from src import schedules as S
 from src.recipes import Recipe
@@ -143,13 +143,15 @@ class GPT(WorldModel):
 
   @torch.no_grad()
   def next_frame(self, ctx, temperature=1.0, steps=None, generator=None, noise=None, graphs=None):
-    """noise: (128, B, 1024) float32, una tirada Exp(1) por token (la que sample_logits sacaría del generador, en el
-    mismo orden): el muestreo no toca el generador y el frame entero se puede capturar en un CUDA graph
-    (GPTStream). graphs: None = lo que dice use_cuda_graphs; False fuerza el decode sin graph por paso (los graphs
-    no se anidan)."""
+    """noise: (128, B, 1024) float32, las tiradas Exp(1) de los 128 tokens. Sin noise (y con temperatura), se tiran
+    acá de una vez con el generador (frame_noise): es lo mismo que hace GPTStream fuera del graph del frame, así que
+    con el mismo generador dan los mismos tokens. graphs: None = lo que dice use_cuda_graphs; False fuerza el decode
+    sin graph por paso (los graphs no se anidan)."""
     B = ctx.shape[0]
     p = next(self.parameters())
     self._ensure_cache(B, p.dtype, p.device)
+    if noise is None and temperature > 0:
+      noise = frame_noise(TPF - 1, B, p.device, generator)
     seq = with_bos(ctx[:, -self.ctx_frames:])
     seq = torch.cat([seq, torch.full_like(seq[:, :1], BOS)], 1)  # BOS del frame a generar
     P = seq.shape[1]

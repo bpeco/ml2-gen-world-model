@@ -7,7 +7,7 @@ import torch.nn.functional as F
 
 from src.common import BLOCK, BOS, TPF, with_bos
 from src.models.backbone import additive_mask, cached_attention
-from src.models.base import WorldModel, sample_logits
+from src.models.base import WorldModel, frame_noise, sample_logits
 from src.models.cudagraph import GraphedStep
 
 sys.path.insert(0, "third_party/commavq")
@@ -104,11 +104,13 @@ class Gpt2m(WorldModel):
   def next_frame(self, ctx, temperature=1.0, steps=None, generator=None, noise=None, graphs=None):
     """(B, F, 128) -> (B, 128). Prefill del contexto + BOS y 128 pasos de decode, en batch.
 
-    noise: (128, B, 1024) float32, una tirada Exp(1) por token en el orden en que sample_logits la sacaría del
-    generador: el muestreo no lo toca y el frame entero se puede capturar en un CUDA graph (GPTStream). graphs:
-    None = lo que dice use_cuda_graphs; False fuerza el decode sin graph por paso (los graphs no se anidan)."""
+    noise: (128, B, 1024) float32, las tiradas Exp(1) de los 128 tokens. Sin noise (y con temperatura), se tiran acá
+    de una vez con el generador (frame_noise), como hace GPTStream fuera del graph del frame. graphs: None = lo que
+    dice use_cuda_graphs; False fuerza el decode sin graph por paso (los graphs no se anidan)."""
     ctx = ctx[:, -self.ctx_frames:]
     B, dev = ctx.shape[0], ctx.device
+    if noise is None and temperature > 0:
+      noise = frame_noise(128, B, dev, generator)
     dtype = next(self.gpt.parameters()).dtype
     L = find_multiple(BLOCK, 8)
     kv, mask = self._setup(B, L, dtype, dev)

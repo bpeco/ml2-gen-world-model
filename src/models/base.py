@@ -142,6 +142,13 @@ def sample_logits(logits: torch.Tensor, temperature: float = 1.0,
   return (probs / q).argmax(-1)
 
 
+def frame_noise(n: int, B: int, device, generator: Optional[torch.Generator] = None, V: int = 1024) -> torch.Tensor:
+  """Las n tiradas Exp(1) de un frame autorregresivo (n, B, V), en una sola llamada al generador: noise[i] es el q
+  del token i en sample_logits. Una llamada por token son n lanzamientos que la CPU hace antes del graph del frame, y
+  la GPU los espera (GPTStream)."""
+  return torch.empty(n, B, V, device=device).exponential_(1, generator=generator)
+
+
 def lm_loss(logits: torch.Tensor, targets: torch.Tensor, teacher_logits: Optional[torch.Tensor] = None,
             alpha: float = 0.5, tau: float = 1.0, mask: Optional[torch.Tensor] = None):
   """CE con hard labels y, si hay maestro, destilación (Hinton 2015):

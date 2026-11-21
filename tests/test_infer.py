@@ -104,12 +104,9 @@ def ctx_for(m, B=2, seed=1):
 
 
 def draw_noise(B, seed, dev="cpu"):
-  """El ruido de un frame tal como sample_logits lo saca del generador: una tirada (B, 1024) por token, en orden."""
+  """El ruido de un frame tal como next_frame lo saca del generador: las 128 tiradas (B, 1024) en una llamada."""
   g = torch.Generator(dev).manual_seed(seed)
-  buf = torch.empty(128, B, 1024, device=dev)
-  for i in range(128):
-    buf[i].exponential_(1, generator=g)
-  return buf
+  return torch.empty(128, B, 1024, device=dev).exponential_(1, generator=g)
 
 
 @pytest.mark.parametrize("kind", ["gpt", "gpt2m"])

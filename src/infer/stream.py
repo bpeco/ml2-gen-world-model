@@ -31,7 +31,7 @@ from typing import Iterator, Optional
 import torch
 
 from src.common import BOS, MASK, TPF, with_bos
-from src.models.base import sample_logits
+from src.models.base import frame_noise, sample_logits
 from src.models.cudagraph import GraphedStep
 from src.models.maskgit import CODES, decode_frame
 
@@ -189,7 +189,7 @@ class MaskGITStream(TokenStream):
 class GPTStream(TokenStream):
   """GPT y gpt2m: con el contexto lleno el frame entero (prefill, 127 pasos de decode y los 128 muestreos) es un solo
   CUDA graph. Antes solo el paso de decode de un token era graph y el bucle de 128 tokens, el muestreo y las copias a
-  los buffers estáticos corrían en Python. El ruido del muestreo se genera afuera, token por token y en el orden de
+  los buffers estáticos corrían en Python. El ruido del muestreo se genera afuera, en una sola llamada como en
   next_frame, y entra como dato: mismos tokens que model.next_frame con el mismo generador."""
 
   def __init__(self, model, **kw):
@@ -200,14 +200,11 @@ class GPTStream(TokenStream):
     self._g = {}
 
   def _noise(self, B):
-    """Una tirada Exp(1) por token (128, B, 1024), una llamada por token: el orden de consumo del generador de
-    next_frame. Con temperatura 0 no hace falta."""
+    """Las tiradas Exp(1) de los 128 tokens (128, B, 1024), en una sola llamada (frame_noise), como next_frame: un
+    lanzamiento de la CPU antes del graph del frame, no 128. Con temperatura 0 no hace falta."""
     if self.temperature == 0:
       return []
-    buf = torch.empty(CODES, B, 1024, device=self.dev)
-    for i in range(CODES):
-      buf[i].exponential_(1, generator=self.gen)
-    return [buf]
+    return [frame_noise(CODES, B, self.dev, self.gen)]
 
   def _frame(self, ctx, *noise):
     """ctx (B, ctx_frames, 128) -> tokens (B, 128). Puro salvo la caché KV (se reescribe entera)."""
