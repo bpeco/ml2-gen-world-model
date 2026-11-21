@@ -171,8 +171,9 @@ def backend_sdpa(kernels):
 
 def lanzamientos(prof):
   """{kernel: grid, block, bloques y ocupación estimada}, del trace de CUPTI que exporta el profiler: cuántos bloques
-  lanza cada kernel, para compararlos con los SM de la GPU. La ocupación es la media de sus llamadas. {} si el trace no
-  los trae."""
+  lanza cada kernel, para compararlos con los SM de la GPU. Un mismo kernel puede lanzarse con grids distintos (la
+  atención del prefill y la del decode): grid y bloques son los de la llamada más frecuente, y "grids" cuenta las
+  llamadas de cada uno. La ocupación es la media de todas. {} si el trace no los trae."""
   import os
   import tempfile
   fd, tmp = tempfile.mkstemp(suffix=".json")
@@ -192,13 +193,19 @@ def lanzamientos(prof):
     if e.get("cat") != "kernel":
       continue
     a = e.get("args", {})
-    o = out.setdefault(e.get("name"), {"grid": a.get("grid"), "block": a.get("block"), "ocup": []})
+    o = out.setdefault(e.get("name"), {"grids": {}, "block": a.get("block"), "ocup": []})
+    g = tuple(a["grid"]) if isinstance(a.get("grid"), list) else None
+    o["grids"][g] = o["grids"].get(g, 0) + 1
     occ = a.get("est. achieved occupancy %")
     if isinstance(occ, (int, float)):
       o["ocup"].append(occ)
-  return {k: {"grid": v["grid"], "block": v["block"],
-              "bloques": int(np.prod(v["grid"])) if isinstance(v["grid"], list) and v["grid"] else None,
-              "ocupacion_pct": float(np.mean(v["ocup"])) if v["ocup"] else None} for k, v in out.items()}
+  res = {}
+  for k, v in out.items():
+    g = max(v["grids"], key=v["grids"].get)
+    res[k] = {"grid": list(g) if g else None, "block": v["block"], "bloques": int(np.prod(g)) if g else None,
+              "grids": {"x".join(map(str, gg)): c for gg, c in sorted(v["grids"].items(), key=lambda kv: -kv[1]) if gg},
+              "ocupacion_pct": float(np.mean(v["ocup"])) if v["ocup"] else None}
+  return res
 
 
 def perfilar(model, ctx, dev, graphs, warmup, steps=None, ctx_frames=None, k=PERFIL_PASOS):
