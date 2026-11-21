@@ -169,9 +169,42 @@ def backend_sdpa(kernels):
   return "math o atención explícita (gemm + softmax)"
 
 
+def lanzamientos(prof):
+  """{kernel: grid, block, bloques y ocupación estimada}, del trace de CUPTI que exporta el profiler: cuántos bloques
+  lanza cada kernel, para compararlos con los SM de la GPU. La ocupación es la media de sus llamadas. {} si el trace no
+  los trae."""
+  import os
+  import tempfile
+  fd, tmp = tempfile.mkstemp(suffix=".json")
+  os.close(fd)
+  try:
+    prof.export_chrome_trace(tmp)
+    eventos = json.loads(Path(tmp).read_text(encoding="utf-8")).get("traceEvents", [])
+  except (OSError, ValueError, RuntimeError):
+    return {}
+  finally:
+    try:
+      os.remove(tmp)
+    except OSError:
+      pass
+  out = {}
+  for e in eventos:
+    if e.get("cat") != "kernel":
+      continue
+    a = e.get("args", {})
+    o = out.setdefault(e.get("name"), {"grid": a.get("grid"), "block": a.get("block"), "ocup": []})
+    occ = a.get("est. achieved occupancy %")
+    if isinstance(occ, (int, float)):
+      o["ocup"].append(occ)
+  return {k: {"grid": v["grid"], "block": v["block"],
+              "bloques": int(np.prod(v["grid"])) if isinstance(v["grid"], list) and v["grid"] else None,
+              "ocupacion_pct": float(np.mean(v["ocup"])) if v["ocup"] else None} for k, v in out.items()}
+
+
 def perfilar(model, ctx, dev, graphs, warmup, steps=None, ctx_frames=None, k=PERFIL_PASOS):
   """Perfil de CUDA (torch.profiler) de k pasos del stream con el contexto lleno, después de `warmup` pasos.
-  Devuelve el resumen por kernel: tiempo y cantidad por paso, participación por categoría y top 15."""
+  Devuelve el resumen por kernel: tiempo y cantidad por paso, participación por categoría y top 15, con los bloques
+  que lanza cada uno (lanzamientos)."""
   from torch.autograd import DeviceType
   from torch.profiler import ProfilerActivity, profile
   with torch.no_grad():
@@ -197,12 +230,14 @@ def perfilar(model, ctx, dev, graphs, warmup, steps=None, ctx_frames=None, k=PER
   for cat in cats.values():
     cat["fraccion"] = cat["us_por_paso"] * k / total_us if total_us else None
   top = sorted(tot.items(), key=lambda kv: -kv[1][0])[:15]
+  lz = lanzamientos(prof)
   return {
     "graphs_usados": graphs, "pasos_perfilados": k,
     "ms_gpu_por_paso": total_us / k / 1000, "kernels_por_paso": sum(c for _, c in tot.values()) / k,
     "backend_sdpa": backend_sdpa(tot), "por_categoria": dict(sorted(cats.items(), key=lambda kv: -kv[1]["us_por_paso"])),
     "top": [{"kernel": nombre[:160], "categoria": categoria(nombre), "us_por_paso": t / k, "llamadas_por_paso": c / k,
-             "us_por_llamada": t / c, "fraccion": t / total_us if total_us else None} for nombre, (t, c) in top],
+             "us_por_llamada": t / c, "fraccion": t / total_us if total_us else None, **lz.get(nombre, {})}
+            for nombre, (t, c) in top],
   }
 
 
@@ -212,7 +247,8 @@ def escribir_perfil(model, ctx, dev, a, name):
   if dev.type != "cuda":
     raise SystemExit("--perfil necesita CUDA")
   res = {"name": name, "model": a.model, "dtype": a.dtype, "steps": a.steps, "ctx_frames": a.ctx_frames,
-         "unidad": unidad(model), "params": sum(p.numel() for p in model.parameters()), "variantes": {}}
+         "unidad": unidad(model), "params": sum(p.numel() for p in model.parameters()),
+         "sm": torch.cuda.get_device_properties(dev).multi_processor_count, "variantes": {}}
   if a.graphs:
     res["variantes"]["graphs"] = perfilar(model, ctx, dev, True, a.warmup, a.steps, a.ctx_frames)
   if hasattr(model, "use_cuda_graphs"):
