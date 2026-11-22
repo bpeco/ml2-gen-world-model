@@ -122,6 +122,7 @@ class MaskGIT(WorldModel):
     p_self: float = 0.0             # prob. de que un frame de entrada sea una predicción del propio modelo (scheduled sampling)
     motion_in: bool = False         # embedding de "igual / distinto al frame anterior" sumado a cada token visible
     motion_cb: bool = False         # proyección de cb[token] - cb[token anterior] (codebook de commaVQ, congelado)
+    flow_limpio: bool = False  # el movimiento de los frames pasados se calcula sin máscaras (como en inferencia)
     flow_k: int = 0                 # módulo de flujo: transformer chico sobre las últimas k diferencias del codebook (0 = no)
     flow_dim: int = 128
     flow_layers: int = 2
@@ -199,7 +200,7 @@ class MaskGIT(WorldModel):
     z = self.flow(z.view(B * Fr, TPF, -1))
     return self.flow_out(z).view(B, Fr, TPF, -1)
 
-  def run(self, x, input_pos=None, hist=None):
+  def run(self, x, input_pos=None, hist=None, clean=None):
     """Pasada de la red. Con las entradas de movimiento (motion_in, motion_cb, flow_k) suma sus embeddings a los de
     los tokens. hist (B, n_hist*129): los frames que preceden a x (en inferencia, hist_of(contexto)); por defecto
     ninguno, y los frames de x se usan entre sí."""
@@ -212,7 +213,10 @@ class MaskGIT(WorldModel):
     if hist is None:
       hist = torch.full((B, H * TPF), -1, dtype=x.dtype, device=x.device)
     allf = torch.cat([hist.to(x.dtype), x], 1).view(B, H + Fr, TPF)
-    cur, prev = allf[:, H:], allf[:, H - 1:-1]
+    cur = allf[:, H:]
+    if clean is not None:  # entrenamiento con flow_limpio: los frames pasados se ven enteros, como el contexto al generar
+      allf = torch.cat([hist.to(x.dtype), clean.to(x.dtype)], 1).view(B, H + Fr, TPF)
+    prev = allf[:, H - 1:-1]
     valid = (cur < BOS) & (prev >= 0) & (prev < BOS)
     emb = self.net.wte(x).view(B, Fr, TPF, -1)
     if c.motion_in:
@@ -253,7 +257,8 @@ class MaskGIT(WorldModel):
     seq = with_bos(src).view(B, Fr, TPF)
     x = seq.clone()
     x[:, :, 1:] = torch.where(masked, torch.full_like(frames, MASK), src)
-    lg = self.logits(x.view(B, -1)).view(B, Fr, TPF, -1)[:, :, 1:]
+    self._drop_cache()
+    lg = self.run(x.view(B, -1), clean=seq.view(B, -1) if c.flow_limpio else None).view(B, Fr, TPF, -1)[:, :, 1:]
     if c.peso_cambio == 1.0:
       loss, m = lm_loss(lg, frames, mask=masked)
     else:  # más peso a acertar lo que cambia: copiar el frame anterior deja de ser la salida barata
@@ -278,7 +283,9 @@ class MaskGIT(WorldModel):
     masked = torch.rand(B, Fr, CODES, device=frames.device) < r
     x = with_bos(frames).view(B, Fr, TPF).clone()
     x[:, :, 1:] = torch.where(masked, torch.full_like(frames, MASK), frames)
-    lg = self.logits(x.view(B, -1)).view(B, Fr, TPF, -1)[:, :, 1:].float()
+    self._drop_cache()
+    clean = with_bos(frames).view(B, -1) if self.cfg.flow_limpio else None
+    lg = self.run(x.view(B, -1), clean=clean).view(B, Fr, TPF, -1)[:, :, 1:].float()
     samp = torch.distributions.Categorical(logits=lg).sample()
     hat = torch.where(masked, samp, frames)
     usar = torch.rand(B, Fr, 1, device=frames.device) < self.cfg.p_self
