@@ -49,6 +49,8 @@ def parse(argv=None):
   p.add_argument("--presupuesto", help="frames vistos, o Nx = N veces el presupuesto de la receta (default 780k frames)")
   p.add_argument("--tokens", type=float, help="alias de --presupuesto en tokens (129 por frame)")
   p.add_argument("--extend-from", help="corrida a continuar con más presupuesto (crea <corrida>_x<k>)")
+  p.add_argument("--init-from", help="ajuste fino: arranca con los pesos de esa corrida (last.pt) y optimizador/schedule "
+                 "nuevos; los módulos que la corrida no tenía quedan con su init (deben estar en cero para no cambiarla)")
   p.add_argument("--restart", action="store_true", help="con --extend-from y receta coseno: re-warmup y coseno nuevo (no equivalente)")
   p.add_argument("--bs", type=int)
   p.add_argument("--accum", type=int)
@@ -347,6 +349,16 @@ def _train(a, dev, run_dir, last_path):
   if getattr(cls, "uses_poses", False) and r.frameskip > 1:
     cfg.setdefault("n_pose", 6 * r.frameskip)  # la acción apila las k poses crudas de cada frame tomado
   model = build(a.kind, cfg, a.size).to(dev)
+  if a.init_from and own is None and src is None:
+    ip = Path(a.ckpt_dir) / a.init_from / "last.pt"
+    ick = torch.load(ip, map_location="cpu", weights_only=False)
+    falta, sobra = model.load_state_dict(ick["model"], strict=False)
+    if sobra:
+      raise SystemExit(f"--init-from {a.init_from}: el checkpoint tiene pesos que este modelo no usa: {sobra[:5]}")
+    from src import store
+    a.parent, a.parent_sha256, a.parent_file = a.init_from, store.sha256(ip), "last.pt (init, ajuste fino)"
+    print(f"ajuste fino desde {ip} (paso {ick.get('step')}); nuevos: {sorted({k.split('.')[0] for k in falta})}", flush=True)
+    del ick
   # num_params(): solo lo que se usa en inferencia (los latentes no cuentan su encoder target EMA)
   n_params = model.num_params() if hasattr(model, "num_params") else sum(p.numel() for p in model.parameters())
   use_poses = getattr(model, "uses_poses", False)
