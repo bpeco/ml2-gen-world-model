@@ -1204,6 +1204,88 @@
   "tokens": 100640640,
   "train_json": "results/train_maskgit_s_abs.json"
  },
+ "maskgit_s_abs_s1": {
+  "bytes": 49730703,
+  "config": {
+   "block_size": 2580,
+   "choice_temp": 1.0,
+   "default_steps": 8,
+   "dim": 384,
+   "dropout": 0.0,
+   "flow_dim": 128,
+   "flow_heads": 4,
+   "flow_k": 0,
+   "flow_layers": 2,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mask_schedule": "cosine",
+   "motion_cb": false,
+   "motion_in": false,
+   "n_head": 6,
+   "n_layer": 6,
+   "p_clean": 0.0,
+   "p_self": 0.0,
+   "peso_cambio": 1.0,
+   "pos": "abs"
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "maskgit",
+  "params": 12425472,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.99,
+   "amp": "fp16",
+   "batch": 16,
+   "batch_fuente": 16,
+   "betas": [
+    0.9,
+    0.95
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "toda la receta",
+     "ablaci\u00f3n propia: no hay receta publicada que seguir",
+     "propio"
+    ]
+   ],
+   "frames": 20,
+   "frameskip": 1,
+   "fuente": "propia (ablaci\u00f3n del repo; MaskGIT no publica el entrenamiento)",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.001,
+     "forma": "linear",
+     "ini": 0.0,
+     "nombre": "warmup",
+     "pasos": 200
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.001,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "maskgit_propia",
+   "optimizer": "adamw",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.1,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "aa590b03a28f",
+  "sha256": "b1cbff34358fe5bd63c6918b78fd7a2f490c16d088103d29c19de9fce9da70df",
+  "step": 2438,
+  "tokens": 100640640,
+  "train_json": "results/train_maskgit_s_abs_s1.json"
+ },
  "maskgit_s_abs_shard0": {
   "bytes": 49730511,
   "config": {
@@ -1277,6 +1359,170 @@
   "step": 9188,
   "tokens": 379280640,
   "train_json": "results/train_maskgit_s_abs_shard0.json"
+ },
+ "maskgit_s_v2_flow": {
+  "bytes": 53036056,
+  "config": {
+   "block_size": 2580,
+   "choice_temp": 1.0,
+   "default_steps": 8,
+   "dim": 384,
+   "dropout": 0.0,
+   "flow_dim": 128,
+   "flow_heads": 4,
+   "flow_k": 4,
+   "flow_layers": 2,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mask_schedule": "cosine",
+   "motion_cb": true,
+   "motion_in": false,
+   "n_head": 6,
+   "n_layer": 6,
+   "p_clean": 0.0,
+   "p_self": 0.0,
+   "peso_cambio": 1.0,
+   "pos": "abs"
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "maskgit",
+  "params": 12986880,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.99,
+   "amp": "fp16",
+   "batch": 16,
+   "batch_fuente": 16,
+   "betas": [
+    0.9,
+    0.95
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "toda la receta",
+     "ablaci\u00f3n propia: no hay receta publicada que seguir",
+     "propio"
+    ]
+   ],
+   "frames": 20,
+   "frameskip": 1,
+   "fuente": "propia (ablaci\u00f3n del repo; MaskGIT no publica el entrenamiento)",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.001,
+     "forma": "linear",
+     "ini": 0.0,
+     "nombre": "warmup",
+     "pasos": 200
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.001,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "maskgit_propia",
+   "optimizer": "adamw",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.1,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "aa590b03a28f",
+  "sha256": "93ab87b4ea922ac6824c511855e9815841621493160cdef1b42005382ef2d86b",
+  "step": 2438,
+  "tokens": 100640640,
+  "train_json": "results/train_maskgit_s_v2_flow.json"
+ },
+ "maskgit_s_v2_flow_s1": {
+  "bytes": 53036056,
+  "config": {
+   "block_size": 2580,
+   "choice_temp": 1.0,
+   "default_steps": 8,
+   "dim": 384,
+   "dropout": 0.0,
+   "flow_dim": 128,
+   "flow_heads": 4,
+   "flow_k": 4,
+   "flow_layers": 2,
+   "mask_max": 1.0,
+   "mask_min": 0.5,
+   "mask_schedule": "cosine",
+   "motion_cb": true,
+   "motion_in": false,
+   "n_head": 6,
+   "n_layer": 6,
+   "p_clean": 0.0,
+   "p_self": 0.0,
+   "peso_cambio": 1.0,
+   "pos": "abs"
+  },
+  "desviaciones": [],
+  "file": "final.pt",
+  "kind": "maskgit",
+  "params": 12986880,
+  "receta": {
+   "accum": 1,
+   "alpha": 0.99,
+   "amp": "fp16",
+   "batch": 16,
+   "batch_fuente": 16,
+   "betas": [
+    0.9,
+    0.95
+   ],
+   "ema_segs": null,
+   "eps": 1e-08,
+   "extras": {},
+   "forzado": [
+    [
+     "toda la receta",
+     "ablaci\u00f3n propia: no hay receta publicada que seguir",
+     "propio"
+    ]
+   ],
+   "frames": 20,
+   "frameskip": 1,
+   "fuente": "propia (ablaci\u00f3n del repo; MaskGIT no publica el entrenamiento)",
+   "grad_clip": 1.0,
+   "lr_segs": [
+    {
+     "fin": 0.001,
+     "forma": "linear",
+     "ini": 0.0,
+     "nombre": "warmup",
+     "pasos": 200
+    },
+    {
+     "forma": "cosine",
+     "ini": 0.001,
+     "min_frac": 0.1,
+     "nombre": "cosine"
+    }
+   ],
+   "momentum": 0.0,
+   "name": "maskgit_propia",
+   "optimizer": "adamw",
+   "paper_steps": null,
+   "presupuesto": 780000,
+   "wd_fin": null,
+   "wd_ini": 0.1,
+   "wd_on": "matrices"
+  },
+  "receta_hash": "aa590b03a28f",
+  "sha256": "e147752645b978afd6e5ba046da37f4224983099e0f7f9b8193612a913ce6b80",
+  "step": 2438,
+  "tokens": 100640640,
+  "train_json": "results/train_maskgit_s_v2_flow_s1.json"
  },
  "maskgit_s_v2_motion": {
   "bytes": 49735565,

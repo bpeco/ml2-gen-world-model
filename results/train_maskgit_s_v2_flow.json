@@ -1,0 +1,188 @@
+{
+ "run": "maskgit_s_v2_flow",
+ "kind": "maskgit",
+ "size": "s",
+ "config": {
+  "n_layer": 6,
+  "n_head": 6,
+  "dim": 384,
+  "dropout": 0.0,
+  "block_size": 2580,
+  "mask_schedule": "cosine",
+  "mask_min": 0.5,
+  "mask_max": 1.0,
+  "default_steps": 8,
+  "choice_temp": 1.0,
+  "pos": "abs",
+  "p_clean": 0.0,
+  "peso_cambio": 1.0,
+  "p_self": 0.0,
+  "motion_in": false,
+  "motion_cb": true,
+  "flow_k": 4,
+  "flow_dim": 128,
+  "flow_layers": 2,
+  "flow_heads": 4
+ },
+ "params": 12986880,
+ "tokens": 100640640,
+ "frames": 780160,
+ "steps": 2438,
+ "seconds": 1809.0994126796722,
+ "tokens_per_s": 55630.24303397964,
+ "final_monitor_ce": 5.545360088348389,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 10320000,
+   "monitor_ce": 6.844541549682617
+  },
+  {
+   "step": 500,
+   "tokens": 20640000,
+   "monitor_ce": 6.81984806060791
+  },
+  {
+   "step": 750,
+   "tokens": 30960000,
+   "monitor_ce": 6.787940979003906
+  },
+  {
+   "step": 1000,
+   "tokens": 41280000,
+   "monitor_ce": 6.768632411956787
+  },
+  {
+   "step": 1250,
+   "tokens": 51600000,
+   "monitor_ce": 6.75050687789917
+  },
+  {
+   "step": 1500,
+   "tokens": 61920000,
+   "monitor_ce": 6.71109676361084
+  },
+  {
+   "step": 1750,
+   "tokens": 72240000,
+   "monitor_ce": 6.144238471984863
+  },
+  {
+   "step": 2000,
+   "tokens": 82560000,
+   "monitor_ce": 5.7166900634765625
+  },
+  {
+   "step": 2250,
+   "tokens": 92880000,
+   "monitor_ce": 5.58492374420166
+  },
+  {
+   "step": 2438,
+   "tokens": 100640640,
+   "monitor_ce": 5.545360088348389
+  }
+ ],
+ "args": {
+  "kind": "maskgit",
+  "size": "s",
+  "config": "{\"motion_cb\":true,\"flow_k\":4}",
+  "run": "maskgit_s_v2_flow",
+  "receta": null,
+  "set": [],
+  "presupuesto": null,
+  "tokens": null,
+  "extend_from": null,
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": null,
+  "min_lr_frac": null,
+  "warmup": null,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [],
+  "receta_hash": "aa590b03a28f",
+  "receta_nombre": "maskgit_propia"
+ },
+ "receta": {
+  "name": "maskgit_propia",
+  "fuente": "propia (ablación del repo; MaskGIT no publica el entrenamiento)",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.95
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "warmup",
+    "forma": "linear",
+    "ini": 0.0,
+    "fin": 0.001,
+    "pasos": 200
+   },
+   {
+    "nombre": "cosine",
+    "forma": "cosine",
+    "ini": 0.001,
+    "min_frac": 0.1
+   }
+  ],
+  "wd_ini": 0.1,
+  "wd_fin": null,
+  "wd_on": "matrices",
+  "ema_segs": null,
+  "grad_clip": 1.0,
+  "amp": "fp16",
+  "batch": 16,
+  "frames": 20,
+  "frameskip": 1,
+  "accum": 1,
+  "presupuesto": 780000,
+  "extras": {},
+  "paper_steps": null,
+  "batch_fuente": 16,
+  "forzado": [
+   [
+    "toda la receta",
+    "ablación propia: no hay receta publicada que seguir",
+    "propio"
+   ]
+  ]
+ },
+ "receta_hash": "aa590b03a28f",
+ "desviaciones": [],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "_bitacora": {
+  "id": "20261122-015000-a9c9",
+  "comando": "python -m src.cli maskgit entrenar '--tamaño' s --variante v2_flow --semilla 0 --set config.motion_cb=true --set config.flow_k=4",
+  "commit": "97db63a959692afb89bc4ad79235493b446c021c"
+ }
+}

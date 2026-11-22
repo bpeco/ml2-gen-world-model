@@ -1,0 +1,8 @@
+$ python -m src.estadistica diferencia --a maskgit_s_v2_flow_p4 --b maskgit_s_abs_p4
+results\diferencia_maskgit_s_v2_flow_p4_vs_maskgit_s_abs_p4.json {'1': (373.6, 0.01), '2': (550.8, 0.01), '3': (397.2, 0.01)}
+$ python -m src.estadistica diferencia --a maskgit_s_v2_flow_s1_p4 --b maskgit_s_abs_s1_p4
+results\diferencia_maskgit_s_v2_flow_s1_p4_vs_maskgit_s_abs_s1_p4.json {'1': (305.7, 0.01), '2': (998.6, 0.01), '3': (1476.2, 0.01)}
+$ python -m src.estadistica diferencia --a maskgit_s_v2_flow_p8 --b maskgit_s_abs_p8
+results\diferencia_maskgit_s_v2_flow_p8_vs_maskgit_s_abs_p8.json {'1': (264.7, 0.01), '2': (439.8, 0.01), '3': (412.4, 0.01)}
+$ python -m src.estadistica diferencia --a maskgit_s_v2_flow_s1_p8 --b maskgit_s_abs_s1_p8
+results\diferencia_maskgit_s_v2_flow_s1_p8_vs_maskgit_s_abs_s1_p8.json {'1': (171.9, 0.01), '2': (826.3, 0.01), '3': (1478.0, 0.01)}
