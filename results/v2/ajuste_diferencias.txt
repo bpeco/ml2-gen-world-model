@@ -1,0 +1,8 @@
+$ python -m src.estadistica diferencia --a maskgit_s_v2_ft_flow_p4 --b maskgit_s_v2_ft_cb_p4
+results\diferencia_maskgit_s_v2_ft_flow_p4_vs_maskgit_s_v2_ft_cb_p4.json {'1': (47.6, 0.01), '2': (202.1, 0.01), '3': (519.5, 0.01)}
+$ python -m src.estadistica diferencia --a maskgit_s_v2_ft_flow_s1_p4 --b maskgit_s_v2_ft_cb_s1_p4
+results\diferencia_maskgit_s_v2_ft_flow_s1_p4_vs_maskgit_s_v2_ft_cb_s1_p4.json {'1': (35.3, 0.04), '2': (126.6, 0.01), '3': (280.8, 0.01)}
+$ python -m src.estadistica diferencia --a maskgit_s_v2_ft_flow_p8 --b maskgit_s_v2_ft_cb_p8
+results\diferencia_maskgit_s_v2_ft_flow_p8_vs_maskgit_s_v2_ft_cb_p8.json {'1': (6.0, 0.886), '2': (206.2, 0.01), '3': (610.9, 0.01)}
+$ python -m src.estadistica diferencia --a maskgit_s_v2_ft_flow_s1_p8 --b maskgit_s_v2_ft_cb_s1_p8
+results\diferencia_maskgit_s_v2_ft_flow_s1_p8_vs_maskgit_s_v2_ft_cb_s1_p8.json {'1': (-26.0, 0.01), '2': (92.5, 0.01), '3': (367.6, 0.01)}
