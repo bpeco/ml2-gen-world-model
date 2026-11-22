@@ -122,6 +122,10 @@ class MaskGIT(WorldModel):
     p_self: float = 0.0             # prob. de que un frame de entrada sea una predicción del propio modelo (scheduled sampling)
     motion_in: bool = False         # embedding de "igual / distinto al frame anterior" sumado a cada token visible
     motion_cb: bool = False         # proyección de cb[token] - cb[token anterior] (codebook de commaVQ, congelado)
+    flow_k: int = 0                 # módulo de flujo: transformer chico sobre las últimas k diferencias del codebook (0 = no)
+    flow_dim: int = 128
+    flow_layers: int = 2
+    flow_heads: int = 4
 
   @classmethod
   def recipe(cls, size=None):
@@ -139,14 +143,25 @@ class MaskGIT(WorldModel):
     if cfg.motion_in:  # 0 = sin dato (MASK, BOS o primer frame), 1 = igual al anterior, 2 = distinto; arranca en cero
       self.motion = torch.nn.Embedding(3, cfg.dim)
       torch.nn.init.zeros_(self.motion.weight)
-    if cfg.motion_cb:  # la diferencia de vectores del codebook predice el desplazamiento (results/v2/latente_movimiento.json)
+    if cfg.motion_cb or cfg.flow_k:  # la diferencia de vectores del codebook predice el desplazamiento (results/v2/latente_movimiento.json)
       from src.infer.codec import ENCODER, ensure_weights
       ensure_weights()
       cb = torch.load(ENCODER, map_location="cpu", weights_only=True)["quantize._embedding.weight"].float()
       self.register_buffer("cb", cb / cb.norm(dim=-1).mean())  # escala ~1 por vector; queda en el checkpoint
-      self.motion_proj = torch.nn.Linear(cb.shape[1], cfg.dim)
+    if cfg.motion_cb:
+      self.motion_proj = torch.nn.Linear(self.cb.shape[1], cfg.dim)
       torch.nn.init.zeros_(self.motion_proj.weight)
       torch.nn.init.zeros_(self.motion_proj.bias)
+    if cfg.flow_k:  # entrada por celda: las k diferencias del codebook de los frames pasados y si cada una es válida
+      fd, C = cfg.flow_dim, self.cb.shape[1]
+      self.flow_in = torch.nn.Linear(cfg.flow_k * (C + 1), fd)
+      self.flow_pos = torch.nn.Embedding(TPF, fd)
+      capa = torch.nn.TransformerEncoderLayer(fd, cfg.flow_heads, 2 * fd, dropout=0.0, activation="gelu",
+                                              batch_first=True, norm_first=True)
+      self.flow = torch.nn.TransformerEncoder(capa, cfg.flow_layers, enable_nested_tensor=False)
+      self.flow_out = torch.nn.Linear(fd, cfg.dim)
+      torch.nn.init.zeros_(self.flow_out.weight)   # arranca como el modelo base
+      torch.nn.init.zeros_(self.flow_out.bias)
     self._graphs_on = False
     self._graphs = {}
     self._cache_key = None
@@ -156,28 +171,58 @@ class MaskGIT(WorldModel):
       self.net.clear_cache()
       self._cache_key, self._graphs = None, {}
 
-  @staticmethod
-  def prev_of(x):
-    """(B, F*129) -> el token de la misma celda en el frame anterior (-1 en el primer frame)."""
-    prev = torch.full_like(x, -1)
-    prev[:, TPF:] = x[:, :-TPF]
-    return prev
-
-  def run(self, x, input_pos=None, prev=None):
-    """Pasada de la red. Con motion_in suma el embedding de movimiento: prev (mismo shape que x) es el token de la
-    misma celda en el frame anterior; por defecto se toma de la propia secuencia (prev_of)."""
+  def n_hist(self):
+    """Frames anteriores que necesita la entrada de movimiento (0 = ninguno: el modelo del paper)."""
     c = self.cfg
-    if not (c.motion_in or c.motion_cb):
+    return max(int(c.motion_in or c.motion_cb), c.flow_k + 1 if c.flow_k else 0)
+
+  def hist_of(self, seq):
+    """(B, F*129) contexto -> (B, n_hist*129) sus últimos frames, con -1 a la izquierda si no alcanzan."""
+    n = self.n_hist() * TPF
+    h = seq[:, max(0, seq.shape[1] - n):]
+    if h.shape[1] < n:
+      h = torch.cat([torch.full((seq.shape[0], n - h.shape[1]), -1, dtype=seq.dtype, device=seq.device), h], 1)
+    return h
+
+  def _flow(self, allf, H, Fr):
+    """allf (B, H + Fr, 129) con la historia adelante. Para cada frame t: las k diferencias cb[t-1-j] - cb[t-2-j]
+    (solo frames pasados), un transformer sobre las 129 celdas del frame y la proyección a dim: (B, Fr, 129, dim)."""
+    c, cb = self.cfg, self.cb
+    B = allf.shape[0]
+    ds, vs = [], []
+    for j in range(c.flow_k):
+      a, b = allf[:, H - 1 - j:H - 1 - j + Fr], allf[:, H - 2 - j:H - 2 - j + Fr]
+      v = (a >= 0) & (a < BOS) & (b >= 0) & (b < BOS)
+      ds.append((cb[a.clamp(0, BOS - 1)] - cb[b.clamp(0, BOS - 1)]) * v[..., None])
+      vs.append(v[..., None].to(cb.dtype))
+    z = self.flow_in(torch.cat(ds + vs, -1)) + self.flow_pos.weight
+    z = self.flow(z.view(B * Fr, TPF, -1))
+    return self.flow_out(z).view(B, Fr, TPF, -1)
+
+  def run(self, x, input_pos=None, hist=None):
+    """Pasada de la red. Con las entradas de movimiento (motion_in, motion_cb, flow_k) suma sus embeddings a los de
+    los tokens. hist (B, n_hist*129): los frames que preceden a x (en inferencia, hist_of(contexto)); por defecto
+    ninguno, y los frames de x se usan entre sí."""
+    c = self.cfg
+    H = self.n_hist()
+    if H == 0:
       return self.net(x, input_pos)
-    prev = self.prev_of(x) if prev is None else prev
-    valid = (x < BOS) & (prev >= 0) & (prev < BOS)
-    emb = self.net.wte(x)
+    B, L = x.shape
+    Fr = L // TPF
+    if hist is None:
+      hist = torch.full((B, H * TPF), -1, dtype=x.dtype, device=x.device)
+    allf = torch.cat([hist.to(x.dtype), x], 1).view(B, H + Fr, TPF)
+    cur, prev = allf[:, H:], allf[:, H - 1:-1]
+    valid = (cur < BOS) & (prev >= 0) & (prev < BOS)
+    emb = self.net.wte(x).view(B, Fr, TPF, -1)
     if c.motion_in:
-      emb = emb + self.motion(torch.where(valid, 1 + (x != prev).long(), torch.zeros_like(x)))
+      emb = emb + self.motion(torch.where(valid, 1 + (cur != prev).long(), torch.zeros_like(cur)))
     if c.motion_cb:
-      d = self.cb[x.clamp(max=BOS - 1)] - self.cb[prev.clamp(0, BOS - 1)]
+      d = self.cb[cur.clamp(max=BOS - 1)] - self.cb[prev.clamp(0, BOS - 1)]
       emb = emb + self.motion_proj((d * valid[..., None]).to(emb.dtype))
-    return self.net(input_pos=input_pos, emb=emb)
+    if c.flow_k:
+      emb = emb + self._flow(allf, H, Fr).to(emb.dtype)
+    return self.net(input_pos=input_pos, emb=emb.view(B, L, -1))
 
   def logits(self, x):
     """(B, L) secuencia con MASK -> (B, L, 1024): la posición p predice el token en p."""
@@ -256,8 +301,8 @@ class MaskGIT(WorldModel):
       self._cache_key = key
       self._graphs = {}  # los graphs apuntan a las cachés viejas
 
-  def _frame_pass(self, tok, pos, prev):
-    return self.run(tok, pos, prev)
+  def _frame_pass(self, tok, pos, hist):
+    return self.run(tok, pos, hist)
 
   @torch.no_grad()
   def next_frame(self, ctx, temperature=1.0, steps=None, generator=None):
@@ -273,7 +318,7 @@ class MaskGIT(WorldModel):
     pos = pos_all[P:P + TPF]
     tok = torch.full((B, TPF), MASK, dtype=torch.long, device=dev)
     tok[:, 0] = BOS
-    prev = seq[:, -TPF:]  # el último frame del contexto: con motion_in, el "anterior" de cada celda del frame nuevo
+    hist = self.hist_of(seq)  # los últimos frames del contexto: la entrada de movimiento del frame nuevo
     use_graph = self._graphs_on and dev.type == "cuda"
 
     def logits_fn(cur):
@@ -281,9 +326,9 @@ class MaskGIT(WorldModel):
       if use_graph:
         g = self._graphs.get(B)
         if g is None:
-          g = self._graphs[B] = GraphedStep(self._frame_pass, tok, pos, prev)
-        return g(tok, pos, prev)[:, 1:].float()
-      return self._frame_pass(tok, pos, prev)[:, 1:].float()
+          g = self._graphs[B] = GraphedStep(self._frame_pass, tok, pos, hist)
+        return g(tok, pos, hist)[:, 1:].float()
+      return self._frame_pass(tok, pos, hist)[:, 1:].float()
 
     cur = torch.full((B, CODES), MASK, dtype=torch.long, device=dev)
     return decode_frame(logits_fn, S, temperature, self.cfg.choice_temp, cur, generator).clone()

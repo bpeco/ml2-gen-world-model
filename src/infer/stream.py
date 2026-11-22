@@ -165,11 +165,11 @@ class MaskGITStream(TokenStream):
     pos = pos_all[P:P + TPF]
     tok = torch.full((B, TPF), MASK, dtype=torch.long, device=ctx.device)
     tok[:, 0] = BOS
-    prev = seq[:, -TPF:]  # motion_in (v2): el frame anterior de cada celda
+    hist = m.hist_of(seq)  # v2: los frames del contexto que usa la entrada de movimiento
 
     def logits_fn(cur):
       tok[:, 1:] = cur
-      return m.run(tok, pos, prev)[:, 1:].float()
+      return m.run(tok, pos, hist)[:, 1:].float()
 
     cur = torch.full((B, self.CODES), MASK, dtype=torch.long, device=ctx.device)
     return decode_frame(logits_fn, S, t, m.cfg.choice_temp, cur, noise=list(noise)).clone()
