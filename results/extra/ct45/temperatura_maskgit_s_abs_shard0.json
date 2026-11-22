@@ -1,0 +1,57 @@
+{
+ "model": "maskgit_s_abs_shard0",
+ "name": "maskgit_s_abs_shard0",
+ "default": 1.0,
+ "temperaturas": [
+  1.0,
+  1.25
+ ],
+ "elegida": 1.0,
+ "tabla": [
+  {
+   "T": 1.0,
+   "fvd": 635.8132564962411,
+   "fvd_lo": 509.0153573299961,
+   "fvd_hi": 762.6111556624862,
+   "lpips": 0.4103016830980778,
+   "lpips_lo": 0.39569884881749745,
+   "lpips_hi": 0.4277467058170587,
+   "seconds": 291.50803565979004
+  },
+  {
+   "T": 1.25,
+   "fvd": 1162.8612415702887,
+   "fvd_lo": 886.0813689658509,
+   "fvd_hi": 1439.6411141747267,
+   "lpips": 0.5808623193204403,
+   "lpips_lo": 0.5665127089880407,
+   "lpips_hi": 0.5954528221599757,
+   "seconds": 343.19135093688965
+  }
+ ],
+ "criterio": "menor FVD a 3 s; empate (FVD <= 1.02 x el mejor) por menor LPIPS a 3 s, luego cercan\u00eda al default",
+ "tol": 0.02,
+ "ventana": [
+  44,
+  60
+ ],
+ "frame_lpips": 59,
+ "fvd_ci": "normal, bootstrap por segmento",
+ "clips": "holdout",
+ "n_clips": 200,
+ "n_segmentos": 50,
+ "clips_hash": "e17c702485",
+ "steps": 8,
+ "dtype": "fp16",
+ "seed": 0,
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "seconds": 634.7027645111084
+}

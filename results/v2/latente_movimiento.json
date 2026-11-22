@@ -1,0 +1,153 @@
+{
+ "n_base": 96,
+ "roundtrip_cambio": 0.1424153745174408,
+ "barrido": {
+  "ruido": {
+   "1": {
+    "cambio": 0.0873,
+    "dist_codebook_mediana": 3.708
+   },
+   "2": {
+    "cambio": 0.2414,
+    "dist_codebook_mediana": 3.808
+   },
+   "4": {
+    "cambio": 0.5124,
+    "dist_codebook_mediana": 4.102
+   },
+   "8": {
+    "cambio": 0.7562,
+    "dist_codebook_mediana": 4.56
+   }
+  },
+  "dx": {
+   "0.5": {
+    "cambio": 0.1687,
+    "dist_codebook_mediana": 3.795
+   },
+   "1": {
+    "cambio": 0.1886,
+    "dist_codebook_mediana": 3.944
+   },
+   "2": {
+    "cambio": 0.4621,
+    "dist_codebook_mediana": 4.132
+   },
+   "4": {
+    "cambio": 0.8111,
+    "dist_codebook_mediana": 4.672
+   },
+   "8": {
+    "cambio": 0.9636,
+    "dist_codebook_mediana": 6.789
+   },
+   "16": {
+    "cambio": 0.9915,
+    "dist_codebook_mediana": 9.409
+   }
+  },
+  "dy": {
+   "0.5": {
+    "cambio": 0.2296,
+    "dist_codebook_mediana": 3.863
+   },
+   "1": {
+    "cambio": 0.2646,
+    "dist_codebook_mediana": 3.974
+   },
+   "2": {
+    "cambio": 0.5958,
+    "dist_codebook_mediana": 4.257
+   },
+   "4": {
+    "cambio": 0.9037,
+    "dist_codebook_mediana": 5.191
+   },
+   "8": {
+    "cambio": 0.988,
+    "dist_codebook_mediana": 8.142
+   }
+  },
+  "zoom": {
+   "1.005": {
+    "cambio": 0.175,
+    "dist_codebook_mediana": 3.813
+   },
+   "1.01": {
+    "cambio": 0.2594,
+    "dist_codebook_mediana": 3.879
+   },
+   "1.02": {
+    "cambio": 0.394,
+    "dist_codebook_mediana": 4.039
+   },
+   "1.05": {
+    "cambio": 0.7117,
+    "dist_codebook_mediana": 4.526
+   },
+   "1.1": {
+    "cambio": 0.9023,
+    "dist_codebook_mediana": 5.614
+   }
+  }
+ },
+ "real_consecutivo": {
+  "cambio": 0.6253,
+  "dist_codebook_mediana": 4.359
+ },
+ "dist_codebook_azar_mediana": 12.501,
+ "sonda": {
+  "bits": {
+   "r2_dx": 0.47,
+   "r2_dy": 0.37,
+   "r2_zoom": 0.266,
+   "r2_train": [
+    0.502,
+    0.406,
+    0.293
+   ],
+   "canales": 1
+  },
+  "codebook": {
+   "r2_dx": 0.958,
+   "r2_dy": 0.938,
+   "r2_zoom": 0.658,
+   "r2_train": [
+    0.996,
+    0.995,
+    0.987
+   ],
+   "canales": 512
+  },
+  "continuo": {
+   "r2_dx": 0.958,
+   "r2_dy": 0.935,
+   "r2_zoom": 0.524,
+   "r2_train": [
+    0.998,
+    0.998,
+    0.991
+   ],
+   "canales": 512
+  }
+ },
+ "sonda_config": {
+  "n_pares": 5000,
+  "dx": [
+   -8,
+   8
+  ],
+  "dy": [
+   -4,
+   4
+  ],
+  "zoom": [
+   1,
+   1.08
+  ],
+  "ruido_sigma": 2,
+  "test": "30 % de los frames base",
+  "n_test": 1434
+ },
+ "segundos": 5526.6
+}

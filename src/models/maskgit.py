@@ -121,6 +121,7 @@ class MaskGIT(WorldModel):
     peso_cambio: float = 1.0        # peso de la CE en los tokens que cambian respecto del frame anterior (1 = sin pesar)
     p_self: float = 0.0             # prob. de que un frame de entrada sea una predicción del propio modelo (scheduled sampling)
     motion_in: bool = False         # embedding de "igual / distinto al frame anterior" sumado a cada token visible
+    motion_cb: bool = False         # proyección de cb[token] - cb[token anterior] (codebook de commaVQ, congelado)
 
   @classmethod
   def recipe(cls, size=None):
@@ -138,6 +139,14 @@ class MaskGIT(WorldModel):
     if cfg.motion_in:  # 0 = sin dato (MASK, BOS o primer frame), 1 = igual al anterior, 2 = distinto; arranca en cero
       self.motion = torch.nn.Embedding(3, cfg.dim)
       torch.nn.init.zeros_(self.motion.weight)
+    if cfg.motion_cb:  # la diferencia de vectores del codebook predice el desplazamiento (results/v2/latente_movimiento.json)
+      from src.infer.codec import ENCODER, ensure_weights
+      ensure_weights()
+      cb = torch.load(ENCODER, map_location="cpu", weights_only=True)["quantize._embedding.weight"].float()
+      self.register_buffer("cb", cb / cb.norm(dim=-1).mean())  # escala ~1 por vector; queda en el checkpoint
+      self.motion_proj = torch.nn.Linear(cb.shape[1], cfg.dim)
+      torch.nn.init.zeros_(self.motion_proj.weight)
+      torch.nn.init.zeros_(self.motion_proj.bias)
     self._graphs_on = False
     self._graphs = {}
     self._cache_key = None
@@ -157,12 +166,18 @@ class MaskGIT(WorldModel):
   def run(self, x, input_pos=None, prev=None):
     """Pasada de la red. Con motion_in suma el embedding de movimiento: prev (mismo shape que x) es el token de la
     misma celda en el frame anterior; por defecto se toma de la propia secuencia (prev_of)."""
-    if not self.cfg.motion_in:
+    c = self.cfg
+    if not (c.motion_in or c.motion_cb):
       return self.net(x, input_pos)
     prev = self.prev_of(x) if prev is None else prev
     valid = (x < BOS) & (prev >= 0) & (prev < BOS)
-    state = torch.where(valid, 1 + (x != prev).long(), torch.zeros_like(x))
-    return self.net(input_pos=input_pos, emb=self.net.wte(x) + self.motion(state))
+    emb = self.net.wte(x)
+    if c.motion_in:
+      emb = emb + self.motion(torch.where(valid, 1 + (x != prev).long(), torch.zeros_like(x)))
+    if c.motion_cb:
+      d = self.cb[x.clamp(max=BOS - 1)] - self.cb[prev.clamp(0, BOS - 1)]
+      emb = emb + self.motion_proj((d * valid[..., None]).to(emb.dtype))
+    return self.net(input_pos=input_pos, emb=emb)
 
   def logits(self, x):
     """(B, L) secuencia con MASK -> (B, L, 1024): la posición p predice el token en p."""

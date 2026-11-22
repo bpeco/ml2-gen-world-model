@@ -1,0 +1,46 @@
+{
+ "model": "maskgit_s_abs",
+ "name": "maskgit_s_abs",
+ "default": 1.0,
+ "temperaturas": [
+  1.0
+ ],
+ "elegida": 1.0,
+ "tabla": [
+  {
+   "T": 1.0,
+   "fvd": 634.0668796423429,
+   "fvd_lo": 493.82925680373523,
+   "fvd_hi": 774.3045024809505,
+   "lpips": 0.5054330782592297,
+   "lpips_lo": 0.48612455966696144,
+   "lpips_hi": 0.5279601467475294,
+   "seconds": 1668.2391428947449
+  }
+ ],
+ "criterio": "menor FVD a 3 s; empate (FVD <= 1.02 x el mejor) por menor LPIPS a 3 s, luego cercan\u00eda al default",
+ "tol": 0.02,
+ "ventana": [
+  44,
+  60
+ ],
+ "frame_lpips": 59,
+ "fvd_ci": "normal, bootstrap por segmento",
+ "clips": "holdout",
+ "n_clips": 200,
+ "n_segmentos": 50,
+ "clips_hash": "e17c702485",
+ "steps": 8,
+ "dtype": "fp16",
+ "seed": 0,
+ "device": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "seconds": 1668.2514622211456
+}
