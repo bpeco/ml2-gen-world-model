@@ -56,6 +56,39 @@ CATALOGO = [
   dict(id="maskgit_s_shard0", temp=1.0, nombre="MaskGIT-S, shard completo", familia="MaskGIT", spec="maskgit_s_abs_shard0",
        params="12,4M", pasos=[1, 2, 4, 8, 12], pasos_def=8, resumen="maskgit_s_abs_shard0_p{s}",
        nota="La misma red y receta que MaskGIT-S, entrenada con todo el shard 0 (2,94M frames, 3,8 veces el presupuesto común). Mejora el LPIPS pero empeora el FVD: más cerca del real frame a frame, menos realista como video."),
+  dict(id="v2_peso3", temp=1.0, nombre="v2 · peso3", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_peso3", params="12,4M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_peso3_p{s}",
+       nota="Desde cero. La CE pesa 3 veces más en los tokens que cambian respecto del frame anterior. Se mueve más (ratio 0,47 con 8 pasos), pero el FVD a 3 s empeora mucho (683)."),
+  dict(id="v2_pself", temp=1.0, nombre="v2 · pself", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_pself", params="12,4M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_pself_p{s}",
+       nota="Desde cero, scheduled sampling fuerte: la mitad de los frames de entrada son reconstrucciones del propio modelo. Es el que más se mueve (ratio 0,93), pero el video es poco realista (FVD 3 s 618)."),
+  dict(id="v2_motion", temp=1.0, nombre="v2 · motion", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_motion", params="12,4M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_motion_p{s}",
+       nota="Desde cero. Cada token visible recibe un embedding de \"igual o distinto al frame anterior\". Más quieto que el base y sin mejora de FVD."),
+  dict(id="v2_motioncb", temp=1.0, nombre="v2 · motioncb", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_motioncb", params="12,4M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_motioncb_p{s}",
+       nota="Desde cero. Suma la diferencia de vectores del codebook de commaVQ con el frame anterior. Es el punto de partida de todos los ajustes finos (ft_*). FVD a 3 s parecido al base (430 con 8 pasos)."),
+  dict(id="v2_flow_s1", temp=1.0, nombre="v2 · flow_s1", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_flow_s1", params="13,0M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_flow_s1_p{s}",
+       nota="motioncb + transformer de flujo (las últimas 4 transiciones de cada celda), entrenado desde cero, semilla 1. Tardó en arrancar a aprender y quedó a medio entrenar: el error se acumula (FVD 3 s ~1870)."),
+  dict(id="v2_ft_cb", temp=1.0, nombre="v2 · ft_cb", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_ft_cb", params="12,4M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_ft_cb_p{s}",
+       nota="Control: motioncb + 1000 pasos más de ajuste fino, sin flujo. FVD 3 s 434 con 8 pasos."),
+  dict(id="v2_ft_flow", temp=1.0, nombre="v2 · ft_flow", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_ft_flow", params="13,0M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_ft_flow_p{s}",
+       nota="Ajuste fino de motioncb con el transformer de flujo. Mantiene el movimiento, pero extrapola sus propios errores: bien a 1 s, FVD 3 s 1045 con 8 pasos."),
+  dict(id="v2_ft_l_cb", temp=1.0, nombre="v2 · ft_l_cb", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_ft_l_cb", params="12,4M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_ft_l_cb_p{s}",
+       nota="Control con flow_limpio (el movimiento pasado se calcula sobre frames completos, como al generar). Es el mejor con 4 pasos (FVD 3 s 415), pero es una sola semilla."),
+  dict(id="v2_ft_l_flow", temp=1.0, nombre="v2 · ft_l_flow", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_ft_l_flow", params="13,0M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_ft_l_flow_p{s}",
+       nota="Flujo + flow_limpio, sin scheduled sampling. Mejor que ft_flow, pero sigue acumulando error (FVD 3 s 657 con 8 pasos)."),
+  dict(id="v2_ft_l_cb_ss", temp=1.0, nombre="v2 · ft_l_cb_ss", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_ft_l_cb_ss", params="12,4M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_ft_l_cb_ss_p{s}",
+       nota="Control con flow_limpio + scheduled sampling (25 %). Más estable, pero más quieto y peor a 1 s."),
+  dict(id="v2_ft_l_flow_ss", temp=1.0, nombre="v2 · ft_l_flow_ss", familia="MaskGIT v2 (movimiento)", spec="maskgit_s_v2_ft_l_flow_ss", params="13,0M",
+       pasos=[4, 8], pasos_def=8, resumen="maskgit_s_v2_ft_l_flow_ss_p{s}",
+       nota="Flujo con las dos correcciones (flow_limpio + scheduled sampling). Ya no empeora, pero tampoco mejora: empata con su control (FVD 3 s 473 contra 471 con 8 pasos)."),
   dict(id="genie_s", temp=1.0, nombre="Genie-S", familia="Genie", spec="genie_s", params="15,0M",
        pasos=[1, 2, 4, 8, 12, 25], pasos_def=4, resumen="genie_s_p{s}",
        nota="ST-transformer de Genie con decodificación MaskGIT. Temperatura 1, la elegida en el holdout (su paper usa 2)."),
@@ -98,8 +131,22 @@ def resumen_paper():
     return {}
 
 
+def resumen_v2(m, pasos):
+  """Modelos de la rama v2 (no están en summary.json): las métricas salen de results/video_* y results/eval_*."""
+  try:
+    v = json.loads((R / f"video_{m['resumen'].format(s=pasos)}.json").read_text(encoding="utf-8"))
+  except (FileNotFoundError, KeyError):
+    return {}
+  c = {"fvd_1s": v["fvd"]["1"]["value"], "fvd_3s": v["fvd"]["3"]["value"], "lpips_1s": v["lpips"]["curve"][19]}
+  try:
+    c["ce_last"] = json.loads((R / f"eval_{m['spec']}.json").read_text(encoding="utf-8"))["ce_last"]
+  except (FileNotFoundError, KeyError):
+    pass
+  return c
+
+
 def paper(m, pasos):
-  c = resumen_paper().get(m["resumen"].format(s=pasos)) or {}
+  c = resumen_paper().get(m["resumen"].format(s=pasos)) or resumen_v2(m, pasos)
   f1, f3 = c.get("fvd_1s"), c.get("fvd_3s")
   return {"fvd_1s": f1, "fvd_3s": f3, "deriva": (f3 / f1) if f1 and f3 else None, "lpips_1s": c.get("lpips_1s"),
           "ce_last": c.get("ce_last"), "ms_frame": c.get("ms_frame")}
