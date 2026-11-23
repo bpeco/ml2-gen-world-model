@@ -228,13 +228,14 @@ def agregar_semillas(nombre, runs, results=RESULTS):
 
 
 # ---- comandos
-def _cargar_feats(name, n=None, results=RESULTS):
+def _cargar_feats(name, n=None, results=RESULTS, clips="eval"):
   """(real, fake, seg) desde results/cache. n recorta a los primeros n clips (rollouts con --limit)."""
-  from src.rollouts import clips_hash, load_clips
+  from src.rollouts import clip_set, clips_hash
   cache = Path(results) / "cache"
-  h = clips_hash()
+  cp, cl, _ = clip_set(clips)
+  h = clips_hash(cp)
   zr = np.load(cache / f"fvd_real_i3d_{h}.npz")
-  seg = segmentos_de(load_clips())
+  seg = segmentos_de(cl)
   fake = None
   if name is not None:
     z = np.load(cache / f"fvd_fake_i3d_{name}.npz")
@@ -260,6 +261,7 @@ def main(argv=None):
   d.add_argument("--b", required=True)
   d.add_argument("--n", type=int)
   d.add_argument("--reps", type=int, default=200)
+  d.add_argument("--clips", default="eval", choices=["eval", "motion"], help="set de clips de los dos rollouts")
   a = ap.parse_args(argv)
 
   if a.cmd == "semillas":
@@ -284,8 +286,8 @@ def main(argv=None):
     path.write_text(json.dumps(res, indent=1), encoding="utf-8")
     print(path, {h: round(v["value"], 1) for h, v in (res["piso"] or res["mitades"]).items()})
     return res
-  real, fake_a, seg = _cargar_feats(a.a, a.n)
-  _, fake_b, _ = _cargar_feats(a.b, len(seg))
+  real, fake_a, seg = _cargar_feats(a.a, a.n, clips=a.clips)
+  _, fake_b, _ = _cargar_feats(a.b, len(seg), clips=a.clips)
   res = {"a": a.a, "b": a.b, "n_clips": len(seg),
          "fvd": {h: diferencia_pareada(real[h], fake_a[h], fake_b[h], seg, a.reps) for h in HORIZONTES}}
   path = RESULTS / f"diferencia_{a.a}_vs_{a.b}.json"

@@ -43,6 +43,7 @@ from src.common import CTX_FRAMES, FPS, device, device_info, log_device
 CLIPS = Path("results/clips_eval.json")
 CLIPS_B = Path("results/clips_eval_b.json")
 CLIPS_HOLDOUT = Path("results/clips_holdout.json")
+CLIPS_MOTION = Path("results/clips_motion.json")   # 100 rectas + 100 curvas del val con poses (src.clips_motion)
 TRAIN = "data/train_tokens.npy"
 HOLDOUT = 50                                    # igual que Windows(holdout=50)
 LATENTES = ("LeWM", "VJEPA2", "VJEPA2AC")       # clases sin tokens de salida: tabla propia (D12)
@@ -88,6 +89,21 @@ def load_clips_holdout(path=CLIPS_HOLDOUT, tokens=TRAIN, holdout=HOLDOUT):
   """(clips, tokens del holdout (holdout, T, 128) memmap). Crea el archivo si falta."""
   c = json.loads(Path(path).read_text()) if Path(path).exists() else make_clips_holdout(path, tokens, holdout)
   return c, np.load(c.get("tokens", tokens), mmap_mode="r")[-c.get("holdout", holdout):]
+
+
+def clip_set(nombre):
+  """(path, clips, tokens) del set de clips por nombre: eval | eval_b | holdout | motion."""
+  if nombre == "holdout":
+    c, t = load_clips_holdout()
+    return CLIPS_HOLDOUT, c, t
+  if nombre == "motion":
+    if not CLIPS_MOTION.exists():
+      from src import clips_motion
+      clips_motion.make(CLIPS_MOTION)
+    c = json.loads(CLIPS_MOTION.read_text())
+    return CLIPS_MOTION, c, np.load(c["tokens"], mmap_mode="r")
+  cp = CLIPS_B if nombre == "eval_b" else CLIPS
+  return cp, load_clips(cp), np.load(VAL, mmap_mode="r")
 
 
 def rechazar_latente(model, comando="rollouts"):
@@ -147,8 +163,11 @@ def main(argv=None):
   ap.add_argument("--bs", type=int, default=50)
   ap.add_argument("--steps", type=int)
   ap.add_argument("--temperature", type=float, help="por defecto la del modelo (2 en genie, 1 en el resto)")
-  ap.add_argument("--clips", choices=["eval", "eval_b", "holdout"], default="eval",
-                  help="eval: 400 clips de val (results/clips_eval.json); eval_b: otros 400 de val (piso); holdout: 200 clips del holdout de train")
+  ap.add_argument("--clips", choices=["eval", "eval_b", "holdout", "motion"], default="eval",
+                  help="eval: 400 clips de val (results/clips_eval.json); eval_b: otros 400 de val (piso); holdout: 200 clips "
+                       "del holdout de train; motion: 100 rectas + 100 curvas del val con poses (results/clips_motion.json)")
+  ap.add_argument("--reanudar", action="store_true",
+                  help="guarda results/rollouts/<name>.parcial.npy tras cada batch y, si existe (misma config), sigue desde ahí")
   ap.add_argument("--dtype", default="fp32", choices=list(DTYPES))
   ap.add_argument("--ctx-frames", type=int, default=CTX_FRAMES)
   ap.add_argument("--limit", type=int)
@@ -158,18 +177,21 @@ def main(argv=None):
   a = ap.parse_args(argv)
 
   hold = a.clips == "holdout"
-  cpath = CLIPS_HOLDOUT if hold else (CLIPS_B if a.clips == "eval_b" else CLIPS)
-  if a.make_clips:
+  cpath = {"holdout": CLIPS_HOLDOUT, "eval_b": CLIPS_B, "motion": CLIPS_MOTION}.get(a.clips, CLIPS)
+  if a.make_clips and a.clips == "motion":
+    from src import clips_motion
+    clips_motion.make(CLIPS_MOTION)
+    print(f"{CLIPS_MOTION}: hash {clips_hash(CLIPS_MOTION)}")
+    if not a.model:
+      return CLIPS_MOTION
+  elif a.make_clips:
     d = make_clips_holdout() if hold else (make_clips_b() if a.clips == "eval_b" else make_clips())
     print(f"{cpath}: {len(d['clips'])} clips, hash {clips_hash(cpath)}")
     if not a.model:
       return cpath
   assert a.model, "falta --model SPEC (o --make-clips)"
 
-  if hold:
-    clips, val = load_clips_holdout()
-  else:
-    clips, val = load_clips(cpath), np.load(VAL, mmap_mode="r")
+  _, clips, val = clip_set(a.clips)
   n = min(a.limit or len(clips["clips"]), len(clips["clips"]))
   clips = {**clips, "clips": clips["clips"][:n]}
   ctx_all, real_all = clip_tokens(val, clips)
@@ -198,7 +220,18 @@ def main(argv=None):
     out = np.zeros((n, HORIZON, 128), np.int16)
   t0 = time.time()
   n_batches = 0
+  parcial, hecho = OUT / f"{name}.parcial.npy", 0
+  firma = {"model": a.model, "steps": a.steps, "temperature": temperature, "dtype": a.dtype, "bs": a.bs, "seed": a.seed,
+           "opt": a.opt, "clips": a.clips, "n": n}
+  if a.reanudar and not pix and parcial.exists():
+    pm = json.loads(parcial.with_suffix(".json").read_text())
+    if pm["firma"] == firma:
+      hecho = pm["hecho"]
+      out[:hecho] = np.load(parcial)[:hecho]
+      print(f"reanudando {name} desde el clip {hecho}/{n}", flush=True)
   for i in range(0, n, a.bs):
+    if i < hecho:
+      continue
     if real:
       out[i:i + a.bs] = real_all[i:i + a.bs]
       continue
@@ -208,6 +241,10 @@ def main(argv=None):
     out[i:i + a.bs] = r.cpu().numpy() if pix else r.cpu().numpy().astype(np.int16)
     n_batches += 1
     print(f"  clips {i + len(ctx)}/{n}  {time.time() - t0:.1f} s", flush=True)
+    if a.reanudar and not pix:
+      OUT.mkdir(parents=True, exist_ok=True)
+      np.save(parcial, out)
+      parcial.with_suffix(".json").write_text(json.dumps({"firma": firma, "hecho": i + len(ctx)}))
   if dev.type == "cuda":
     torch.cuda.synchronize()
   sec = time.time() - t0
@@ -217,6 +254,8 @@ def main(argv=None):
     out.flush()
   else:
     np.save(OUT / f"{name}.npy", out)
+    for f in (parcial, parcial.with_suffix(".json")):
+      f.unlink(missing_ok=True)
   meta = {"output": "pixels" if pix else "tokens", "model": a.model, "name": name, "opt": a.opt, "steps": a.steps, "temperature": temperature, "dtype": a.dtype,
           "bs": a.bs, "seed": a.seed, "graphs": a.graphs, "ctx_frames": a.ctx_frames, "n_clips": n, "seconds": sec,
           "ms_per_frame_batch": 1000 * sec / (max(n_batches, 1) * HORIZON) if not real else None,

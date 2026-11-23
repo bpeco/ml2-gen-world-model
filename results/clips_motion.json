@@ -1,0 +1,2018 @@
+{
+ "ctx": 20,
+ "horizon": 60,
+ "fps": 20,
+ "source": "valp (data-0001, sin rutas de train ni del val oficial)",
+ "tokens": "data/valp_tokens.npy",
+ "poses": "data/valp_poses.npy",
+ "seed": 0,
+ "criterio": {
+  "curva_min_deg": 20.0,
+  "recta_max_deg": 1.5,
+  "v_min_ms": 8.0,
+  "paso": 10,
+  "yaw": "col 5 (rad/s) integrada en los 60 frames del rollout"
+ },
+ "clips": [
+  {
+   "clip": 0,
+   "segment": 1292,
+   "key": "ed28f031bb843f8c0fe0197083baa754_46",
+   "start": 770,
+   "tipo": "recta",
+   "yaw_3s": 0.31,
+   "yaw_ctx": -0.07,
+   "v_media": 12.17
+  },
+  {
+   "clip": 1,
+   "segment": 1768,
+   "key": "771dc1a84d22ec790e2dfeff1bc3d0a1_2",
+   "start": 30,
+   "tipo": "recta",
+   "yaw_3s": 0.46,
+   "yaw_ctx": -0.04,
+   "v_media": 12.87
+  },
+  {
+   "clip": 2,
+   "segment": 1956,
+   "key": "636f7edcdcc53e13614fbd1adc29f265_7",
+   "start": 470,
+   "tipo": "recta",
+   "yaw_3s": -0.19,
+   "yaw_ctx": -0.06,
+   "v_media": 11.26
+  },
+  {
+   "clip": 3,
+   "segment": 1952,
+   "key": "5ca5dc14b2fc0d4478157ba30b9704b9_2",
+   "start": 420,
+   "tipo": "recta",
+   "yaw_3s": -0.48,
+   "yaw_ctx": 0.16,
+   "v_media": 9.37
+  },
+  {
+   "clip": 4,
+   "segment": 880,
+   "key": "4b78dc7c02892d08ccf1dc5e6543ac1f_5",
+   "start": 790,
+   "tipo": "recta",
+   "yaw_3s": -0.35,
+   "yaw_ctx": -1.26,
+   "v_media": 8.77
+  },
+  {
+   "clip": 5,
+   "segment": 991,
+   "key": "c43ada7d9d5d151b606323f57b8f54a6_6",
+   "start": 290,
+   "tipo": "recta",
+   "yaw_3s": 0.76,
+   "yaw_ctx": -0.03,
+   "v_media": 9.34
+  },
+  {
+   "clip": 6,
+   "segment": 252,
+   "key": "e8fcbbac30d7133cf83d479801de5437_1",
+   "start": 160,
+   "tipo": "recta",
+   "yaw_3s": 0.59,
+   "yaw_ctx": -0.92,
+   "v_media": 21.17
+  },
+  {
+   "clip": 7,
+   "segment": 1436,
+   "key": "042d0d40090b3f5a0d4796ef3a7352a8_5",
+   "start": 750,
+   "tipo": "recta",
+   "yaw_3s": -0.91,
+   "yaw_ctx": -0.51,
+   "v_media": 8.16
+  },
+  {
+   "clip": 8,
+   "segment": 1982,
+   "key": "a1b991fcce207785dcff507164439945_78",
+   "start": 500,
+   "tipo": "recta",
+   "yaw_3s": -0.35,
+   "yaw_ctx": 0.12,
+   "v_media": 12.91
+  },
+  {
+   "clip": 9,
+   "segment": 1137,
+   "key": "a2c68abdb8ea70c455d62e514c86408b_8",
+   "start": 920,
+   "tipo": "recta",
+   "yaw_3s": 0.75,
+   "yaw_ctx": -0.77,
+   "v_media": 12.23
+  },
+  {
+   "clip": 10,
+   "segment": 1455,
+   "key": "91f75c9cf5e2185bbdb8269adb4b8f9a_6",
+   "start": 980,
+   "tipo": "recta",
+   "yaw_3s": -1.01,
+   "yaw_ctx": -0.33,
+   "v_media": 9.95
+  },
+  {
+   "clip": 11,
+   "segment": 1260,
+   "key": "f6bc291c8fed19832512b660114c77e9_4",
+   "start": 810,
+   "tipo": "recta",
+   "yaw_3s": 0.73,
+   "yaw_ctx": -1.49,
+   "v_media": 8.8
+  },
+  {
+   "clip": 12,
+   "segment": 650,
+   "key": "0bbb35b60c5d0ddeda9b4ad03b5676a0_1",
+   "start": 590,
+   "tipo": "recta",
+   "yaw_3s": 0.14,
+   "yaw_ctx": -0.06,
+   "v_media": 8.28
+  },
+  {
+   "clip": 13,
+   "segment": 1412,
+   "key": "6ace4d2f6d8afa2d785073717ad1c41d_33",
+   "start": 380,
+   "tipo": "recta",
+   "yaw_3s": 0.26,
+   "yaw_ctx": -0.2,
+   "v_media": 16.96
+  },
+  {
+   "clip": 14,
+   "segment": 1944,
+   "key": "f45191f046e69c0e16cacf50003e4ed5_4",
+   "start": 870,
+   "tipo": "recta",
+   "yaw_3s": 0.57,
+   "yaw_ctx": -0.23,
+   "v_media": 9.26
+  },
+  {
+   "clip": 15,
+   "segment": 773,
+   "key": "e3d6dfdcfd26ccf8753ee15a8e8242d8_19",
+   "start": 300,
+   "tipo": "recta",
+   "yaw_3s": 0.99,
+   "yaw_ctx": 0.15,
+   "v_media": 15.89
+  },
+  {
+   "clip": 16,
+   "segment": 259,
+   "key": "7d4a4040362363e61bea209f5d2c86fe_11",
+   "start": 90,
+   "tipo": "recta",
+   "yaw_3s": -0.01,
+   "yaw_ctx": -0.08,
+   "v_media": 17.62
+  },
+  {
+   "clip": 17,
+   "segment": 367,
+   "key": "f66719f5d6301db0325c8d2f5f93d107_8",
+   "start": 650,
+   "tipo": "recta",
+   "yaw_3s": 0.91,
+   "yaw_ctx": 0.08,
+   "v_media": 12.3
+  },
+  {
+   "clip": 18,
+   "segment": 1985,
+   "key": "12c9d5974a6cf135678c4e6c9a2e2f69_2",
+   "start": 880,
+   "tipo": "recta",
+   "yaw_3s": 0.03,
+   "yaw_ctx": 0.01,
+   "v_media": 20.31
+  },
+  {
+   "clip": 19,
+   "segment": 2146,
+   "key": "36f159499757b7e751dd1a8be83d5494_5",
+   "start": 380,
+   "tipo": "recta",
+   "yaw_3s": 0.56,
+   "yaw_ctx": -1.3,
+   "v_media": 17.37
+  },
+  {
+   "clip": 20,
+   "segment": 308,
+   "key": "5feb977b3f733441aa258407111cda2b_21",
+   "start": 260,
+   "tipo": "recta",
+   "yaw_3s": 0.15,
+   "yaw_ctx": -0.46,
+   "v_media": 15.69
+  },
+  {
+   "clip": 21,
+   "segment": 2170,
+   "key": "af4227709635c4fc0abdf7b6abd3995c_6",
+   "start": 550,
+   "tipo": "recta",
+   "yaw_3s": -0.08,
+   "yaw_ctx": -0.1,
+   "v_media": 8.86
+  },
+  {
+   "clip": 22,
+   "segment": 326,
+   "key": "a8349dfa61760bdaad538c35edcf8704_14",
+   "start": 440,
+   "tipo": "recta",
+   "yaw_3s": -0.2,
+   "yaw_ctx": -0.65,
+   "v_media": 10.77
+  },
+  {
+   "clip": 23,
+   "segment": 23,
+   "key": "f8a18b8308ba96542668dd3f7320e459_10",
+   "start": 610,
+   "tipo": "recta",
+   "yaw_3s": 0.28,
+   "yaw_ctx": -0.15,
+   "v_media": 11.36
+  },
+  {
+   "clip": 24,
+   "segment": 244,
+   "key": "9799027aed107f3e007ae875ffe88e8a_1",
+   "start": 770,
+   "tipo": "recta",
+   "yaw_3s": -0.79,
+   "yaw_ctx": 0.02,
+   "v_media": 8.68
+  },
+  {
+   "clip": 25,
+   "segment": 1266,
+   "key": "72e08127b0514972c2bbd1580a8aad50_6",
+   "start": 740,
+   "tipo": "recta",
+   "yaw_3s": -0.08,
+   "yaw_ctx": 0.07,
+   "v_media": 15.82
+  },
+  {
+   "clip": 26,
+   "segment": 1243,
+   "key": "6b3872b54d77c3d048b091963e5dcffe_16",
+   "start": 290,
+   "tipo": "recta",
+   "yaw_3s": 0.07,
+   "yaw_ctx": 0.08,
+   "v_media": 9.7
+  },
+  {
+   "clip": 27,
+   "segment": 722,
+   "key": "0576ed292f94022f2b3a68e3505080b7_20",
+   "start": 950,
+   "tipo": "recta",
+   "yaw_3s": 0.83,
+   "yaw_ctx": -0.2,
+   "v_media": 9.09
+  },
+  {
+   "clip": 28,
+   "segment": 1767,
+   "key": "cb28763ef0d8676dfc05ddc00d1410dc_48",
+   "start": 530,
+   "tipo": "recta",
+   "yaw_3s": 0.38,
+   "yaw_ctx": 0.03,
+   "v_media": 22.13
+  },
+  {
+   "clip": 29,
+   "segment": 1622,
+   "key": "fa9ab0a371776a85c530f044026befd5_2",
+   "start": 740,
+   "tipo": "recta",
+   "yaw_3s": -0.35,
+   "yaw_ctx": 0.03,
+   "v_media": 8.45
+  },
+  {
+   "clip": 30,
+   "segment": 142,
+   "key": "2852264b3321bbcdc952cc0dab106645_3",
+   "start": 890,
+   "tipo": "recta",
+   "yaw_3s": 0.4,
+   "yaw_ctx": -0.07,
+   "v_media": 15.86
+  },
+  {
+   "clip": 31,
+   "segment": 1940,
+   "key": "4401e96de7c65f899c427d3d0b9984c1_7",
+   "start": 450,
+   "tipo": "recta",
+   "yaw_3s": -0.65,
+   "yaw_ctx": -0.05,
+   "v_media": 9.0
+  },
+  {
+   "clip": 32,
+   "segment": 1709,
+   "key": "6ecd9ae39618969b644d1ce4022afe02_25",
+   "start": 120,
+   "tipo": "recta",
+   "yaw_3s": -0.1,
+   "yaw_ctx": -0.01,
+   "v_media": 9.43
+  },
+  {
+   "clip": 33,
+   "segment": 0,
+   "key": "6ae52b4e7346efa3613e66cd643ab0c8_17",
+   "start": 640,
+   "tipo": "recta",
+   "yaw_3s": 0.48,
+   "yaw_ctx": 0.35,
+   "v_media": 8.88
+  },
+  {
+   "clip": 34,
+   "segment": 349,
+   "key": "943bcb94ab57a76634f20c311f75811e_55",
+   "start": 60,
+   "tipo": "recta",
+   "yaw_3s": -0.11,
+   "yaw_ctx": 1.23,
+   "v_media": 11.49
+  },
+  {
+   "clip": 35,
+   "segment": 2000,
+   "key": "81bc0cfad39a22429a89de2757705e81_12",
+   "start": 690,
+   "tipo": "recta",
+   "yaw_3s": -0.15,
+   "yaw_ctx": -0.14,
+   "v_media": 9.15
+  },
+  {
+   "clip": 36,
+   "segment": 821,
+   "key": "61ccae4abb695a3369104d5114158401_32",
+   "start": 120,
+   "tipo": "recta",
+   "yaw_3s": 0.77,
+   "yaw_ctx": -0.2,
+   "v_media": 8.13
+  },
+  {
+   "clip": 37,
+   "segment": 981,
+   "key": "72dd9b587f3dbc9d94e9afc72ea85cca_0",
+   "start": 1020,
+   "tipo": "recta",
+   "yaw_3s": -1.12,
+   "yaw_ctx": -0.25,
+   "v_media": 9.22
+  },
+  {
+   "clip": 38,
+   "segment": 1097,
+   "key": "be51797cdf7c029020f00b18108dca76_4",
+   "start": 650,
+   "tipo": "recta",
+   "yaw_3s": -0.98,
+   "yaw_ctx": 0.18,
+   "v_media": 12.77
+  },
+  {
+   "clip": 39,
+   "segment": 1003,
+   "key": "7b4aafd1b776328346a63a8142779b38_14",
+   "start": 470,
+   "tipo": "recta",
+   "yaw_3s": 0.01,
+   "yaw_ctx": 0.03,
+   "v_media": 13.81
+  },
+  {
+   "clip": 40,
+   "segment": 782,
+   "key": "043331577f76013f8a4ebbb72188c741_40",
+   "start": 650,
+   "tipo": "recta",
+   "yaw_3s": -0.24,
+   "yaw_ctx": -0.02,
+   "v_media": 15.46
+  },
+  {
+   "clip": 41,
+   "segment": 1009,
+   "key": "bf27b5f50577cb9d71db6c7823f567dc_6",
+   "start": 60,
+   "tipo": "recta",
+   "yaw_3s": -0.34,
+   "yaw_ctx": 0.11,
+   "v_media": 8.47
+  },
+  {
+   "clip": 42,
+   "segment": 1279,
+   "key": "fd53b793cbd5859934a903f1f0c8af9a_2",
+   "start": 500,
+   "tipo": "recta",
+   "yaw_3s": -0.2,
+   "yaw_ctx": -0.48,
+   "v_media": 8.58
+  },
+  {
+   "clip": 43,
+   "segment": 109,
+   "key": "63c31cf24f4cd5eba9410e630ec68bbc_29",
+   "start": 830,
+   "tipo": "recta",
+   "yaw_3s": 1.39,
+   "yaw_ctx": 0.96,
+   "v_media": 8.08
+  },
+  {
+   "clip": 44,
+   "segment": 1747,
+   "key": "c54a4bb3a5e60a766fac2926805f16ed_6",
+   "start": 600,
+   "tipo": "recta",
+   "yaw_3s": -1.05,
+   "yaw_ctx": -0.04,
+   "v_media": 8.56
+  },
+  {
+   "clip": 45,
+   "segment": 801,
+   "key": "af23892ca9f5e220f2f96a864f8163b6_10",
+   "start": 340,
+   "tipo": "recta",
+   "yaw_3s": 0.95,
+   "yaw_ctx": 0.52,
+   "v_media": 9.65
+  },
+  {
+   "clip": 46,
+   "segment": 510,
+   "key": "f2e1958e73cdc8a6f390a64a0f5c60cd_3",
+   "start": 760,
+   "tipo": "recta",
+   "yaw_3s": -0.94,
+   "yaw_ctx": 0.32,
+   "v_media": 9.71
+  },
+  {
+   "clip": 47,
+   "segment": 1196,
+   "key": "d434c924c4de01a63901d2f5efb385e0_0",
+   "start": 480,
+   "tipo": "recta",
+   "yaw_3s": 0.53,
+   "yaw_ctx": 0.11,
+   "v_media": 8.25
+  },
+  {
+   "clip": 48,
+   "segment": 515,
+   "key": "8521b0b60f92921572f13a07c9e2b200_5",
+   "start": 520,
+   "tipo": "recta",
+   "yaw_3s": 1.31,
+   "yaw_ctx": 0.09,
+   "v_media": 10.05
+  },
+  {
+   "clip": 49,
+   "segment": 2097,
+   "key": "8862fcd3f38ef43e97c28168ea847f45_27",
+   "start": 200,
+   "tipo": "recta",
+   "yaw_3s": 0.93,
+   "yaw_ctx": 0.28,
+   "v_media": 10.37
+  },
+  {
+   "clip": 50,
+   "segment": 977,
+   "key": "a3ca76f9759ee883b3c51e4a2c8bb06b_1",
+   "start": 170,
+   "tipo": "recta",
+   "yaw_3s": 0.68,
+   "yaw_ctx": 0.09,
+   "v_media": 8.54
+  },
+  {
+   "clip": 51,
+   "segment": 1578,
+   "key": "ea70e1295d34999d0f0d898eb3d19e6c_5",
+   "start": 1100,
+   "tipo": "recta",
+   "yaw_3s": -0.18,
+   "yaw_ctx": 0.13,
+   "v_media": 25.07
+  },
+  {
+   "clip": 52,
+   "segment": 2017,
+   "key": "0fd336a60dcfd8d1987c5c4839ac0712_6",
+   "start": 910,
+   "tipo": "recta",
+   "yaw_3s": -0.16,
+   "yaw_ctx": 0.01,
+   "v_media": 10.04
+  },
+  {
+   "clip": 53,
+   "segment": 1875,
+   "key": "b78d215fa3b1ea8f7f73933118258f12_5",
+   "start": 510,
+   "tipo": "recta",
+   "yaw_3s": 1.15,
+   "yaw_ctx": -0.06,
+   "v_media": 10.27
+  },
+  {
+   "clip": 54,
+   "segment": 836,
+   "key": "b067596165df8ef30da948e014916d9e_27",
+   "start": 1060,
+   "tipo": "recta",
+   "yaw_3s": -0.48,
+   "yaw_ctx": 0.18,
+   "v_media": 9.0
+  },
+  {
+   "clip": 55,
+   "segment": 632,
+   "key": "e375eea0975e95216ec52c63e8e8d907_66",
+   "start": 720,
+   "tipo": "recta",
+   "yaw_3s": 1.26,
+   "yaw_ctx": 1.03,
+   "v_media": 10.63
+  },
+  {
+   "clip": 56,
+   "segment": 810,
+   "key": "539a88f95373a0c4f206005fbfc07ecd_159",
+   "start": 660,
+   "tipo": "recta",
+   "yaw_3s": -0.58,
+   "yaw_ctx": -0.39,
+   "v_media": 8.12
+  },
+  {
+   "clip": 57,
+   "segment": 806,
+   "key": "c7ffbfc94837e7dd9617f7207052f498_3",
+   "start": 350,
+   "tipo": "recta",
+   "yaw_3s": 0.15,
+   "yaw_ctx": 0.41,
+   "v_media": 19.88
+  },
+  {
+   "clip": 58,
+   "segment": 914,
+   "key": "43642c6a30a3055f80a8449c3971838a_19",
+   "start": 330,
+   "tipo": "recta",
+   "yaw_3s": -0.74,
+   "yaw_ctx": -1.12,
+   "v_media": 15.43
+  },
+  {
+   "clip": 59,
+   "segment": 21,
+   "key": "bc00f3c3bf1072639eab5481609ec3d3_1",
+   "start": 710,
+   "tipo": "recta",
+   "yaw_3s": 1.08,
+   "yaw_ctx": 0.21,
+   "v_media": 8.84
+  },
+  {
+   "clip": 60,
+   "segment": 248,
+   "key": "ea4ccd08c4423d7a599cd9a538b69eed_3",
+   "start": 960,
+   "tipo": "recta",
+   "yaw_3s": 0.65,
+   "yaw_ctx": 0.66,
+   "v_media": 8.02
+  },
+  {
+   "clip": 61,
+   "segment": 616,
+   "key": "c2073fb1980fad68307a453d6f30ecf3_5",
+   "start": 130,
+   "tipo": "recta",
+   "yaw_3s": 0.88,
+   "yaw_ctx": 0.13,
+   "v_media": 8.88
+  },
+  {
+   "clip": 62,
+   "segment": 7,
+   "key": "79a257b3f4a7cb114ae3cca37358b1b4_1",
+   "start": 1040,
+   "tipo": "recta",
+   "yaw_3s": 0.12,
+   "yaw_ctx": 0.1,
+   "v_media": 9.04
+  },
+  {
+   "clip": 63,
+   "segment": 438,
+   "key": "29603ff54ad34e7745f48c501abb192a_3",
+   "start": 340,
+   "tipo": "recta",
+   "yaw_3s": -0.42,
+   "yaw_ctx": -0.29,
+   "v_media": 8.26
+  },
+  {
+   "clip": 64,
+   "segment": 856,
+   "key": "ffc69aa372539a78143330c8a277e8b2_4",
+   "start": 1070,
+   "tipo": "recta",
+   "yaw_3s": 0.7,
+   "yaw_ctx": -0.5,
+   "v_media": 8.35
+  },
+  {
+   "clip": 65,
+   "segment": 185,
+   "key": "5bce2afe4655d42adf3f782adaf857a3_1",
+   "start": 960,
+   "tipo": "recta",
+   "yaw_3s": 0.39,
+   "yaw_ctx": -1.29,
+   "v_media": 8.63
+  },
+  {
+   "clip": 66,
+   "segment": 667,
+   "key": "766aa5f2f5329160fa431ebad1c98df6_49",
+   "start": 730,
+   "tipo": "recta",
+   "yaw_3s": -0.51,
+   "yaw_ctx": 0.92,
+   "v_media": 8.67
+  },
+  {
+   "clip": 67,
+   "segment": 969,
+   "key": "cfbd325b721be3d3fe5c0b4965b78bae_9",
+   "start": 420,
+   "tipo": "recta",
+   "yaw_3s": -1.19,
+   "yaw_ctx": 0.12,
+   "v_media": 9.69
+  },
+  {
+   "clip": 68,
+   "segment": 1115,
+   "key": "3a68cbcc2f49e1d56972280bd7435c38_9",
+   "start": 190,
+   "tipo": "recta",
+   "yaw_3s": -0.89,
+   "yaw_ctx": 0.1,
+   "v_media": 14.96
+  },
+  {
+   "clip": 69,
+   "segment": 775,
+   "key": "865bd2c555235fe44ccff37c429308a2_19",
+   "start": 150,
+   "tipo": "recta",
+   "yaw_3s": -0.14,
+   "yaw_ctx": -0.13,
+   "v_media": 8.14
+  },
+  {
+   "clip": 70,
+   "segment": 756,
+   "key": "bfb9d93057c8c0a77c8b2d02074a8e55_12",
+   "start": 1010,
+   "tipo": "recta",
+   "yaw_3s": -0.31,
+   "yaw_ctx": 0.57,
+   "v_media": 12.45
+  },
+  {
+   "clip": 71,
+   "segment": 1613,
+   "key": "45dd3a5312ef16055a07886f8b26d0c8_8",
+   "start": 690,
+   "tipo": "recta",
+   "yaw_3s": -0.59,
+   "yaw_ctx": 0.63,
+   "v_media": 10.31
+  },
+  {
+   "clip": 72,
+   "segment": 1907,
+   "key": "b1f02b19655314ccb5e113fe749301fd_128",
+   "start": 1060,
+   "tipo": "recta",
+   "yaw_3s": 0.47,
+   "yaw_ctx": 0.52,
+   "v_media": 18.16
+  },
+  {
+   "clip": 73,
+   "segment": 591,
+   "key": "f9faa9d8276663d81273f85911df9e9e_16",
+   "start": 240,
+   "tipo": "recta",
+   "yaw_3s": 0.56,
+   "yaw_ctx": -0.18,
+   "v_media": 8.04
+  },
+  {
+   "clip": 74,
+   "segment": 2039,
+   "key": "26025aa6d1850c89769fec3396bb741f_23",
+   "start": 460,
+   "tipo": "recta",
+   "yaw_3s": -0.48,
+   "yaw_ctx": -0.29,
+   "v_media": 8.52
+  },
+  {
+   "clip": 75,
+   "segment": 1528,
+   "key": "974cd18ad0c02f3612a01395815109ce_2",
+   "start": 660,
+   "tipo": "recta",
+   "yaw_3s": -1.29,
+   "yaw_ctx": 0.47,
+   "v_media": 8.08
+  },
+  {
+   "clip": 76,
+   "segment": 1838,
+   "key": "338bbea50b738b8abc18834691174b43_6",
+   "start": 630,
+   "tipo": "recta",
+   "yaw_3s": -1.27,
+   "yaw_ctx": 0.44,
+   "v_media": 11.03
+  },
+  {
+   "clip": 77,
+   "segment": 1134,
+   "key": "3d8055dc21e9e2417d07f4d65b7871ff_38",
+   "start": 310,
+   "tipo": "recta",
+   "yaw_3s": -0.45,
+   "yaw_ctx": -0.03,
+   "v_media": 8.49
+  },
+  {
+   "clip": 78,
+   "segment": 505,
+   "key": "824a44287006fae012364611f3b179a1_23",
+   "start": 800,
+   "tipo": "recta",
+   "yaw_3s": -1.11,
+   "yaw_ctx": -0.83,
+   "v_media": 10.5
+  },
+  {
+   "clip": 79,
+   "segment": 166,
+   "key": "58ab1667955122dd883f8ee6c9877dc7_7",
+   "start": 960,
+   "tipo": "recta",
+   "yaw_3s": 0.12,
+   "yaw_ctx": 0.11,
+   "v_media": 8.2
+  },
+  {
+   "clip": 80,
+   "segment": 949,
+   "key": "ef120e7834a6257e9459f5d0515c2a22_3",
+   "start": 330,
+   "tipo": "recta",
+   "yaw_3s": 0.51,
+   "yaw_ctx": -0.03,
+   "v_media": 15.0
+  },
+  {
+   "clip": 81,
+   "segment": 1775,
+   "key": "79ea862f53002870e7e7f73c2a97a5a3_14",
+   "start": 460,
+   "tipo": "recta",
+   "yaw_3s": 0.75,
+   "yaw_ctx": 0.58,
+   "v_media": 8.14
+  },
+  {
+   "clip": 82,
+   "segment": 164,
+   "key": "0f1ce466eb4845083e3a0c1aaef27772_6",
+   "start": 400,
+   "tipo": "recta",
+   "yaw_3s": -1.16,
+   "yaw_ctx": -0.96,
+   "v_media": 8.31
+  },
+  {
+   "clip": 83,
+   "segment": 572,
+   "key": "393196efd2891d9aa6e16faef74a32b1_2",
+   "start": 740,
+   "tipo": "recta",
+   "yaw_3s": 1.4,
+   "yaw_ctx": 0.36,
+   "v_media": 8.05
+  },
+  {
+   "clip": 84,
+   "segment": 592,
+   "key": "974ccf36be6125edfc37231d86289aed_4",
+   "start": 730,
+   "tipo": "recta",
+   "yaw_3s": -0.03,
+   "yaw_ctx": -0.09,
+   "v_media": 8.82
+  },
+  {
+   "clip": 85,
+   "segment": 340,
+   "key": "888cd35645399effc4dbacda1b76d6e2_185",
+   "start": 1080,
+   "tipo": "recta",
+   "yaw_3s": -0.94,
+   "yaw_ctx": 0.26,
+   "v_media": 10.93
+  },
+  {
+   "clip": 86,
+   "segment": 757,
+   "key": "db94c4359e7edc6c41f761ddb0ec0aa0_11",
+   "start": 450,
+   "tipo": "recta",
+   "yaw_3s": 0.03,
+   "yaw_ctx": -0.05,
+   "v_media": 9.63
+  },
+  {
+   "clip": 87,
+   "segment": 2022,
+   "key": "46428d2bd5e1cf7c391a809f497d12b7_98",
+   "start": 370,
+   "tipo": "recta",
+   "yaw_3s": -1.38,
+   "yaw_ctx": 0.03,
+   "v_media": 8.09
+  },
+  {
+   "clip": 88,
+   "segment": 1506,
+   "key": "51789bcca3e6e5474be81ff2003b6021_6",
+   "start": 790,
+   "tipo": "recta",
+   "yaw_3s": -0.05,
+   "yaw_ctx": 0.04,
+   "v_media": 16.63
+  },
+  {
+   "clip": 89,
+   "segment": 900,
+   "key": "412979c6e1a92d5365a34719d778db99_2",
+   "start": 230,
+   "tipo": "recta",
+   "yaw_3s": 1.06,
+   "yaw_ctx": 0.29,
+   "v_media": 8.25
+  },
+  {
+   "clip": 90,
+   "segment": 144,
+   "key": "3560ea0c5275741853f65f6b0e728ccd_20",
+   "start": 500,
+   "tipo": "recta",
+   "yaw_3s": -0.19,
+   "yaw_ctx": 0.11,
+   "v_media": 15.04
+  },
+  {
+   "clip": 91,
+   "segment": 729,
+   "key": "bf5c44171cf4be45d623a7726446167c_34",
+   "start": 650,
+   "tipo": "recta",
+   "yaw_3s": -0.52,
+   "yaw_ctx": 0.33,
+   "v_media": 11.22
+  },
+  {
+   "clip": 92,
+   "segment": 1624,
+   "key": "0495ae801d0ec2144098c46d2117db19_5",
+   "start": 1060,
+   "tipo": "recta",
+   "yaw_3s": -0.5,
+   "yaw_ctx": 0.1,
+   "v_media": 9.11
+  },
+  {
+   "clip": 93,
+   "segment": 857,
+   "key": "140406f0c9a13867019e953d34a66395_3",
+   "start": 450,
+   "tipo": "recta",
+   "yaw_3s": -0.26,
+   "yaw_ctx": 0.15,
+   "v_media": 11.37
+  },
+  {
+   "clip": 94,
+   "segment": 1481,
+   "key": "aac621d21a99ee2efb11638039fa9f18_12",
+   "start": 1090,
+   "tipo": "recta",
+   "yaw_3s": -0.78,
+   "yaw_ctx": -1.49,
+   "v_media": 9.88
+  },
+  {
+   "clip": 95,
+   "segment": 425,
+   "key": "1eb4a4c96551973fca780e95a999d133_4",
+   "start": 250,
+   "tipo": "recta",
+   "yaw_3s": 0.69,
+   "yaw_ctx": -0.1,
+   "v_media": 9.9
+  },
+  {
+   "clip": 96,
+   "segment": 1437,
+   "key": "33b0c1075df6f83fe484105edb1e19c0_2",
+   "start": 750,
+   "tipo": "recta",
+   "yaw_3s": 0.1,
+   "yaw_ctx": 0.2,
+   "v_media": 8.97
+  },
+  {
+   "clip": 97,
+   "segment": 1557,
+   "key": "ec11877f66f74aa9fc3f837db4f527c8_8",
+   "start": 860,
+   "tipo": "recta",
+   "yaw_3s": -0.43,
+   "yaw_ctx": -0.26,
+   "v_media": 20.2
+  },
+  {
+   "clip": 98,
+   "segment": 431,
+   "key": "2ee8002e883bcad3d475904187b507e4_26",
+   "start": 790,
+   "tipo": "recta",
+   "yaw_3s": -0.04,
+   "yaw_ctx": 0.12,
+   "v_media": 9.2
+  },
+  {
+   "clip": 99,
+   "segment": 1476,
+   "key": "0616752fbf1ffeb71589630c23c4529d_1",
+   "start": 490,
+   "tipo": "recta",
+   "yaw_3s": -1.13,
+   "yaw_ctx": 0.45,
+   "v_media": 8.65
+  },
+  {
+   "clip": 100,
+   "segment": 1298,
+   "key": "f4983c4aa608d92cf7862a0adeeb3533_4",
+   "start": 70,
+   "tipo": "curva",
+   "yaw_3s": 58.65,
+   "yaw_ctx": 19.27,
+   "v_media": 12.17
+  },
+  {
+   "clip": 101,
+   "segment": 1743,
+   "key": "f07362978fcacfea3e9938c888bc8684_3",
+   "start": 880,
+   "tipo": "curva",
+   "yaw_3s": 23.48,
+   "yaw_ctx": 8.13,
+   "v_media": 12.87
+  },
+  {
+   "clip": 102,
+   "segment": 1688,
+   "key": "476096e096e7228951f7d8dee18034a4_24",
+   "start": 30,
+   "tipo": "curva",
+   "yaw_3s": 31.16,
+   "yaw_ctx": 1.06,
+   "v_media": 11.25
+  },
+  {
+   "clip": 103,
+   "segment": 1986,
+   "key": "c3619c447e534716addc3b71d4a76b84_13",
+   "start": 480,
+   "tipo": "curva",
+   "yaw_3s": 25.71,
+   "yaw_ctx": 2.28,
+   "v_media": 9.37
+  },
+  {
+   "clip": 104,
+   "segment": 1903,
+   "key": "ef7c0b6c4888ef2578aaa153cd3628fb_66",
+   "start": 800,
+   "tipo": "curva",
+   "yaw_3s": 42.74,
+   "yaw_ctx": 16.99,
+   "v_media": 8.77
+  },
+  {
+   "clip": 105,
+   "segment": 474,
+   "key": "31a61f2fd173c4b991d06ed71d14a1b2_1",
+   "start": 730,
+   "tipo": "curva",
+   "yaw_3s": 20.21,
+   "yaw_ctx": 4.92,
+   "v_media": 9.34
+  },
+  {
+   "clip": 106,
+   "segment": 490,
+   "key": "8b8f19e496361ef04905ae913c8513fd_6",
+   "start": 20,
+   "tipo": "curva",
+   "yaw_3s": 20.36,
+   "yaw_ctx": 4.94,
+   "v_media": 21.18
+  },
+  {
+   "clip": 107,
+   "segment": 1654,
+   "key": "39545044dec76734aaba21a3ef9b05bc_23",
+   "start": 300,
+   "tipo": "curva",
+   "yaw_3s": 21.68,
+   "yaw_ctx": 7.3,
+   "v_media": 8.16
+  },
+  {
+   "clip": 108,
+   "segment": 1076,
+   "key": "03fedcd9342b2caf077e88dc4cea7029_31",
+   "start": 330,
+   "tipo": "curva",
+   "yaw_3s": 21.3,
+   "yaw_ctx": 9.35,
+   "v_media": 12.9
+  },
+  {
+   "clip": 109,
+   "segment": 1283,
+   "key": "510e0fa79cef8eb17ac9810c0efcb9d4_2",
+   "start": 250,
+   "tipo": "curva",
+   "yaw_3s": 48.43,
+   "yaw_ctx": 3.14,
+   "v_media": 12.24
+  },
+  {
+   "clip": 110,
+   "segment": 847,
+   "key": "e3d1eeef0cdbea658784f0a503d2fb33_19",
+   "start": 600,
+   "tipo": "curva",
+   "yaw_3s": 26.76,
+   "yaw_ctx": 7.22,
+   "v_media": 9.96
+  },
+  {
+   "clip": 111,
+   "segment": 848,
+   "key": "8a6a7e5d332cffc4d92325dffb494c46_4",
+   "start": 510,
+   "tipo": "curva",
+   "yaw_3s": 22.26,
+   "yaw_ctx": -8.58,
+   "v_media": 8.78
+  },
+  {
+   "clip": 112,
+   "segment": 1442,
+   "key": "3b359c88bd9e0dee3c87345ea1abb30e_24",
+   "start": 370,
+   "tipo": "curva",
+   "yaw_3s": 26.31,
+   "yaw_ctx": 34.29,
+   "v_media": 8.29
+  },
+  {
+   "clip": 113,
+   "segment": 2,
+   "key": "a4eb3d5a07f7ebb498a1f09c88ae56b6_41",
+   "start": 560,
+   "tipo": "curva",
+   "yaw_3s": 23.52,
+   "yaw_ctx": 7.47,
+   "v_media": 16.95
+  },
+  {
+   "clip": 114,
+   "segment": 753,
+   "key": "9ccaaee94f8e8ef45ac2337504965c17_31",
+   "start": 90,
+   "tipo": "curva",
+   "yaw_3s": 25.02,
+   "yaw_ctx": 4.99,
+   "v_media": 9.26
+  },
+  {
+   "clip": 115,
+   "segment": 1007,
+   "key": "d39e52f6f0cea13737830737a29e2ac8_260",
+   "start": 340,
+   "tipo": "curva",
+   "yaw_3s": 48.75,
+   "yaw_ctx": -14.96,
+   "v_media": 15.89
+  },
+  {
+   "clip": 116,
+   "segment": 611,
+   "key": "87b70ff467fec27ac6f1b47d528bfbbb_7",
+   "start": 530,
+   "tipo": "curva",
+   "yaw_3s": 20.18,
+   "yaw_ctx": 6.3,
+   "v_media": 17.62
+  },
+  {
+   "clip": 117,
+   "segment": 1300,
+   "key": "26905d0c6cf7a7d488d6d5033c6ac9a0_4",
+   "start": 290,
+   "tipo": "curva",
+   "yaw_3s": 20.09,
+   "yaw_ctx": 6.17,
+   "v_media": 12.3
+  },
+  {
+   "clip": 118,
+   "segment": 1928,
+   "key": "df3a3d781259981382a065f7890a8fef_2",
+   "start": 710,
+   "tipo": "curva",
+   "yaw_3s": 23.19,
+   "yaw_ctx": 7.07,
+   "v_media": 20.31
+  },
+  {
+   "clip": 119,
+   "segment": 53,
+   "key": "78aa560d1cb7df256f5109caa6f9106b_30",
+   "start": 750,
+   "tipo": "curva",
+   "yaw_3s": 20.84,
+   "yaw_ctx": 5.9,
+   "v_media": 17.37
+  },
+  {
+   "clip": 120,
+   "segment": 1305,
+   "key": "bca963a98c33028ede8c25981c0d361e_11",
+   "start": 590,
+   "tipo": "curva",
+   "yaw_3s": 20.11,
+   "yaw_ctx": 3.24,
+   "v_media": 15.69
+  },
+  {
+   "clip": 121,
+   "segment": 1992,
+   "key": "09c4038f58a64dff4ce045648bba4585_2",
+   "start": 240,
+   "tipo": "curva",
+   "yaw_3s": 51.87,
+   "yaw_ctx": 18.5,
+   "v_media": 8.86
+  },
+  {
+   "clip": 122,
+   "segment": 1012,
+   "key": "79a6aa1b3cdd209695b2210a75789ae6_80",
+   "start": 850,
+   "tipo": "curva",
+   "yaw_3s": 28.77,
+   "yaw_ctx": -18.28,
+   "v_media": 10.77
+  },
+  {
+   "clip": 123,
+   "segment": 2165,
+   "key": "205756f5d671d3efc6be437fa501782d_4",
+   "start": 660,
+   "tipo": "curva",
+   "yaw_3s": 24.91,
+   "yaw_ctx": 6.62,
+   "v_media": 11.36
+  },
+  {
+   "clip": 124,
+   "segment": 1337,
+   "key": "6e42526515ee85c59e9fd5e963b2488f_1",
+   "start": 410,
+   "tipo": "curva",
+   "yaw_3s": 43.13,
+   "yaw_ctx": 23.6,
+   "v_media": 8.69
+  },
+  {
+   "clip": 125,
+   "segment": 1368,
+   "key": "ef76c67cf90ed7915f7c9846f57165b7_8",
+   "start": 1090,
+   "tipo": "curva",
+   "yaw_3s": 20.32,
+   "yaw_ctx": 7.41,
+   "v_media": 15.82
+  },
+  {
+   "clip": 126,
+   "segment": 1312,
+   "key": "a198ef18121bd0be3fd92e3a66d98565_12",
+   "start": 880,
+   "tipo": "curva",
+   "yaw_3s": 25.66,
+   "yaw_ctx": 25.56,
+   "v_media": 9.7
+  },
+  {
+   "clip": 127,
+   "segment": 31,
+   "key": "4b7817ac270fce6a803a58a6c015e9ca_484",
+   "start": 260,
+   "tipo": "curva",
+   "yaw_3s": 35.99,
+   "yaw_ctx": 12.75,
+   "v_media": 9.09
+  },
+  {
+   "clip": 128,
+   "segment": 1525,
+   "key": "ce63de3843ca03b59203d1d419be24a4_4",
+   "start": 290,
+   "tipo": "curva",
+   "yaw_3s": 20.19,
+   "yaw_ctx": 6.22,
+   "v_media": 22.12
+  },
+  {
+   "clip": 129,
+   "segment": 429,
+   "key": "5f7a3cec551861fc03d4051346cf4468_18",
+   "start": 680,
+   "tipo": "curva",
+   "yaw_3s": 24.52,
+   "yaw_ctx": 23.07,
+   "v_media": 8.46
+  },
+  {
+   "clip": 130,
+   "segment": 1371,
+   "key": "7abdec1dde0cf6d3660c4f288fc47d3e_24",
+   "start": 270,
+   "tipo": "curva",
+   "yaw_3s": 20.61,
+   "yaw_ctx": 6.99,
+   "v_media": 15.88
+  },
+  {
+   "clip": 131,
+   "segment": 1136,
+   "key": "6f5163b1ec18cacb80a14f1e78b4b0c7_3",
+   "start": 650,
+   "tipo": "curva",
+   "yaw_3s": 35.93,
+   "yaw_ctx": 16.54,
+   "v_media": 9.0
+  },
+  {
+   "clip": 132,
+   "segment": 383,
+   "key": "f4bf32fa4488687889ae395bbca822e3_0",
+   "start": 1030,
+   "tipo": "curva",
+   "yaw_3s": 29.26,
+   "yaw_ctx": 3.41,
+   "v_media": 9.43
+  },
+  {
+   "clip": 133,
+   "segment": 2201,
+   "key": "c21f5287a5234f55e3fb0c3a43cb218e_5",
+   "start": 920,
+   "tipo": "curva",
+   "yaw_3s": 26.74,
+   "yaw_ctx": 0.31,
+   "v_media": 8.89
+  },
+  {
+   "clip": 134,
+   "segment": 446,
+   "key": "fe39318b32e6b9d63c45d7ed3938af0a_5",
+   "start": 270,
+   "tipo": "curva",
+   "yaw_3s": 22.2,
+   "yaw_ctx": 6.16,
+   "v_media": 11.49
+  },
+  {
+   "clip": 135,
+   "segment": 1858,
+   "key": "762db658026fd92570e2a5bee1b06f5a_5",
+   "start": 830,
+   "tipo": "curva",
+   "yaw_3s": 37.69,
+   "yaw_ctx": 5.5,
+   "v_media": 9.16
+  },
+  {
+   "clip": 136,
+   "segment": 1404,
+   "key": "fd7ad09b8479229e07bd17618b6874dd_52",
+   "start": 880,
+   "tipo": "curva",
+   "yaw_3s": 25.2,
+   "yaw_ctx": 23.19,
+   "v_media": 8.13
+  },
+  {
+   "clip": 137,
+   "segment": 1703,
+   "key": "0b1c67c73a20926dceb1f5d4f9c9ab96_9",
+   "start": 920,
+   "tipo": "curva",
+   "yaw_3s": 26.54,
+   "yaw_ctx": 6.87,
+   "v_media": 9.22
+  },
+  {
+   "clip": 138,
+   "segment": 1268,
+   "key": "d379dbbaa7d15816f03f1d49d11d04e5_61",
+   "start": 50,
+   "tipo": "curva",
+   "yaw_3s": 20.23,
+   "yaw_ctx": 1.95,
+   "v_media": 12.78
+  },
+  {
+   "clip": 139,
+   "segment": 1915,
+   "key": "d7508c7deb048a5abc94fe96d51f4a84_21",
+   "start": 250,
+   "tipo": "curva",
+   "yaw_3s": 24.27,
+   "yaw_ctx": 6.94,
+   "v_media": 13.8
+  },
+  {
+   "clip": 140,
+   "segment": 124,
+   "key": "0e82bde5edd40e2844799d6e7a9d0b9f_11",
+   "start": 600,
+   "tipo": "curva",
+   "yaw_3s": 22.44,
+   "yaw_ctx": 3.25,
+   "v_media": 15.46
+  },
+  {
+   "clip": 141,
+   "segment": 1532,
+   "key": "ea9040542b9cff22bbd67b8461d114fa_14",
+   "start": 310,
+   "tipo": "curva",
+   "yaw_3s": 52.25,
+   "yaw_ctx": 25.72,
+   "v_media": 8.46
+  },
+  {
+   "clip": 142,
+   "segment": 1184,
+   "key": "b1a93cdb58ebf9e3efb25fc2b5889021_16",
+   "start": 1110,
+   "tipo": "curva",
+   "yaw_3s": 63.1,
+   "yaw_ctx": 2.59,
+   "v_media": 8.58
+  },
+  {
+   "clip": 143,
+   "segment": 1125,
+   "key": "b9d5ecf2e5ce8f3ba021c6dbdbf86f38_1",
+   "start": 620,
+   "tipo": "curva",
+   "yaw_3s": 62.19,
+   "yaw_ctx": 21.25,
+   "v_media": 8.08
+  },
+  {
+   "clip": 144,
+   "segment": 177,
+   "key": "6318c4c3ccfbf39a845df754f1c862eb_43",
+   "start": 80,
+   "tipo": "curva",
+   "yaw_3s": 30.53,
+   "yaw_ctx": 20.33,
+   "v_media": 8.56
+  },
+  {
+   "clip": 145,
+   "segment": 1568,
+   "key": "7eab8b217204d2342800275f47dd2d26_17",
+   "start": 900,
+   "tipo": "curva",
+   "yaw_3s": 26.12,
+   "yaw_ctx": 10.49,
+   "v_media": 9.66
+  },
+  {
+   "clip": 146,
+   "segment": 1757,
+   "key": "5c308db025298b940964769f21c1d5d9_28",
+   "start": 1050,
+   "tipo": "curva",
+   "yaw_3s": 58.72,
+   "yaw_ctx": 10.69,
+   "v_media": 9.72
+  },
+  {
+   "clip": 147,
+   "segment": 397,
+   "key": "8e4328b00bbc8fa8ef77614ab853f69e_14",
+   "start": 610,
+   "tipo": "curva",
+   "yaw_3s": 53.52,
+   "yaw_ctx": 19.13,
+   "v_media": 8.24
+  },
+  {
+   "clip": 148,
+   "segment": 1382,
+   "key": "7a174162d1bea48543332268916f4859_25",
+   "start": 1060,
+   "tipo": "curva",
+   "yaw_3s": 45.33,
+   "yaw_ctx": 12.42,
+   "v_media": 10.05
+  },
+  {
+   "clip": 149,
+   "segment": 476,
+   "key": "7219b740420319656b1c7297af6e3fa9_19",
+   "start": 290,
+   "tipo": "curva",
+   "yaw_3s": 33.47,
+   "yaw_ctx": 0.15,
+   "v_media": 10.38
+  },
+  {
+   "clip": 150,
+   "segment": 2179,
+   "key": "0c954bb23793dbee144514d421607bc3_4",
+   "start": 230,
+   "tipo": "curva",
+   "yaw_3s": -26.6,
+   "yaw_ctx": -20.9,
+   "v_media": 8.53
+  },
+  {
+   "clip": 151,
+   "segment": 2010,
+   "key": "95a13d7e2faee523b0fd1b6bf3389c4a_30",
+   "start": 90,
+   "tipo": "curva",
+   "yaw_3s": -22.0,
+   "yaw_ctx": -7.65,
+   "v_media": 25.07
+  },
+  {
+   "clip": 152,
+   "segment": 1389,
+   "key": "bebeefd2ae1adab8227d14bcf3d91b65_6",
+   "start": 10,
+   "tipo": "curva",
+   "yaw_3s": -28.97,
+   "yaw_ctx": -23.36,
+   "v_media": 10.04
+  },
+  {
+   "clip": 153,
+   "segment": 513,
+   "key": "8cfabbcdb6e51ac87de7216216e203e4_3",
+   "start": 580,
+   "tipo": "curva",
+   "yaw_3s": -25.47,
+   "yaw_ctx": -28.76,
+   "v_media": 10.26
+  },
+  {
+   "clip": 154,
+   "segment": 1277,
+   "key": "c030b7d39c94062670c01a09b5b268e0_28",
+   "start": 980,
+   "tipo": "curva",
+   "yaw_3s": -43.78,
+   "yaw_ctx": -17.06,
+   "v_media": 9.01
+  },
+  {
+   "clip": 155,
+   "segment": 562,
+   "key": "f61dc0727da3f71bb638a926bf4c63e6_70",
+   "start": 1040,
+   "tipo": "curva",
+   "yaw_3s": -24.53,
+   "yaw_ctx": -28.61,
+   "v_media": 10.63
+  },
+  {
+   "clip": 156,
+   "segment": 895,
+   "key": "c4caded907fd1b4d3c506b3fd07346ec_16",
+   "start": 1050,
+   "tipo": "curva",
+   "yaw_3s": -36.39,
+   "yaw_ctx": 0.19,
+   "v_media": 8.12
+  },
+  {
+   "clip": 157,
+   "segment": 1744,
+   "key": "49db3022d9da8963c90d0768616992dc_2",
+   "start": 280,
+   "tipo": "curva",
+   "yaw_3s": -20.42,
+   "yaw_ctx": -5.03,
+   "v_media": 19.88
+  },
+  {
+   "clip": 158,
+   "segment": 1122,
+   "key": "820866b4f616e2d08c15030f1e4aa2f2_8",
+   "start": 910,
+   "tipo": "curva",
+   "yaw_3s": -22.26,
+   "yaw_ctx": -4.06,
+   "v_media": 15.41
+  },
+  {
+   "clip": 159,
+   "segment": 1548,
+   "key": "8dae3b7a4ad09c6522be223dd3bd916c_13",
+   "start": 810,
+   "tipo": "curva",
+   "yaw_3s": -20.08,
+   "yaw_ctx": -3.25,
+   "v_media": 8.83
+  },
+  {
+   "clip": 160,
+   "segment": 1419,
+   "key": "48ed348cbea34802b76333156c51e0d8_6",
+   "start": 100,
+   "tipo": "curva",
+   "yaw_3s": -40.19,
+   "yaw_ctx": -6.51,
+   "v_media": 8.02
+  },
+  {
+   "clip": 161,
+   "segment": 924,
+   "key": "0a03f25844a09a3c97a11de647f45531_7",
+   "start": 690,
+   "tipo": "curva",
+   "yaw_3s": -20.19,
+   "yaw_ctx": -18.11,
+   "v_media": 8.88
+  },
+  {
+   "clip": 162,
+   "segment": 230,
+   "key": "b442d07d13a7370142eb7c42d03e77c9_10",
+   "start": 770,
+   "tipo": "curva",
+   "yaw_3s": -44.08,
+   "yaw_ctx": -21.76,
+   "v_media": 9.02
+  },
+  {
+   "clip": 163,
+   "segment": 4,
+   "key": "64a5cde69793f67e7e83e86696b21f30_4",
+   "start": 0,
+   "tipo": "curva",
+   "yaw_3s": -22.26,
+   "yaw_ctx": -13.93,
+   "v_media": 8.27
+  },
+  {
+   "clip": 164,
+   "segment": 1077,
+   "key": "3a3e0f1f415a31110c3d5d52e8ccd487_60",
+   "start": 80,
+   "tipo": "curva",
+   "yaw_3s": -30.42,
+   "yaw_ctx": -0.61,
+   "v_media": 8.36
+  },
+  {
+   "clip": 165,
+   "segment": 1748,
+   "key": "4bdd03296189f556a87a36b12f3a0243_3",
+   "start": 590,
+   "tipo": "curva",
+   "yaw_3s": -22.63,
+   "yaw_ctx": -19.98,
+   "v_media": 8.63
+  },
+  {
+   "clip": 166,
+   "segment": 1843,
+   "key": "c09ae4f252555fd07c603aaec309aab4_7",
+   "start": 140,
+   "tipo": "curva",
+   "yaw_3s": -20.6,
+   "yaw_ctx": -5.06,
+   "v_media": 8.67
+  },
+  {
+   "clip": 167,
+   "segment": 819,
+   "key": "5cd0e6f54bed470537a4b6047b9576a6_4",
+   "start": 530,
+   "tipo": "curva",
+   "yaw_3s": -31.55,
+   "yaw_ctx": -3.68,
+   "v_media": 9.69
+  },
+  {
+   "clip": 168,
+   "segment": 683,
+   "key": "0200397f601bd1bc0c0142e56c2e14a6_93",
+   "start": 1060,
+   "tipo": "curva",
+   "yaw_3s": -30.37,
+   "yaw_ctx": -14.0,
+   "v_media": 14.96
+  },
+  {
+   "clip": 169,
+   "segment": 1665,
+   "key": "43cf5afc86aa5fa211f04d8e7cc70a51_4",
+   "start": 920,
+   "tipo": "curva",
+   "yaw_3s": -54.08,
+   "yaw_ctx": 5.99,
+   "v_media": 8.14
+  },
+  {
+   "clip": 170,
+   "segment": 945,
+   "key": "fa522f27e3fb2a487ed23ec1b492549e_6",
+   "start": 500,
+   "tipo": "curva",
+   "yaw_3s": -23.06,
+   "yaw_ctx": -5.47,
+   "v_media": 12.45
+  },
+  {
+   "clip": 171,
+   "segment": 1516,
+   "key": "c0e63df9f308a6cb4ea683999684d180_7",
+   "start": 170,
+   "tipo": "curva",
+   "yaw_3s": -31.34,
+   "yaw_ctx": -1.73,
+   "v_media": 10.31
+  },
+  {
+   "clip": 172,
+   "segment": 676,
+   "key": "a43210baf91e8037945ec45c0bdf2e4b_6",
+   "start": 410,
+   "tipo": "curva",
+   "yaw_3s": -20.79,
+   "yaw_ctx": -1.35,
+   "v_media": 18.16
+  },
+  {
+   "clip": 173,
+   "segment": 1894,
+   "key": "ba9a338c80f2f4ef203602a740a40eee_5",
+   "start": 740,
+   "tipo": "curva",
+   "yaw_3s": -26.97,
+   "yaw_ctx": -25.12,
+   "v_media": 8.04
+  },
+  {
+   "clip": 174,
+   "segment": 2080,
+   "key": "d1fb04203091bd2a1e24b3a1054f90fd_61",
+   "start": 340,
+   "tipo": "curva",
+   "yaw_3s": -22.95,
+   "yaw_ctx": -19.46,
+   "v_media": 8.53
+  },
+  {
+   "clip": 175,
+   "segment": 2105,
+   "key": "af36b29ca0d3032dd5087970042d9655_4",
+   "start": 570,
+   "tipo": "curva",
+   "yaw_3s": -45.06,
+   "yaw_ctx": -29.81,
+   "v_media": 8.08
+  },
+  {
+   "clip": 176,
+   "segment": 577,
+   "key": "f6f5ee56bcdb0412ea1dd67e2fca08bc_5",
+   "start": 560,
+   "tipo": "curva",
+   "yaw_3s": -20.4,
+   "yaw_ctx": -5.86,
+   "v_media": 11.02
+  },
+  {
+   "clip": 177,
+   "segment": 1235,
+   "key": "bd6f5f82fbfaf1ebe65eaf1bcbaf9bd2_4",
+   "start": 640,
+   "tipo": "curva",
+   "yaw_3s": -47.56,
+   "yaw_ctx": -25.88,
+   "v_media": 8.5
+  },
+  {
+   "clip": 178,
+   "segment": 1180,
+   "key": "ff472034c0b8c3f2a07e952101a9b09b_11",
+   "start": 390,
+   "tipo": "curva",
+   "yaw_3s": -24.6,
+   "yaw_ctx": -4.32,
+   "v_media": 10.5
+  },
+  {
+   "clip": 179,
+   "segment": 443,
+   "key": "0c0dfc068d704b64e4ed94506899cec4_2",
+   "start": 410,
+   "tipo": "curva",
+   "yaw_3s": -26.27,
+   "yaw_ctx": -15.91,
+   "v_media": 8.2
+  },
+  {
+   "clip": 180,
+   "segment": 2012,
+   "key": "003e037821f2b01906491e3601d5c181_123",
+   "start": 70,
+   "tipo": "curva",
+   "yaw_3s": -20.07,
+   "yaw_ctx": -13.8,
+   "v_media": 15.0
+  },
+  {
+   "clip": 181,
+   "segment": 1384,
+   "key": "3bbe362670879259b189e6fbe8c14de9_0",
+   "start": 270,
+   "tipo": "curva",
+   "yaw_3s": -22.38,
+   "yaw_ctx": -3.02,
+   "v_media": 8.15
+  },
+  {
+   "clip": 182,
+   "segment": 618,
+   "key": "da9f38b1ba9bbce64be12d8dcadf6b1e_8",
+   "start": 20,
+   "tipo": "curva",
+   "yaw_3s": -21.11,
+   "yaw_ctx": -30.09,
+   "v_media": 8.31
+  },
+  {
+   "clip": 183,
+   "segment": 1325,
+   "key": "02b04a43e5af09ce40bf5e74da3eb4a7_10",
+   "start": 600,
+   "tipo": "curva",
+   "yaw_3s": -64.6,
+   "yaw_ctx": -16.02,
+   "v_media": 8.05
+  },
+  {
+   "clip": 184,
+   "segment": 1222,
+   "key": "20ea1fef6fb9ccd77f543c00ed89d72b_86",
+   "start": 800,
+   "tipo": "curva",
+   "yaw_3s": -26.43,
+   "yaw_ctx": -21.45,
+   "v_media": 8.82
+  },
+  {
+   "clip": 185,
+   "segment": 1142,
+   "key": "928700433b1f9260d5e30ebf6f06f303_7",
+   "start": 480,
+   "tipo": "curva",
+   "yaw_3s": -27.23,
+   "yaw_ctx": -21.87,
+   "v_media": 10.94
+  },
+  {
+   "clip": 186,
+   "segment": 1391,
+   "key": "112474a4a8731df01d7501e5d83770e5_29",
+   "start": 710,
+   "tipo": "curva",
+   "yaw_3s": -31.45,
+   "yaw_ctx": -1.27,
+   "v_media": 9.62
+  },
+  {
+   "clip": 187,
+   "segment": 1615,
+   "key": "6362b60ae16a10928c1d364ff4d5f411_42",
+   "start": 1010,
+   "tipo": "curva",
+   "yaw_3s": -28.08,
+   "yaw_ctx": 1.98,
+   "v_media": 8.09
+  },
+  {
+   "clip": 188,
+   "segment": 365,
+   "key": "0d7869ef996336e9489cdd444ece538c_3",
+   "start": 320,
+   "tipo": "curva",
+   "yaw_3s": -33.34,
+   "yaw_ctx": -7.79,
+   "v_media": 16.64
+  },
+  {
+   "clip": 189,
+   "segment": 1151,
+   "key": "124f130d0568389644d86dee4e4fe88e_12",
+   "start": 280,
+   "tipo": "curva",
+   "yaw_3s": -48.72,
+   "yaw_ctx": -18.97,
+   "v_media": 8.25
+  },
+  {
+   "clip": 190,
+   "segment": 1093,
+   "key": "2ba5bb9e838ff30b5cc115fa99e91ce9_3",
+   "start": 230,
+   "tipo": "curva",
+   "yaw_3s": -22.46,
+   "yaw_ctx": -8.98,
+   "v_media": 15.05
+  },
+  {
+   "clip": 191,
+   "segment": 486,
+   "key": "1ade80e430e24ac57c78841c7ad1b332_2",
+   "start": 960,
+   "tipo": "curva",
+   "yaw_3s": -36.76,
+   "yaw_ctx": -13.58,
+   "v_media": 11.22
+  },
+  {
+   "clip": 192,
+   "segment": 957,
+   "key": "e45bec88e19f67b65430ebcfaaf63708_36",
+   "start": 520,
+   "tipo": "curva",
+   "yaw_3s": -53.43,
+   "yaw_ctx": -14.63,
+   "v_media": 9.13
+  },
+  {
+   "clip": 193,
+   "segment": 2154,
+   "key": "1a20d527fd051d0475b22fb11d00238b_14",
+   "start": 360,
+   "tipo": "curva",
+   "yaw_3s": -21.7,
+   "yaw_ctx": -5.29,
+   "v_media": 11.38
+  },
+  {
+   "clip": 194,
+   "segment": 2118,
+   "key": "f2070f017b47710854bb4353df0e4e88_11",
+   "start": 710,
+   "tipo": "curva",
+   "yaw_3s": -21.36,
+   "yaw_ctx": -16.04,
+   "v_media": 9.88
+  },
+  {
+   "clip": 195,
+   "segment": 450,
+   "key": "d132aae7a5242fe9bbd682cf6072a054_10",
+   "start": 460,
+   "tipo": "curva",
+   "yaw_3s": -28.4,
+   "yaw_ctx": -0.25,
+   "v_media": 9.89
+  },
+  {
+   "clip": 196,
+   "segment": 970,
+   "key": "ee63c41146bc93c9a62deda89e355e01_16",
+   "start": 490,
+   "tipo": "curva",
+   "yaw_3s": -20.59,
+   "yaw_ctx": -20.99,
+   "v_media": 8.98
+  },
+  {
+   "clip": 197,
+   "segment": 285,
+   "key": "6f7a3a44f7eb4467a6d53b2069e120ba_12",
+   "start": 350,
+   "tipo": "curva",
+   "yaw_3s": -21.26,
+   "yaw_ctx": -4.88,
+   "v_media": 20.21
+  },
+  {
+   "clip": 198,
+   "segment": 1637,
+   "key": "6971302458abebdb9e155658b3ffa7b0_4",
+   "start": 20,
+   "tipo": "curva",
+   "yaw_3s": -22.36,
+   "yaw_ctx": -16.51,
+   "v_media": 9.2
+  },
+  {
+   "clip": 199,
+   "segment": 336,
+   "key": "4c451e85d5f42f7efe8d81b48933f3d1_10",
+   "start": 860,
+   "tipo": "curva",
+   "yaw_3s": -55.93,
+   "yaw_ctx": -19.1,
+   "v_media": 8.65
+  }
+ ]
+}

@@ -27,7 +27,7 @@ import torch
 
 from src import estadistica
 from src.common import FPS, device, device_info
-from src.rollouts import CLIPS, CLIPS_B, HORIZON, OUT, VAL, clip_tokens, clips_hash, load_clips
+from src.rollouts import CLIPS, CLIPS_B, HORIZON, OUT, VAL, clip_set, clip_tokens, clips_hash, load_clips
 from src.viz import decode, load_decoder
 
 RESULTS = Path("results")
@@ -106,7 +106,8 @@ def main(argv=None):
   ap.add_argument("--boot", type=int, default=1000)
   ap.add_argument("--boot-fvd", type=int, default=200)
   ap.add_argument("--boot-piso", type=int, default=20, help="sorteos de mitades para el piso de FVD")
-  ap.add_argument("--clips", choices=["eval", "eval_b"], default="eval", help="set de clips de val (eval_b: el del piso)")
+  ap.add_argument("--clips", choices=["eval", "eval_b", "motion"], default="eval",
+                  help="set de clips (eval_b: el del piso; motion: rectas y curvas del val con poses)")
   ap.add_argument("--fvd-model", default="i3d", choices=["i3d"])
   ap.add_argument("--from-cache", action="store_true",
                   help="recalcula las estadísticas desde results/cache (LPIPS por clip y features I3D), sin decodificar")
@@ -117,17 +118,15 @@ def main(argv=None):
   import lpips
   t0 = time.time()
   dev = device()
-  cp = CLIPS_B if a.clips == "eval_b" else CLIPS
+  cp, allc, val = clip_set(a.clips)
   h = clips_hash(cp)
   roll = np.load(a.rollouts or OUT / f"{a.name}.npy", mmap_mode="r")
   n = len(roll)
-  val = np.load(VAL, mmap_mode="r")
 
   dec = load_decoder(dev)
   lp = lpips.LPIPS(net="alex", verbose=False).to(dev).eval()
   fn = load_fvd_model(a.fvd_model, dev)
   # referencia: frames reales decodificados (memmap en disco) y sus features I3D, para los 400 clips (se crean una vez)
-  allc = load_clips(cp)
   _, real_all = clip_tokens(val, allc)
   N = len(real_all)
   tag = f"{a.fvd_model}_{h}"
@@ -188,7 +187,7 @@ def main(argv=None):
 
 def write_stats(a, lpm, ff, real_feats, h, dev, t0):
   n = len(lpm)
-  seg = estadistica.segmentos_de(load_clips(CLIPS_B if getattr(a, "clips", "eval") == "eval_b" else CLIPS)["clips"][:n])        # bootstrap por segmento (D14)
+  seg = estadistica.segmentos_de(clip_set(getattr(a, "clips", "eval"))[1]["clips"][:n])        # bootstrap por segmento (D14)
   assert len(seg) == n, "más rollouts que clips en results/clips_eval.json"
   lpips_res = {"curve": lpm.mean(0).tolist(), "at": {}}
   for k, f in AT.items():
@@ -217,7 +216,7 @@ def write_stats(a, lpm, ff, real_feats, h, dev, t0):
 
 def stats_from_cache(a):
   t0 = time.time()
-  h = clips_hash(CLIPS_B if getattr(a, "clips", "eval") == "eval_b" else CLIPS)
+  h = clips_hash(clip_set(getattr(a, "clips", "eval"))[0])
   lpm = np.load(CACHE / f"lpips_{a.name}.npy").astype(np.float64)
   z = np.load(CACHE / f"fvd_fake_{a.fvd_model}_{a.name}.npz")
   zr = np.load(CACHE / f"fvd_real_{a.fvd_model}_{h}.npz")
