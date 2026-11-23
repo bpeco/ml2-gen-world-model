@@ -1,0 +1,45 @@
+{
+ "a": "maskgit_s_v2_ft_l_flow_p4",
+ "b": "maskgit_s_v2_ft_flow_p4",
+ "n_clips": 400,
+ "fvd": {
+  "1": {
+   "fvd_a": 286.35881626892933,
+   "fvd_b": 266.7615581577679,
+   "diff": 19.59725811116141,
+   "lo": -11.109517379739511,
+   "hi": 50.30403360206233,
+   "sd": 15.666722189235164,
+   "p": 0.12935323383084577,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "2": {
+   "fvd_a": 477.98126419752543,
+   "fvd_b": 510.6686863880518,
+   "diff": -32.68742219052638,
+   "lo": -87.25772580493748,
+   "hi": 21.882881423884733,
+   "sd": 27.84199164000567,
+   "p": 0.4079601990049751,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "3": {
+   "fvd_a": 794.9405982643966,
+   "fvd_b": 970.9771747047198,
+   "diff": -176.0365764403232,
+   "lo": -268.4197223651666,
+   "hi": -83.65343051547978,
+   "sd": 47.1342581249201,
+   "p": 0.009950248756218905,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  }
+ },
+ "_bitacora": {
+  "id": "20261122-210146-06a4",
+  "comando": "python -m src.cli estadistica diferencia --a maskgit_s_v2_ft_l_flow_p4 --b maskgit_s_v2_ft_flow_p4",
+  "commit": "375d12d6e26e4f6609fe8c0e6e8c0cfc8d95f1eb"
+ }
+}
