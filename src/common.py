@@ -7,7 +7,9 @@ BOS = 1024
 VOCAB = 1025          # 1024 códigos del VQ-VAE + BOS
 MASK = 1025           # token de máscara de MaskGIT (solo entrada, fuera del vocabulario de comma)
 TPF = 129             # tokens por frame (BOS + 8x16)
-CTX_FRAMES = 20       # 1 s a 20 FPS, igual que gpt2m
+CTX_FRAMES = 20       # 1 s a 20 FPS, igual que gpt2m (original de comma).
+                      # Es la ventana de contexto que se usa para predecir.
+                      # En este caso 20 frames de contexto (equivale a 1 segundo de contexto)
 BLOCK = CTX_FRAMES * TPF
 FPS = 20
 

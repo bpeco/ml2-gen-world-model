@@ -129,6 +129,22 @@
   .cols3 .keep { border-top: .25em solid var(--comma-line); }
   .cols3 .chg { border-top: .25em solid var(--accent); }
   .cols3 .add { border-top: .25em solid var(--ok); }
+  .cols3.short { grid-template-columns: 1fr 1fr 1fr; }
+  .cols3.short { flex: 0 1 auto; margin-bottom: 1.6em; }
+  .cols3.short .card { font-size: .84em; padding: .8em 1.1em; }
+  .cols3.short .card > b:first-child { font-size: 1em; text-transform: uppercase; letter-spacing: .08em; margin-bottom: .5em; }
+  .cols3.short .keep > b:first-child { color: var(--muted); }
+  .cols3.short .chg > b:first-child { color: var(--accent); }
+  .cols3.short .add > b:first-child { color: var(--ok); }
+  .cols3.short ul { list-style: none; padding: 0; margin: 0; }
+  .cols3.short li { display: grid; grid-template-columns: 1.3em 1fr; align-items: baseline; margin: 0; padding: .4em 0; border-top: 1px solid var(--line); line-height: 1.22; }
+  .cols3.short li:first-child { border-top: 0; padding-top: .1em; }
+  .cols3.short li::before { font-weight: 700; }
+  .cols3.short .keep li::before { content: "="; color: var(--muted); }
+  .cols3.short .chg li::before { content: "→"; color: var(--accent); }
+  .cols3.short .add li::before { content: "+"; color: var(--ok); }
+  .cols3.short li b { font-weight: 650; }
+  .cols3.short li span.d { display: block; color: var(--muted); font-size: .86em; }
 
   /* ---------- slide 3: token a token contra en paralelo ---------- */
   .duo { display: grid; grid-template-columns: 1fr 1fr; gap: 2.6em; width: 74%; margin: 0 auto; }
@@ -512,32 +528,33 @@
     <div class="ph" data-k="2"><div class="dot">✓</div><span class="when">nov</span><b>Más rápido</b><p>Genie de 1 a 25 pasos y MaskGIT-S de 1 a 12.</p></div>
     <div class="ph" data-k="3"><div class="dot">✓</div><span class="when">dic</span><b>Calidad contra velocidad</b><p>FVD contra ms por frame, cadena completa.</p></div>
   </div>
-  <div class="cols3">
+  <div class="cols3 short">
     <div class="card keep"><b>Se mantuvo</b>
       <ul>
-        <li>La pregunta y el dataset: commaVQ, 2.500 segmentos del primer shard; los últimos 50, de holdout.</li>
-        <li>Encoder y decoder de comma, fijos.</li>
-        <li>gpt2m como referencia y como maestro de la destilación.</li>
-        <li>Las referencias simples y el ConvLSTM.</li>
+        <li><div><b>La pregunta</b></div></li>
+        <li><div><b>commaVQ</b><span class="d">shard 0 + holdout</span></div></li>
+        <li><div><b>Encoder y decoder</b><span class="d">de comma, fijos</span></div></li>
+        <li><div><b>gpt2m</b><span class="d">referencia y maestro</span></div></li>
+        <li><div><b>Referencias simples</b><span class="d">y ConvLSTM</span></div></li>
       </ul>
     </div>
-    <div class="card chg"><b>Cambió, y por qué</b>
+    <div class="card chg"><b>Cambió</b>
       <ul>
-        <li>Métrica principal: pasamos de cross-entropy a FVD. La CE no se puede comparar entre modelos con máscara y autorregresivos, y el LPIPS premia el video quieto.</li>
-        <li>Decodificación paralela: la dinámica de Genie y un MaskGIT con la misma red que el GPT-S, para separar la forma de decodificar de la arquitectura.</li>
-        <li>El ConvLSTM pasó de la grilla de tokens a píxeles, como en su paper.</li>
-        <li>Cada modelo que entrenamos, con la receta de su paper y el mismo presupuesto: 780.000 frames.</li>
-        <li>Latencia de comma: <span data-d="m.gpt2m.ms3080" data-f="0">291</span> ms con un protocolo fijo (RTX 3080 Ti, fp16, CUDA graphs) y la atención optimizada; antes, <span data-d="opt.pasos.gpt2m.1" data-f="0">767</span> ms. El 1,25 s de la pre-entrega no tenía el hardware documentado.</li>
+        <li><div><b>Métrica</b><span class="d">CE → FVD</span></div></li>
+        <li><div><b>Decodificación paralela</b><span class="d">Genie y MaskGIT-S</span></div></li>
+        <li><div><b>ConvLSTM</b><span class="d">tokens → píxeles</span></div></li>
+        <li><div><b>Entrenamiento</b><span class="d">receta del paper, 780.000 frames</span></div></li>
+        <li><div><b>Latencia de comma</b><span class="d"><span data-d="opt.pasos.gpt2m.1" data-f="0">767</span> → <span data-d="m.gpt2m.ms3080" data-f="0">291</span> ms</span></div></li>
       </ul>
     </div>
     <div class="card add"><b>Sumamos</b>
       <ul>
-        <li>Genie-M (<span data-d="m.genie_m_p4.params" data-f="0">35</span>M), para ver si agrandar ayuda.</li>
-        <li>La cadena completa a ritmo de cámara.</li>
-        <li>Diferencias pareadas, tres semillas y temperatura elegida en un holdout.</li>
-        <li>GPT-S de cero con 25 % y 50 % de los datos.</li>
-        <li>Modelos latentes: V-JEPA 2 y LeWorldModel.</li>
-        <li>La optimización de la inferencia en la GPU.</li>
+        <li><div><b>Genie-M</b><span class="d"><span data-d="m.genie_m_p4.params" data-f="0">35</span>M</span></div></li>
+        <li><div><b>Cadena completa</b><span class="d">a ritmo de cámara</span></div></li>
+        <li><div><b>Estadística</b><span class="d">pareadas, semillas, holdout</span></div></li>
+        <li><div><b>GPT-S de cero</b><span class="d">25 % y 50 % de los datos</span></div></li>
+        <li><div><b>Latentes</b><span class="d">V-JEPA 2 y LeWorldModel</span></div></li>
+        <li><div><b>Optimización</b><span class="d">inferencia en la GPU</span></div></li>
       </ul>
     </div>
   </div>
