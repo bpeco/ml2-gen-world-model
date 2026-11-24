@@ -267,19 +267,19 @@
   .h2row { display: flex; align-items: baseline; justify-content: space-between; gap: 1em; }
   .h2row > span { font-size: .78em; color: var(--muted); white-space: nowrap; }
   .dif { --del: #fdeceb; --del-hl: #f7c4bd; --del-k: #b42318; --add: #e7f5ec; --add-hl: #b6e2c3; --add-k: var(--ok);
-    background: var(--card); border: 1px solid var(--line); border-radius: .5em; overflow: hidden; font-size: .86em; margin-top: .15em; }
+    background: var(--card); border: 1px solid var(--line); border-radius: .5em; overflow: hidden; font-size: .8em; margin-top: .15em; }
   .dif .hk { display: grid; grid-template-columns: minmax(0, 1fr) 11.4em; border-top: 1px solid var(--line); border-left: .28em solid transparent;
     cursor: pointer; transition: opacity .3s; }
   .dif .hk:first-child { border-top: none; }
   .dif .hk.att { border-left-color: var(--accent); }
   .dif.foco .hk:not(.on) { opacity: .35; }
   .dif .fh { grid-column: 1; display: flex; align-items: baseline; gap: .55em; padding: .2em .8em .2em 2.1em; background: #f3f1ec;
-    font: .95em/1.4 Consolas, ui-monospace, SFMono-Regular, monospace; color: var(--muted); }
+    font: .95em/1.3 Consolas, ui-monospace, SFMono-Regular, monospace; color: var(--muted); }
   .dif .fh code { font: inherit; background: none; padding: 0; color: var(--ink); }
   .dif .fh code.fn { color: var(--muted); }
   .dif .fh .tag { font: 650 .82em/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; margin-left: .3em; }
   .dif .ln { grid-column: 1; display: grid; grid-template-columns: 2em 66ch minmax(0, 1fr); align-items: baseline;
-    font: 1em/1.62 Consolas, ui-monospace, SFMono-Regular, monospace; }
+    font: 1em/1.4 Consolas, ui-monospace, SFMono-Regular, monospace; }
   .dif .ln > i { font-style: normal; text-align: center; font-weight: 700; }
   .dif .ln code { font: inherit; background: none; padding: 0; white-space: pre; color: var(--ink); }
   .dif .ln code.w { grid-column: 2 / span 2; }
@@ -750,24 +750,28 @@
     <div class="hk" data-k="1">
       <div class="fh"><code>stream.py</code><code class="fn">GPTStream</code></div>
       <div class="ln del"><i>−</i><code class="w">return self.m.<em>next_frame</em>(self.ctx)</code></div>
+      <div class="ln add"><i>+</i><code class="w">noise = self.<em>_noise</em>(B)</code></div>
       <div class="ln add"><i>+</i><code class="w">g = <em>GraphedStep</em>(self.<em>_frame</em>, self.ctx, *noise)</code></div>
       <div class="ln add"><i>+</i><code class="w">return g(self.ctx, *noise)</code></div>
-      <div class="an flat" style="grid-row: 1 / span 4"><b><span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span> → <span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span></b><span>1 graph por frame</span></div>
+      <div class="an flat" style="grid-row: 1 / span 5"><b><span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span> → <span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span></b><span>1 graph por frame</span></div>
     </div>
     <div class="hk att" data-k="2">
-      <div class="fh"><code>backbone.py</code><code class="fn">Attention</code></div>
+      <div class="fh"><code>backbone.py</code><code class="fn">Attention → cached_attention</code></div>
       <div class="ln del"><i>−</i><code>y = <em>F.scaled_dot_product_attention</em>(q, k, v, attn_mask=attn_mask)</code><span class="m">softmax(q·Kᵀ/√d + m)·V</span></div>
+      <div class="ln add"><i>+</i><code>q, k, v = (t.<em>reshape</em>(B * H, -1, hd) for t in (q, k, v))</code><span class="m">3D: (B·H, ·, d)</span></div>
       <div class="ln add"><i>+</i><code>s = <em>torch.baddbmm</em>(bias, q, k.transpose(1, 2), alpha=hd ** -0.5)</code><span class="m">q·Kᵀ/√d + m</span></div>
       <div class="ln add"><i>+</i><code>p = <em>torch.softmax</em>(s, -1)</code><span class="m">softmax(s)</span></div>
-      <div class="ln add"><i>+</i><code>o = <em>torch.bmm</em>(p, v)</code><span class="m">p·V</span></div>
-      <div class="an big" style="grid-row: 1 / span 5"><b><span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> → <span data-d="opt.attn.gpt_s_kd" data-f="0">40</span></b><span><span data-d="opt.antes.att_us_decode" data-f="0">160</span> → <span data-d="opt.despues.att_us" data-f="0">15</span> µs por capa</span><span><span data-d="opt.antes.att_bloques" data-f="0">6</span> → <span data-d="opt.despues.att_lista.1.bloques" data-f="0">1008</span> bloques</span></div>
+      <div class="ln add"><i>+</i><code>y = <em>torch.bmm</em>(p, v).view(B, H, T, hd)</code><span class="m">p·V</span></div>
+      <div class="an big" style="grid-row: 1 / span 6"><b><span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> → <span data-d="opt.attn.gpt_s_kd" data-f="0">40</span></b><span><span data-d="opt.antes.att_us_decode" data-f="0">160</span> → <span data-d="opt.despues.att_us" data-f="0">15</span> µs por capa</span><span><span data-d="opt.antes.att_bloques" data-f="0">6</span> → <span data-d="opt.despues.att_lista.1.bloques" data-f="0">1008</span> bloques</span></div>
     </div>
     <div class="hk" data-k="3">
       <div class="fh"><code>stream.py</code><code class="fn">GPTStream._noise</code></div>
+      <div class="ln del"><i>−</i><code class="w">buf = <em>torch.empty</em>(CODES, B, 1024)</code></div>
       <div class="ln del"><i>−</i><code class="w">for i in range(CODES):</code></div>
       <div class="ln del"><i>−</i><code class="w">  buf[i].<em>exponential_</em>(1, generator=self.gen)</code></div>
+      <div class="ln del"><i>−</i><code class="w">return [buf]</code></div>
       <div class="ln add"><i>+</i><code class="w">return [<em>frame_noise</em>(CODES, B, self.dev, self.gen)]</code></div>
-      <div class="an" style="grid-row: 1 / span 4"><b><span data-d="opt.attn.gpt_s_kd" data-f="0">40</span> → <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span></b><span>128 → 1 lanzamiento</span></div>
+      <div class="an" style="grid-row: 1 / span 6"><b><span data-d="opt.attn.gpt_s_kd" data-f="0">40</span> → <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span></b><span>128 → 1 lanzamiento</span></div>
     </div>
   </div>
   <p class="note" style="margin-top:auto;padding-bottom:1.1em">Código de <code>src/</code>, sin argumentos; gpt2m, igual. El entrenamiento no cambió. Calidad, FVD pareado después − antes: <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.diff" data-f="1" data-sign>+12,6</span> · <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.diff" data-f="1" data-sign>+27,0</span> · <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.diff" data-f="1" data-sign>+4,4</span> a 1 · 2 · 3 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.p" data-f="2">0,18</span> · <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.p" data-f="2">0,05</span> · <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.p" data-f="2">0,76</span>).</p>
