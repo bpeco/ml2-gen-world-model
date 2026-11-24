@@ -80,6 +80,7 @@ class GPT(WorldModel):
     dropout: float = 0.1            # IRIS: embedding, residual y atención (comma: 0)
     block_size: int = BLOCK
     pos: str = "abs"                # embedding de posición: "abs" | "frame" (frame + celda)
+    top_p: float = 1.0              # muestreo de núcleo en inferencia (1 = apagado; --opt top_p=0.95)
 
   @classmethod
   def recipe(cls, size=None):
@@ -160,7 +161,8 @@ class GPT(WorldModel):
     out = []
     use_graph = (self._graphs_on if graphs is None else graphs) and p.device.type == "cuda"
     for i in range(TPF - 1):
-      tok = sample_logits(lg[:, :BOS], temperature, generator, None if noise is None else noise[i])  # nunca emite BOS
+      tok = sample_logits(lg[:, :BOS], temperature, generator, None if noise is None else noise[i],
+                          top_p=getattr(self.cfg, "top_p", 1.0))  # nunca emite BOS
       out.append(tok)
       if i == TPF - 2:
         break

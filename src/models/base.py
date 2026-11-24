@@ -128,8 +128,8 @@ def frame_logits_to_seq(frame_logits: torch.Tensor) -> torch.Tensor:
 
 def sample_logits(logits: torch.Tensor, temperature: float = 1.0,
                   generator: Optional[torch.Generator] = None,
-                  noise: Optional[torch.Tensor] = None) -> torch.Tensor:
-  """logits (..., V) -> índices (...). temperature 0 = argmax.
+                  noise: Optional[torch.Tensor] = None, top_p: float = 1.0) -> torch.Tensor:
+  """logits (..., V) -> índices (...). temperature 0 = argmax. top_p < 1: muestreo de núcleo.
 
   Muestrea con el truco de la exponencial (argmax de p / q con q ~ Exp(1)), que equivale a
   muestrear de p sin sincronizar con la GPU. Si llega `noise` (float32, la forma de los logits), es el q ya
@@ -138,6 +138,10 @@ def sample_logits(logits: torch.Tensor, temperature: float = 1.0,
   if temperature == 0:
     return logits.argmax(-1)
   probs = torch.softmax(logits.float() / temperature, -1)
+  if top_p < 1.0:  # núcleo (Holtzman 2019): solo los tokens más probables que suman top_p; sin sincronizar con la GPU
+    ps, idx = probs.sort(-1, descending=True)
+    fuera = (ps.cumsum(-1) - ps) >= top_p
+    probs = probs.scatter(-1, idx, ps.masked_fill(fuera, 0.0))
   q = noise if noise is not None else torch.empty_like(probs).exponential_(1, generator=generator)
   return (probs / q).argmax(-1)
 

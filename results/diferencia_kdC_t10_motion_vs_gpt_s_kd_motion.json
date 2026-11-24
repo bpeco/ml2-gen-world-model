@@ -1,0 +1,45 @@
+{
+ "a": "kdC_t10_motion",
+ "b": "gpt_s_kd_motion",
+ "n_clips": 200,
+ "fvd": {
+  "1": {
+   "fvd_a": 445.4892869569567,
+   "fvd_b": 423.81206477070145,
+   "diff": 21.67722218625522,
+   "lo": -19.238366325243703,
+   "hi": 62.592810697754146,
+   "sd": 20.87530026096884,
+   "p": 0.3283582089552239,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "2": {
+   "fvd_a": 632.7278312792582,
+   "fvd_b": 625.6884590100781,
+   "diff": 7.039372269180149,
+   "lo": -59.39768527251486,
+   "hi": 73.47642981087516,
+   "sd": 33.89645792943623,
+   "p": 0.746268656716418,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "3": {
+   "fvd_a": 825.1058522875728,
+   "fvd_b": 721.2061077115036,
+   "diff": 103.89974457606922,
+   "lo": 21.70216994469979,
+   "hi": 186.09731920743866,
+   "sd": 41.937538077229306,
+   "p": 0.009950248756218905,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  }
+ },
+ "_bitacora": {
+  "id": "20261124-135155-4ba4",
+  "comando": "python -m src.cli estadistica diferencia --clips motion --a kdC_t10_motion --b gpt_s_kd_motion",
+  "commit": "d8cfb925b80c4e3e14921d007c7322a0e441aa35"
+ }
+}

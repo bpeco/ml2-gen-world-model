@@ -18,6 +18,7 @@ import numpy as np
 from src.common import CTX_FRAMES, FPS
 
 PATH = Path("results/clips_motion.json")
+PATH_SUAVE = Path("results/clips_motion_suave.json")   # curvas de 10-20° para la sensibilidad de la métrica de giro
 TOKENS = "data/valp_tokens.npy"
 POSES = "data/valp_poses.npy"
 KEYS = "data/valp_keys.json"
@@ -87,6 +88,39 @@ def make(path=PATH, seed=0):
        "criterio": {"curva_min_deg": CURVA_MIN, "recta_max_deg": RECTA_MAX, "v_min_ms": V_MIN, "paso": PASO,
                     "yaw": "col 5 (rad/s) integrada en los 60 frames del rollout"},
        "clips": clips}
+  Path(path).write_text(json.dumps(d, indent=1))
+  return d
+
+
+def make_suave(path=PATH_SUAVE, n=50, lo=10.0, hi=20.0, seed=1):
+  """n curvas con lo <= |yaw_3s| < hi y v >= V_MIN (mitad a cada lado), de rutas que no están en clips_motion.json."""
+  rng = np.random.default_rng(seed)
+  poses = np.load(POSES, mmap_mode="r")
+  keys = json.loads(Path(KEYS).read_text())
+  route = lambda k: Path(k).name.rsplit("_", 1)[0]
+  usadas = {route(c["key"]) for c in json.loads(PATH.read_text())["clips"]}
+  starts, y3, yc, v = candidatos(np.asarray(poses))
+  ok = (v >= V_MIN) & (np.abs(y3) >= lo) & (np.abs(y3) < hi)
+  lados = {+1: [], -1: []}
+  for seg in rng.permutation(len(poses)):
+    js = np.flatnonzero(ok[seg])
+    if len(js) == 0 or route(keys[seg]) in usadas:
+      continue
+    j = int(rng.choice(js))
+    lado = int(np.sign(y3[seg, j]))
+    if len(lados[lado]) >= n // 2:
+      continue
+    lados[lado].append((int(seg), j))
+    usadas.add(route(keys[seg]))
+    if all(len(x) == n // 2 for x in lados.values()):
+      break
+  assert all(len(x) == n // 2 for x in lados.values()), {k: len(x) for k, x in lados.items()}
+  clips = [{"clip": i, "segment": s, "key": keys[s], "start": int(starts[j]), "tipo": "curva",
+            "yaw_3s": round(float(y3[s, j]), 2), "yaw_ctx": round(float(yc[s, j]), 2), "v_media": round(float(v[s, j]), 2)}
+           for i, (s, j) in enumerate(lados[+1] + lados[-1])]
+  d = {"ctx": CTX_FRAMES, "horizon": HORIZON, "fps": FPS, "source": "valp (data-0001), rutas fuera de clips_motion.json",
+       "tokens": TOKENS, "poses": POSES, "seed": seed,
+       "criterio": {"curva_deg": [lo, hi], "v_min_ms": V_MIN, "paso": PASO}, "clips": clips}
   Path(path).write_text(json.dumps(d, indent=1))
   return d
 

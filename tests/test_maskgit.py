@@ -54,8 +54,8 @@ def test_cache_consistency(dev):
     P = seq.shape[1]
     pos = torch.arange(m.cfg.block_size, device=dev)
     m.net(seq, pos[:P])
-    inc = m._frame_pass(fr, pos[P:P + TPF])
-    inc2 = m._frame_pass(fr, pos[P:P + TPF])  # reescribir el frame es idempotente
+    inc = m._frame_pass(fr, pos[P:P + TPF], m.hist_of(seq))
+    inc2 = m._frame_pass(fr, pos[P:P + TPF], m.hist_of(seq))  # reescribir el frame es idempotente
   assert (inc - full).abs().max() < 1e-4
   assert (inc2 - full).abs().max() < 1e-4
 

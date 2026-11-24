@@ -25,6 +25,13 @@ FASE1 = {"gpt2m_motion": ("GPT2M (maestro)", "gpt2m"), "gpt_s_kd_motion": ("GPT-
          "genie_s_p4_motion": ("Genie-S p4", "genie_s_p4"), "mg_p1_motion": ("MaskGIT p1", "maskgit_s_abs_p1"),
          "mg_p2_motion": ("MaskGIT p2", "maskgit_s_abs_p2"), "mg_p4_motion": ("MaskGIT p4", "maskgit_s_abs_p4"),
          "mg_p8_motion": ("MaskGIT p8", "maskgit_s_abs_p8")}
+# prioridades C y A (mismas arquitecturas: misma latencia que su base)
+AC = {"gpt2m_motion": FASE1["gpt2m_motion"], "gpt_s_kd_motion": ("GPT-S kd T 0,9", "gpt_s_kd"),
+      "kdC_t10_motion": ("kd T 1,0", "gpt_s_kd"), "kdC_t11_motion": ("kd T 1,1", "gpt_s_kd"),
+      "kdC_t10_p95_motion": ("kd T 1,0 top-p 0,95", "gpt_s_kd"),
+      "mgA_ctrl_p4_motion": ("MaskGIT p4 FT control", "maskgit_s_abs_p4"),
+      "mgA_ctxl_p4_motion": ("MaskGIT p4 ctx limpio", "maskgit_s_abs_p4"),
+      "mgA_pc08_p4_motion": ("MaskGIT p4 p_clean 0,8", "maskgit_s_abs_p4")}
 # Okabe-Ito (seguro para daltonismo), orden fijo
 COLORES = ["#0072B2", "#E69F00", "#009E73", "#CC79A7", "#D55E00", "#56B4E9", "#F0E442", "#999999"]
 SUAVE = 5
@@ -129,12 +136,46 @@ def vs_ms(runs, archivo):
   plt.close(fig)
 
 
+def fig_metrica(archivo):
+  """Figura del paper (docs/metrica_giro.md): giro alineado y tasa de tokens de real, GPT2M, kd y MaskGIT p1 en curvas."""
+  runs = {"gpt2m_motion": "GPT2M (maestro)", "gpt_s_kd_motion": "GPT-S kd", "mg_p1_motion": "MaskGIT p1"}
+  col = {"gpt2m_motion": COLORES[0], "gpt_s_kd_motion": COLORES[1], "mg_p1_motion": COLORES[4]}
+  clips = json.loads(Path("results/clips_motion.json").read_text())["clips"]
+  cur = np.array([c["tipo"] == "curva" for c in clips])
+  h = json.loads((FLOW / "piso_codec.json").read_text())["clips_hash"]
+  piso = json.loads((FLOW / "piso_codec.json").read_text())["resumen"]["tok"]["media"]
+  t = np.arange(1, 61) / 20
+  fig, (a1, a2) = plt.subplots(1, 2, figsize=(10.5, 3.8))
+  r = giro_alineado("real").mean(0)
+  for n, lab in runs.items():
+    a1.plot(t, suavizar(giro_alineado(n).mean(0) / r.mean()), color=col[n], lw=1.8, label=lab)
+    a2.plot(t, suavizar(np.load(CACHE / f"flow_{n}_{h}.npz")["tok"][cur].mean(0)), color=col[n], lw=1.8, label=lab)
+  a1.plot(t, suavizar(r / r.mean()), color="black", lw=2.4, label="real")
+  a2.plot(t, suavizar(np.load(CACHE / f"flow_real_{h}.npz")["tok"][cur].mean(0)), color="black", lw=2.4, label="real")
+  a1.axhline(0, color="#666666", lw=0.8)
+  a2.axhline(piso, color="#666666", ls="--", lw=1.2, label="piso del codec")
+  a1.set_title("Giro (flow horizontal alineado con el giro real)", fontsize=10)
+  a1.set_ylabel("relativo a la media del real")
+  a2.set_title("Tasa de cambio de tokens", fontsize=10)
+  a2.set_ylabel("fracción de tokens que cambian")
+  for ax in (a1, a2):
+    ax.set_xlabel("horizonte del rollout (s)")
+    ax.grid(alpha=0.25)
+    ax.spines[["top", "right"]].set_visible(False)
+  a2.legend(fontsize=8, frameon=False, loc="center left", bbox_to_anchor=(1.0, 0.5))
+  fig.suptitle("Curvas (n=100): MaskGIT p1 cambia ~4× más tokens que el piso del codec y no gira", fontsize=11)
+  fig.tight_layout()
+  fig.savefig(archivo, dpi=150, bbox_inches="tight")
+  plt.close(fig)
+
+
 def main():
   ap = argparse.ArgumentParser()
   ap.add_argument("--names", nargs="*")
   ap.add_argument("--tag", default="fase1")
   a = ap.parse_args()
-  runs = FASE1 if not a.names else {n: FASE1.get(n, (n, None)) for n in a.names}
+  conocidos = {**FASE1, **AC}
+  runs = AC if a.tag == "AC" and not a.names else FASE1 if not a.names else {n: conocidos.get(n, (n, None)) for n in a.names}
   FIGS.mkdir(parents=True, exist_ok=True)
   piso = json.loads((FLOW / "piso_codec.json").read_text())["resumen"]
   por_horizonte(runs, "tok", FIGS / f"fig_{a.tag}_tok.png", "Tasa de cambio de tokens entre frames consecutivos",
@@ -143,6 +184,8 @@ def main():
                 "|flow| (px)", piso=piso["mag"]["media"])
   giro(runs, FIGS / f"fig_{a.tag}_giro.png")
   vs_ms(runs, FIGS / f"fig_{a.tag}_vs_ms.png")
+  if not a.names and a.tag == "fase1":
+    fig_metrica(FIGS / "fig_metrica_giro.png")
   print("figuras en", FIGS)
 
 

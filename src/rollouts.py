@@ -43,6 +43,7 @@ from src.common import CTX_FRAMES, FPS, device, device_info, log_device
 CLIPS = Path("results/clips_eval.json")
 CLIPS_B = Path("results/clips_eval_b.json")
 CLIPS_HOLDOUT = Path("results/clips_holdout.json")
+CLIPS_MOTION_SUAVE = Path("results/clips_motion_suave.json")  # 50 curvas de 10-20° (src.clips_motion.make_suave)
 CLIPS_MOTION = Path("results/clips_motion.json")   # 100 rectas + 100 curvas del val con poses (src.clips_motion)
 TRAIN = "data/train_tokens.npy"
 HOLDOUT = 50                                    # igual que Windows(holdout=50)
@@ -96,6 +97,12 @@ def clip_set(nombre):
   if nombre == "holdout":
     c, t = load_clips_holdout()
     return CLIPS_HOLDOUT, c, t
+  if nombre == "motion_suave":
+    if not CLIPS_MOTION_SUAVE.exists():
+      from src import clips_motion
+      clips_motion.make_suave(CLIPS_MOTION_SUAVE)
+    c = json.loads(CLIPS_MOTION_SUAVE.read_text())
+    return CLIPS_MOTION_SUAVE, c, np.load(c["tokens"], mmap_mode="r")
   if nombre == "motion":
     if not CLIPS_MOTION.exists():
       from src import clips_motion
@@ -163,7 +170,7 @@ def main(argv=None):
   ap.add_argument("--bs", type=int, default=50)
   ap.add_argument("--steps", type=int)
   ap.add_argument("--temperature", type=float, help="por defecto la del modelo (2 en genie, 1 en el resto)")
-  ap.add_argument("--clips", choices=["eval", "eval_b", "holdout", "motion"], default="eval",
+  ap.add_argument("--clips", choices=["eval", "eval_b", "holdout", "motion", "motion_suave"], default="eval",
                   help="eval: 400 clips de val (results/clips_eval.json); eval_b: otros 400 de val (piso); holdout: 200 clips "
                        "del holdout de train; motion: 100 rectas + 100 curvas del val con poses (results/clips_motion.json)")
   ap.add_argument("--reanudar", action="store_true",
@@ -177,7 +184,8 @@ def main(argv=None):
   a = ap.parse_args(argv)
 
   hold = a.clips == "holdout"
-  cpath = {"holdout": CLIPS_HOLDOUT, "eval_b": CLIPS_B, "motion": CLIPS_MOTION}.get(a.clips, CLIPS)
+  cpath = {"holdout": CLIPS_HOLDOUT, "eval_b": CLIPS_B, "motion": CLIPS_MOTION,
+           "motion_suave": CLIPS_MOTION_SUAVE}.get(a.clips, CLIPS)
   if a.make_clips and a.clips == "motion":
     from src import clips_motion
     clips_motion.make(CLIPS_MOTION)

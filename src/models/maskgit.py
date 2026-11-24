@@ -117,6 +117,8 @@ class MaskGIT(WorldModel):
     choice_temp: float = 1.0        # ruido Gumbel sobre la confianza, baja linealmente a 0
     pos: str = "abs"                # embedding de posición: "abs" | "frame" (frame + celda)
     p_clean: float = 0.0            # prob. de dejar un frame entero sin máscara al entrenar (contexto limpio, como en inferencia)
+    ctx_limpio: bool = False        # motion A: un solo frame enmascarado por clip (al azar), el resto limpio: el contexto
+                                    # de cada objetivo es siempre limpio, como al generar ("p_clean = 1")
     # v2, experimentos de movimiento (apagados por defecto: los checkpoints del paper no cambian)
     peso_cambio: float = 1.0        # peso de la CE en los tokens que cambian respecto del frame anterior (1 = sin pesar)
     p_self: float = 0.0             # prob. de que un frame de entrada sea una predicción del propio modelo (scheduled sampling)
@@ -253,6 +255,9 @@ class MaskGIT(WorldModel):
     r = self._mask_rates(B, Fr, frames.device)
     if c.p_clean > 0:  # en inferencia el contexto está limpio: que en entrenamiento también aparezca
       r = torch.where(torch.rand(B, Fr, device=frames.device) < c.p_clean, torch.zeros_like(r), r)
+    if c.ctx_limpio:  # un objetivo por clip; con la atención causal entre frames, los frames posteriores no lo afectan
+      obj = torch.randint(0, Fr, (B,), device=frames.device)
+      r = torch.where(torch.arange(Fr, device=frames.device)[None] == obj[:, None], r, torch.zeros_like(r))
     masked = torch.rand(B, Fr, CODES, device=frames.device) < r[..., None]  # el BOS no entra
     seq = with_bos(src).view(B, Fr, TPF)
     x = seq.clone()

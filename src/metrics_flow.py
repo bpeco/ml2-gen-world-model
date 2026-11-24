@@ -132,7 +132,7 @@ def resumen(m, r, clips):
 def main(argv=None):
   ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
   ap.add_argument("--name", action="append", default=[])
-  ap.add_argument("--clips", default="motion", choices=["eval", "motion"])
+  ap.add_argument("--clips", default="motion", choices=["eval", "motion", "motion_suave"])
   ap.add_argument("--piso-codec", action="store_true")
   a = ap.parse_args(argv)
   dev = device()

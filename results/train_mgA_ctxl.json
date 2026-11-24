@@ -1,0 +1,184 @@
+{
+ "run": "mgA_ctxl",
+ "kind": "maskgit",
+ "size": "s",
+ "config": {
+  "n_layer": 6,
+  "n_head": 6,
+  "dim": 384,
+  "dropout": 0.0,
+  "block_size": 2580,
+  "mask_schedule": "cosine",
+  "mask_min": 0.5,
+  "mask_max": 1.0,
+  "default_steps": 8,
+  "choice_temp": 1.0,
+  "pos": "abs",
+  "p_clean": 0.0,
+  "ctx_limpio": true,
+  "peso_cambio": 1.0,
+  "p_self": 0.0,
+  "motion_in": false,
+  "motion_cb": false,
+  "flow_limpio": false,
+  "flow_k": 0,
+  "flow_dim": 128,
+  "flow_layers": 2,
+  "flow_heads": 4
+ },
+ "params": 12425472,
+ "tokens": 41280000,
+ "frames": 320000,
+ "steps": 1000,
+ "seconds": 1788.8205289840698,
+ "tokens_per_s": 23076.65823996568,
+ "final_monitor_ce": 3.2522263526916504,
+ "monitor_history": [
+  {
+   "step": 250,
+   "tokens": 10320000,
+   "monitor_ce": 3.3259620666503906
+  },
+  {
+   "step": 500,
+   "tokens": 20640000,
+   "monitor_ce": 3.3023743629455566
+  },
+  {
+   "step": 750,
+   "tokens": 30960000,
+   "monitor_ce": 3.2719526290893555
+  },
+  {
+   "step": 1000,
+   "tokens": 41280000,
+   "monitor_ce": 3.2522263526916504
+  }
+ ],
+ "args": {
+  "kind": "maskgit",
+  "size": "s",
+  "config": "{\"ctx_limpio\":true}",
+  "run": "mgA_ctxl",
+  "receta": null,
+  "set": [],
+  "presupuesto": "320000",
+  "tokens": null,
+  "extend_from": null,
+  "init_from": "maskgit_s_abs",
+  "restart": false,
+  "bs": null,
+  "accum": null,
+  "frames": null,
+  "frameskip": null,
+  "lr": 0.0003,
+  "min_lr_frac": null,
+  "warmup": 100,
+  "wd": null,
+  "clip": null,
+  "amp": null,
+  "seed": 0,
+  "kd": false,
+  "alpha": 0.5,
+  "tau": 1.0,
+  "data": "data/train_tokens.npy",
+  "poses": "data/train_poses.npy",
+  "ckpt_dir": "checkpoints",
+  "ckpt_every_min": 15,
+  "eval_every": 250,
+  "log_every": 25,
+  "compile": false,
+  "max_steps": null,
+  "results_dir": "results",
+  "desviaciones": [
+   {
+    "campo": "lr",
+    "receta": 0.001,
+    "valor": 0.0003
+   },
+   {
+    "campo": "warmup",
+    "receta": 200,
+    "valor": 100
+   }
+  ],
+  "receta_hash": "ec85d4401608",
+  "receta_nombre": "maskgit_propia",
+  "parent": "maskgit_s_abs",
+  "parent_sha256": "1cae417de9f77d2acbc8a9c421e5d11dffadb3097b7f4bc52f977edcb526c3b0",
+  "parent_file": "last.pt (init, ajuste fino)"
+ },
+ "receta": {
+  "name": "maskgit_propia",
+  "fuente": "propia (ablaci\u00f3n del repo; MaskGIT no publica el entrenamiento)",
+  "optimizer": "adamw",
+  "betas": [
+   0.9,
+   0.95
+  ],
+  "eps": 1e-08,
+  "alpha": 0.99,
+  "momentum": 0.0,
+  "lr_segs": [
+   {
+    "nombre": "warmup",
+    "forma": "linear",
+    "ini": 0.0,
+    "fin": 0.0003,
+    "pasos": 100
+   },
+   {
+    "nombre": "cosine",
+    "forma": "cosine",
+    "ini": 0.0003,
+    "min_frac": 0.1
+   }
+  ],
+  "wd_ini": 0.1,
+  "wd_fin": null,
+  "wd_on": "matrices",
+  "ema_segs": null,
+  "grad_clip": 1.0,
+  "amp": "fp16",
+  "batch": 16,
+  "frames": 20,
+  "frameskip": 1,
+  "accum": 1,
+  "presupuesto": 780000,
+  "extras": {},
+  "paper_steps": null,
+  "batch_fuente": 16,
+  "forzado": [
+   [
+    "toda la receta",
+    "ablaci\u00f3n propia: no hay receta publicada que seguir",
+    "propio"
+   ]
+  ]
+ },
+ "receta_hash": "ec85d4401608",
+ "desviaciones": [
+  {
+   "campo": "lr",
+   "receta": 0.001,
+   "valor": 0.0003
+  },
+  {
+   "campo": "warmup",
+   "receta": 200,
+   "valor": 100
+  }
+ ],
+ "device_info": {
+  "device": "cuda",
+  "torch": "2.11.0+cu128",
+  "platform": "Windows-11-10.0.26300-SP0",
+  "cpu": "Intel64 Family 6 Model 191 Stepping 2, GenuineIntel",
+  "gpu": "NVIDIA GeForce RTX 4060 Laptop GPU",
+  "backend": "cuda",
+  "backend_version": "12.8"
+ },
+ "parent": "maskgit_s_abs",
+ "parent_sha256": "1cae417de9f77d2acbc8a9c421e5d11dffadb3097b7f4bc52f977edcb526c3b0",
+ "parent_file": "last.pt (init, ajuste fino)"
+}

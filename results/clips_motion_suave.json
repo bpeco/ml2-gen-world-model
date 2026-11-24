@@ -1,0 +1,519 @@
+{
+ "ctx": 20,
+ "horizon": 60,
+ "fps": 20,
+ "source": "valp (data-0001), rutas fuera de clips_motion.json",
+ "tokens": "data/valp_tokens.npy",
+ "poses": "data/valp_poses.npy",
+ "seed": 1,
+ "criterio": {
+  "curva_deg": [
+   10.0,
+   20.0
+  ],
+  "v_min_ms": 8.0,
+  "paso": 10
+ },
+ "clips": [
+  {
+   "clip": 0,
+   "segment": 2110,
+   "key": "9b9722d392933cec774a4c273ea633f4_3",
+   "start": 1020,
+   "tipo": "curva",
+   "yaw_3s": 15.96,
+   "yaw_ctx": -2.22,
+   "v_media": 16.16
+  },
+  {
+   "clip": 1,
+   "segment": 1945,
+   "key": "a8a8f5ffb5e7460666087f128ca65114_2",
+   "start": 50,
+   "tipo": "curva",
+   "yaw_3s": 11.75,
+   "yaw_ctx": 3.8,
+   "v_media": 24.81
+  },
+  {
+   "clip": 2,
+   "segment": 751,
+   "key": "d71705a05751f17e9068fa4892d627c6_37",
+   "start": 700,
+   "tipo": "curva",
+   "yaw_3s": 10.78,
+   "yaw_ctx": 3.99,
+   "v_media": 27.05
+  },
+  {
+   "clip": 3,
+   "segment": 84,
+   "key": "107c7c033ef730d7a860123ba2b19a42_39",
+   "start": 50,
+   "tipo": "curva",
+   "yaw_3s": 15.01,
+   "yaw_ctx": -0.47,
+   "v_media": 8.41
+  },
+  {
+   "clip": 4,
+   "segment": 1758,
+   "key": "b60f8d4206ad885565e2fb04137b0a1b_37",
+   "start": 10,
+   "tipo": "curva",
+   "yaw_3s": 13.18,
+   "yaw_ctx": 1.71,
+   "v_media": 14.32
+  },
+  {
+   "clip": 5,
+   "segment": 1145,
+   "key": "5fd70ac60c5a4f3acfc64bd5354c31e7_9",
+   "start": 500,
+   "tipo": "curva",
+   "yaw_3s": 15.69,
+   "yaw_ctx": 5.66,
+   "v_media": 8.05
+  },
+  {
+   "clip": 6,
+   "segment": 1100,
+   "key": "2d32b502f213c53dc8b341abc95112a1_4",
+   "start": 1000,
+   "tipo": "curva",
+   "yaw_3s": 10.41,
+   "yaw_ctx": 2.6,
+   "v_media": 17.96
+  },
+  {
+   "clip": 7,
+   "segment": 2006,
+   "key": "014656527b5cdc22b413eb9b34c337df_2",
+   "start": 240,
+   "tipo": "curva",
+   "yaw_3s": 14.27,
+   "yaw_ctx": -0.81,
+   "v_media": 8.08
+  },
+  {
+   "clip": 8,
+   "segment": 971,
+   "key": "8dbf8c926cab718372ab8181b263a5c0_38",
+   "start": 0,
+   "tipo": "curva",
+   "yaw_3s": 10.14,
+   "yaw_ctx": 2.33,
+   "v_media": 30.22
+  },
+  {
+   "clip": 9,
+   "segment": 1692,
+   "key": "f277c1f545750eab4f24246b60b33789_8",
+   "start": 550,
+   "tipo": "curva",
+   "yaw_3s": 14.22,
+   "yaw_ctx": 1.09,
+   "v_media": 13.51
+  },
+  {
+   "clip": 10,
+   "segment": 1752,
+   "key": "49a5051f964b49ea851533b4a9ef8ea3_0",
+   "start": 390,
+   "tipo": "curva",
+   "yaw_3s": 10.59,
+   "yaw_ctx": 22.93,
+   "v_media": 10.8
+  },
+  {
+   "clip": 11,
+   "segment": 1034,
+   "key": "ca0516f0b8d50214f08ecf96cdea4d0c_17",
+   "start": 350,
+   "tipo": "curva",
+   "yaw_3s": 11.62,
+   "yaw_ctx": 2.9,
+   "v_media": 33.81
+  },
+  {
+   "clip": 12,
+   "segment": 2047,
+   "key": "1d7eeac1c0eb7282f12f73035b8d503b_16",
+   "start": 890,
+   "tipo": "curva",
+   "yaw_3s": 10.14,
+   "yaw_ctx": 4.41,
+   "v_media": 23.5
+  },
+  {
+   "clip": 13,
+   "segment": 167,
+   "key": "a190420fe213318f231ac9ab1b859a3a_9",
+   "start": 870,
+   "tipo": "curva",
+   "yaw_3s": 11.41,
+   "yaw_ctx": 3.9,
+   "v_media": 10.98
+  },
+  {
+   "clip": 14,
+   "segment": 695,
+   "key": "f8e0216790bfb6fe63190741f061ee53_22",
+   "start": 860,
+   "tipo": "curva",
+   "yaw_3s": 10.06,
+   "yaw_ctx": 3.02,
+   "v_media": 14.62
+  },
+  {
+   "clip": 15,
+   "segment": 585,
+   "key": "2b70f263a45052cbe84f68ce1b590db3_10",
+   "start": 690,
+   "tipo": "curva",
+   "yaw_3s": 11.37,
+   "yaw_ctx": 0.71,
+   "v_media": 11.45
+  },
+  {
+   "clip": 16,
+   "segment": 702,
+   "key": "81cac7d11b1569afd6aa5f4e30f7818e_2",
+   "start": 110,
+   "tipo": "curva",
+   "yaw_3s": 19.35,
+   "yaw_ctx": 37.47,
+   "v_media": 8.46
+  },
+  {
+   "clip": 17,
+   "segment": 2065,
+   "key": "5049849dfaa8bdb234bac921f3f1a93b_6",
+   "start": 820,
+   "tipo": "curva",
+   "yaw_3s": 10.19,
+   "yaw_ctx": 2.68,
+   "v_media": 32.82
+  },
+  {
+   "clip": 18,
+   "segment": 1954,
+   "key": "bf872929927a6b4f23a08939783bdad4_3",
+   "start": 210,
+   "tipo": "curva",
+   "yaw_3s": 12.89,
+   "yaw_ctx": 0.78,
+   "v_media": 21.04
+  },
+  {
+   "clip": 19,
+   "segment": 826,
+   "key": "4f9f586ea353da99ffe27a51da34a521_7",
+   "start": 630,
+   "tipo": "curva",
+   "yaw_3s": 10.62,
+   "yaw_ctx": -5.47,
+   "v_media": 9.4
+  },
+  {
+   "clip": 20,
+   "segment": 1306,
+   "key": "40982ce63bbd905484987dd9396b82ee_22",
+   "start": 220,
+   "tipo": "curva",
+   "yaw_3s": 10.32,
+   "yaw_ctx": 3.05,
+   "v_media": 29.49
+  },
+  {
+   "clip": 21,
+   "segment": 1237,
+   "key": "744e51b2eafdae15658b6f7dfd2ead39_2",
+   "start": 330,
+   "tipo": "curva",
+   "yaw_3s": 10.51,
+   "yaw_ctx": 3.22,
+   "v_media": 18.61
+  },
+  {
+   "clip": 22,
+   "segment": 1057,
+   "key": "8a8f6a55a39507eef4c72c0aaacefcdc_1",
+   "start": 710,
+   "tipo": "curva",
+   "yaw_3s": 13.06,
+   "yaw_ctx": 4.27,
+   "v_media": 13.56
+  },
+  {
+   "clip": 23,
+   "segment": 1478,
+   "key": "1fe6372f3c84116aa5e5cb01cd835694_3",
+   "start": 150,
+   "tipo": "curva",
+   "yaw_3s": 18.45,
+   "yaw_ctx": 18.37,
+   "v_media": 13.05
+  },
+  {
+   "clip": 24,
+   "segment": 1203,
+   "key": "02bd33f4c8e46d08f16dcfbe3aafe460_31",
+   "start": 420,
+   "tipo": "curva",
+   "yaw_3s": 18.51,
+   "yaw_ctx": 15.22,
+   "v_media": 9.37
+  },
+  {
+   "clip": 25,
+   "segment": 1540,
+   "key": "abddd3774b6afb47fc7d20b1d696511e_13",
+   "start": 800,
+   "tipo": "curva",
+   "yaw_3s": -15.38,
+   "yaw_ctx": -1.86,
+   "v_media": 9.34
+  },
+  {
+   "clip": 26,
+   "segment": 1993,
+   "key": "eb5946a0f6dc3fca8e8caf67f5da210d_20",
+   "start": 0,
+   "tipo": "curva",
+   "yaw_3s": -10.93,
+   "yaw_ctx": -2.65,
+   "v_media": 28.04
+  },
+  {
+   "clip": 27,
+   "segment": 82,
+   "key": "a5a1d32ef614de57160840ada1abe912_20",
+   "start": 860,
+   "tipo": "curva",
+   "yaw_3s": -17.17,
+   "yaw_ctx": 0.88,
+   "v_media": 8.98
+  },
+  {
+   "clip": 28,
+   "segment": 839,
+   "key": "5d95d481e7643377b5a2636b233ad7f0_5",
+   "start": 840,
+   "tipo": "curva",
+   "yaw_3s": -11.14,
+   "yaw_ctx": -7.74,
+   "v_media": 18.45
+  },
+  {
+   "clip": 29,
+   "segment": 1873,
+   "key": "2131f9603fabf1497f9d3447b2867ca8_1",
+   "start": 320,
+   "tipo": "curva",
+   "yaw_3s": -14.53,
+   "yaw_ctx": -19.39,
+   "v_media": 9.45
+  },
+  {
+   "clip": 30,
+   "segment": 1849,
+   "key": "4f1efdc74997dcd843b3ce7503b3acea_16",
+   "start": 330,
+   "tipo": "curva",
+   "yaw_3s": -13.55,
+   "yaw_ctx": -3.41,
+   "v_media": 14.22
+  },
+  {
+   "clip": 31,
+   "segment": 165,
+   "key": "a285aabe72480dcd8506d39564f0938c_5",
+   "start": 860,
+   "tipo": "curva",
+   "yaw_3s": -15.2,
+   "yaw_ctx": -15.52,
+   "v_media": 9.02
+  },
+  {
+   "clip": 32,
+   "segment": 1186,
+   "key": "b4c17e9bd84b8e9a689174c3d5276aa5_3",
+   "start": 670,
+   "tipo": "curva",
+   "yaw_3s": -14.54,
+   "yaw_ctx": -2.64,
+   "v_media": 15.99
+  },
+  {
+   "clip": 33,
+   "segment": 1917,
+   "key": "42771fa15408fd1836d1a2a1849a940b_5",
+   "start": 600,
+   "tipo": "curva",
+   "yaw_3s": -15.71,
+   "yaw_ctx": -0.78,
+   "v_media": 11.29
+  },
+  {
+   "clip": 34,
+   "segment": 2108,
+   "key": "8660e48f00906d7cc55a892a1ee81289_9",
+   "start": 990,
+   "tipo": "curva",
+   "yaw_3s": -11.96,
+   "yaw_ctx": -4.39,
+   "v_media": 20.66
+  },
+  {
+   "clip": 35,
+   "segment": 1195,
+   "key": "e7ae957e10fcb63d164b4863783d3889_7",
+   "start": 980,
+   "tipo": "curva",
+   "yaw_3s": -10.09,
+   "yaw_ctx": -1.79,
+   "v_media": 15.47
+  },
+  {
+   "clip": 36,
+   "segment": 522,
+   "key": "470a19061ce6430c4e6b12b3917af701_11",
+   "start": 750,
+   "tipo": "curva",
+   "yaw_3s": -11.95,
+   "yaw_ctx": -4.35,
+   "v_media": 18.34
+  },
+  {
+   "clip": 37,
+   "segment": 1074,
+   "key": "bb3d0ec8bd2d4734de443c28679c4792_54",
+   "start": 790,
+   "tipo": "curva",
+   "yaw_3s": -11.24,
+   "yaw_ctx": 4.04,
+   "v_media": 8.36
+  },
+  {
+   "clip": 38,
+   "segment": 77,
+   "key": "6012f302938c72a9ba74176e9161b97e_18",
+   "start": 570,
+   "tipo": "curva",
+   "yaw_3s": -10.91,
+   "yaw_ctx": -2.77,
+   "v_media": 10.77
+  },
+  {
+   "clip": 39,
+   "segment": 434,
+   "key": "fd8e4574e72da6ff4e052d15f349a9e5_114",
+   "start": 90,
+   "tipo": "curva",
+   "yaw_3s": -18.69,
+   "yaw_ctx": -15.09,
+   "v_media": 9.16
+  },
+  {
+   "clip": 40,
+   "segment": 1700,
+   "key": "056bd265a1591baa4aaa6b7d406b058b_14",
+   "start": 430,
+   "tipo": "curva",
+   "yaw_3s": -13.82,
+   "yaw_ctx": -3.94,
+   "v_media": 13.62
+  },
+  {
+   "clip": 41,
+   "segment": 1883,
+   "key": "f38cc37ef323c69af2ad8e493bd3889c_1",
+   "start": 500,
+   "tipo": "curva",
+   "yaw_3s": -14.09,
+   "yaw_ctx": -27.19,
+   "v_media": 8.69
+  },
+  {
+   "clip": 42,
+   "segment": 115,
+   "key": "e0f0d52e4e5574aa55fe5d8d33efa0c5_17",
+   "start": 650,
+   "tipo": "curva",
+   "yaw_3s": -11.13,
+   "yaw_ctx": -1.01,
+   "v_media": 11.38
+  },
+  {
+   "clip": 43,
+   "segment": 1676,
+   "key": "05cabe613fc1183e24b0fd23a9e8af8d_9",
+   "start": 140,
+   "tipo": "curva",
+   "yaw_3s": -10.37,
+   "yaw_ctx": -2.9,
+   "v_media": 11.84
+  },
+  {
+   "clip": 44,
+   "segment": 1462,
+   "key": "334ca34c4519aece0d11a177b4549e8e_5",
+   "start": 590,
+   "tipo": "curva",
+   "yaw_3s": -12.31,
+   "yaw_ctx": 6.06,
+   "v_media": 23.36
+  },
+  {
+   "clip": 45,
+   "segment": 113,
+   "key": "9ccd9771b63e257e5acde8ae432273d1_9",
+   "start": 80,
+   "tipo": "curva",
+   "yaw_3s": -13.86,
+   "yaw_ctx": -4.15,
+   "v_media": 11.46
+  },
+  {
+   "clip": 46,
+   "segment": 1179,
+   "key": "7ed619fa4bfb39822ae41d6451fbd1d6_193",
+   "start": 1030,
+   "tipo": "curva",
+   "yaw_3s": -17.53,
+   "yaw_ctx": -2.96,
+   "v_media": 10.2
+  },
+  {
+   "clip": 47,
+   "segment": 498,
+   "key": "5ba48f8fc5849dcbe08615b36f3af05f_9",
+   "start": 650,
+   "tipo": "curva",
+   "yaw_3s": -12.46,
+   "yaw_ctx": -18.68,
+   "v_media": 12.41
+  },
+  {
+   "clip": 48,
+   "segment": 1278,
+   "key": "d7b7f978d0a2be4e8d80285b92eac903_5",
+   "start": 500,
+   "tipo": "curva",
+   "yaw_3s": -11.65,
+   "yaw_ctx": 0.87,
+   "v_media": 12.81
+  },
+  {
+   "clip": 49,
+   "segment": 1503,
+   "key": "0dd452810a2f117739ab87577705b5c4_27",
+   "start": 950,
+   "tipo": "curva",
+   "yaw_3s": -14.21,
+   "yaw_ctx": -7.23,
+   "v_media": 9.06
+  }
+ ]
+}

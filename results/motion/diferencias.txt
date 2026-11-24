@@ -1,0 +1,18 @@
+$ python -m src.estadistica diferencia --clips motion --a kdC_t10_motion --b gpt_s_kd_motion
+results\diferencia_kdC_t10_motion_vs_gpt_s_kd_motion.json {'1': (21.7, 0.328), '2': (7.0, 0.746), '3': (103.9, 0.01)}
+$ python -m src.estadistica diferencia --clips motion --a kdC_t11_motion --b gpt_s_kd_motion
+results\diferencia_kdC_t11_motion_vs_gpt_s_kd_motion.json {'1': (37.7, 0.169), '2': (78.2, 0.03), '3': (150.6, 0.01)}
+$ python -m src.estadistica diferencia --clips motion --a kdC_t10_p95_motion --b gpt_s_kd_motion
+results\diferencia_kdC_t10_p95_motion_vs_gpt_s_kd_motion.json {'1': (13.3, 0.547), '2': (41.3, 0.209), '3': (87.0, 0.01)}
+$ python -m src.estadistica diferencia --clips motion --a mgA_ctxl_p8_motion --b mgA_ctrl_p8_motion
+results\diferencia_mgA_ctxl_p8_motion_vs_mgA_ctrl_p8_motion.json {'1': (92.1, 0.01), '2': (47.6, 0.09), '3': (-33.4, 0.199)}
+$ python -m src.estadistica diferencia --clips motion --a mgA_ctxl_p4_motion --b mgA_ctrl_p4_motion
+results\diferencia_mgA_ctxl_p4_motion_vs_mgA_ctrl_p4_motion.json {'1': (37.0, 0.109), '2': (59.0, 0.05), '3': (-0.3, 0.935)}
+$ python -m src.estadistica diferencia --clips motion --a mgA_pc08_p8_motion --b mgA_ctrl_p8_motion
+results\diferencia_mgA_pc08_p8_motion_vs_mgA_ctrl_p8_motion.json {'1': (33.8, 0.08), '2': (15.4, 0.716), '3': (-98.0, 0.01)}
+$ python -m src.estadistica diferencia --clips motion --a mgA_pc08_p4_motion --b mgA_ctrl_p4_motion
+results\diferencia_mgA_pc08_p4_motion_vs_mgA_ctrl_p4_motion.json {'1': (-8.9, 0.647), '2': (-23.4, 0.438), '3': (-124.1, 0.01)}
+$ python -m src.estadistica diferencia --clips motion --a mgA_ctrl_p8_motion --b mg_p8_motion
+results\diferencia_mgA_ctrl_p8_motion_vs_mg_p8_motion.json {'1': (-10.5, 0.418), '2': (24.7, 0.139), '3': (81.2, 0.01)}
+$ python -m src.estadistica diferencia --clips motion --a mgA_ctrl_p4_motion --b mg_p4_motion
+results\diferencia_mgA_ctrl_p4_motion_vs_mg_p4_motion.json {'1': (6.6, 0.667), '2': (-3.3, 0.846), '3': (-24.2, 0.398)}

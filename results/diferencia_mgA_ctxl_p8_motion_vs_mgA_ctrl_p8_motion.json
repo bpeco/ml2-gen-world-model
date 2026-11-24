@@ -1,0 +1,45 @@
+{
+ "a": "mgA_ctxl_p8_motion",
+ "b": "mgA_ctrl_p8_motion",
+ "n_clips": 200,
+ "fvd": {
+  "1": {
+   "fvd_a": 535.100415778476,
+   "fvd_b": 443.0151156179086,
+   "diff": 92.08530016056739,
+   "lo": 50.044142237048725,
+   "hi": 134.12645808408604,
+   "sd": 21.449570369142176,
+   "p": 0.009950248756218905,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "2": {
+   "fvd_a": 540.761208869415,
+   "fvd_b": 493.199057986551,
+   "diff": 47.56215088286399,
+   "lo": 1.4449053107213246,
+   "hi": 93.67939645500665,
+   "sd": 23.529206924562583,
+   "p": 0.08955223880597014,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "3": {
+   "fvd_a": 607.1701944995375,
+   "fvd_b": 640.5575877780539,
+   "diff": -33.387393278516356,
+   "lo": -96.37596952744707,
+   "hi": 29.601182970414357,
+   "sd": 32.13702869843404,
+   "p": 0.19900497512437812,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  }
+ },
+ "_bitacora": {
+  "id": "20261124-140032-9edc",
+  "comando": "python -m src.cli estadistica diferencia --clips motion --a mgA_ctxl_p8_motion --b mgA_ctrl_p8_motion",
+  "commit": "d8cfb925b80c4e3e14921d007c7322a0e441aa35"
+ }
+}
