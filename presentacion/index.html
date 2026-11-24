@@ -37,6 +37,14 @@
   .foot { position: absolute; left: 5.5%; right: 5.5%; bottom: 2%; display: flex; justify-content: space-between;
     font-size: .62em; color: var(--muted); }
   .note { font-size: .66em; color: var(--muted); line-height: 1.4; }
+  .agenda { position: absolute; left: 5.5%; right: 5.5%; top: .85em; display: flex; justify-content: space-between; gap: .6em;
+    font-size: .56em; line-height: 1.3; color: var(--muted); opacity: .6; white-space: nowrap; pointer-events: none; }
+  .agenda span { padding-bottom: .15em; border-bottom: 2px solid transparent; }
+  .agenda span i { font-style: normal; font-variant-numeric: tabular-nums; margin-right: .3em; }
+  .agenda span.on { color: var(--accent); border-bottom-color: var(--accent); font-weight: 650; }
+  .agenda.has { opacity: 1; }
+  .agenda.has span:not(.on) { opacity: .5; }
+  .slide.statement .agenda, .slide.statement .agenda span.on { color: #fde7d9; border-bottom-color: #fde7d9; }
   .replay { width: 1.6em; height: 1.6em; padding: .3em; border: 1px solid var(--line); flex: none;
     border-radius: 50%; background: var(--card); color: var(--muted); cursor: pointer; opacity: 0; pointer-events: none; transition: opacity .3s, color .2s, border-color .2s; }
   .replay svg { width: 100%; height: 100%; display: block; }
@@ -180,6 +188,15 @@
   .cards3 { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.1em; }
   .cards3 .card { font-size: .84em; }
   .cards3 li { margin: .3em 0; line-height: 1.32; }
+  .cards3.hero .card { padding: 1em 1.2em; font-size: .94em; }
+  .cards3.hero .card > b:first-child { font-size: .86em; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); margin-bottom: .3em; }
+  .cards3.hero .big { font-size: 1.7em; font-weight: 700; letter-spacing: -.01em; line-height: 1.1; color: var(--accent); }
+  .cards3.hero .big + span { display: block; color: var(--muted); font-size: .9em; margin: .15em 0 .55em; }
+  .cards3.hero ul { list-style: none; padding: 0; margin: 0; border-top: 1px solid var(--line); }
+  .cards3.hero li { display: flex; justify-content: space-between; gap: .8em; margin: 0; padding: .38em 0; border-bottom: 1px solid var(--line); line-height: 1.22; }
+  .cards3.hero li:last-child { border-bottom: 0; padding-bottom: 0; }
+  .cards3.hero li b { font-weight: 650; white-space: nowrap; }
+  .cards3.hero li span { color: var(--muted); text-align: right; white-space: nowrap; font-size: .9em; }
 
   /* ---------- slide 5: video lado a lado ---------- */
   .race { display: grid; grid-template-columns: repeat(3, 1fr); gap: .8em 1.2em; }
@@ -599,28 +616,28 @@
     <div class="lbls"><div>1 s de contexto real (20 frames)</div><div>3 s generados (60 frames): el modelo se alimenta de sus propias predicciones</div></div>
     <div class="cells"></div>
   </div>
-  <div class="clipnotes"><span>Contexto: cada modelo usa los últimos que entran en su ventana (19, 15 o 10).</span><span>Cada ventana: 16 frames, con features de I3D.</span><span>Drift: FVD a 3 s sobre FVD a 1 s, cuánto se aleja el video de la distribución real.</span></div>
-  <div class="cards3">
+  <div class="clipnotes"><span>Contexto: lo que entra en su ventana (19, 15 o 10 frames)</span><span>Ventanas de 16 frames · features de I3D</span><span>Drift = FVD a 3 s ÷ FVD a 1 s</span></div>
+  <div class="cards3 hero">
     <div class="card"><b>Calidad</b>
+      <div class="big">FVD</div><span>videos generados contra reales, con movimiento</span>
       <ul>
-        <li><b>FVD</b>, la métrica principal: compara la distribución de los videos generados con la de los reales, con el movimiento incluido.</li>
-        <li><b>LPIPS:</b> parecido frame a frame con la continuación real.</li>
-        <li><b>Cross-entropy:</b> solo para los autorregresivos.</li>
+        <li><b>LPIPS</b><span>frame a frame</span></li>
+        <li><b>Cross-entropy</b><span>solo autorregresivos</span></li>
       </ul>
     </div>
     <div class="card"><b>Incerteza</b>
+      <div class="big">400 clips</div><span>100 segmentos de val × 4 arranques</span>
       <ul>
-        <li>400 clips: 100 segmentos de val × 4 arranques.</li>
-        <li>Intervalos del 95 % por bootstrap por segmento.</li>
-        <li>Para comparar dos modelos, diferencias pareadas sobre los mismos clips.</li>
-        <li>Temperatura elegida en un holdout separado de val.</li>
+        <li><b>IC 95 %</b><span>bootstrap por segmento</span></li>
+        <li><b>Pareadas</b><span>mismos clips</span></li>
+        <li><b>Temperatura</b><span>elegida en el holdout</span></li>
       </ul>
     </div>
     <div class="card"><b>Latencia</b>
+      <div class="big">ms por frame</div><span>batch 1 · fp16 · p50 y p99</span>
       <ul>
-        <li>Un frame, batch 1, contexto lleno, fp16 con CUDA graphs (el ConvLSTM y la transición, en fp32 y sin graphs). Mediana (p50) y p99.</li>
-        <li>Cadena completa (encoder, modelo y decoder) a ritmo de cámara: cuántos frames llegan tarde.</li>
-        <li>Para comparar modelos, siempre la misma GPU.</li>
+        <li><b>Cadena completa</b><span>a ritmo de cámara</span></li>
+        <li><b>Misma GPU</b><span>RTX 3080 Ti</span></li>
       </ul>
     </div>
   </div>
@@ -1768,6 +1785,16 @@ self.v_cache.index_copy_(2, input_pos, v)</pre></div>
     f.className = 'foot';
     f.innerHTML = '<span>World models de manejo · commaVQ</span><span>' + (k < NMAIN ? k + ' / ' + (NMAIN - 1) : 'Respaldo ' + (k - NMAIN + 1)) + '</span>';
     s.appendChild(f);
+  });
+  // agenda arriba de cada slide: un ítem por slide de la 1 a la 10; las 11 a 13 son un solo ítem (Optimización)
+  const AGENDA = ['El problema', 'Pipeline', 'Qué cambió', 'Cómo se genera', 'Qué comparamos', 'Cómo medimos',
+    'Video', 'Calidad y latencia', 'Pasos y horizonte', 'Lo que no funcionó', 'Optimización'];
+  const itemDe = k => (k >= 1 && k <= 10) ? k - 1 : (k >= 11 && k <= 13) ? 10 : -1;
+  slides.forEach((s, k) => {
+    const a = document.createElement('div'), on = itemDe(k);
+    a.className = 'agenda' + (on >= 0 ? ' has' : '');
+    a.innerHTML = AGENDA.map((t, j) => `<span class="${j === on ? 'on' : ''}"><i>${j + 1}</i>${t}</span>`).join('');
+    s.appendChild(a);
   });
   document.querySelectorAll('[data-replay]').forEach(b => b.addEventListener('click', e => { e.stopPropagation(); const s = b.closest('.slide'); ANIM[s.dataset.anim].start(s); }));
   document.addEventListener('keydown', e => {
