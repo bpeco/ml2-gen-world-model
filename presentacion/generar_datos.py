@@ -289,7 +289,7 @@ def optimizacion():
                    "tarde": round(d["cadena_ritmo"]["late_pct"], 1)} for k, d in cad.items() if d},
     "kb_frame": round(FRAME_BYTES / 1e3), "mb_pesos": round(SUM["gpt_s_kd"]["params_M"] * 2, 1), "mb_kv": round(kv_mb(cfg), 1),
     "mb_pesos_gpt2m": round(SUM["gpt2m"]["params_M"] * 2), "mb_kv_gpt2m": round(kv_mb(GPT2M_CFG)),
-    "cache_len": CACHE_LEN, "capas": cfg["n_layer"], "cabezas": cfg["n_head"],
+    "cache_len": CACHE_LEN, "capas": cfg["n_layer"], "cabezas": cfg["n_head"], "dim_cabeza": cfg["dim"] // cfg["n_head"],
     # solo la atención (cached_attention, antes de frame_noise), para separar su efecto del ruido
     "attn": {m: p50(B / f"{m}_attn__fp16_graphs.json") for m in ("gpt_s_kd", "gpt2m")},
     # MB de k y v que lee cada llamada del decode (una capa entera de la caché, fp16)

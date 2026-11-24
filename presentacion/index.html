@@ -198,7 +198,7 @@
 
   /* ---------- slide 5: cómo corre en la GPU (la optimización de la inferencia) ---------- */
   .opt { display: grid; grid-template-columns: 1.25fr 1fr; gap: 1.6em; flex: 1; min-height: 0; align-items: start; }
-  .optcap { font-size: .8em; line-height: 1.38; min-height: 4.2em; border-left: .25em solid var(--accent); padding: .15em 0 .15em .9em; margin: .1em 0 .45em; }
+  .optcap { font-size: .8em; line-height: 1.38; min-height: 2.9em; border-left: .25em solid var(--accent); padding: .15em 0 .15em .9em; margin: .1em 0 .45em; }
   .optcap b { color: var(--accent); }
   .optcap code, .slide code { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: .9em; background: #ecebe6; padding: 0 .25em; border-radius: .2em; }
   svg.ch .hw { fill: var(--card); stroke: var(--line); stroke-width: 1.5; }
@@ -214,6 +214,8 @@
   svg.ch .paso rect.b { fill: #cfcbc1; transition: fill .3s; }
   svg.ch .paso.act rect.b { fill: var(--accent); }
   svg.ch .paso.fin rect.b { fill: var(--ok); }
+  svg.ch .paso.ref rect.b { fill: #e2dfd6; }               /* eager: la referencia, no un paso */
+  svg.ch .paso.ref.act rect.b { fill: #a8a29e; }
   svg.ch .mono { font-family: ui-monospace, SFMono-Regular, Consolas, monospace; font-size: 12.5px; fill: var(--muted); }
   /* ---------- slide 6: los SM de la GPU (una llamada a la atención, antes y ahora) ---------- */
   .smsl { display: grid; grid-template-columns: 1.6fr 1fr; gap: 1.6em; flex: 1; min-height: 0; align-items: start; }
@@ -227,6 +229,49 @@
   .stat p span { color: var(--muted); }
   .stat.gray b { color: var(--c-gpt); }
   .stat.green b { color: var(--ok); }
+
+  /* ---------- slide 12: las operaciones (la atención, arriba) y el código de los otros tres cambios ---------- */
+  .code3 { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: .9em; margin-top: .65em; align-items: stretch; }
+  .ccard.att .antes1 { display: flex; align-items: baseline; gap: .7em; margin: .1em 0 .35em; }
+  .ccard.att .antes1 code { font-size: .8em; background: none; padding: 0; }
+  .ccard.att .antes1 .muted { margin-left: auto; font-size: .92em; }
+  .ops { display: grid; grid-template-columns: .9fr 1.3fr .75fr .85fr; gap: 0 1.1em; }
+  .ops .op { border-top: 2px solid var(--line); padding-top: .25em; min-width: 0; }
+  .ops .op > b { display: block; color: var(--accent); font-size: .92em; }
+  .ops .op > b small { font-weight: 400; }
+  .ops .m { display: block; font-family: "Cambria Math", "STIX Two Math", Georgia, serif; font-style: italic; font-size: 1.12em; line-height: 1.3; }
+  .ops .sh { display: block; color: var(--muted); font-size: .86em; font-variant-numeric: tabular-nums; margin-bottom: .15em; }
+  .ccard code.old { color: #a19e95; }
+  .ccard { background: var(--card); border: 1px solid var(--line); border-left: .25em solid var(--c-base); border-radius: .5em; padding: .45em .8em .5em;
+    font-size: .74em; cursor: pointer; transition: background .3s, border-color .3s; }
+  .ccard.on { background: var(--accent-soft); border-color: #f0b48f; border-left-color: var(--accent); }
+  .ccard .cch { display: flex; align-items: baseline; gap: .6em; margin-bottom: .2em; }
+  .ccard .cch b { font-size: 1.05em; }
+  .ccard .cch .f { color: var(--muted); font: .85em Consolas, ui-monospace, SFMono-Regular, monospace; white-space: nowrap; }
+  .ccard .cch .msd { margin-left: auto; font-weight: 700; color: var(--muted); font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .ccard.big .cch .msd { color: var(--accent); }
+  .ccard .mth { font-family: "Cambria Math", "STIX Two Math", Georgia, serif; font-style: italic; margin: 0 0 .2em; }
+  .ccard .mth code { font-style: normal; }
+  .ccard pre { font: .8em/1.3 Consolas, ui-monospace, SFMono-Regular, monospace; white-space: pre; margin: 0; color: var(--ink); overflow: hidden; }
+  .ccard pre .c { color: #8a877f; }              /* comentarios */
+  .ccard pre .old { color: #a19e95; }            /* el código de antes */
+  .ccard .ef { margin-top: .25em; }
+
+  /* ---------- respaldo: la atención, paso a paso ---------- */
+  .catb { display: flex; align-items: baseline; gap: .8em; font-size: .84em; margin: .12em 0; }
+  .catb .muted { margin-left: auto; font-size: .92em; }
+  .tag { font-size: .8em; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; padding: .1em .6em; border-radius: 1em; flex: none; }
+  .tag.antes { background: #ebe9e2; color: var(--muted); }
+  .tag.ahora { background: var(--ok-soft); color: var(--ok); }
+  .cat { margin-top: .55em; font-size: .86em; }
+  .cat .cr { display: grid; grid-template-columns: 7.2em 1.2fr 1.4fr 2.3fr; gap: .9em; align-items: center; padding: .38em .7em; border-top: 1px solid var(--line);
+    border-left: .22em solid transparent; transition: background .3s, border-color .3s; }
+  .cat .cr.h { border-top: none; padding-top: 0; padding-bottom: .1em; font-size: .82em; color: var(--muted); text-transform: uppercase; letter-spacing: .08em; font-weight: 650; }
+  .cat .cr.on { background: var(--accent-soft); border-left-color: var(--accent); }
+  .cat .p { color: var(--accent); }
+  .cat .m { font-family: "Cambria Math", "STIX Two Math", Georgia, serif; font-size: 1.15em; font-style: italic; }
+  .cat .sh { color: var(--muted); font-variant-numeric: tabular-nums; }
+  .cat pre { font: .86em/1.32 ui-monospace, SFMono-Regular, Consolas, monospace; white-space: pre; color: var(--ink); margin: 0; }
 
   /* ---------- slide 7 ---------- */
   .pair { display: grid; grid-template-columns: 1fr 1fr; gap: 2.2em; }
@@ -638,48 +683,104 @@
 <!-- 11. OPTIMIZACIÓN: CÓMO CORRE EN LA GPU (Docs/optimizar-decode-gpt.md) -->
 <section class="slide" data-anim="opt" data-name="Cómo corre en la GPU">
   <div class="head" style="font-size:1em;margin:0"><div class="kicker">11 · Optimización: cómo corre en la GPU</div><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
-  <h2>Sin cambiar el modelo, el GPT-S pasó de <span data-d="opt.pasos.gpt_s_kd.0" data-f="0">430</span> a <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span> ms por frame</h2>
+  <h2>Con los mismos pesos, el GPT-S destilado pasó de <span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span> a <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span> ms por frame</h2>
   <div class="opt">
     <div><div class="head"><b>Qué hace cada parte del hardware en un frame</b><span class="muted" id="optPasoLbl">&nbsp;</span></div><svg class="ch" id="chOptHw" viewBox="0 0 640 318"></svg></div>
-    <div><div class="head"><b>ms por frame del GPT-S, en cada paso</b><span class="muted">clic en un paso</span></div><svg class="ch" id="chOptPasos" viewBox="0 0 520 318"></svg></div>
+    <div><div class="head"><b>ms por frame del GPT-S destilado</b><span class="muted">clic en un paso</span></div><svg class="ch" id="chOptPasos" viewBox="0 0 560 318"></svg></div>
   </div>
   <p class="optcap" id="optCap">&nbsp;</p>
-  <p class="note" style="padding-bottom:1.1em">Modelo solo, p50, batch 1, fp16, RTX 3080 Ti; cada paso medido con su commit. La calidad no cambia: FVD a 3 s de <span data-d="opt.fvd3.0" data-f="1">468,5</span> antes y <span data-d="opt.fvd3.1" data-f="1">472,9</span> después. MaskGIT-S usa la misma red y también bajó (4 pasos: <span data-d="opt.maskgit_p4.0" data-f="1">9,3</span> → <span data-d="opt.maskgit_p4.1" data-f="1">6,4</span> ms); Genie usa otra atención y no cambió (<span data-d="opt.genie_p4" data-f="1">5,7</span> ms).</p>
+  <p class="note" style="padding-bottom:1.1em">Modelo solo, p50, batch 1, fp16, RTX 3080 Ti; cada paso medido con su commit. MaskGIT-S usa la misma atención: con 4 pasos, de <span data-d="opt.maskgit_p4.0" data-f="1">9,3</span> a <span data-d="opt.maskgit_p4.1" data-f="1">6,4</span> ms; Genie tiene la suya, que no tocamos (<span data-d="opt.genie_p4" data-f="1">5,7</span> ms).</p>
 </section>
 
-<!-- 12. OPTIMIZACIÓN: LOS SM DE LA GPU, LA ATENCIÓN DEL DECODE, ANTES Y AHORA (Docs/atencion-decode.md) -->
-<section class="slide" data-anim="sms" data-name="Los SM de la GPU">
-  <div class="head" style="font-size:1em;margin:0"><div class="kicker">12 · Optimización: los SM de la GPU</div><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
-  <h2>La atención del GPT-S usaba <span data-d="opt.antes.att_bloques" data-f="0">6</span> de los <span data-d="opt.sm" data-f="0">80</span> SM; ahora el q·kᵀ los usa todos</h2>
+<!-- 12. OPTIMIZACIÓN: LAS OPERACIONES Y EL CÓDIGO (la atención paso a paso, arriba; los otros tres cambios, abajo; extractos de src/) -->
+<section class="slide" data-anim="codigo" data-name="Las operaciones y el código">
+  <div class="head" style="font-size:1em;margin:0"><div class="kicker">12 · Optimización: las operaciones y el código</div><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
+  <h2>Es la misma atención, escrita con productos de matrices</h2>
+  <div class="ccard big att" data-k="0">
+    <div class="cch"><b>3 · La atención, paso a paso</b><span class="f">backbone.py</span><span class="msd"><span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> → <span data-d="opt.attn.gpt_s_kd" data-f="0">40</span> ms</span></div>
+    <div class="antes1"><span class="tag antes">antes</span><code class="old">y = F.scaled_dot_product_attention(q, k, v, attn_mask=m)</code><span class="muted">un kernel; con una query, <span data-d="opt.antes.att_bloques" data-f="0">6</span> bloques para <span data-d="opt.sm" data-f="0">80</span> SM</span></div>
+    <div class="ops">
+      <div class="op"><b>Guardar <small class="muted">(ya estaba)</small></b><span class="m">K[t] ← k, V[t] ← v</span><span class="sh">k, v: 1×<span data-d="opt.dim_cabeza" data-f="0">64</span>, a la caché</span><pre>k_cache.index_copy_(2, pos, k)
+v_cache.index_copy_(2, pos, v)</pre></div>
+      <div class="op"><b>Puntajes</b><span class="m">s = q·Kᵀ / √d + m</span><span class="sh">1×<span data-d="opt.dim_cabeza" data-f="0">64</span> · <span data-d="opt.dim_cabeza" data-f="0">64</span>×<span data-d="opt.cache_len" data-f="0">2584</span> → 1×<span data-d="opt.cache_len" data-f="0">2584</span>; <code>bias</code> es <i>m</i></span><pre>s = torch.baddbmm(bias, q, k.transpose(1, 2),
+                  alpha=hd ** -0.5)</pre></div>
+      <div class="op"><b>Pesos</b><span class="m">p = softmax(s)</span><span class="sh">1×<span data-d="opt.cache_len" data-f="0">2584</span></span><pre>p = torch.softmax(s, -1)</pre></div>
+      <div class="op"><b>Salida</b><span class="m">o = p·V</span><span class="sh">1×<span data-d="opt.cache_len" data-f="0">2584</span> · <span data-d="opt.cache_len" data-f="0">2584</span>×<span data-d="opt.dim_cabeza" data-f="0">64</span> → 1×<span data-d="opt.dim_cabeza" data-f="0">64</span></span><pre>o = torch.bmm(p, v)</pre></div>
+    </div>
+    <p class="ef">→ ahora, 3 llamadas y <span data-d="opt.despues.att_kernels" data-f="0">4</span> kernels: el q·kᵀ se reparte en <span data-d="opt.despues.att_lista.1.bloques" data-f="0">1008</span> bloques y usa los <span data-d="opt.sm" data-f="0">80</span> SM; de <span data-d="opt.antes.att_us_decode" data-f="0">160</span> a <span data-d="opt.despues.att_us" data-f="0">15</span> µs por capa. De paso, <i>m</i> se arma una vez (<code>mask_bias</code>).</p>
+  </div>
+  <div class="code3">
+    <div class="ccard" data-k="1">
+      <div class="cch"><b>1 · Un graph por token</b><span class="msd"><span data-d="opt.pasos.gpt_s_kd.0" data-f="0">430</span> → <span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span> ms</span></div>
+<pre><span class="c"># next_frame (gpt.py), ya estaba</span>
+if use_graph:
+  g = self._graphs.get(B)
+  if g is None:             <span class="c"># la 1.ª vez, graba</span>
+    g = GraphedStep(self._decode, tok, pos)
+  lg = g(tok, pos)          <span class="c"># replay</span>
+else:
+  lg = self._decode(tok, pos)   <span class="c"># eager</span></pre>
+      <p class="ef">→ la CPU lanza 127 graphs y el muestreo, no unos <span data-d="opt.antes.kernels" data-f="-3">13.000</span> kernels.</p>
+    </div>
+    <div class="ccard" data-k="2">
+      <div class="cch"><b>2 · El frame en un graph</b><span class="msd"><span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span> → <span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> ms</span></div>
+<pre><span class="c"># GPTStream (stream.py): prefill,</span>
+<span class="c"># 127 pasos y muestreo, en un graph</span>
+noise = self._noise(B)          <span class="c"># afuera</span>
+g = GraphedStep(self._frame, self.ctx, *noise)
+return g(self.ctx, *noise)      <span class="c"># 1 replay</span>
+<span class="c"># _frame = next_frame(..., graphs=False)</span></pre>
+      <p class="ef">→ 1 graph por frame, más 128 lanzamientos de ruido. No bajó: el límite era la GPU.</p>
+    </div>
+    <div class="ccard big" data-k="3">
+      <div class="cch"><b>4 · El ruido, de una vez</b><span class="msd"><span data-d="opt.attn.gpt_s_kd" data-f="0">40</span> → <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span> ms</span></div>
+<pre><span class="c"># antes, _noise: 128 lanzamientos</span>
+<span class="old">for i in range(CODES):</span>
+<span class="old">  buf[i].exponential_(1, generator=self.gen)</span>
+<span class="c"># ahora, frame_noise (base.py): 1</span>
+return torch.empty(n, B, V) \
+           .exponential_(1, generator=generator)
+<span class="c"># sample_logits: el ruido sortea el token</span>
+return (probs / q).argmax(-1)   <span class="c"># q = noise[i]</span></pre>
+      <p class="ef">→ 1 lanzamiento por frame. argmax(π/E), con E ~ Exp(1), muestrea de π.</p>
+    </div>
+  </div>
+  <p class="note" style="margin-top:auto;padding-bottom:1.1em">ms por frame del GPT-S destilado; gpt2m tiene los mismos cambios (<code>gpt2m.py</code>). Extractos reales de <code>src/</code>, sin argumentos ni líneas que no cambian; <i>m</i>: 0 donde se mira y −∞ donde no. La cuenta es la misma, pero cambia el redondeo: los puntajes se guardan en fp16. Calidad, FVD pareado después − antes: <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.diff" data-f="1" data-sign>+12,6</span> a 1 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.p" data-f="2">0,18</span>), <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.diff" data-f="1" data-sign>+27,0</span> a 2 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.p" data-f="2">0,05</span>) y <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.diff" data-f="1" data-sign>+4,4</span> a 3 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.p" data-f="2">0,76</span>). El entrenamiento no cambió.</p>
+</section>
+
+<!-- 13. OPTIMIZACIÓN: DÓNDE SE IBA EL TIEMPO: LOS SM DE LA GPU, UNA LLAMADA A LA ATENCIÓN ANTES Y AHORA (Docs/atencion-decode.md) -->
+<section class="slide" data-anim="sms" data-name="Dónde se iba el tiempo">
+  <div class="head" style="font-size:1em;margin:0"><div class="kicker">13 · Optimización: dónde se iba el tiempo</div><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
+  <h2>Con un solo token, la atención usaba <span data-d="opt.antes.att_bloques" data-f="0">6</span> de los <span data-d="opt.sm" data-f="0">80</span> SM de la GPU</h2>
   <div class="smsl">
     <div><svg class="ch" id="chSm" viewBox="0 0 640 306"></svg></div>
     <div>
-      <div class="stat"><b><span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> → <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span><small>ms</small></b>
-        <p>GPT-S destilado, por frame. <span>Con <code>cached_attention</code>, <span data-d="opt.attn.gpt_s_kd" data-f="0">40</span> ms; con el ruido del muestreo en un solo lanzamiento, <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span>.</span></p></div>
-      <div class="stat"><b><span data-d="opt.pasos.gpt2m.2" data-f="0">730</span> → <span data-d="opt.pasos.gpt2m.3" data-f="0">291</span><small>ms</small></b>
-        <p>gpt2m, por frame. <span>Su atención usaba <span data-d="opt.perfil_gpt2m.antes.att_bloques" data-f="0">16</span> SM. Con <code>cached_attention</code>, <span data-d="opt.attn.gpt2m" data-f="0">313</span> ms; con el ruido, <span data-d="opt.pasos.gpt2m.3" data-f="0">291</span>.</span></p></div>
-      <div class="stat green"><b><span id="smGbA">25</span> → <span id="smGbB">266</span><small>GB/s</small></b>
-        <p>lectura de la caché en el GPT-S. <span>Cada llamada lee <span data-d="opt.mb_kv_capa" data-f="1">4,0</span> MB de k y v; la placa da <span data-d="opt.gbs_placa" data-f="0">912</span> GB/s.</span></p></div>
+      <div class="stat"><b><span data-d="opt.antes.att_pct" data-f="0">81</span><small>%</small></b>
+        <p>del tiempo de GPU del GPT-S destilado era la atención: <span data-d="opt.antes.att_ms" data-f="0">124</span> de <span data-d="opt.antes.ms_gpu" data-f="0">153</span> ms por frame. <span>En gpt2m, el <span data-d="opt.perfil_gpt2m.antes.att_pct" data-f="0">70</span> %, con <span data-d="opt.perfil_gpt2m.antes.att_bloques" data-f="0">16</span> bloques.</span></p></div>
+      <div class="stat"><b><span id="smGbA">25</span> → <span id="smGbB">266</span><small>GB/s</small></b>
+        <p>lectura de la caché de k y v en cada llamada (<span data-d="opt.mb_kv_capa" data-f="1">4,0</span> MB). <span>La placa da <span data-d="opt.gbs_placa" data-f="0">912</span> GB/s.</span></p></div>
+      <div class="stat green"><b><span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> → <span data-d="opt.attn.gpt_s_kd" data-f="0">40</span><small>ms</small></b>
+        <p>GPT-S destilado por frame, solo por la atención. <span>gpt2m: de <span data-d="opt.pasos.gpt2m.2" data-f="0">730</span> a <span data-d="opt.attn.gpt2m" data-f="0">313</span>.</span></p></div>
     </div>
   </div>
-  <p class="optcap" id="smCap">Cada kernel se lanza en bloques, y cada bloque corre entero en un SM. Con la caché y una sola query, SDPA armaba un bloque por cabeza, que recorría las <span data-d="opt.cache_len" data-f="0">2584</span> posiciones en serie, de a 64. <code>cached_attention</code> hace la misma cuenta en <span data-d="opt.despues.att_kernels" data-f="0">4</span> kernels: el q·kᵀ de cuBLAS reparte las posiciones de k en <span data-d="opt.despues.att_lista.1.bloques" data-f="0">1008</span> bloques y usa los <span data-d="opt.sm" data-f="0">80</span> SM.</p>
-  <p class="note" style="padding-bottom:1.1em">Abajo: una llamada a la atención del GPT-S, por capa y por token, en la misma escala, según el perfil por kernel (<code>torch.profiler</code>); la ubicación de los SM encendidos es ilustrativa. Latencias: modelo solo, p50, batch 1, fp16, RTX 3080 Ti; antes, con el frame ya en un CUDA graph.</p>
+  <p class="optcap" id="smCap">Un kernel se lanza en bloques, y cada bloque corre entero en un SM, uno de los multiprocesadores de la GPU. Con una sola query, SDPA armaba un bloque por cabeza, que recorría las <span data-d="opt.cache_len" data-f="0">2584</span> posiciones de la caché en <span id="smVueltas">41</span> vueltas seguidas.</p>
+  <p class="note" style="padding-bottom:1.1em">Abajo: una llamada a la atención del GPT-S destilado, por capa y por token, en la misma escala, según el perfil por kernel (<code>torch.profiler</code>, 5 frames con el contexto lleno, con el frame ya en un CUDA graph); <code>baddbmm</code> copia primero el bias a la salida, así que las tres llamadas son 4 kernels. La ubicación de los SM encendidos es ilustrativa. Modelo solo, p50, batch 1, fp16, RTX 3080 Ti.</p>
 </section>
 
-<!-- 13. CONCLUSIONES -->
+<!-- 14. CONCLUSIONES -->
 <section class="slide statement" data-anim="claims" data-name="Conclusiones">
-  <div class="kicker">13 · Conclusiones</div>
+  <div class="kicker">14 · Conclusiones</div>
   <h2>El GPT chico llega justo a 20 FPS; con margen, solo decodificando en paralelo</h2>
   <div class="claims">
-    <div class="claim"><span class="k">1</span><p class="t">Medir dónde se iba el tiempo cambió el resultado: sin tocar el modelo, el GPT de <span data-d="m.gpt_s_kd.params" data-f="0">12</span>M bajó de <span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> a <span data-d="m.gpt_s_kd.ms3080" data-f="0">38</span> ms por frame. Llega a 20 FPS, pero justo: con encoder y decoder, el p99 es de <span data-d="cadena.gpt_s_kd.p99_ritmo" data-f="1">48,4</span> ms.</p></div>
+    <div class="claim"><span class="k">1</span><p class="t">Medir dónde se iba el tiempo cambió el resultado: sin tocar el modelo, el GPT de <span data-d="m.gpt_s_kd.params" data-f="0">12</span>M bajó de <span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span> a <span data-d="m.gpt_s_kd.ms3080" data-f="0">38</span> ms por frame. Llega a 20 FPS, pero justo: con encoder y decoder, el p99 es de <span data-d="cadena.gpt_s_kd.p99_ritmo" data-f="1">48,4</span> ms.</p></div>
     <div class="claim"><span class="k">2</span><p class="t">Con la misma red, decodificar en pocos pasos paralelos entra en los 50 ms con margen (<span data-d="m.maskgit_s_abs_p4.ms3080" data-f="1">6,4</span> ms con 4 pasos) y con la misma calidad a 3 s (4 pasos) o mejor (8 a 12 pasos). A 1 s, el GPT sigue siendo mejor.</p></div>
     <div class="claim"><span class="k">3</span><p class="t">El número de pasos se elige en inferencia, sin reentrenar: permite elegir el punto entre calidad y latencia. Con menos de 4 pasos, el video se degrada con el horizonte.</p></div>
   </div>
 </section>
 
-<!-- 14. LIMITACIONES -->
+<!-- 15. LIMITACIONES -->
 <section class="slide" data-name="Limitaciones">
-  <div class="kicker">14 · Cierre</div>
+  <div class="kicker">15 · Cierre</div>
   <h2>Limitaciones</h2>
   <ul class="limits">
     <li>780.000 frames por modelo entrenado, el <span data-d="datos.pct_commavq" data-f="2">0,65</span> % de commaVQ. Las conclusiones sobre arquitecturas valen para este régimen de pocos datos, y para video de una cámara a 128×256.</li>
@@ -716,11 +817,29 @@
     <div><svg class="ch" id="chPerfil" viewBox="0 0 640 330"></svg></div>
     <div style="font-size:.78em;line-height:1.4">
       <p>Tiempo de GPU por frame, sumando los kernels (<code>torch.profiler</code>, 5 frames con el contexto lleno, RTX 3080 Ti).</p>
-      <p style="margin-top:.6em"><b>Antes:</b> la atención con caché era un kernel de SDPA (mem-efficient de cutlass: este PyTorch no trae FlashAttention). <span data-d="opt.antes.att_llamadas" data-f="0">768</span> llamadas por frame de <span data-d="opt.antes.att_us" data-f="0">161</span> µs; en el decode, cada una lanza <span data-d="opt.antes.att_bloques" data-f="0">6</span> bloques (uno por cabeza; <span data-d="opt.perfil_gpt2m.antes.att_bloques" data-f="0">16</span> en gpt2m) para <span data-d="opt.sm" data-f="0">80</span> SM.</p>
+      <p style="margin-top:.6em"><b>Antes:</b> la atención con caché era un kernel de SDPA (mem-efficient de cutlass: este PyTorch no trae FlashAttention). <span data-d="opt.antes.att_llamadas" data-f="0">768</span> llamadas por frame, de <span data-d="opt.antes.att_us" data-f="0">161</span> µs en promedio (<span data-d="opt.antes.att_us_decode" data-f="0">160</span> en el decode; las 6 del prefill son más largas); en el decode, cada una lanza <span data-d="opt.antes.att_bloques" data-f="0">6</span> bloques (uno por cabeza; <span data-d="opt.perfil_gpt2m.antes.att_bloques" data-f="0">16</span> en gpt2m) para <span data-d="opt.sm" data-f="0">80</span> SM.</p>
       <p style="margin-top:.6em"><b>Después:</b> <span data-d="opt.despues.att_kernels" data-f="0">4</span> kernels por capa (q·kᵀ con cuBLAS, el softmax, el producto con v y una copia), <span data-d="opt.despues.att_us" data-f="0">15</span> µs en total. Es la misma cuenta que hace el decode de comma, que fuerza el backend math de SDPA.</p>
       <p style="margin-top:.6em" class="muted">Queda una red de unos <span data-d="opt.despues.kernels" data-f="-2">13.000</span> kernels chicos por frame. Bajar de ahí pide fusionarlos (<code>torch.compile</code>, que en Windows necesita Triton) o menos pasos por frame.</p>
     </div>
   </div>
+</section>
+
+<!-- RESPALDO: LA ATENCIÓN, PASO A PASO (la cuenta, la forma de cada matriz y el código; Docs/atencion-decode.md) -->
+<section class="slide backup" data-anim="cattn" data-name="Respaldo: la atención, paso a paso">
+  <div class="head" style="font-size:1em;margin:0"><div class="kicker">Respaldo · la atención, paso a paso</div><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
+  <h2>Es la misma atención, escrita con productos de matrices</h2>
+  <div class="catb"><span class="tag antes">Antes</span><code>y = F.scaled_dot_product_attention(q, k, v, attn_mask=m)</code><span class="muted">un kernel fusionado; con una query, <span data-d="opt.antes.att_bloques" data-f="0">6</span> bloques</span></div>
+  <div class="catb"><span class="tag ahora">Ahora</span><span><code>cached_attention</code>: la misma cuenta en tres llamadas</span><span class="muted"><span data-d="opt.despues.att_kernels" data-f="0">4</span> kernels; el q·kᵀ, en <span data-d="opt.despues.att_lista.1.bloques" data-f="0">1008</span> bloques</span></div>
+  <div class="cat">
+    <div class="cr h"><span>Paso</span><span>La cuenta</span><span>Forma (una cabeza)</span><span>El código</span></div>
+    <div class="cr" data-st="0"><b class="p">1 · Guardar<small class="muted" style="display:block;font-weight:400">ya estaba</small></b><span class="m">K[t] ← k, V[t] ← v</span><span class="sh">k, v: 1×<span data-d="opt.dim_cabeza" data-f="0">64</span>, a la caché</span><pre>self.k_cache.index_copy_(2, input_pos, k)
+self.v_cache.index_copy_(2, input_pos, v)</pre></div>
+    <div class="cr" data-st="1"><b class="p">2 · Puntajes</b><span class="m">s = q·Kᵀ / √d + m</span><span class="sh">1×<span data-d="opt.dim_cabeza" data-f="0">64</span> · <span data-d="opt.dim_cabeza" data-f="0">64</span>×<span data-d="opt.cache_len" data-f="0">2584</span> → 1×<span data-d="opt.cache_len" data-f="0">2584</span></span><pre>s = torch.baddbmm(bias, q, k.transpose(1, 2),
+                  alpha=hd ** -0.5)</pre></div>
+    <div class="cr" data-st="2"><b class="p">3 · Pesos</b><span class="m">p = softmax(s)</span><span class="sh">1×<span data-d="opt.cache_len" data-f="0">2584</span></span><pre>p = torch.softmax(s, -1)</pre></div>
+    <div class="cr" data-st="3"><b class="p">4 · Salida</b><span class="m">o = p·V</span><span class="sh">1×<span data-d="opt.cache_len" data-f="0">2584</span> · <span data-d="opt.cache_len" data-f="0">2584</span>×<span data-d="opt.dim_cabeza" data-f="0">64</span> → 1×<span data-d="opt.dim_cabeza" data-f="0">64</span></span><pre>o = torch.bmm(p, v)</pre></div>
+  </div>
+  <p class="note" style="margin-top:auto;padding-bottom:1.1em">Código simplificado de <code>src/models/backbone.py</code> (<code>cached_attention</code>, <code>Attention.forward</code>). <i>d</i> = dimensión de la cabeza; <i>m</i> (<code>bias</code> en el código): máscara, 0 donde se mira y −∞ donde no, incluidas las posiciones vacías de la caché. Antes, <i>m</i> era booleana y SDPA la convertía en cada capa; ahora es aditiva y se arma una vez (<code>mask_bias</code>, en <code>setup_cache</code>), y <code>baddbmm</code> solo la copia. La cuenta es la misma, pero cambia el redondeo: SDPA calculaba los puntajes y el softmax en fp32 sin escribirlos; ahora los puntajes se guardan en fp16. En cada capa, las <span data-d="opt.cabezas" data-f="0">6</span> cabezas van en un solo producto por lotes. Al entrenar no hay caché: una sola pasada sobre toda la secuencia, por SDPA.</p>
 </section>
 
 <!-- RESPALDO 3: ESCALA -->
@@ -1147,20 +1266,25 @@
     $('fam6').innerHTML = V ? CARDS.map(([k, t, p, d, desc]) => `<div class="fcard" style="--k:var(${k})"><h3>${t}<span>${p}</span></h3>${DIB[d]()}<p>${desc}</p></div>`).join('') : '';
   }
 
-  // ===== 5. cómo corre en la GPU: los cuatro pasos de la optimización, en el hardware y en ms =====
+  // ===== 11. cómo corre en la GPU: la referencia (eager) y los cuatro pasos, en el hardware y en ms =====
   {
     const O = D.opt, P = O.pasos.gpt_s_kd, P2 = O.pasos.gpt2m, A = O.antes, Z = O.despues;
     const bl = Z.att_bloques.filter(x => x != null), qk = bl.length ? Math.max(...bl) : null;   // el kernel con más bloques: q·kᵀ
     const ms = (v, f = 0) => `${fmt(v, f)} ms`;
+    // ms por frame de cada barra: eager, graph por token, frame en un graph, la atención sola y con el ruido
+    const MS5 = [P[0], P[1], P[2], O.attn.gpt_s_kd, P[3]], G5 = [P2[0], P2[1], P2[2], O.attn.gpt2m, P2[3]];
+    const NK = fmt(A.kernels, -3), ULT = MS5.length - 1;           // unos 13.000 kernels por frame
     const PASOS = [
-      { et: ['PyTorch', 'eager'], code: '', lanza: [`${fmt(A.kernels, -2)}`, 'kernels'], smOn: A.att_bloques,
-        cap: `<b>Eager.</b> Cada operación es un kernel que la CPU lanza desde Python: unos ${fmt(A.kernels, -2)} por frame (${O.capas} capas × 128 tokens × unos ${Math.round(A.kernels / (O.capas * 128))} por capa). Con graphs, esos mismos kernels ocupan unos ${ms(A.ms_gpu)} de GPU: casi todo lo que falta para llegar a ${ms(P[0])} es la CPU lanzando.` },
-      { et: ['un graph', 'por token'], code: 'GraphedStep', lanza: ['128 graphs', '+ el muestreo'], smOn: A.att_bloques,
-        cap: `<b>Un CUDA graph por token</b> (<code>GraphedStep</code>): la GPU guarda los kernels de un paso de decode y la CPU los dispara con una sola llamada, 128 veces por frame; el muestreo de cada token sigue afuera. De ${ms(P[0])} a ${ms(P[1])}.` },
-      { et: ['el frame en', 'un graph'], code: 'GPTStream', lanza: ['1 graph', '+ 128 de ruido'], smOn: A.att_bloques,
-        cap: `<b>El frame entero en un graph</b> (<code>GPTStream</code>): prefill, 127 pasos y muestreo en una sola llamada de la CPU; solo el ruido del muestreo se tira aparte, con 128 lanzamientos. No cambió nada (${ms(P[1])} → ${ms(P[2])}): el límite ya no era la CPU sino la GPU.` },
-      { et: ['atención', 'explícita'], code: 'cached_attention', lanza: ['1 graph', '+ 1 de ruido'], smOn: O.sm,
-        cap: `<b>Atención explícita</b> (<code>cached_attention</code>). El perfil mostró que la atención era el ${A.att_pct} % del tiempo de GPU: con la caché, SDPA elegía un kernel que en cada token lanza ${A.att_bloques} bloques, uno por cabeza, para ${O.sm} SM, y cada uno recorre las ${fmt(O.cache_len, 0)} posiciones en serie (${fmt(A.att_us, 0)} µs por capa). La misma cuenta en ${Z.att_kernels} kernels cortos (el q·kᵀ de cuBLAS se reparte en ${fmt(qk, 0)} bloques) tarda ${fmt(Z.att_us, 0)} µs. Y el ruido pasó a un solo lanzamiento. De ${ms(P[2])} a <b>${ms(P[3])}</b>.` },
+      { et: ['PyTorch', 'normal'], tag: 'referencia', lanza: [`unos ${NK}`, 'kernels'], smOn: A.att_bloques,
+        cap: `<b>PyTorch normal.</b> Python lanza cada kernel, un programa chico que corre en la GPU: unos ${NK} por frame, unos ${fmt(A.kernels / 128, -1)} por token.` },
+      { et: ['un graph', 'por token'], tag: 'ya estaba', lanza: ['127 graphs', '+ el muestreo'], smOn: A.att_bloques,
+        cap: `<b>Un CUDA graph por token</b> (<code>GraphedStep</code>): graba los kernels de un paso, y la CPU los relanza con una llamada, 127 veces por frame.` },
+      { et: ['el frame', 'en un graph'], tag: '', lanza: ['1 graph', '+ 128 de ruido'], smOn: A.att_bloques,
+        cap: `<b>El frame entero en un graph</b> (<code>GPTStream</code>): un graph por frame, más 128 lanzamientos del ruido del muestreo. No bajó: el límite ya era la GPU.` },
+      { et: ['la', 'atención'], tag: '', lanza: ['1 graph', '+ 128 de ruido'], smOn: O.sm,
+        cap: `<b>La atención, con productos de matrices</b> (<code>cached_attention</code>): era el ${A.att_pct} % del tiempo de GPU; ahora el q·kᵀ se reparte en ${fmt(qk, 0)} bloques y usa los ${O.sm} SM.` },
+      { et: ['el ruido', 'de una vez'], tag: '', lanza: ['1 graph', '+ 1 de ruido'], smOn: O.sm,
+        cap: `<b>El ruido del muestreo, de una vez</b> (<code>frame_noise</code>): un lanzamiento antes de cada frame, en vez de 128. Queda en <b>${ms(P[3])}</b>.` },
     ];
 
     // --- hardware: host, PCIe y GPU con su VRAM y sus SM
@@ -1201,18 +1325,20 @@
     const smTxt3 = txt(hw, SMX + 95, SMY + 8 * CS + 56, '', { class: 'tk', 'text-anchor': 'middle', style: 'font-size:12px' });
 
     // --- escalera: ms por frame en cada paso
-    const sv = $('chOptPasos'), box = { l: 52, r: 512, t: 26, b: 210 };
-    const Y = lin(0, Math.max(...P) * 1.12, box.b, box.t), W = (box.r - box.l) / 4, bw = W * .56;
+    const sv = $('chOptPasos'), box = { l: 52, r: 552, t: 26, b: 210 };
+    const Y = lin(0, Math.max(...MS5) * 1.12, box.b, box.t), W = (box.r - box.l) / MS5.length, bw = W * .56;
     el('line', { x1: box.l, x2: box.r, y1: box.b, y2: box.b, class: 'ax' }, sv);
     el('line', { x1: box.l, x2: box.r, y1: Y(50), y2: Y(50), stroke: '#57534e', 'stroke-width': 1.4, 'stroke-dasharray': '5 4' }, sv);
     txt(sv, box.l - 6, Y(50) + 4, '50 ms', { class: 'tk', 'text-anchor': 'end', style: 'font-size:12.5px' });
+    txt(sv, box.l - 6, box.b + 78, 'gpt2m', { class: 'tk', 'text-anchor': 'end', style: 'font-size:12.5px;font-weight:650' });
+    txt(sv, box.r, box.b + 98, 'gpt2m (el de comma): los mismos cambios', { class: 'tk', 'text-anchor': 'end', style: 'font-size:12px;font-style:italic' });
     const gs = PASOS.map((p, k) => {
-      const g = el('g', { class: 'paso' }, sv), cx = box.l + W * (k + .5);
-      el('rect', { x: cx - bw / 2, y: Y(P[k]), width: bw, height: box.b - Y(P[k]), rx: 4, class: 'b' }, g);
-      txt(g, cx, Y(P[k]) - 8, ms(P[k]), { 'text-anchor': 'middle', style: 'font-size:15px;font-weight:700' });
+      const g = el('g', { class: 'paso' + (k === 0 ? ' ref' : '') }, sv), cx = box.l + W * (k + .5);
+      el('rect', { x: cx - bw / 2, y: Y(MS5[k]), width: bw, height: box.b - Y(MS5[k]), rx: 4, class: 'b' }, g);
+      txt(g, cx, Y(MS5[k]) - 8, ms(MS5[k]), { 'text-anchor': 'middle', style: 'font-size:15px;font-weight:700' });
       p.et.forEach((s, j) => txt(g, cx, box.b + 20 + j * 17, s, { 'text-anchor': 'middle', style: 'font-size:14px;font-weight:650' }));
-      if (p.code) txt(g, cx, box.b + 56, p.code, { class: 'mono', 'text-anchor': 'middle' });
-      if (P2[k] != null) txt(g, cx, box.b + 78, `gpt2m: ${ms(P2[k])}`, { class: 'tk', 'text-anchor': 'middle', style: 'font-size:12.5px' });
+      if (p.tag) txt(g, cx, box.b + 56, p.tag, { class: 'tk', 'text-anchor': 'middle', style: 'font-size:12.5px;font-style:italic' });
+      if (G5[k] != null) txt(g, cx, box.b + 78, ms(G5[k]), { class: 'tk', 'text-anchor': 'middle', style: 'font-size:12.5px' });
       el('rect', { x: cx - W / 2, y: box.t - 20, width: W, height: box.b + 92 - box.t, fill: 'transparent' }, g);   // zona de clic
       g.addEventListener('click', e => { e.stopPropagation(); stopAll(); paso(k); replayBtn(g.closest('.slide')).classList.add('show'); });
       return g;
@@ -1220,22 +1346,25 @@
 
     function paso(k) {
       const p = PASOS[k];
-      gs.forEach((g, j) => { g.classList.toggle('oculto', j > k); g.classList.toggle('act', j === k && k < 3); g.classList.toggle('fin', j === 3 && k === 3); });
+      gs.forEach((g, j) => { g.classList.toggle('oculto', j > k); g.classList.toggle('act', j === k && k < ULT); g.classList.toggle('fin', j === ULT && k === ULT); });
       lanza.textContent = p.lanza[0]; lanza2.textContent = p.lanza[1];
       flujo.setAttribute('stroke-dasharray', k === 0 ? '3 4' : k === 1 ? '3 13' : '8 220');
       sms.forEach((s, j) => s.classList.toggle('on', j < p.smOn));
-      if (k < 3) { smTxt1.textContent = `atención: ${A.att_bloques} bloques (1 por cabeza)`; smTxt2.textContent = `cada uno recorre ${fmt(O.cache_len, 0)} posiciones`;
+      if (p.smOn < O.sm) { smTxt1.textContent = `atención: ${A.att_bloques} bloques (1 por cabeza)`; smTxt2.textContent = `cada uno recorre ${fmt(O.cache_len, 0)} posiciones`;
         smTxt3.textContent = `en serie: ${fmt(A.att_us_decode, 0)} µs por capa`; }
       else { smTxt1.textContent = `q·kᵀ: ${fmt(qk, 0)} bloques, todos los SM`; smTxt2.textContent = `y otros ${Z.att_kernels - 1} kernels cortos:`;
-        smTxt3.textContent = `${fmt(Z.att_us, 0)} µs por capa (antes ${fmt(A.att_us_decode, 0)})`; }
-      $('optCap').innerHTML = p.cap; $('optPasoLbl').textContent = `paso ${k + 1} de 4`;
+        smTxt3.textContent = `${fmt(Z.att_us, 0)} µs por capa (antes, ${fmt(A.att_us_decode, 0)})`; }
+      $('optCap').innerHTML = p.cap; $('optPasoLbl').textContent = k === 0 ? 'referencia' : `paso ${k} de ${ULT}`;
     }
+    // un paso cada 2,2 s y, después de 3,5 s en el último, vuelve a empezar; un clic en una barra corta el bucle en ese paso
+    const T_PASO = [300, 2500, 4700, 6900, 9100], VUELTA = T_PASO[ULT] + 3500;
     ANIM.opt = {
-      start(s) { stopAll(); replayBtn(s).classList.remove('show'); gs.forEach(g => { g.classList.add('oculto'); g.classList.remove('act', 'fin'); });
-        [0, 1, 2, 3].forEach(k => at(300 + k * 3200, () => paso(k))); at(300 + 3 * 3200 + 500, () => replayBtn(s).classList.add('show')); },
-      stop() { paso(3); }
+      start(s, otra) { stopAll(); if (!otra) replayBtn(s).classList.remove('show'); gs.forEach(g => { g.classList.add('oculto'); g.classList.remove('act', 'fin'); });
+        T_PASO.forEach((t, k) => at(t, () => paso(k))); at(T_PASO[ULT] + 700, () => replayBtn(s).classList.add('show'));
+        at(VUELTA, () => ANIM.opt.start(s, true)); },
+      stop() { paso(ULT); }
     };
-    paso(3);
+    paso(ULT);
   }
 
   // ===== 6. los SM de la GPU: una llamada a la atención, antes y ahora, con el mismo reloj =====
@@ -1243,8 +1372,8 @@
     const O = D.opt, A = O.antes, Z = O.despues, L = Z.att_lista, svg = $('chSm');
     const qk = L.find(k => k.n === 'q·kᵀ'), CS = 20, GX = [14, 330], GY = 46, vueltas = Math.ceil(O.cache_len / 64);
     const gbs = us => O.mb_kv_capa * 1e3 / us;                    // MB por µs -> GB/s
-    $('smGbA').textContent = fmt(gbs(A.att_us_decode), 0); $('smGbB').textContent = fmt(gbs(Z.att_us), 0);
-    txt(svg, GX[0], 16, 'Antes: SDPA (mem-efficient)', { class: 'tt', style: 'font-size:15px' });
+    $('smGbA').textContent = fmt(gbs(A.att_us_decode), 0); $('smGbB').textContent = fmt(gbs(Z.att_us), 0); $('smVueltas').textContent = vueltas;
+    txt(svg, GX[0], 16, 'Antes: SDPA de PyTorch', { class: 'tt', style: 'font-size:15px' });
     txt(svg, GX[0], 34, `${A.att_bloques} bloques, uno por cabeza`, { class: 'tk', style: 'font-size:12.5px' });
     txt(svg, GX[1], 16, 'Ahora: cached_attention', { class: 'tt', style: 'font-size:15px' });
     txt(svg, GX[1], 34, `${Z.att_kernels} kernels; q·kᵀ en ${fmt(qk.bloques, 0)} bloques`, { class: 'tk', style: 'font-size:12.5px' });
@@ -1261,7 +1390,7 @@
     txt(svg, 14, y0 + 37, 'ahora', { class: 'tk' });
     let acc = 0;
     L.forEach((k, i) => { el('rect', { x: X(acc), y: y0 + 24, width: Math.max(X(acc + k.us) - X(acc) - 1, 1), height: 17, fill: css('--accent'), opacity: i % 2 ? .55 : 1 }, svg); acc += k.us; });
-    txt(svg, X(acc) + 8, y0 + 37, `${fmt(Z.att_us, 1)} µs: ${L.map(k => `${k.n.replace(' del bias', '')} ${fmt(k.us, 1)}`).join(' · ')}`, { style: 'font-size:12.5px' });
+    txt(svg, X(acc) + 8, y0 + 37, `${fmt(Z.att_us, 1)} µs: ${L.map(k => `${k.n} ${fmt(k.us, 1)}`).join(' · ')}`, { style: 'font-size:12.5px' });
     [0, 40, 80, 120, 160].forEach(v => { el('line', { x1: X(v), x2: X(v), y1: y0 + 46, y2: y0 + 50, stroke: '#a8a29e' }, svg);
       txt(svg, X(v), y0 + 63, v === 160 ? 'µs por llamada' : v, { class: 'tk', 'text-anchor': 'middle', style: 'font-size:12px' }); });
     el('line', { x1: X(0), x2: X(U), y1: y0 + 46, y2: y0 + 46, class: 'ax' }, svg);
@@ -1285,11 +1414,12 @@
       cur.setAttribute('x1', X(Math.min(t, U))); cur.setAttribute('x2', X(Math.min(t, U))); cur.setAttribute('opacity', reposo ? 0 : 1);
     }
     ANIM.sms = {
-      start(s) { stopAll(); replayBtn(s).classList.remove('show'); dibujar(-1, false);
-        const MS = 28, t0 = performance.now() + 600;              // 1 µs de GPU = 28 ms en pantalla
+      start(s, otra) { stopAll(); if (!otra) replayBtn(s).classList.remove('show'); dibujar(-1, false);
+        const MS = 20, t0 = performance.now() + 500;              // 1 µs de GPU = 20 ms en pantalla
         const paso = now => { const t = (now - t0) / MS; dibujar(t < 0 ? -1 : Math.min(t, U), false);
           if (t < U) raf = requestAnimationFrame(paso);
-          else { at(1500, () => dibujar(0, true)); replayBtn(s).classList.add('show'); } };   // al final, el reposo
+          else { at(1200, () => dibujar(0, true)); replayBtn(s).classList.add('show');   // al final, el reposo
+            at(4500, () => ANIM.sms.start(s, true)); } };                                // y vuelve a empezar
         raf = requestAnimationFrame(paso); },
       stop() { dibujar(0, true); }
     };
@@ -1436,6 +1566,35 @@
     ANIM.claims = {
       start() { stopAll(); cs.forEach(c => c.classList.add('hid')); cs.forEach((c, k) => at(300 + k * 650, () => c.classList.remove('hid'))); },
       stop() { cs.forEach(c => c.classList.remove('hid')); }
+    };
+  }
+
+  // ===== 12. las operaciones y el código: los cuatro cambios se resaltan en el orden del guion (§12), por data-k =====
+  {
+    const cards = [...document.querySelectorAll('[data-anim=codigo] .ccard')].sort((a, b) => a.dataset.k - b.dataset.k);
+    const enc = k => cards.forEach((c, j) => c.classList.toggle('on', j === k));
+    // uno cada 2,5 s, y vuelve a empezar; un clic en uno lo resalta y corta el bucle
+    const T_CARD = [300, 2800, 5300, 7800], FIN = 10300, VUELTA = 11300;
+    cards.forEach((c, k) => c.addEventListener('click', e => { e.stopPropagation(); stopAll(); enc(k); replayBtn(c.closest('.slide')).classList.add('show'); }));
+    ANIM.codigo = {
+      start(s, otra) { stopAll(); if (!otra) replayBtn(s).classList.remove('show'); enc(-1);
+        T_CARD.forEach((t, k) => at(t, () => enc(k)));
+        at(FIN, () => { enc(-1); replayBtn(s).classList.add('show'); });
+        at(VUELTA, () => ANIM.codigo.start(s, true)); },
+      stop() { enc(-1); }
+    };
+  }
+
+  // ===== respaldo: la atención, paso a paso: las cuatro filas se encienden de a una =====
+  {
+    const filas = [...document.querySelectorAll('[data-anim=cattn] .cr[data-st]')];
+    const enc = k => filas.forEach((f, j) => f.classList.toggle('on', j === k));
+    ANIM.cattn = {
+      start(s, otra) { stopAll(); if (!otra) replayBtn(s).classList.remove('show'); enc(-1);
+        filas.forEach((_, k) => at(400 + k * 1400, () => enc(k)));
+        at(400 + filas.length * 1400, () => { enc(-1); replayBtn(s).classList.add('show'); });
+        at(1400 + filas.length * 1400, () => ANIM.cattn.start(s, true)); },
+      stop() { enc(-1); }
     };
   }
 
