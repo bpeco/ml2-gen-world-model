@@ -76,33 +76,236 @@ Con eso, entrenar GPT2M (6 × 307 M FLOP por token) daría ~13 k tok/s. Tampoco 
    - Sin maestro sí es abordable para Genie-S (17 h), Genie-M (46 h) y MaskGIT (48 h), pero sin maestro no giran.
      Esto se puede verificar barato con MaskGIT del shard completo (abajo).
 
-## Plan de acción
+## Plan detallado por fases
 
-### Fase 1: decidir el camino (hoy, ~3 h de GPU)
+### Objetivo y punto de partida
 
-| # | qué | pregunta que responde | costo |
+**Objetivo:** un modelo de tiempo real (cadena p99 ≤ 50 ms en la 3080 Ti) que sostenga el giro, acercándose al 0,79
+de GPT2M sin perder FVD.
+
+**Hoy:** el mejor modelo de tiempo real es kd + FT, con giro 0,21 y 48,4 ms.
+
+**Hipótesis de trabajo:**
+- **H1, la dirección del giro viene del maestro.** Medido: sin maestro, ningún modelo gira.
+- **H2, los alumnos están subentrenados.** kd vio el 26 % de un shard y su CE sigue bajando; +5 % de un shard llevó el
+  giro de 0,03 a 0,21.
+- **H3, el margen de latencia está en Genie y MaskGIT** (~30 ms), no en GPT-S (1,6 ms).
+- **H4, el maestro se puede transferir a un alumno no autorregresivo** (Genie y MaskGIT). Sin probar.
+
+**Reglas de todas las fases:**
+- Un cambio por experimento, contra su control (mismo init, clips, semilla y presupuesto).
+- Antes de corridas de más de ~1 h de GPU, o de usar el maestro sobre datos nuevos, consultar con una estimación.
+- Todo se registra en `results.md`.
+- Métricas por corrida:
+  - giro f1 / 0-1 / 1-2 / 2-3 s con IC y lado correcto;
+  - |flow| y tokens por horizonte;
+  - FVD/LPIPS a 1/2/3 s con diferencia pareada contra el control;
+  - ms/frame.
+- Set de evaluación: `clips_motion.json` (data-0001). **data-0001 no se usa nunca para entrenar.**
+- Los tiempos que siguen son de la 4060 (la máquina de los experimentos); entre paréntesis, la 3080 Ti cuando se
+  conoce. Batch 8 × accum 2 para todo lo que usa maestro en la 4060.
+
+---
+
+### Fase 1: decidir el camino (~4 h de GPU en total; no se bajan datos)
+
+Cuatro experimentos independientes. 1a y 1c no entrenan.
+
+#### 1a. Más datos o más parámetros, sin maestro (~45 min)
+
+**Qué:** rollouts en `clips_motion` (T 1,0), flow, giro y FVD de modelos que ya están entrenados:
+- `maskgit_s_abs_shard0`, p4 y p8: 4× datos (98 % del shard);
+- `genie_m`, p4: 2,3× parámetros.
+
+**Contra:** `mg_p4/p8_motion` y `genie_s_p4_motion`.
+
+**Pregunta:** ¿más datos o más params dan giro sin maestro? Contrasta H1 a otra escala.
+
+**Decisión:**
+- Si el giro 2-3 s tiene IC por encima de 0 y el lado correcto es ≥ 0,6: más datos o más params alcanzan, y Genie/MaskGIT
+  sin maestro con commaVQ entero (17-48 h) vuelve a ser opción.
+- Si quedan en 0, H1 se refuerza.
+
+#### 1b. Curva de escala de la destilación de GPT-S (~2 h)
+
+**Qué:**
+- KD desde `gpt_s_kd` (`final.pt`), lr 3e-4 constante (el del control que dio 0,21), **semilla 1** para no repetir
+  ventanas;
+- presupuesto +780 k frames (2440 pasos), lo que duplica lo que vio kd;
+- checkpoints cada ~800 pasos (+260 k frames), y en cada uno rollout + flow + giro **sin FVD** (~10 min);
+- FVD solo en el último.
+
+**Contra:** `kdOP_ctrl` (+160 k frames, semilla 0) y `gpt_s_kd`.
+
+**Pregunta:** ¿el giro sigue subiendo con los frames de destilación (H2) o se estanca en ~0,2?
+
+**Resultado:** curva de giro 2-3 s y lado correcto contra frames vistos.
+
+**Decisión:**
+- **Sigue subiendo** (el último punto supera a 0,21 con IC que no se solapa, o pendiente positiva en los 3 puntos):
+  vale la pena escalar datos (2A).
+- **Se estanca:** el límite es la capacidad de GPT-S, y conviene más parámetros (1c, 2B).
+
+#### 1c. Bench de latencia de GPTs más grandes (~15 min, sin entrenar)
+
+**Qué:** `src.bench` con pesos al azar, fp16 y CUDA graphs, B = 1:
+- configuraciones 4×512, 4×640, 4×768, 6×512, 6×640 y 8×384, contra 6×384 (GPT-S);
+- en la 4060 se mide la latencia relativa a GPT-S (en la 4060 GPT-S tarda 131 ms y en la 3080 Ti, 38);
+- **la confirmación final es en la 3080 Ti**, con la cadena completa.
+
+**Pregunta:** ¿hay un GPT con más parámetros que entre en la cadena de 50 ms? La latencia depende sobre todo de la
+cantidad de capas (128 pasos secuenciales por frame): por capa y por frame, 6 ms en GPT-S (dim 384) y 12 ms en GPT2M
+(dim 1024).
+
+**Resultado:** la tabla params → ms y la config más grande con cadena estimada ≤ 47 ms.
+
+**Decisión:** define el alumno GPT de la fase 2. Si ninguna entra, el alumno sigue siendo 6×384.
+
+#### 1d. MaskGIT-S con maestro (~1 h de implementación + ~40 min de GPU)
+
+**Qué:** `train_loss` de MaskGIT con maestro, opción A (etiquetas blandas en teacher forcing):
+- El maestro corre sobre la secuencia real (igual que en kd).
+- En cada posición enmascarada, la pérdida es α·CE + (1 − α)·τ²·KL(maestro ‖ MaskGIT), con α 0,5 y τ 1, igual que kd.
+- El orden de los tokens del maestro (raster, con BOS por frame) se mapea a la grilla de MaskGIT.
+
+FT desde `maskgit_s_abs`: 1000 pasos, lr 3e-4, warmup 100, semilla 0 (la receta de mgA). Rollouts p4 y p8.
+
+**Contra:** `mgA_ctrl` (el mismo FT sin maestro, ya está).
+
+**Pregunta:** ¿el maestro le transfiere dirección a un alumno no autorregresivo (H4)?
+
+**Decisión, en orden de fuerza:**
+1. Giro 2-3 s con IC por encima de 0 y lado correcto ≥ 0,6: **éxito**, y se abre el camino 2B.
+2. Solo el giro del frame 1 o de 0-1 s pasa a positivo (hoy son −0,15 y −0,01): **señal débil**; probar con más pasos
+   o α más bajo en 2B antes de descartar.
+3. Nada cambia: H4 falla con la opción A. La opción B (secuencias generadas por el maestro) queda como último recurso
+   por su costo (~8 h por 100 k frames).
+
+Si 1d da éxito, la misma implementación se aplica a Genie (`genie_s`) en la fase 2.
+
+#### Cierre de la fase 1
+
+Una tabla en `results.md` y la decisión de qué rama sigue.
+
+| resultado de 1b | resultado de 1d | sigue |
+|---|---|---|
+| sube | éxito | 2A y 2B en paralelo; la final la gana el mejor giro con cadena ≤ 50 ms |
+| sube | falla | 2A (GPT; si 1c lo permite, el GPT más grande) |
+| se estanca | éxito | 2B (Genie/MaskGIT con maestro, más datos y más params) |
+| se estanca | falla | 2A con el GPT más grande de 1c, y revisar la opción B de destilación |
+
+---
+
+### Fase 2: escalar la vía ganadora
+
+#### 2.0. Infraestructura común
+
+Se hace solo si la fase 2 va a usar más de ~0,5 shard.
+
+**Datos nuevos:**
+- Bajar data-0002 y data-0003 (2 shards, ~6 M frames) con `python -m src.data --shard`. data-0001 sigue reservado para
+  evaluar.
+- Hay que verificar que no compartan rutas con data-0001 ni con el val oficial (filtrar segmentos de rutas compartidas,
+  igual que en `clips_motion`).
+
+**Maestro precalculado** (`src/maestro_topk.py`, nuevo):
+- **Ventanas fijas:** por segmento, ventanas de 20 frames con paso 20 (60 por segmento, 3 M frames por shard). La
+  distribución del maestro depende de qué contexto vio, así que con logits precalculados las ventanas tienen que ser
+  siempre las mismas. Se pierde el desplazamiento aleatorio de las ventanas; se acepta.
+- **Qué se guarda:** por token, las k = 16 probabilidades más altas (fp16) y sus índices (int16): 64 B por token, unos
+  25 GB por shard. Hace falta verificar el espacio en disco.
+- **Costo:** un forward del maestro por shard, ~5 h en la 4060 (~2,5 h en la 3080 Ti), **una sola vez**, reutilizable
+  para GPT-S, MaskGIT y Genie.
+- **KL con top-k:** sobre las 16 clases más un bucket con la masa restante (KL esparsa).
+- **Validación antes de usarlo en serio:** 500 pasos de kd con top-k contra 500 pasos con KD completo (`kdOP_ctrl`).
+  Tiene que dar giro y FVD equivalentes (IC solapados).
+
+**Ganancia:** sin el forward del maestro, un shard de KD cuesta ~3 h para GPT-S y ~1,3 h para MaskGIT en la 4060,
+contra ~9 h hoy.
+
+#### 2A. Rama GPT
+
+**Alumno:** GPT-S (6×384), o la config más grande de 1c que entre en 50 ms. Si cambia la arquitectura, se entrena
+desde cero con KD; si es GPT-S, se sigue desde el mejor checkpoint de 1b.
+
+**Corridas:**
+1. **KD con 1 shard nuevo:** data-0002 con maestro top-k (~3 h). Giro cada 0,25 shard.
+2. **Si sigue subiendo:** +1 shard (data-0003, ~3 h).
+3. **Variante de pérdida:** α 0,2 (más peso al maestro) contra α 0,5, 500 pasos cada una (~40 min). Se hace solo si
+   la curva se aplana.
+
+**Controles:** el mismo presupuesto sin maestro (sirve para separar maestro de datos; se puede achicar a 0,5 shard) y
+una segunda semilla del mejor.
+
+**Éxito:** giro 2-3 s ≥ 0,35 y lado correcto ≥ 0,85, con FVD a 3 s igual o mejor que `kdOP_ctrl` y cadena ≤ 50 ms.
+
+#### 2B. Rama Genie/MaskGIT con maestro
+
+Se hace si 1d dio éxito o señal débil.
+
+**Alumnos:** MaskGIT-S y Genie-S con maestro (la pérdida de 1d). Después, más params con el margen de ~30 ms: Genie-M
+(35 M, ya existe y su cadena es de 20 ms), o un MaskGIT-M a medida, medido antes con el bench.
+
+**Corridas:**
+1. **MaskGIT-S con maestro, 1 shard** (~1,3 h con top-k). Giro cada 0,25 shard.
+2. **Genie-S con maestro:** el mismo presupuesto.
+3. **El mejor de los dos en tamaño M:** 1-2 shards.
+4. **Combinar con p_clean 0,8**, que mejoró el FVD a 3 s de MaskGIT (−124). Es un cambio aparte, contra su control.
+
+**Pasos de muestreo:** se evalúa con 4 y 8. El de 8 da mejor FVD a 3 s y sigue en tiempo real.
+
+**Éxito:** el mismo criterio que 2A. Además, si iguala a 2A en giro, gana por margen de latencia.
+
+#### Cierre de la fase 2
+
+- Elegir el modelo final por giro 2-3 s, con FVD como desempate y cadena ≤ 50 ms como restricción dura.
+- Confirmar con 3 semillas.
+- Medir la latencia de la cadena en la 3080 Ti.
+
+---
+
+### Fase 3: condicionamiento por pose (E) sobre el modelo final
+
+**Implementación:**
+- Embedding lineal de las 6 velocidades normalizadas por frame. Los NaN pasan a 0 y se agrega un flag de dato
+  faltante.
+- La proyección se inicializa en cero, así que al arrancar el modelo es idéntico al de partida.
+- Se suma al embedding de los tokens de cada frame. `train.py` ya tiene el camino `uses_poses`.
+
+**Entrenamiento:** FT corto desde el modelo final con poses (~0,25 shard).
+
+**Evaluación, reportada por separado:**
+1. **Sin pose futura** (solo la del contexto). Es la prueba justa de si la señal ayuda a sostener el giro.
+2. **Con la pose futura real.** Es el techo de un modelo condicionado por acción, que ya es otra tarea.
+
+**Control:** el mismo FT sin poses.
+
+---
+
+### Fase 4: evaluación final y documentación
+
+1. **Set de validación oficial (100 segmentos):** FVD/LPIPS a 1/3 s, comparable con el paper. Giro en `clips_motion`
+   y en el set de 10-20°.
+2. **3 semillas** del modelo final y de su control.
+3. **Latencia de la cadena en la 3080 Ti:** p50/p99 y cumplimiento de 20 FPS.
+4. **Figuras:** giro contra latencia con todo, curva de giro contra frames destilados y figura de la métrica.
+5. **Informe aparte** (adenda o sección nueva), **sin tocar `paper/informe.pdf` ni `main.tex`**.
+
+---
+
+### Calendario y costo estimado (4060)
+
+| fase | GPU | trabajo mío | requiere OK |
 |---|---|---|---|
-| 1a | **Giro de lo que ya está entrenado:** MaskGIT del shard completo (p4, p8) y Genie-M p4 | ¿Más datos (4×) o más parámetros (2,3×) dan giro sin maestro? | ~45 min, sin entrenar |
-| 1b | **Curva de escala de KD en GPT-S:** seguir kd hasta +780 k frames (semilla 1), con giro cada ~800 pasos | ¿El giro sigue subiendo con más destilación o se estanca en ~0,2? | ~2 h |
-| 1c | **Bench de latencia de GPTs más anchos y menos profundos** (sin entrenar), p. ej. 4×512, 4×768, 6×512 | ¿Hay un GPT con más parámetros que entre en 50 ms? La latencia depende más de la cantidad de capas que del ancho (GPT2M: 12 ms por capa con dim 1024; GPT-S: 6 ms con dim 384) | ~15 min |
+| 1a + 1c | ~1 h | – | no (no entrena) |
+| 1b | ~2 h | – | sí (> 1 h) |
+| 1d | ~40 min | ~1 h de implementación | no (< 1 h) |
+| 2.0 | bajar 2 shards + ~10 h de precálculo del maestro (2 shards) + validación de top-k | ~2 h | sí (maestro sobre datos nuevos) |
+| 2A o 2B | ~4-8 h según la rama (con top-k) | – | sí |
+| 3 | ~2 h | ~1-2 h | sí |
+| 4 | ~3 h | ~2 h | sí |
 
-### Fase 2: escalar lo que funciona (según la fase 1)
-
-- **Si 1b sigue subiendo:** destilar GPT-S (o el GPT de 1c que entre en 50 ms) con 1-2 shards de datos: ~3-6 h en la
-  3080 Ti o 9-17 h en la 4060.
-  - Para bajar el costo del maestro: precalcular sus top-k logits una vez por shard y reutilizarlos.
-- **Si Genie o MaskGIT no giran ni con más datos (1a): destilarles el maestro.** Es la apuesta con más upside porque
-  tienen ~30 ms de margen para crecer, pero es investigación: el maestro es autorregresivo y MaskGIT predice en
-  paralelo.
-  - Opción simple: usar como etiqueta blanda la distribución del maestro en teacher forcing.
-  - Prueba corta de 1000 pasos (~30 min) antes de invertir más.
-- **Si 1b se estanca:** el límite es la capacidad. Pasar a un GPT más ancho que entre en 50 ms (1c), o al camino de
-  Genie/MaskGIT destilado.
-
-### Fase 3: condicionamiento por pose (E) sobre el mejor modelo
-
-- **Sin pose futura:** es la evaluación justa.
-- **Con pose futura:** sirve de techo. Se reporta aparte.
+**Total:** ~25-30 h de GPU repartidas en varios días. La fase 1 se puede hacer hoy.
 
 ### Descartado para el movimiento
 
