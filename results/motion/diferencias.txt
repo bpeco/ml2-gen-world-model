@@ -16,3 +16,6 @@ $ python -m src.estadistica diferencia --clips motion --a mgA_ctrl_p8_motion --b
 results\diferencia_mgA_ctrl_p8_motion_vs_mg_p8_motion.json {'1': (-10.5, 0.418), '2': (24.7, 0.139), '3': (81.2, 0.01)}
 $ python -m src.estadistica diferencia --clips motion --a mgA_ctrl_p4_motion --b mg_p4_motion
 results\diferencia_mgA_ctrl_p4_motion_vs_mg_p4_motion.json {'1': (6.6, 0.667), '2': (-3.3, 0.846), '3': (-24.2, 0.398)}
+results\diferencia_kdOP_k8_motion_vs_kdOP_ctrl_motion.json {'1': (140.7, 0.01), '2': (211.1, 0.01), '3': (288.4, 0.01)}
+results\diferencia_kdOP_ctrl_motion_vs_gpt_s_kd_motion.json {'1': (-60.7, 0.01), '2': (-123.0, 0.01), '3': (-86.4, 0.01)}
+results\diferencia_kdOP_k8_motion_vs_gpt_s_kd_motion.json {'1': (79.9, 0.02), '2': (88.1, 0.06), '3': (201.9, 0.01)}

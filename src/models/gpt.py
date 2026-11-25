@@ -81,6 +81,9 @@ class GPT(WorldModel):
     block_size: int = BLOCK
     pos: str = "abs"                # embedding de posición: "abs" | "frame" (frame + celda)
     top_p: float = 1.0              # muestreo de núcleo en inferencia (1 = apagado; --opt top_p=0.95)
+    onpolicy_k: int = 0             # destilación on-policy (solo con maestro): la mitad del batch tiene sus últimos K
+                                    # frames generados por el alumno; ahí la pérdida es solo KL(maestro || alumno)
+    onpolicy_temp: float = 0.9      # temperatura del alumno al generar esos frames (la de inferencia de kd)
 
   @classmethod
   def recipe(cls, size=None):
@@ -119,6 +122,13 @@ class GPT(WorldModel):
     return self.net(x)
 
   def train_loss(self, frames, teacher=None, alpha=0.5, tau=1.0):
+    K = getattr(self.cfg, "onpolicy_k", 0)
+    h = frames.shape[0] // 2
+    if teacher is not None and K > 0 and self.training:
+      # on-policy: el alumno genera (sin gradiente, en eval) los últimos K frames de la segunda mitad del batch
+      ctx = frames[h:, :-K]
+      gen = self._generador().rollout(ctx, K, temperature=self.cfg.onpolicy_temp)
+      frames = torch.cat([frames[:h], torch.cat([ctx, gen.to(frames.dtype)], 1)], 0)
     seq = with_bos(frames)
     x, y = seq[:, :-1], seq[:, 1:]
     lg = self.logits(x)
@@ -126,7 +136,30 @@ class GPT(WorldModel):
     if teacher is not None:
       with torch.no_grad():
         tl = teacher.logits(x)
-    return lm_loss(lg, y, tl, alpha, tau)
+    if tl is None or K == 0 or not self.training:
+      return lm_loss(lg, y, tl, alpha, tau)
+    # mitad real: KD normal (alpha CE + (1 - alpha) KL). Mitad on-policy: solo KL, en las posiciones que predicen los
+    # tokens de los K frames generados (sin CE: los "targets" son muestras del propio alumno). Mezcla 50/50.
+    l_real, m_real = lm_loss(lg[:h], y[:h], tl[:h], alpha, tau)
+    j = torch.arange(y.shape[1], device=y.device)
+    mask = ((j + 1) >= (frames.shape[1] - K) * TPF)[None].expand(y.shape[0] - h, -1) & (y[h:] != BOS)
+    l_op, m_op = lm_loss(lg[h:], y[h:], tl[h:], 0.0, tau, mask=mask)
+    return 0.5 * l_real + 0.5 * l_op, {**m_real, "kl_op": m_op["kl"]}
+
+  @torch.no_grad()
+  def _generador(self):
+    """Copia fp16 del alumno, en eval y con CUDA graphs, para generar los frames on-policy rápido (como en inferencia).
+    Se re-sincroniza con los pesos actuales en cada llamada (copy_ en el lugar: los graphs siguen valiendo). Se guarda
+    en una lista para que no sea un submódulo (no entra al state_dict ni al optimizador)."""
+    import copy
+    if not hasattr(self, "_gen_ref"):
+      g = copy.deepcopy(self).half().eval()
+      g.use_cuda_graphs(True)
+      object.__setattr__(self, "_gen_ref", [g])
+    g = self._gen_ref[0]
+    for d, o in zip(g.parameters(), self.parameters()):
+      d.copy_(o)
+    return _SinAutocast(g)
 
   def use_cuda_graphs(self, enable: bool = True):
     self._graphs_on = enable
@@ -175,3 +208,16 @@ class GPT(WorldModel):
       else:
         lg = self._decode(tok, pos)
     return torch.stack(out, 1)
+
+
+class _SinAutocast:
+  """Envuelve el generador fp16 para que rollout corra fuera del autocast del loop de entrenamiento (las cachés KV son
+  fp16 y el autocast mezclaría dtypes)."""
+
+  def __init__(self, m):
+    self.m = m
+
+  @torch.no_grad()
+  def rollout(self, ctx, n, **kw):
+    with torch.autocast("cuda", enabled=False):
+      return self.m.rollout(ctx, n, **kw)

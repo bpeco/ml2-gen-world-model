@@ -144,3 +144,38 @@ Figuras de C y A (`python experiments/motion/figuras.py --tag AC`):
 - **Set de 10-20°** (`results/clips_motion_suave.json`, 50 curvas): rollouts de los 8 modelos de la Fase 1.
   - **Tiempo de GPT2M:** con bs 25 tardó 88 min en 50 clips. Con bs 20 el set principal tarda 57 min en 200 clips, así
     que bs 25 probablemente desborda la VRAM. Usar bs ≤ 20.
+
+### 4. Destilación on-policy de kd (`scripts/motion_OP.sh`)
+
+FT desde `gpt_s_kd` (final.pt) con estos parámetros:
+- 500 pasos (presupuesto 160000 frames), lr 3e-4 constante, semilla 0;
+- batch 8 × accum 2 = 16. Con batch 16 la VRAM desborda y cada paso tarda ~65 s en vez de 2-5 s.
+
+Las dos corridas son:
+- **kdOP_ctrl:** el mismo FT con KD normal.
+- **kdOP_k8:** en la mitad del batch, los últimos 8 frames los genera el alumno (copia fp16, T 0,9) y la pérdida ahí
+  es solo KL(maestro ‖ alumno); la otra mitad es KD normal, mezcla 50/50 (`onpolicy_k` en `src/models/gpt.py`).
+  ~5 s/paso.
+
+Rollouts a T 0,9.
+
+| experimento | cambio | giro f1 / 0-1 / 1-2 / 2-3 s [IC 2-3 s] | lado correcto | \|flow\| px 0-1 / 2-3 s · tokens | FVD 1/2/3 s | ΔFVD 1/2/3 s (p) | LPIPS 1/2/3 s | ms/frame | conclusión |
+|---|---|---|---|---|---|---|---|---|---|
+| gpt_s_kd_motion | kd original | 0,43 / 0,19 / 0,07 / 0,03 [0,01; 0,06] | 0,68 | – · 0,16 | 424 / 626 / 721 | – | 0,373 / 0,430 / 0,458 | 38 | referencia |
+| **kdOP_ctrl_motion** | FT de 500 pasos con KD normal, lr 3e-4 | 0,52 / 0,37 / 0,32 / **0,21 [0,10; 0,35]** | **0,78** | 0,75 / 0,34 · 0,30 | 363 / 503 / 635 | vs kd: **−61 (0,01) / −123 (0,01) / −86 (0,01)** | 0,366 / 0,432 / 0,458 | 38 | **Mejora todo:** giro ×7 a 2-3 s, lado correcto 0,78 y mejor FVD. |
+| kdOP_k8_motion | + on-policy K = 8 | 0,26 / 0,08 / 0,02 / 0,02 [0,00; 0,04] | 0,68 | 0,62 / 0,37 · 0,48 | 504 / 714 / 923 | vs control: **+141 / +211 / +288 (0,01)** | 0,390 / 0,455 / 0,482 | 38 | **Peor que el control en todo** (y que kd en FVD). |
+
+**Conclusiones (contradicen la hipótesis):**
+1. **La on-policy, como está, empeora:**
+   - el giro cae por debajo de kd original (frame 1: 0,26 contra 0,43);
+   - el FVD empeora +141…+288 contra el control.
+
+   Hipótesis, no verificada: sobre los frames degradados del alumno el maestro también predice "quedarse quieto"
+   o borroso, y la KL le enseña eso al alumno. Además, el alumno ve la mitad de datos reales por paso.
+2. **El hallazgo es el control.** 500 pasos más de KD normal con lr 3e-4 llevan el giro a 2-3 s de 0,03 a 0,21 (IC
+   [0,10; 0,35], que no se solapa con el de kd) y el lado correcto de 0,68 a 0,78, con mejor FVD en los tres
+   horizontes.
+   - **No es parpadeo:** los tokens suben (0,16 → 0,30), pero sube también el lado correcto.
+   - **Lectura probable:** kd terminó con lr 1e-3 constante, sin decaimiento (receta IRIS forzada; `final.pt` en el
+     paso 2438). El FT a lr más bajo funciona como el annealing que le faltó. **El sesgo de exposición no sería la
+     causa principal del apagado del giro: kd estaba subentrenado o sin annealing.**

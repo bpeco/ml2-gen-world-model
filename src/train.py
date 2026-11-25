@@ -351,6 +351,8 @@ def _train(a, dev, run_dir, last_path):
   model = build(a.kind, cfg, a.size).to(dev)
   if a.init_from and own is None and src is None:
     ip = Path(a.ckpt_dir) / a.init_from / "last.pt"
+    if not ip.exists():  # corridas viejas (gpt_s_kd) solo guardaron final.pt
+      ip = ip.with_name("final.pt")
     ick = torch.load(ip, map_location="cpu", weights_only=False)
     falta, sobra = model.load_state_dict(ick["model"], strict=False)
     if sobra:
