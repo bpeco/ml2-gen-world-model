@@ -157,10 +157,11 @@ Lo que sigue es entrenar los chicos con todo commaVQ, 150 veces más datos. No c
 - R1, tabla completa: todos los modelos con CE, LPIPS, FVD a 1, 2 y 3 s, drift y latencia en la RTX 3080 Ti.
 - R2, cadena completa: encoder, modelo y decoder por etapa, con el p99 y los frames tarde a ritmo de cámara.
 - R3, perfil por kernel: tiempo de GPU en la atención y en el resto de la red, antes y después de la atención explícita, para el GPT-S y gpt2m. El kernel de antes y sus bloques.
-- R4, la atención, paso a paso: la cuenta, la forma de cada matriz y el código de `cached_attention`, contra la caché; la máscara aditiva, armada una vez.
-- R5, datos y escala: el GPT-S de cero con 25 % y 50 % de los datos, el ajuste y la extrapolación (con la advertencia: dos puntos y E fijo). Correlación entre CE y FVD.
-- R6, FVD real contra real: por qué no es una cota inferior y por qué leemos el FVD solo para comparar.
-- R7, temperatura: FVD en el holdout según la temperatura; la del paper de Genie triplica el FVD.
-- R8, figura del informe, FVD según el horizonte: todos los modelos, con las referencias simples.
-- R9, figura del informe, frames del clip 0: incluye MaskGIT-S y el frame congelado.
-- R10, arquitecturas: enlaces a la hoja de cada modelo (arquitecturas.html, de Tomás).
+- R4, el código, como un diff: los cuatro cambios en el código de `src/` (− lo que se fue, + lo que entró), con los ms de cada paso. Es la slide 12 de Kevin.
+- R5, la atención, paso a paso: la cuenta, la forma de cada matriz y el código de `cached_attention`, contra la caché; la máscara aditiva, armada una vez.
+- R6, datos y escala: el GPT-S de cero con 25 % y 50 % de los datos, el ajuste y la extrapolación (con la advertencia: dos puntos y E fijo). Correlación entre CE y FVD.
+- R7, FVD real contra real: por qué no es una cota inferior y por qué leemos el FVD solo para comparar.
+- R8, temperatura: FVD en el holdout según la temperatura; la del paper de Genie triplica el FVD.
+- R9, figura del informe, FVD según el horizonte: todos los modelos, con las referencias simples.
+- R10, figura del informe, frames del clip 0: incluye MaskGIT-S y el frame congelado.
+- R11, arquitecturas: enlaces a la hoja de cada modelo (arquitecturas.html, de Tomás).

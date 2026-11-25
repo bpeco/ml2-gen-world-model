@@ -307,6 +307,44 @@
   .s12 .chain i { font-style: normal; color: var(--accent); font-weight: 700; }
   .s12 .code3 { margin-top: .9em; }
 
+  /* ---------- respaldo: el código de los cuatro cambios (la slide 12 de Kevin), como un diff (− lo que se fue, + lo que entró) ---------- */
+  .h2row { display: flex; align-items: baseline; justify-content: space-between; gap: 1em; }
+  .h2row > span { font-size: .78em; color: var(--muted); white-space: nowrap; }
+  .dif { --del: #fdeceb; --del-hl: #f7c4bd; --del-k: #b42318; --add: #e7f5ec; --add-hl: #b6e2c3; --add-k: var(--ok);
+    background: var(--card); border: 1px solid var(--line); border-radius: .5em; overflow: hidden; font-size: .8em; margin-top: .15em; }
+  .dif .hk { display: grid; grid-template-columns: minmax(0, 1fr) 11.4em; border-top: 1px solid var(--line); border-left: .28em solid transparent;
+    cursor: pointer; transition: opacity .3s; }
+  .dif .hk:first-child { border-top: none; }
+  .dif .hk.att { border-left-color: var(--accent); }
+  .dif.foco .hk:not(.on) { opacity: .35; }
+  .dif .fh { grid-column: 1; display: flex; align-items: baseline; gap: .55em; padding: .2em .8em .2em 2.1em; background: #f3f1ec;
+    font: .95em/1.3 Consolas, ui-monospace, SFMono-Regular, monospace; color: var(--muted); }
+  .dif .fh code { font: inherit; background: none; padding: 0; color: var(--ink); }
+  .dif .fh code.fn { color: var(--muted); }
+  .dif .fh .tag { font: 650 .82em/1.3 -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; margin-left: .3em; }
+  .dif .ln { grid-column: 1; display: grid; grid-template-columns: 2em 66ch minmax(0, 1fr); align-items: baseline;
+    font: 1em/1.4 Consolas, ui-monospace, SFMono-Regular, monospace; }
+  .dif .ln > i { font-style: normal; text-align: center; font-weight: 700; }
+  .dif .ln code { font: inherit; background: none; padding: 0; white-space: pre; color: var(--ink); }
+  .dif .ln code.w { grid-column: 2 / span 2; }
+  .dif .ln.del { background: var(--del); } .dif .ln.del > i { color: var(--del-k); }
+  .dif .ln.add { background: var(--add); } .dif .ln.add > i { color: var(--add-k); }
+  .dif .ln.ctx code { color: #57534e; }
+  .dif .ln em { font-style: normal; border-radius: .15em; }
+  .dif .ln.del em { background: var(--del-hl); }
+  .dif .ln.add em { background: var(--add-hl); }
+  .dif .ln.ctx em { background: #ecebe6; }
+  .dif .ln .m { font: italic 1.04em/1 "Cambria Math", "STIX Two Math", Georgia, serif; white-space: nowrap; color: var(--ink); }
+  .dif .ln.del .m { color: var(--del-k); }
+  .dif .ln.add .m { color: var(--add-k); }
+  .dif .an { grid-column: 2; display: flex; flex-direction: column; justify-content: center; gap: .05em; padding: .25em .8em;
+    border-left: 1px solid var(--line); font-variant-numeric: tabular-nums; line-height: 1.3; }
+  .dif .an b { font-size: 1.32em; line-height: 1.15; white-space: nowrap; }
+  .dif .an span { color: var(--muted); white-space: nowrap; }
+  .dif .an.big b { color: var(--accent); font-size: 1.6em; }
+  .dif .an.big span { color: var(--ink); }
+  .dif .an.flat b { color: var(--muted); }
+
   /* ---------- respaldo: la atención, paso a paso ---------- */
   .catb { display: flex; align-items: baseline; gap: .8em; font-size: .84em; margin: .12em 0; }
   .catb .muted { margin-left: auto; font-size: .92em; }
@@ -442,8 +480,9 @@
   .lim3 .d { color: var(--muted); font-size: .86em; line-height: 1.3; margin-top: auto; }
   .lim3 .bar { height: .6em; background: #ebe9e2; border-radius: 1em; overflow: hidden; }
   .lim3 .bar i { display: block; height: 100%; width: max(.65%, 5px); background: var(--accent); border-radius: 1em; }
-  .lim3 .eb { display: grid; grid-template-columns: 2.1em 1fr 3.6em; align-items: center; gap: .5em; font-size: 1em; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .lim3 .eb { display: grid; grid-template-columns: 2.1em 1fr 4.2em; align-items: center; gap: .5em; font-size: 1em; color: var(--muted); font-variant-numeric: tabular-nums; }
   .lim3 .eb .w { position: relative; height: 1em; }
+  .lim3 .eb > span:last-child { white-space: nowrap; font-size: .82em; text-align: right; }
   .lim3 .eb .w i { position: absolute; top: .15em; height: .7em; left: calc(50% - var(--h)); width: calc(2 * var(--h)); border-left: 2px solid var(--k); border-right: 2px solid var(--k);
     background: linear-gradient(var(--k), var(--k)) center / 100% 2px no-repeat; }
   .lim3 .eb .w i::after { content: ""; position: absolute; left: 50%; top: 50%; width: .5em; height: .5em; margin: -.25em 0 0 -.25em; border-radius: 50%; background: var(--k); }
@@ -799,7 +838,7 @@
       <p class="ef">Mismo muestreo, menos lanzamientos</p>
     </div>
   </div>
-  <p class="note" style="margin-top:auto;padding-bottom:1.1em">Los números 1 a 4 son los pasos de la slide anterior. Mismos pesos y mismo entrenamiento; gpt2m tiene los mismos cambios. Calidad, FVD pareado después − antes: <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.diff" data-f="1" data-sign>+12,6</span> a 1 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.p" data-f="2">0,18</span>), <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.diff" data-f="1" data-sign>+27,0</span> a 2 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.p" data-f="2">0,05</span>) y <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.diff" data-f="1" data-sign>+4,4</span> a 3 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.p" data-f="2">0,76</span>). El código, en el respaldo 4.</p>
+  <p class="note" style="margin-top:auto;padding-bottom:1.1em">Los números 1 a 4 son los pasos de la slide anterior. Mismos pesos y mismo entrenamiento; gpt2m tiene los mismos cambios. Calidad, FVD pareado después − antes: <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.diff" data-f="1" data-sign>+12,6</span> a 1 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.p" data-f="2">0,18</span>), <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.diff" data-f="1" data-sign>+27,0</span> a 2 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.p" data-f="2">0,05</span>) y <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.diff" data-f="1" data-sign>+4,4</span> a 3 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.p" data-f="2">0,76</span>). El código, en los respaldos 4 y 5.</p>
 </section>
 
 <!-- 13. OPTIMIZACIÓN: DÓNDE SE IBA EL TIEMPO: LOS SM DE LA GPU, UNA LLAMADA A LA ATENCIÓN ANTES Y AHORA (Docs/atencion-decode.md) -->
@@ -888,6 +927,46 @@
       <p style="margin-top:.6em" class="muted">Queda una red de unos <span data-d="opt.despues.kernels" data-f="-2">13.000</span> kernels chicos por frame. Bajar de ahí pide fusionarlos (<code>torch.compile</code>, que en Windows necesita Triton) o menos pasos por frame.</p>
     </div>
   </div>
+</section>
+
+<!-- RESPALDO: EL CÓDIGO, COMO UN DIFF (la slide 12 de Kevin; − lo que se fue, + lo que entró) -->
+<section class="slide backup" data-anim="codigodiff" data-name="Respaldo: el código, como un diff">
+  <div class="head" style="font-size:1em;margin:0"><div class="kicker">Respaldo · el código, como un diff</div><button class="replay" data-replay title="Repetir animación" aria-label="Repetir animación"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7"/><path d="M3 3v6h6"/></svg></button></div>
+  <div class="h2row"><h2>La misma atención, en tres llamadas</h2><span>ms por frame · GPT-S destilado</span></div>
+  <div class="dif">
+    <div class="hk" data-k="0">
+      <div class="fh"><code>gpt.py</code><code class="fn">next_frame</code><span class="tag antes">ya estaba</span></div>
+      <div class="ln ctx"><i></i><code class="w">g = GraphedStep(self.<em>_decode</em>, tok, pos)</code></div>
+      <div class="an" style="grid-row: 1 / span 2"><b><span data-d="opt.pasos.gpt_s_kd.0" data-f="0">430</span> → <span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span></b><span>1 graph por token</span></div>
+    </div>
+    <div class="hk" data-k="1">
+      <div class="fh"><code>stream.py</code><code class="fn">GPTStream</code></div>
+      <div class="ln del"><i>−</i><code class="w">return self.m.<em>next_frame</em>(self.ctx)</code></div>
+      <div class="ln add"><i>+</i><code class="w">noise = self.<em>_noise</em>(B)</code></div>
+      <div class="ln add"><i>+</i><code class="w">g = <em>GraphedStep</em>(self.<em>_frame</em>, self.ctx, *noise)</code></div>
+      <div class="ln add"><i>+</i><code class="w">return g(self.ctx, *noise)</code></div>
+      <div class="an flat" style="grid-row: 1 / span 5"><b><span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span> → <span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span></b><span>1 graph por frame</span></div>
+    </div>
+    <div class="hk att" data-k="2">
+      <div class="fh"><code>backbone.py</code><code class="fn">Attention → cached_attention</code></div>
+      <div class="ln del"><i>−</i><code>y = <em>F.scaled_dot_product_attention</em>(q, k, v, attn_mask=attn_mask)</code><span class="m">softmax(q·Kᵀ/√d + m)·V</span></div>
+      <div class="ln add"><i>+</i><code>q, k, v = (t.<em>reshape</em>(B * H, -1, hd) for t in (q, k, v))</code><span class="m">3D: (B·H, ·, d)</span></div>
+      <div class="ln add"><i>+</i><code>s = <em>torch.baddbmm</em>(bias, q, k.transpose(1, 2), alpha=hd ** -0.5)</code><span class="m">q·Kᵀ/√d + m</span></div>
+      <div class="ln add"><i>+</i><code>p = <em>torch.softmax</em>(s, -1)</code><span class="m">softmax(s)</span></div>
+      <div class="ln add"><i>+</i><code>y = <em>torch.bmm</em>(p, v).view(B, H, T, hd)</code><span class="m">p·V</span></div>
+      <div class="an big" style="grid-row: 1 / span 6"><b><span data-d="opt.pasos.gpt_s_kd.2" data-f="0">156</span> → <span data-d="opt.attn.gpt_s_kd" data-f="0">40</span></b><span><span data-d="opt.antes.att_us_decode" data-f="0">160</span> → <span data-d="opt.despues.att_us" data-f="0">15</span> µs por capa</span><span><span data-d="opt.antes.att_bloques" data-f="0">6</span> → <span data-d="opt.despues.att_lista.1.bloques" data-f="0">1008</span> bloques</span></div>
+    </div>
+    <div class="hk" data-k="3">
+      <div class="fh"><code>stream.py</code><code class="fn">GPTStream._noise</code></div>
+      <div class="ln del"><i>−</i><code class="w">buf = <em>torch.empty</em>(CODES, B, 1024)</code></div>
+      <div class="ln del"><i>−</i><code class="w">for i in range(CODES):</code></div>
+      <div class="ln del"><i>−</i><code class="w">  buf[i].<em>exponential_</em>(1, generator=self.gen)</code></div>
+      <div class="ln del"><i>−</i><code class="w">return [buf]</code></div>
+      <div class="ln add"><i>+</i><code class="w">return [<em>frame_noise</em>(CODES, B, self.dev, self.gen)]</code></div>
+      <div class="an" style="grid-row: 1 / span 6"><b><span data-d="opt.attn.gpt_s_kd" data-f="0">40</span> → <span data-d="opt.pasos.gpt_s_kd.3" data-f="0">38</span></b><span>128 → 1 lanzamiento</span></div>
+    </div>
+  </div>
+  <p class="note" style="margin-top:auto;padding-bottom:1.1em">Código de <code>src/</code>, sin argumentos; gpt2m, igual. El entrenamiento no cambió. Calidad, FVD pareado después − antes: <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.diff" data-f="1" data-sign>+12,6</span> · <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.diff" data-f="1" data-sign>+27,0</span> · <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.diff" data-f="1" data-sign>+4,4</span> a 1 · 2 · 3 s (p = <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.1.p" data-f="2">0,18</span> · <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.2.p" data-f="2">0,05</span> · <span data-d="diferencias.gpt_s_kd_stream__gpt_s_kd.3.p" data-f="2">0,76</span>).</p>
 </section>
 
 <!-- RESPALDO: LA ATENCIÓN, PASO A PASO (la cuenta, la forma de cada matriz y el código; Docs/atencion-decode.md) -->
@@ -1647,6 +1726,23 @@ self.v_cache.index_copy_(2, input_pos, v)</pre></div>
         T_CARD.forEach((t, k) => at(t, () => enc(k)));
         at(FIN, () => { enc(-1); replayBtn(s).classList.add('show'); });
         at(VUELTA, () => ANIM.codigo.start(s, true)); },
+      stop() { enc(-1); }
+    };
+  }
+
+  // ===== respaldo: el código, como un diff (la slide 12 de Kevin): los cuatro cambios se resaltan en el orden del guion (§12), por data-k =====
+  {
+    const cards = [...document.querySelectorAll('[data-anim=codigodiff] .hk')].sort((a, b) => a.dataset.k - b.dataset.k);
+    const dif = document.querySelector('[data-anim=codigodiff] .dif');
+    const enc = k => { cards.forEach((c, j) => c.classList.toggle('on', j === k)); if (dif) dif.classList.toggle('foco', k >= 0); };
+    // uno cada 2,5 s, y vuelve a empezar; un clic en uno lo resalta y corta el bucle
+    const T_CARD = [300, 2800, 5300, 7800], FIN = 10300, VUELTA = 11300;
+    cards.forEach((c, k) => c.addEventListener('click', e => { e.stopPropagation(); stopAll(); enc(k); replayBtn(c.closest('.slide')).classList.add('show'); }));
+    ANIM.codigodiff = {
+      start(s, otra) { stopAll(); if (!otra) replayBtn(s).classList.remove('show'); enc(-1);
+        T_CARD.forEach((t, k) => at(t, () => enc(k)));
+        at(FIN, () => { enc(-1); replayBtn(s).classList.add('show'); });
+        at(VUELTA, () => ANIM.codigodiff.start(s, true)); },
       stop() { enc(-1); }
     };
   }
