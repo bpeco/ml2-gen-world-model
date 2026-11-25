@@ -25,6 +25,13 @@ FASE1 = {"gpt2m_motion": ("GPT2M (maestro)", "gpt2m"), "gpt_s_kd_motion": ("GPT-
          "genie_s_p4_motion": ("Genie-S p4", "genie_s_p4"), "mg_p1_motion": ("MaskGIT p1", "maskgit_s_abs_p1"),
          "mg_p2_motion": ("MaskGIT p2", "maskgit_s_abs_p2"), "mg_p4_motion": ("MaskGIT p4", "maskgit_s_abs_p4"),
          "mg_p8_motion": ("MaskGIT p8", "maskgit_s_abs_p8")}
+# resumen: lo mejor de cada línea (fase 1, C, A, 4 y annealing)
+FINAL = {"gpt2m_motion": ("GPT2M (maestro)", "gpt2m"), "gpt_s_kd_motion": ("kd original", "gpt_s_kd"),
+         "kdOP_ctrl_motion": ("kd + FT 500 pasos lr 3e-4", "gpt_s_kd"),
+         "kdAN_cos1k_motion": ("kd + FT 1000 pasos coseno", "gpt_s_kd"),
+         "kdOP_k8_motion": ("kd + on-policy K=8", "gpt_s_kd"), "kdC_t11_motion": ("kd T 1,1", "gpt_s_kd"),
+         "d050_ctrl_motion": ("d050 + FT (sin maestro)", "gpt_s_kd"),
+         "mgA_pc08_p4_motion": ("MaskGIT p4 p_clean 0,8", "maskgit_s_abs_p4")}
 # prioridades C y A (mismas arquitecturas: misma latencia que su base)
 AC = {"gpt2m_motion": FASE1["gpt2m_motion"], "gpt_s_kd_motion": ("GPT-S kd T 0,9", "gpt_s_kd"),
       "kdC_t10_motion": ("kd T 1,0", "gpt_s_kd"), "kdC_t11_motion": ("kd T 1,1", "gpt_s_kd"),
@@ -174,8 +181,8 @@ def main():
   ap.add_argument("--names", nargs="*")
   ap.add_argument("--tag", default="fase1")
   a = ap.parse_args()
-  conocidos = {**FASE1, **AC}
-  runs = AC if a.tag == "AC" and not a.names else FASE1 if not a.names else {n: conocidos.get(n, (n, None)) for n in a.names}
+  conocidos = {**FASE1, **AC, **FINAL}
+  runs = FINAL if a.tag == "final" and not a.names else AC if a.tag == "AC" and not a.names else FASE1 if not a.names else {n: conocidos.get(n, (n, None)) for n in a.names}
   FIGS.mkdir(parents=True, exist_ok=True)
   piso = json.loads((FLOW / "piso_codec.json").read_text())["resumen"]
   por_horizonte(runs, "tok", FIGS / f"fig_{a.tag}_tok.png", "Tasa de cambio de tokens entre frames consecutivos",

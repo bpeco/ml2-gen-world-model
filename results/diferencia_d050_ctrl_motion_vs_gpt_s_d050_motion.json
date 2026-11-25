@@ -1,0 +1,40 @@
+{
+ "a": "d050_ctrl_motion",
+ "b": "gpt_s_d050_motion",
+ "n_clips": 200,
+ "fvd": {
+  "1": {
+   "fvd_a": 455.1403757789094,
+   "fvd_b": 471.32695682912663,
+   "diff": -16.186581050217228,
+   "lo": -59.680162510969424,
+   "hi": 27.307000410534968,
+   "sd": 22.190602786098058,
+   "p": 0.2885572139303483,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "2": {
+   "fvd_a": 519.1420085081049,
+   "fvd_b": 570.0869655882916,
+   "diff": -50.94495708018667,
+   "lo": -104.90560934406005,
+   "hi": 3.0156951836867165,
+   "sd": 27.530945032588463,
+   "p": 0.04975124378109453,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "3": {
+   "fvd_a": 565.2474439910743,
+   "fvd_b": 610.7974549976275,
+   "diff": -45.55001100655318,
+   "lo": -107.32155158503207,
+   "hi": 16.221529571925707,
+   "sd": 31.51609213187698,
+   "p": 0.08955223880597014,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  }
+ }
+}

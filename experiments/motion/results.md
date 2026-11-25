@@ -179,3 +179,24 @@ Rollouts a T 0,9.
    - **Lectura probable:** kd terminó con lr 1e-3 constante, sin decaimiento (receta IRIS forzada; `final.pt` en el
      paso 2438). El FT a lr más bajo funciona como el annealing que le faltó. **El sesgo de exposición no sería la
      causa principal del apagado del giro: kd estaba subentrenado o sin annealing.**
+
+### Annealing y d050 (`scripts/motion_AN.sh`)
+
+Mismas condiciones que la sección 4: semilla 0, batch 8 × accum 2 y rollouts a T 0,9.
+
+| experimento | cambio | giro f1 / 0-1 / 1-2 / 2-3 s [IC 2-3 s] | lado correcto | \|flow\| px 0-1 / 2-3 s · tokens | FVD 1/2/3 s | ΔFVD 1/2/3 s (p) | LPIPS 1/2/3 s | ms/frame | conclusión |
+|---|---|---|---|---|---|---|---|---|---|
+| d050_ctrl_motion | el FT de kdOP_ctrl sobre gpt_s_d050, sin maestro | −0,04 / 0,01 / 0,01 / 0,00 [−0,01; 0,02] | 0,49 | 0,52 / 0,32 · 0,37 | 455 / 519 / 565 | vs d050: −16 (0,29) / −51 (0,05) / −46 (0,09) | 0,373 / 0,432 / 0,465 | 38 | No gira: el FT solo no da dirección, hace falta el maestro. |
+| kdAN_cos1k_motion | FT de kd con KD, 1000 pasos, lr coseno 3e-4 → 0 | 0,49 / 0,28 / 0,17 / 0,13 [0,07; 0,20] | 0,78 | 0,62 / 0,28 · 0,26 | 380 / 528 / 625 | vs kdOP_ctrl: +17 (0,60) / +25 (0,65) / −10 (0,63); vs kd: **−44 (0,04) / −98 (0,02) / −96 (0,02)** | 0,345 / 0,406 / 0,432 | 38 | Gira como el control o algo menos (IC solapados); mejor LPIPS. El annealing completo no suma giro. |
+
+**Conclusiones:**
+- **La dirección viene de la destilación:** d050 con el mismo FT sigue sin girar (lado correcto 0,49).
+- **"kd estaba sin annealing" no se confirma tal cual.** Bajar el lr hasta 0 en 1000 pasos da giro 0,13, contra 0,21
+  del FT de 500 pasos a lr constante, con IC solapados: no es mejor. Lo que sí se repite en los dos FT con KD:
+  - el giro sostenido sube (×4–7 contra kd);
+  - el lado correcto pasa de 0,68 a 0,78;
+  - el FVD mejora de −86 a −96 a 3 s.
+
+  **Falta separar "más pasos de KD" de "lr más bajo".** El control que falta es seguir kd a lr 1e-3 constante, el de
+  su receta, 500 pasos. También falta medir la varianza entre semillas: todo es con semilla 0.
+- **Figura resumen:** `figs/fig_final_giro.png` y `figs/fig_final_vs_ms.png`.
