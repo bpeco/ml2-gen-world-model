@@ -824,11 +824,11 @@
 <!-- 14. CONCLUSIONES -->
 <section class="slide statement" data-anim="claims" data-name="Conclusiones">
   <div class="kicker">14 · Conclusiones</div>
-  <h2>El GPT chico llega justo a 20 FPS; con margen, solo decodificando en paralelo</h2>
+  <h2>El GPT chico llega justo a 20 FPS; decodificando en paralelo, con margen</h2>
   <div class="claims">
-    <div class="claim"><span class="k">1</span><p class="t">Medir dónde se iba el tiempo cambió el resultado: sin tocar el modelo, el GPT de <span data-d="m.gpt_s_kd.params" data-f="0">12</span>M bajó de <span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span> a <span data-d="m.gpt_s_kd.ms3080" data-f="0">38</span> ms por frame. Llega a 20 FPS, pero justo: con encoder y decoder, el p99 es de <span data-d="cadena.gpt_s_kd.p99_ritmo" data-f="1">48,4</span> ms.</p></div>
-    <div class="claim"><span class="k">2</span><p class="t">Con la misma red, decodificar en pocos pasos paralelos entra en los 50 ms con margen (<span data-d="m.maskgit_s_abs_p4.ms3080" data-f="1">6,4</span> ms con 4 pasos) y con la misma calidad a 3 s (4 pasos) o mejor (8 a 12 pasos). A 1 s, el GPT sigue siendo mejor.</p></div>
-    <div class="claim"><span class="k">3</span><p class="t">El número de pasos se elige en inferencia, sin reentrenar: permite elegir el punto entre calidad y latencia. Con menos de 4 pasos, el video se degrada con el horizonte.</p></div>
+    <div class="claim"><span class="k">1</span><p class="t">Medir dónde se iba el tiempo cambió el resultado: con los mismos pesos, el GPT de <span data-d="m.gpt_s_kd.params" data-f="0">12</span>M bajó de <span data-d="opt.pasos.gpt_s_kd.1" data-f="0">154</span> a <span data-d="m.gpt_s_kd.ms3080" data-f="0">38</span> ms por frame. Con encoder y decoder, el p99 es de <span data-d="cadena.gpt_s_kd.p99_ritmo" data-f="1">48,4</span> ms de los 50: llega, pero sin margen.</p></div>
+    <div class="claim"><span class="k">2</span><p class="t">Con la misma red, decodificar en paralelo tarda <span data-d="m.maskgit_s_abs_p4.ms3080" data-f="1">6,4</span> ms por frame con 4 pasos (el modelo solo), y a 3 s no se distingue del GPT-S; con 8 a 12 pasos, es mejor. A 1 s, el GPT-S gana a 8 pasos o más.</p></div>
+    <div class="claim"><span class="k">3</span><p class="t">Los pasos se eligen en inferencia, sin reentrenar: calidad contra latencia. Con menos de 4, el video se degrada con el horizonte.</p></div>
   </div>
 </section>
 

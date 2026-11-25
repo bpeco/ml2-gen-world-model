@@ -16,7 +16,7 @@ Diez minutos más preguntas; con las tres slides de optimización (11, 12 y 13),
 | 9 · Pasos y horizonte | 55 |
 | 10 · Lo que no funcionó | 65 |
 | 11 · Optimización: cómo corre en la GPU | 35 |
-| 12 · Optimización: las operaciones y el código | 45 |
+| 12 · Optimización: qué cambiamos | 45 |
 | 13 · Optimización: dónde se iba el tiempo | 35 |
 | 14 · Conclusiones | 50 |
 | 15 · Limitaciones | 50 |
@@ -122,7 +122,7 @@ Cuarto, agrandar sin más datos. Genie-M tiene más del doble de parámetros y e
 
 Ahora, otro tema: cómo llegamos a esas latencias. Un kernel es un programa chico que la CPU lanza en la GPU. En PyTorch normal, Python lanza unos 13 mil por frame: con el GPT-S destilado, 430 milisegundos. Un CUDA graph los graba y los relanza con una llamada; con uno por token, que ya teníamos, 154. Grabar el frame entero no cambió nada: el límite era la GPU. La atención nueva lo bajó a 40, y tirar de una vez el ruido del muestreo, a 38.
 
-## 12 · Optimización: las operaciones y el código (45 s)
+## 12 · Optimización: qué cambiamos (45 s)
 
 *La atención y las tres tarjetas se resaltan de a una, cada 2,5 segundos, y se repite. Un clic en una la deja resaltada, para acompañar el texto.*
 
@@ -138,15 +138,15 @@ Medimos kernel por kernel: la atención era el 81 % del tiempo de GPU. La GPU ti
 
 *Las conclusiones aparecen de a una.*
 
-Uno: medir dónde se iba el tiempo cambió el resultado. Sin tocar el modelo, el GPT de 12 millones de parámetros bajó de 154 a 38 milisegundos por frame. Llega a 20 frames por segundo, pero justo: con encoder y decoder, 48 milisegundos.
+Uno: medir dónde se iba el tiempo cambió el resultado. Con los mismos pesos, el GPT de 12 millones de parámetros bajó de 154 a 38 milisegundos por frame. Con encoder y decoder, el p99 es de 48 milisegundos de los 50: llega a 20 frames por segundo, pero sin margen.
 
-Dos: con la misma red, decodificar en pocos pasos paralelos entra en los 50 milisegundos con margen, 6,4 milisegundos con 4 pasos, y con la misma calidad a 3 segundos, o mejor, con 8 a 12 pasos. A 1 segundo, el GPT sigue siendo mejor.
+Dos: con la misma red, decodificar en paralelo tarda 6,4 milisegundos por frame con 4 pasos, el modelo solo. A 3 segundos, la diferencia pareada con el GPT no es significativa, y con 8 a 12 pasos es mejor. A 1 segundo, el GPT gana a 8 pasos o más; con 4, empatan.
 
 Tres: el número de pasos se elige en inferencia, sin reentrenar. Permite elegir el punto entre calidad y latencia. Con menos de 4 pasos, el video se degrada con el horizonte.
 
 ## 15 · Limitaciones (50 s)
 
-Estos resultados valen para pocos datos: 780 mil frames por modelo, el 0,65 % de commaVQ. También para video de una cámara a 128 por 256, y para latencias con batch 1 en una RTX 3080 Ti, que dependen de los kernels que trae PyTorch. La temperatura de MaskGIT deja sus números conservadores, y el FVD es ruidoso. No evaluamos difusión, ni acciones en los modelos generativos.
+Estos resultados valen para pocos datos: 780 mil frames por modelo, el 0,65 % de commaVQ. También para video de una cámara a 128 por 256, y para latencias con batch 1 en una RTX 3080 Ti, que dependen de los kernels que trae PyTorch. La temperatura de MaskGIT deja sus números conservadores, y el FVD es ruidoso. No evaluamos difusión, ni acciones en los modelos generativos. Las tres semillas son de Genie-S y del ConvLSTM, no de los dos modelos de las conclusiones. Cada número sale de un comando de la CLI y queda en una bitácora, con su commit.
 
 Lo que sigue es entrenar los chicos con todo commaVQ, 150 veces más datos. No cambia la latencia y permite medir cuánto de la brecha cierran los datos. Después, condicionar el modelo en las acciones del auto, para usarlo como simulador de una política. Gracias.
 
