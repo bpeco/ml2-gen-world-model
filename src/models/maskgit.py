@@ -98,6 +98,15 @@ def decode_frame(logits_fn, steps, temperature, choice_temp, cur, generator=None
   return cur
 
 
+@torch.no_grad()
+def maestro_codigos(teacher, frames):
+  """Logits del maestro autorregresivo para cada código: (B, F, 128) -> (B, F, 128, 1024). Corre en teacher forcing
+  sobre la secuencia real con BOS; su posición f*TPF + i predice el código i del frame f."""
+  B, Fr, _ = frames.shape
+  tl = teacher.logits(with_bos(frames)[:, :-1])
+  return torch.cat([tl, tl[:, -1:]], 1).view(B, Fr, TPF, -1)[:, :, :CODES, :BOS]
+
+
 class MaskGIT(WorldModel):
   name = "maskgit"
   ctx_frames = 19
@@ -245,8 +254,8 @@ class MaskGIT(WorldModel):
     raise ValueError(f"mask_schedule no soportado: {c.mask_schedule}")
 
   def train_loss(self, frames, teacher=None, alpha=0.5, tau=1.0):
-    if teacher is not None:
-      raise ValueError("MaskGIT no se destila: teacher tiene que ser None")
+    if teacher is not None and (self.cfg.p_self > 0 or self.cfg.peso_cambio != 1.0):
+      raise ValueError("destilación de MaskGIT: solo con p_self 0 y peso_cambio 1")
     B, Fr, _ = frames.shape
     c = self.cfg
     src = frames
@@ -264,7 +273,13 @@ class MaskGIT(WorldModel):
     x[:, :, 1:] = torch.where(masked, torch.full_like(frames, MASK), src)
     self._drop_cache()
     lg = self.run(x.view(B, -1), clean=seq.view(B, -1) if c.flow_limpio else None).view(B, Fr, TPF, -1)[:, :, 1:]
-    if c.peso_cambio == 1.0:
+    if teacher is not None:
+      # destilación (etiquetas blandas en teacher forcing): el maestro autorregresivo corre sobre la secuencia real;
+      # su posición f*TPF + i predice el código i del frame f. En cada posición enmascarada:
+      # alpha * CE + (1 - alpha) * tau^2 * KL(maestro || MaskGIT), sobre los 1024 códigos.
+      tl = maestro_codigos(teacher, frames)
+      loss, m = lm_loss(lg[..., :BOS], frames, tl, alpha, tau, mask=masked)
+    elif c.peso_cambio == 1.0:
       loss, m = lm_loss(lg, frames, mask=masked)
     else:  # más peso a acertar lo que cambia: copiar el frame anterior deja de ser la salida barata
       ce = torch.nn.functional.cross_entropy(lg.reshape(-1, lg.shape[-1]).float(), frames.reshape(-1),

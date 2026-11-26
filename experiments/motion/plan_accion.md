@@ -150,7 +150,7 @@ Cuatro experimentos independientes. 1a y 1c no entrenan.
 
 **Qué:** `src.bench` con pesos al azar, fp16 y CUDA graphs, B = 1:
 - configuraciones 4×512, 4×640, 4×768, 6×512, 6×640 y 8×384, contra 6×384 (GPT-S);
-- en la 4060 se mide la latencia relativa a GPT-S (en la 4060 GPT-S tarda 131 ms y en la 3080 Ti, 38);
+- en la 4060 se mide la latencia relativa a GPT-S (en la 4060 GPT-S tarda 51 ms y en la 3080 Ti, 38; el 131 ms de la primera versión del plan estaba mal);
 - **la confirmación final es en la 3080 Ti**, con la cadena completa.
 
 **Pregunta:** ¿hay un GPT con más parámetros que entre en la cadena de 50 ms? La latencia depende sobre todo de la
@@ -196,7 +196,47 @@ Una tabla en `results.md` y la decisión de qué rama sigue.
 
 ---
 
-### Fase 2: escalar la vía ganadora
+### Resultado de la fase 1 (detalle en `results.md`, "Fase 1 del plan de acción")
+
+- **1a:** sin maestro no hay giro sostenido, ni con 4× datos (MaskGIT shard 0) ni con más params (Genie-M).
+- **1b:** **se estanca y baja**. Con la misma semilla, el giro 2-3 s da 0,11 / 0,07 / 0,03 / 0,02 a +160 / 260 / 520 /
+  780 k frames de KD. El 0,21 de kdOP_ctrl es la semilla buena: la réplica con semilla 1 da 0,11.
+- **1c:** 3×768 (24,8 M) cuesta 0,96× la latencia de GPT-S, y 4×512 (15 M) cuesta 0,91×.
+- **1d:** MaskGIT con maestro (opción A) no cambia nada, y el KL queda plano en 2,2.
+
+**Celda:** "se estanca × falla". La fase 2 de abajo queda **revisada**. Escalar datos de KD con teacher forcing (2A tal
+como estaba, la infraestructura 2.0 y bajar shards) no se justifica: más frames de destilación no subieron el giro
+sostenido, lo bajaron.
+
+### Fase 2 revisada (propuesta, pendiente de aprobación)
+
+El diagnóstico: el alumno aprende del maestro el giro del arranque (f1 0,57, lado 0,80), pero en el rollout largo se
+apaga. Es sesgo de exposición: con teacher forcing el alumno nunca ve sus propios errores. Que más datos lo empeoren
+es consistente con esto. Hay dos vías que atacan causas distintas, y van en una sola cola, de a una.
+
+**2B′. Destilación por secuencias (opción B) en piloto, ~3 h. Va primero.**
+- **Datos:** GPT2M genera 10 frames a T 1,0 desde 10 frames reales de contexto, en ventanas del shard 0 de
+  entrenamiento (nunca data-0001). Se guarda la secuencia generada y el top-16 de los logits del maestro en cada paso.
+  Son ~2 h para ~25 k frames generados, según la estimación de ~8 h por 100 k.
+- **Corridas, cada una contra su control:**
+  - `kdB_gpt`: FT de gpt_s_kd, 500 pasos, mitad KD real y mitad secuencias del maestro. Control: kdOP_ctrl y kdR1.
+  - `mgB`: FT de maskgit_s_abs sobre las secuencias del maestro (CE sobre tokens del maestro). Control: mgT_ctrl.
+- **Por qué:** el alumno ve trayectorias largas que giran, y no solo la condicional de un paso. Es la única vía que
+  queda para MaskGIT/Genie.
+- **Éxito:** GPT, giro 2-3 s por encima del rango 0,11–0,21 de los FT con KD (2 semillas); MaskGIT, giro 2-3 s con IC
+  por encima de 0.
+
+**2A′. Capacidad: alumno 3×768 con KD desde cero, ~2,5–3 h.**
+- Mismo presupuesto que kd: ~780 k frames del shard 0, el mismo maestro, con snapshots cada 0,25 del presupuesto.
+- Control: gpt_s_kd, el mismo presupuesto y la misma receta.
+- **Pregunta:** ¿el doble de parámetros, a la misma latencia, sostiene mejor el giro?
+- Antes de pasar a la 3080 Ti hay que medir la cadena completa.
+
+**Después:** si alguna vía da éxito, se escala solo esa (más secuencias del maestro, o 4×512/3×768 con más pasos), y
+recién ahí vuelve a tener sentido la infraestructura 2.0. Si ninguna da éxito, el modelo final de tiempo real es
+kdOP_ctrl / kdR1 (giro 0,1–0,2, FVD −60/−110/−75 contra kd) y se pasa a la fase 3.
+
+### Fase 2 (versión original, antes de la fase 1): escalar la vía ganadora
 
 #### 2.0. Infraestructura común
 

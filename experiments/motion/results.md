@@ -200,3 +200,122 @@ Mismas condiciones que la sección 4: semilla 0, batch 8 × accum 2 y rollouts a
   **Falta separar "más pasos de KD" de "lr más bajo".** El control que falta es seguir kd a lr 1e-3 constante, el de
   su receta, 500 pasos. También falta medir la varianza entre semillas: todo es con semilla 0.
 - **Figura resumen:** `figs/fig_final_giro.png` y `figs/fig_final_vs_ms.png`.
+
+## Fase 1 del plan de acción (`plan_accion.md`; `scripts/motion_F1.sh`, `motion_F1d.sh`, `motion_F1r.sh`)
+
+Giro sobre las curvas de `clips_motion` (≥ 20°), IC 95 % bootstrap por clip. Rollouts fp16 + graphs.
+
+### 1a. Más datos y más parámetros sin maestro
+
+| experimento | cambio | giro f1 / 0-1 / 1-2 / 2-3 s [IC 2-3 s] | lado correcto | \|flow\| px 0-1 / 2-3 s · tokens | FVD 1/2/3 s | conclusión |
+|---|---|---|---|---|---|---|
+| mg_p4_motion (ref.) | MaskGIT-S, 4 pasos | −0,19 / −0,01 / 0,00 / 0,00 | 0,49 | 0,22 / 0,39 | 430 / 506 / 674 | referencia |
+| mgS0_p4_motion | MaskGIT-S entrenado con el shard 0 completo, 4 pasos | +0,23 / 0,05 / 0,00 / 0,00 [−0,01; 0,01] | 0,62 | 0,34 / 0,38 · 0,40 | 515 / 620 / 773 | El frame 1 pasa a girar para el lado correcto, pero se apaga en 1 s. FVD peor. |
+| mgS0_p8_motion | ídem, 8 pasos | +0,23 / 0,03 / 0,00 / 0,00 [0,00; 0,01] | 0,67 | 0,22 / 0,20 · 0,19 | 582 / 684 / 776 | Igual que p4. |
+| genie_s_p4_motion (ref.) | Genie-S, 4 pasos | −0,13 / 0,00 / 0,00 / 0,00 | 0,47 | 0,24 / 0,42 | 479 / 571 / 670 | referencia |
+| genie_m_p4_motion | Genie-M, 4 pasos | −0,12 / 0,00 / 0,00 / +0,01 [0,00; 0,02] | 0,50 | 0,45 / 0,33 · 0,35 | 464 / 533 / 609 | Más parámetros: mejor FVD (−61 a 3 s), giro nulo. |
+
+**Conclusión:** sin maestro, ni 4× más datos (MaskGIT) ni más parámetros (Genie-M) dan giro sostenido. Con más datos,
+MaskGIT aprende el signo del primer frame (f1 +0,23, lado 0,62–0,67), pero no lo sostiene. Confirma que la
+dirección sostenida viene del maestro.
+
+### 1b. Curva de escala de la destilación de GPT-S (semilla 1, lr 3e-4 constante, batch 8 × 2)
+
+| experimento | frames de KD extra | giro f1 / 0-1 / 1-2 / 2-3 s [IC 2-3 s] | lado correcto | \|flow\| px 0-1 / 2-3 s · tokens | FVD 1/2/3 s |
+|---|---|---|---|---|---|
+| gpt_s_kd_motion | 0 | 0,43 / 0,19 / 0,07 / 0,03 [0,01; 0,06] | 0,68 | 0,13 / 0,19 · 0,16 | 424 / 626 / 721 |
+| kdOP_ctrl_motion (semilla 0) | +160 k | 0,52 / 0,37 / 0,32 / 0,21 [0,10; 0,35] | 0,78 | – | 363 / 503 / 635 |
+| kdAN_cos1k_motion (semilla 0, coseno) | +320 k | 0,49 / 0,28 / 0,17 / 0,13 [0,07; 0,20] | 0,78 | – | 380 / 528 / 625 |
+| kdS1_813_motion | +260 k | 0,46 / 0,23 / 0,11 / 0,07 [0,03; 0,12] | 0,77 | 0,57 / 0,25 · 0,25 | – |
+| kdS1_1626_motion | +520 k | 0,55 / 0,28 / 0,06 / 0,03 [0,01; 0,07] | 0,79 | 0,69 / 0,27 · 0,27 | – |
+| kdS1_2438_motion | +780 k | 0,57 / 0,31 / 0,09 / 0,02 [0,00; 0,04] | 0,80 | 0,63 / 0,22 · 0,22 | 377 / 550 / 672 |
+
+**Contradice la hipótesis H2 ("más destilación → más giro sostenido").** Con más frames de KD:
+- el giro **temprano** sube de forma monótona: f1 0,46 → 0,57 y 0-1 s 0,23 → 0,31;
+- el lado correcto sube un poco: 0,77 → 0,80;
+- el giro **sostenido** a 2-3 s **baja**: 0,07 → 0,03 → 0,02. Queda muy por debajo del 0,21 de kdOP_ctrl, con IC que
+  no se solapan.
+
+El FVD a 2438 pasos mejora contra kd (−47 / −76 / −49), pero es peor que kdOP_ctrl.
+
+Hay dos explicaciones posibles:
+1. **El 0,21 de kdOP_ctrl fue en parte suerte de semilla.** kdOP_ctrl usó otras ventanas de datos (semilla 0). Con
+   la semilla 1, ya a 813 pasos el giro sostenido es 0,07.
+2. **El giro sostenido sube con poco FT y después decae.** Esto es consistente con kdAN de 1000 pasos (0,13 < 0,21).
+   El alumno aprende mejor el giro inicial del maestro, pero el sesgo de exposición (se apaga en rollouts largos) no
+   se arregla con más teacher forcing: es un problema del entrenamiento, no de la cantidad de datos.
+
+La réplica `kdR1` (la receta de kdOP_ctrl con semilla 1, único cambio; `scripts/motion_F1r.sh`) separa las dos. Figura: `figs/fig_F1_escala_kd.png`.
+
+### 1c. Latencia de GPTs más grandes (4060, B = 1, fp16 + CUDA graphs, pesos al azar, solo el modelo)
+
+| config (capas × dim) | params | p50 ms/frame | relativo a GPT-S |
+|---|---|---|---|
+| 6×384 (GPT-S) | 12,4 M | 51,3 | 1,00 |
+| **4×512** | 15,0 M | **46,8** | 0,91 |
+| **3×768** | **24,8 M** | **49,4** | 0,96 |
+| 4×640 | 22,7 M | 57,8 | 1,13 |
+| 8×384 | 16,0 M | 67,3 | 1,31 |
+| 6×512 | 21,3 M | 68,6 | 1,34 |
+| 4×768 | 31,9 M | 73,5 | 1,43 |
+| 3×1024 | 42,5 M | 78,8 | 1,54 |
+| 6×640 | 32,5 M | 84,8 | 1,65 |
+| 4×1024 | 55,1 M | 110,1 | 2,15 |
+
+- En la 4060, GPT-S tarda 51 ms y no los 131 ms del plan. Ese número estaba mal: la primera tanda del bench usaba
+  `--opt`, que no cambia la arquitectura, y se descartó.
+- **3×768 tiene el doble de parámetros que GPT-S con la misma latencia (0,96×).** En la 3080 Ti la cadena debería
+  quedar en ~37 ms de modelo + ~10 ms de codec, dentro de los 50 ms.
+- La latencia la dominan las capas: 128 pasos secuenciales por frame. Falta confirmarlo en la 3080 Ti con la cadena
+  completa.
+
+### 1d. MaskGIT-S con maestro (opción A: etiquetas blandas de GPT2M en teacher forcing)
+
+FT de `maskgit_s_abs`: 1000 pasos, lr 3e-4, warmup 100, semilla 0, batch 8 × 2. El control `mgT_ctrl` es idéntico sin
+`--kd`.
+
+| experimento | giro f1 / 0-1 / 1-2 / 2-3 s [IC 2-3 s] | lado correcto | \|flow\| px 0-1 / 2-3 s · tokens | FVD 1/2/3 s | ΔFVD vs ctrl (p) |
+|---|---|---|---|---|---|
+| mgT_ctrl_p4 | −0,18 / −0,01 / 0,00 / −0,01 [−0,02; 0,01] | 0,49 | 0,37 / 0,37 · 0,38 | 432 / 488 / 643 | – |
+| mgT_kd_p4 | −0,19 / −0,02 / −0,01 / 0,00 [−0,01; 0,01] | 0,47 | 0,37 / 0,36 · 0,38 | 438 / 497 / 644 | +6 (0,78) / +8 (0,66) / 0 (0,96) |
+| mgT_ctrl_p8 | −0,16 / −0,01 / 0,00 / 0,00 | 0,50 | 0,27 / 0,27 · 0,24 | – | – |
+| mgT_kd_p8 | −0,16 / −0,01 / 0,00 / 0,00 | 0,44 | 0,26 / 0,26 · 0,24 | – | – |
+
+**H4 falla con la opción A** (criterio 3 del plan: no cambia nada, ni siquiera el frame 1). El KL contra el maestro
+queda plano en ~2,2 durante los 1000 pasos (2,21 → 2,18): el alumno no se acerca al maestro.
+
+Explicación probable: el objetivo no es alcanzable. El maestro da p(código i | códigos < i del frame, en raster). El
+alumno predice cada código enmascarado a partir de un subconjunto al azar del frame (~36 % visible). Son
+condicionales distintas, así que la KL tiene un piso alto y la señal de dirección no pasa.
+
+Para que el maestro sirva a un alumno no autorregresivo hacen falta objetivos marginales o una secuencia generada por
+el maestro (la opción B, el rollout del maestro como dato), no la condicional raster.
+
+### Réplica de semilla `kdR1` (`scripts/motion_F1r.sh`)
+
+Es la receta de kdOP_ctrl (500 pasos de KD, lr 3e-4, batch 8 × 2) con semilla 1 en lugar de 0. Es el único cambio.
+
+| experimento | giro f1 / 0-1 / 1-2 / 2-3 s [IC 2-3 s] | lado correcto | FVD 1/2/3 s | ΔFVD (p) |
+|---|---|---|---|---|
+| kdOP_ctrl_motion (semilla 0) | 0,52 / 0,37 / 0,32 / 0,21 [0,10; 0,35] | 0,78 | 363 / 503 / 635 | – |
+| **kdR1_motion (semilla 1)** | 0,47 / 0,27 / 0,17 / **0,11 [0,05; 0,18]** | 0,74 | 369 / 526 / 656 | vs kdOP_ctrl: +6 (0,97) / +24 (0,61) / +21 (0,76); vs kd: **−55 (0,02) / −99 (0,01) / −65 (0,03)** |
+
+**Las dos explicaciones de 1b son ciertas a la vez:**
+- **Varianza de semilla grande.** El mismo FT da 0,21 o 0,11 de giro a 2-3 s según las ventanas de datos (los IC se
+  solapan). Ese 0,21 es la estimación optimista; el efecto del FT corto está entre ~0,1 y ~0,2.
+- **Con la misma semilla, el giro sostenido decae con más KD.** La serie de la semilla 1 da 0,11 a +160 k frames,
+  0,07 a +260 k, 0,03 a +520 k y 0,02 a +780 k. El giro temprano y el lado correcto se mantienen o suben.
+
+El FVD no depende de la semilla: −55 a −99 contra kd en las dos.
+
+### Cierre de la fase 1
+
+| rama | resultado | lectura |
+|---|---|---|
+| 1a sin maestro, más datos / más params | 2-3 s ≈ 0 en MaskGIT shard 0 y en Genie-M | La dirección sostenida no aparece sin maestro (MaskGIT con más datos solo aprende el signo del frame 1). |
+| 1b más KD en GPT-S | **se estanca y baja**: pico ~0,1–0,2 a +160 k frames, 0,02 a +780 k | Más datos de destilación con teacher forcing **no** arreglan el giro sostenido. Mejora el arranque, pero el rollout largo se sigue apagando (sesgo de exposición). Contradice H2. |
+| 1c latencia | 3×768 (24,8 M, 2× GPT-S) a 0,96× de la latencia de GPT-S; 4×512 a 0,91× | Hay margen para duplicar parámetros dentro de tiempo real (falta confirmarlo en la 3080 Ti). |
+| 1d MaskGIT con maestro (opción A) | sin efecto; KL plano en 2,2 | H4 falla con la opción A. La condicional raster del maestro no es un objetivo alcanzable para un alumno enmascarado. |
+
+**Celda de la matriz:** "se estanca × falla". El plan dice: 2A con el GPT más grande de 1c, y revisar la opción B de
+destilación. La propuesta de la fase 2 está en `plan_accion.md`.

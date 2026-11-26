@@ -1,0 +1,40 @@
+{
+ "a": "kdR1_motion",
+ "b": "gpt_s_kd_motion",
+ "n_clips": 200,
+ "fvd": {
+  "1": {
+   "fvd_a": 368.6143713402307,
+   "fvd_b": 423.81206477070145,
+   "diff": -55.197693430470736,
+   "lo": -97.01021933731366,
+   "hi": -13.385167523627807,
+   "sd": 21.33292138104231,
+   "p": 0.01990049751243781,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "2": {
+   "fvd_a": 526.4948779912629,
+   "fvd_b": 625.6884590100781,
+   "diff": -99.19358101881517,
+   "lo": -159.69582680052844,
+   "hi": -38.69133523710191,
+   "sd": 30.86849274577207,
+   "p": 0.009950248756218905,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "3": {
+   "fvd_a": 655.769510786914,
+   "fvd_b": 721.2061077115036,
+   "diff": -65.4365969245896,
+   "lo": -128.88080174081136,
+   "hi": -1.9923921083678238,
+   "sd": 32.36949225317437,
+   "p": 0.029850746268656716,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  }
+ }
+}

@@ -178,9 +178,19 @@ def test_train_loss_only_masked():
   assert not torch.allclose(lm_loss(lg, y2, mask=mk)[0], loss.detach(), atol=1e-6)
 
 
-def test_train_loss_teacher_raises():
-  with pytest.raises(ValueError):
-    tiny().train_loss(rand_frames(1, 2), teacher=object())
+def test_maestro_codigos_alineado():
+  """Un maestro "perfecto" (one-hot en el token siguiente): su argmax por código tiene que ser el frame real."""
+  from src.models.maskgit import maestro_codigos
+
+  from src.common import with_bos
+
+  fr = torch.randint(0, 1024, (2, 3, 128))
+
+  class Perfecto:  # conoce la secuencia entera: en la posición j pone toda la masa en el token j + 1
+    def logits(self, x):
+      return torch.nn.functional.one_hot(with_bos(fr)[:, 1:], 1025).float()
+
+  assert torch.equal(maestro_codigos(Perfecto(), fr).argmax(-1), fr)
 
 
 @pytest.mark.parametrize("sched,lo,hi,mean", [("cosine", 0.0, 1.0, 2 / torch.pi), ("uniform", 0.5, 1.0, 0.75)])
