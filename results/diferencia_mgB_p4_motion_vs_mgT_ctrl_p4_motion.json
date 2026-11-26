@@ -1,0 +1,40 @@
+{
+ "a": "mgB_p4_motion",
+ "b": "mgT_ctrl_p4_motion",
+ "n_clips": 200,
+ "fvd": {
+  "1": {
+   "fvd_a": 426.39385366645956,
+   "fvd_b": 432.25044320773304,
+   "diff": -5.856589541273479,
+   "lo": -43.5416451230449,
+   "hi": 31.828466040497943,
+   "sd": 19.227069174373174,
+   "p": 0.8258706467661692,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "2": {
+   "fvd_a": 470.81645369837725,
+   "fvd_b": 488.266380199178,
+   "diff": -17.449926500800757,
+   "lo": -57.884927780181535,
+   "hi": 22.98507477858002,
+   "sd": 20.63010269356162,
+   "p": 0.3880597014925373,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  },
+  "3": {
+   "fvd_a": 635.7282902559155,
+   "fvd_b": 643.312224674532,
+   "diff": -7.583934418616536,
+   "lo": -69.7311567301086,
+   "hi": 54.56328789287552,
+   "sd": 31.70776648545513,
+   "p": 0.9552238805970149,
+   "reps": 200,
+   "metodo": "bootstrap pareado por segmento; IC normal; p de dos colas por bootstrap"
+  }
+ }
+}

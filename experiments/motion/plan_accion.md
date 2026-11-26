@@ -21,19 +21,30 @@ Unidades:
 | GPT-S kd | destilado de GPT2M (paper) | 12,4 M | 101 M (26 %) | 0,07 | 0,03 [0,01; 0,06] | 0,68 | 424 / 626 / 721 | 207 / 469 |
 | **kd + FT 500 pasos lr 3e-4** | **+ más KD** | 12,4 M | 121 M (31 %) | **0,32** | **0,21 [0,10; 0,35]** | **0,78** | **363** / 503 / 635 | – |
 | kd + FT 1000 pasos coseno | + más KD, lr → 0 | 12,4 M | 142 M (37 %) | 0,17 | 0,13 [0,07; 0,20] | 0,78 | 380 / 528 / 625 | – |
+| kd + FT 500 pasos, semilla 1 (fase 1) | réplica de semilla del FT de 500 pasos | 12,4 M | 121 M (31 %) | 0,17 | 0,11 [0,05; 0,18] | 0,74 | 369 / 526 / 656 | – |
+| kd + KD +260 k frames (fase 1, 1b) | más KD, semilla 1 | 12,4 M | 135 M (35 %) | 0,11 | 0,07 [0,03; 0,12] | 0,77 | – | – |
+| kd + KD +520 k frames (1b) | ídem | 12,4 M | 168 M (43 %) | 0,06 | 0,03 [0,01; 0,07] | 0,79 | – | – |
+| kd + KD +780 k frames (1b) | ídem | 12,4 M | 201 M (52 %) | 0,09 | 0,02 [0,00; 0,04] | 0,80 | 377 / 550 / 672 | – |
+| **kd + secuencias del maestro, semilla 0 (2B′)** | KD + secuencias de GPT2M | 12,4 M | 121 M (31 %) | 0,23 | **0,18 [0,10; 0,29]** | 0,76 | 351 / 454 / **537** | – |
+| kd + secuencias del maestro, semilla 1 (2B′) | ídem | 12,4 M | 121 M (31 %) | 0,20 | 0,15 [0,07; 0,24] | 0,78 | 358 / 519 / 630 | – |
+| GPT 3×768 con KD desde cero (2A′) | 2× params, misma latencia | 24,8 M | 101 M (26 %) | 0,01 | 0,00 [−0,01; 0,01] | 0,59 | 377 / 446 / 555 | – |
 | kd + on-policy K = 8 | + on-policy | 12,4 M | 121 M (31 %) | 0,02 | 0,02 [0,00; 0,04] | 0,68 | 504 / 714 / 923 | – |
 | kd T 1,1 | muestreo | 12,4 M | 101 M (26 %) | 0,17 | 0,12 [0,05; 0,21] | 0,60 | 462 / 704 / 872 | – |
 | GPT-S d050 | sin maestro (paper) | 12,4 M | 50 M (13 %) | 0,01 | 0,00 [−0,02; 0,02] | 0,49 | 471 / 570 / 611 | 235 / 479 |
 | d050 + FT 500 pasos | + más datos, sin maestro | 12,4 M | 71 M (18 %) | 0,01 | 0,00 [−0,01; 0,02] | 0,49 | 455 / 519 / 565 | – |
 | GPT-S d025 | sin maestro (paper) | 12,4 M | 25 M (7 %) | no medido | no medido | – | – | 414 / 615 |
 | Genie-S p4 | paper | 15,0 M | 101 M (26 %) | 0,00 | 0,00 [−0,02; 0,01] | 0,47 | 479 / 571 / 670 | 232 / 413 |
-| Genie-M p4 | paper, más params | 34,8 M | 101 M (26 %) | no medido | no medido | – | – | 244 / 406 |
+| Genie-M p4 | paper, más params | 34,8 M | 101 M (26 %) | 0,00 | 0,01 [0,00; 0,02] | 0,50 | 464 / 533 / 609 | 244 / 406 |
 | MaskGIT-S p1 | paper (ablación) | 12,4 M | 101 M (26 %) | 0,00 | −0,02 [−0,04; 0,00] | 0,45 | 419 / 529 / 762 | 228 / 607 |
 | MaskGIT-S p4 | ídem | 12,4 M | 101 M (26 %) | 0,00 | 0,00 [−0,01; 0,01] | 0,49 | 430 / 506 / 674 | 220 / 468 |
 | MaskGIT-S p8 | ídem | 12,4 M | 101 M (26 %) | 0,00 | 0,00 [−0,01; 0,01] | 0,47 | 454 / 469 / 559 | 247 / 380 |
 | MaskGIT p4 + FT p_clean 0,8 | A: contexto más limpio | 12,4 M | 142 M (37 %) | 0,00 | 0,00 [−0,01; 0,01] | 0,51 | 428 / 479 / **525** | – |
 | MaskGIT p4 + FT ctx limpio | A | 12,4 M | 142 M (37 %) | 0,00 | 0,00 [−0,02; 0,01] | 0,50 | 474 / 561 / 649 | – |
-| MaskGIT-S shard completo, p8 | más datos, sin maestro | 12,4 M | 379 M (98 %) | no medido | no medido | – | – | 379 / 524 |
+| MaskGIT p4 + FT 1000 pasos (control 1d) | batch 8 × 2 | 12,4 M | 142 M (37 %) | 0,00 | −0,01 [−0,02; 0,01] | 0,49 | 432 / 488 / 643 | – |
+| MaskGIT p4 + FT con maestro (1d) | KD opción A | 12,4 M | 142 M (37 %) | −0,01 | 0,00 [−0,01; 0,01] | 0,47 | 438 / 497 / 644 | – |
+| MaskGIT p4 + secuencias del maestro (2B′) | datos del maestro | 12,4 M | 142 M (37 %) | 0,00 | 0,00 [−0,01; 0,01] | 0,47 | 426 / 471 / 636 | – |
+| MaskGIT-S shard completo, p4 | más datos, sin maestro | 12,4 M | 379 M (98 %) | 0,00 | 0,00 [−0,01; 0,01] | 0,62 | 515 / 620 / 773 | – |
+| MaskGIT-S shard completo, p8 | ídem | 12,4 M | 379 M (98 %) | 0,00 | 0,00 [0,00; 0,01] | 0,67 | 582 / 684 / 776 | 379 / 524 |
 | ConvLSTM px | paper | 8,0 M | 101 M (26 %) | no medido | no medido | – | – | 1790 / 2400 |
 | Frame congelado | baseline | – | – | 0 (por construcción) | 0 | – | – | 929 / 978 |
 
@@ -46,6 +57,7 @@ El margen es lo que queda de los 50 ms por frame (20 FPS) después de la cadena 
 | modelo | ms/frame modelo (3080 Ti) | cadena p99 (3080 Ti) | margen a 50 ms | entrenamiento medido (tok/s, GPU) | h / 1 shard | h / commaVQ (40 shards) |
 |---|---|---|---|---|---|---|
 | GPT2M | 291 | – | **no es tiempo real (×6)** | no lo entrenamos | ~8 (estimado*) | ~330 (~14 días)* |
+| GPT 3×768 (kd3x768, fase 2) | ~37 (estimado: 49,7 ms en la 4060, 0,97× GPT-S) | ~47 (estimado) | ~3 ms | 10,5 k con maestro (4060) | 10,2 (4060, KD) | ~410 |
 | GPT-S (kd y derivados) | 38 | **48,4** | **1,6 ms (ninguno)** | 34,8 k con maestro (3080 Ti) · 12,4 k con maestro (4060) · 36,2 k sin maestro (4060) | 3,1 (3080 Ti, KD) · 8,7 (4060, KD) · 3,0 (4060, sin maestro) | 124 · 347 · 119 |
 | Genie-S p4 | 5,7 | 15,9 | **34 ms (×3)** | 255 k (3080 Ti) | 0,4 | 17 |
 | Genie-M p4 | 9,4 | 20,2 | **30 ms (×2,5)** | 94 k (3080 Ti) | 1,1 | 46 |
@@ -235,6 +247,13 @@ es consistente con esto. Hay dos vías que atacan causas distintas, y van en una
 **Después:** si alguna vía da éxito, se escala solo esa (más secuencias del maestro, o 4×512/3×768 con más pasos), y
 recién ahí vuelve a tener sentido la infraestructura 2.0. Si ninguna da éxito, el modelo final de tiempo real es
 kdOP_ctrl / kdR1 (giro 0,1–0,2, FVD −60/−110/−75 contra kd) y se pasa a la fase 3.
+
+### Resultado de la fase 2 revisada (detalle en `results.md`)
+
+- 2B′: las secuencias del maestro no suben el giro (0,18 / 0,15 contra 0,21 / 0,11), pero mejoran el FVD a 3 s
+  (kdB_s0: 537, −97 contra su control).
+- 2A′: el 3×768 mejora mucho el FVD (555 a 3 s, −166 contra kd) a la misma latencia, pero no gira (0,00; lado 0,59).
+- Candidato a modelo final de tiempo real: **kdB_s0**. Pendiente barato: el FT corto de kdB sobre kd3x768.
 
 ### Fase 2 (versión original, antes de la fase 1): escalar la vía ganadora
 

@@ -28,6 +28,7 @@ import warnings
 from datetime import datetime, timedelta
 from pathlib import Path
 
+import numpy as np
 import torch
 
 from src import recipes as R
@@ -67,6 +68,9 @@ def parse(argv=None):
   p.add_argument("--alpha", type=float)
   p.add_argument("--tau", type=float)
   p.add_argument("--data")
+  p.add_argument("--seq-maestro", help="secuencias generadas por el maestro (src/maestro_seq.py): una fracción del batch "
+                 "se reemplaza por ventanas de ellas (destilación por secuencias)")
+  p.add_argument("--seq-frac", type=float, default=0.5, help="fracción del batch de --seq-maestro")
   p.add_argument("--poses", help="poses por frame (solo modelos con uses_poses)")
   p.add_argument("--ckpt-dir", default="checkpoints")
   p.add_argument("--ckpt-every-min", type=float, default=15)
@@ -143,6 +147,21 @@ def apply_overrides(r, a, desv):
 
 
 # ---------------------------------------------------------------- optimizador y EMA
+
+def mezclar_seq(x, seq_t, a, micro, n_frames):
+  """Reemplaza los últimos round(frac·B) ejemplos del batch por ventanas de n_frames de las secuencias del maestro.
+  El offset va de 0 a L - n_frames: con 19 frames reales de contexto y G = 20 generados, la ventana trae entre 1 y 20
+  frames generados. Depende solo de (seed, micro-paso), así que es reproducible al reanudar."""
+  B = x.shape[0]
+  k = int(round(a.seq_frac * B))
+  if k == 0:
+    return x
+  g = torch.Generator().manual_seed(a.seed * 7_919 + micro)
+  idx = torch.randint(0, seq_t.shape[0], (k,), generator=g)
+  off = torch.randint(0, seq_t.shape[1] - n_frames + 1, (k,), generator=g)
+  w = torch.stack([seq_t[j, o:o + n_frames] for j, o in zip(idx.tolist(), off.tolist())]).to(x.dtype)
+  return torch.cat([x[:B - k], w], 0)
+
 
 def make_optimizer(model, r, dev, lr0):
   params = [p for p in model.parameters() if p.requires_grad]
@@ -458,6 +477,10 @@ def _train(a, dev, run_dir, last_path):
     print(f"[eval] step {step} monitor_ce {ce:.4f}", flush=True)
 
   # índices (segmento, inicio) de todos los pasos que faltan, calculados una vez con el mismo RNG y subidos al device
+  seq_t = None
+  if a.seq_maestro:  # (N, 19 + G, 128) int16, residente
+    seq_t = torch.from_numpy(np.load(a.seq_maestro)).to(dev)
+    print(f"secuencias del maestro: {tuple(seq_t.shape)}, fracción {a.seq_frac}", flush=True)
   windows.prepare((stop_at - step) * r.accum, r.batch, r.frames, r.frameskip, first_step=step * r.accum)
   model.train()
   status("en curso")
@@ -482,6 +505,8 @@ def _train(a, dev, run_dir, last_path):
       else:
         x = windows.sample(step * r.accum + i, r.batch, r.frames, frameskip=r.frameskip)
       x = x.to(dev, non_blocking=True)
+      if seq_t is not None:
+        x = mezclar_seq(x, seq_t, a, step * r.accum + i, r.frames)
       with autocast():
         try:
           loss, met = loss_fn(x, **kw)

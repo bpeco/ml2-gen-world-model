@@ -319,3 +319,67 @@ El FVD no depende de la semilla: −55 a −99 contra kd en las dos.
 
 **Celda de la matriz:** "se estanca × falla". El plan dice: 2A con el GPT más grande de 1c, y revisar la opción B de
 destilación. La propuesta de la fase 2 está en `plan_accion.md`.
+
+## Fase 2 revisada (`scripts/motion_F2.sh`)
+
+### 2B′. Destilación por secuencias (opción B)
+
+`src/maestro_seq.py`: GPT2M genera 20 frames a T 1,0 desde 19 frames reales.
+- Son 1250 ventanas de train del shard 0 (25 k frames generados), a 3,3 frames/s con batch 12: 2 h 06 min.
+- Con batch 25, la caché KV desborda los 8 GB y la generación se vuelve muchísimo más lenta.
+
+En el FT (`--seq-maestro`, `train.py`):
+- la mitad de cada batch es una ventana de 20 frames de esas secuencias, con un offset al azar (de 1 a 20 frames
+  generados);
+- la pérdida no cambia: con `--kd`, α·CE sobre los tokens del maestro + (1−α)·KL contra sus logits;
+- es el único cambio contra cada control.
+
+| experimento | control | giro f1 / 0-1 / 1-2 / 2-3 s [IC 2-3 s] | lado correcto | \|flow\| px 0-1 / 2-3 s · tokens | FVD 1/2/3 s | ΔFVD vs control (p) |
+|---|---|---|---|---|---|---|
+| kdB_s0_motion | kdOP_ctrl (0,21 [0,10; 0,35], lado 0,78) | 0,53 / 0,33 / 0,23 / **0,18 [0,10; 0,29]** | 0,76 | 0,71 / 0,31 · 0,27 | **351 / 454 / 537** | −13 (0,42) / **−48 (0,04) / −97 (0,01)** |
+| kdB_s1_motion | kdR1 (0,11 [0,05; 0,18], lado 0,74) | 0,49 / 0,28 / 0,20 / **0,15 [0,07; 0,24]** | 0,78 | 0,64 / 0,29 · 0,28 | 358 / 519 / 630 | −11 (0,41) / −8 (0,74) / −26 (0,45) |
+| mgB_p4_motion | mgT_ctrl_p4 | −0,18 / −0,01 / 0,00 / 0,00 [−0,01; 0,01] | 0,47 | 0,37 / 0,37 · 0,38 | 426 / 471 / 636 | −6 (0,83) / −17 (0,39) / −8 (0,96) |
+| mgB_p8_motion | mgT_ctrl_p8 | −0,18 / −0,01 / 0,00 / 0,00 | 0,48 | 0,26 / 0,26 · 0,24 | – | – |
+
+**Las secuencias del maestro no suben el giro sostenido.**
+- En GPT-S, el promedio de las dos semillas queda igual: 0,165 con secuencias contra 0,16 sin ellas, con IC solapados.
+- La diferencia entre semillas se achica: 0,18 / 0,15 con secuencias, contra 0,21 / 0,11 sin ellas.
+- **Sí mejoran el FVD a 2-3 s:** −97 a 3 s con la semilla 0 (p 0,01) y −26 con la semilla 1 (no significativo).
+- kdB_s0 tiene el **mejor FVD a 3 s de todos los modelos de tiempo real (537)**.
+- MaskGIT con las secuencias como datos (CE, sin KL) no cambia nada.
+- Contradice la hipótesis de que el apagado del giro es sesgo de exposición que se arregla viendo trayectorias del
+  maestro, al menos con 10 k ventanas y 500 pasos.
+
+### 2A′. Capacidad: GPT 3×768 (24,8 M) con KD desde cero
+
+Receta de gpt_s_kd: 780 k frames, lr 1e-3 constante, α 0,5, semilla 0. Batch 8 × 2 en lugar de 16 × 1, el mismo
+batch efectivo (por VRAM).
+
+| experimento | CE monitor | giro f1 / 0-1 / 1-2 / 2-3 s [IC 2-3 s] | lado correcto | \|flow\| px 0-1 / 2-3 s · tokens | FVD 1/2/3 s | ΔFVD vs gpt_s_kd (p) |
+|---|---|---|---|---|---|---|
+| gpt_s_kd (control, 6×384) | – | 0,43 / 0,19 / 0,07 / 0,03 [0,01; 0,06] | 0,68 | 0,13 / 0,19 · 0,16 | 424 / 626 / 721 | – |
+| kd3x768_813 | 3,21 | −0,33 / −0,01 / 0,00 / 0,00 [−0,02; 0,03] | 0,49 | 0,75 / 0,71 · 0,99 | – | – |
+| kd3x768_1626 | 3,05 | −0,04 / 0,01 / 0,00 / 0,00 [−0,01; 0,01] | 0,49 | 0,53 / 0,30 · 0,35 | – | – |
+| kd3x768_2438 | 2,96 | 0,11 / 0,07 / 0,01 / 0,00 [−0,01; 0,01] | 0,59 | 0,52 / 0,22 · 0,21 | **377 / 446 / 555** | **−47 (0,01) / −180 (0,01) / −166 (0,01)** |
+
+Latencia en la 4060: p50 49,7 ms (GPT-S: 51,3).
+
+**Doble de params a la misma latencia: mucho mejor video, sin giro.**
+- El FVD a 2-3 s mejora −166 a −180 contra kd. Es mejor que todos los FT de GPT-S salvo kdB_s0, con el que empata.
+- El giro sostenido es 0. El giro del arranque recién aparece al final (f1 −0,33 → +0,11 y lado 0,49 → 0,59), la
+  misma forma que tenía kd antes de su FT corto.
+- Un modelo ancho y poco profundo aprende la dirección más tarde. Como pasó con kd, puede que la dirección sostenida
+  salga con un FT corto (500 pasos, lr 3e-4) que todavía no se probó.
+
+### Cierre de la fase 2
+
+- **Ninguna vía nueva supera el techo de ~0,15–0,2 de giro sostenido** de los FT cortos con KD sobre GPT-S. El maestro
+  da 0,79.
+- **Lo que sí avanzó es la calidad de video a 2-3 s:**
+  - kdB_s0 (GPT-S, 12,4 M): 537 a 3 s, giro 0,18.
+  - kd3x768 (24,8 M): 555 a 3 s, sin giro.
+  - kd original: 721 a 3 s.
+- **Candidato a modelo final de tiempo real: kdB_s0.** Tiene el mejor FVD a 3 s, un giro dentro del rango del mejor y
+  la misma latencia que kd.
+- **Pendiente barato (~35 min):** el FT corto de kdB sobre kd3x768, para ver si junta el FVD del modelo grande con el
+  giro.
