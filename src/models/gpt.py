@@ -84,6 +84,10 @@ class GPT(WorldModel):
     onpolicy_k: int = 0             # destilación on-policy (solo con maestro): la mitad del batch tiene sus últimos K
                                     # frames generados por el alumno; ahí la pérdida es solo KL(maestro || alumno)
     onpolicy_temp: float = 0.9      # temperatura del alumno al generar esos frames (la de inferencia de kd)
+    pose_dim: int = 0               # fase 3 de motion: 0 = sin poses. 6 = la pose del frame j-1 (ego-movimiento j-1 -> j,
+                                    # data/*_poses.npy) entra sumada a los embeddings de todo el bloque del frame j
+                                    # (BOS + tokens), vía Linear(pose_dim + 1 -> dim) inicializada en cero (con un flag de
+                                    # "hay pose"; NaN o sin pose -> flag 0). Al arrancar, el modelo es idéntico al de base.
 
   @classmethod
   def recipe(cls, size=None):
@@ -111,18 +115,56 @@ class GPT(WorldModel):
     self._graphs_on = False
     self._graphs = {}
     self._cache_key = None
+    self._pe_cur = None             # (B, 1, dim) embedding de pose del frame que se genera (estático para el graph)
+    if cfg.pose_dim:
+      self.pose_proj = torch.nn.Linear(cfg.pose_dim + 1, cfg.dim)
+      torch.nn.init.zeros_(self.pose_proj.weight)
+      torch.nn.init.zeros_(self.pose_proj.bias)
+      self.register_buffer("pose_mean", torch.zeros(cfg.pose_dim))
+      self.register_buffer("pose_std", torch.ones(cfg.pose_dim))
+
+  @property
+  def uses_poses(self):
+    return bool(self.cfg.pose_dim)
+
+  def set_pose_stats(self, mean, std):
+    self.pose_mean.copy_(torch.as_tensor(mean, dtype=self.pose_mean.dtype))
+    self.pose_std.copy_(torch.as_tensor(std, dtype=self.pose_std.dtype))
+
+  def pose_frames(self, acts, n_frames, B, device):
+    """Embedding de pose por bloque de frame (B, n_frames, dim). acts (B, F, pose_dim) crudas alineadas con los frames:
+    acts[:, i] es el ego-movimiento del frame i al i+1. El bloque j recibe acts[:, j - 1]; el bloque 0 (y todo, si acts
+    es None) recibe "sin pose" (entrada 0, flag 0). Así el frame j se predice sabiendo cómo se movió el auto hasta él,
+    y la pose de un frame nunca llega a los anteriores (la atención es causal)."""
+    w = self.pose_proj.weight
+    feat = torch.zeros(B, n_frames, self.cfg.pose_dim + 1, device=device, dtype=torch.float32)
+    if acts is not None:
+      a = acts[:, :n_frames - 1].float()
+      ok = ~torch.isnan(a).any(-1, keepdim=True)
+      z = torch.nan_to_num((a - self.pose_mean.float()) / self.pose_std.float(), nan=0.0, posinf=0.0, neginf=0.0)
+      feat[:, 1:a.shape[1] + 1] = torch.cat([z * ok, ok.float()], -1)
+    return self.pose_proj(feat.to(w.dtype))
+
+  def _emb(self, x, acts):
+    """Embeddings de entrada de la secuencia comma x (B, L) con la pose de cada bloque sumada."""
+    n = -(-x.shape[1] // TPF)
+    pe = self.pose_frames(acts, n, x.shape[0], x.device).repeat_interleave(TPF, 1)[:, :x.shape[1]]
+    return self.net.wte(x) + pe
 
   def _drop_cache(self):
     if self._cache_key is not None:  # el camino sin caché no admite cachés activas
       self.net.clear_cache()
       self._cache_key, self._graphs = None, {}
 
-  def logits(self, x):
+  def logits(self, x, poses=None):
     self._drop_cache()
+    if getattr(self.cfg, "pose_dim", 0):
+      return self.net(emb=self._emb(x, poses))
     return self.net(x)
 
-  def train_loss(self, frames, teacher=None, alpha=0.5, tau=1.0):
+  def train_loss(self, frames, teacher=None, alpha=0.5, tau=1.0, poses=None):
     K = getattr(self.cfg, "onpolicy_k", 0)
+    assert poses is None or K == 0, "poses y on-policy juntos no están soportados"
     h = frames.shape[0] // 2
     if teacher is not None and K > 0 and self.training:
       # on-policy: el alumno genera (sin gradiente, en eval) los últimos K frames de la segunda mitad del batch
@@ -131,7 +173,7 @@ class GPT(WorldModel):
       frames = torch.cat([frames[:h], torch.cat([ctx, gen.to(frames.dtype)], 1)], 0)
     seq = with_bos(frames)
     x, y = seq[:, :-1], seq[:, 1:]
-    lg = self.logits(x)
+    lg = self.logits(x, poses)
     tl = None
     if teacher is not None:
       with torch.no_grad():
@@ -173,10 +215,27 @@ class GPT(WorldModel):
       self._graphs = {}  # los graphs apuntan a las cachés viejas
 
   def _decode(self, tok, pos):
+    if self._pe_cur is not None:
+      return self.net(input_pos=pos, emb=self.net.wte(tok) + self._pe_cur)[:, -1]
     return self.net(tok, pos)[:, -1]
 
   @torch.no_grad()
-  def next_frame(self, ctx, temperature=1.0, steps=None, generator=None, noise=None, graphs=None):
+  def generate(self, ctx, n_frames, temperature=1.0, steps=None, generator=None, poses=None):
+    """Como WorldModel.generate; poses (B, F_ctx + n_frames, pose_dim) crudas alineadas con [contexto, frames a generar]
+    (poses[:, i] = ego-movimiento del frame i al i+1). Para el frame k se usan las de los frames < k (las del contexto
+    móvil). None = sin pose (igual que un modelo sin poses si pose_dim = 0)."""
+    F0 = ctx.shape[1]
+    ctx = ctx[:, -self.ctx_frames:]
+    for k in range(n_frames):
+      acts = None
+      if poses is not None:
+        acts = poses[:, F0 + k - ctx.shape[1]:F0 + k]
+      new = self.next_frame(ctx, temperature, steps, generator, acts=acts)
+      yield new
+      ctx = torch.cat([ctx, new[:, None]], 1)[:, -self.ctx_frames:]
+
+  @torch.no_grad()
+  def next_frame(self, ctx, temperature=1.0, steps=None, generator=None, noise=None, graphs=None, acts=None):
     """noise: (128, B, 1024) float32, las tiradas Exp(1) de los 128 tokens. Sin noise (y con temperatura), se tiran
     acá de una vez con el generador (frame_noise): es lo mismo que hace GPTStream fuera del graph del frame, así que
     con el mismo generador dan los mismos tokens. graphs: None = lo que dice use_cuda_graphs; False fuerza el decode
@@ -190,7 +249,19 @@ class GPT(WorldModel):
     seq = torch.cat([seq, torch.full_like(seq[:, :1], BOS)], 1)  # BOS del frame a generar
     P = seq.shape[1]
     pos_all = torch.arange(self.cfg.block_size, device=p.device)
-    lg = self.net(seq, pos_all[:P])[:, -1]  # prefill; el contexto se re-prefillea en cada frame
+    if getattr(self.cfg, "pose_dim", 0):
+      # acts alineadas con ctx[:, -ctx_frames:]: el bloque j del prefill recibe acts[:, j - 1] y el frame nuevo (último
+      # bloque) la del último frame del contexto
+      if acts is not None:
+        acts = acts[:, -min(ctx.shape[1], self.ctx_frames):]
+      pe = self.pose_frames(acts, -(-P // TPF), B, p.device)  # 20 bloques: el último es solo el BOS nuevo
+      if self._pe_cur is None or self._pe_cur.shape[0] != B or self._pe_cur.dtype != pe.dtype:
+        self._pe_cur = torch.zeros(B, 1, pe.shape[-1], dtype=pe.dtype, device=p.device)
+        self._graphs = {}
+      self._pe_cur.copy_(pe[:, -1:])
+      lg = self.net(input_pos=pos_all[:P], emb=self.net.wte(seq) + pe.repeat_interleave(TPF, 1)[:, :P])[:, -1]
+    else:
+      lg = self.net(seq, pos_all[:P])[:, -1]  # prefill; el contexto se re-prefillea en cada frame
     out = []
     use_graph = (self._graphs_on if graphs is None else graphs) and p.device.type == "cuda"
     for i in range(TPF - 1):

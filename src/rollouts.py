@@ -181,6 +181,10 @@ def main(argv=None):
   ap.add_argument("--seed", type=int, default=0)
   ap.add_argument("--graphs", action="store_true", help="CUDA graphs en el decode (mismos tokens, más rápido)")
   ap.add_argument("--opt", action="append", help="campo=valor de la Config del modelo (p. ej. rollout=latent); repetible")
+  ap.add_argument("--poses", choices=["none", "hold", "real"], default="none",
+                  help="modelos con pose_dim (fase 3 de motion), solo con clips que tienen poses (motion): none = sin pose; "
+                       "hold = las del contexto y, para el futuro, la última transición observada repetida (solo pasado); "
+                       "real = las poses futuras reales (techo: modelo condicionado por la acción)")
   a = ap.parse_args(argv)
 
   hold = a.clips == "holdout"
@@ -204,6 +208,15 @@ def main(argv=None):
   clips = {**clips, "clips": clips["clips"][:n]}
   ctx_all, real_all = clip_tokens(val, clips)
   ctx_all = ctx_all[:, -a.ctx_frames:]
+  poses_all = None
+  if a.poses != "none":
+    assert "poses" in clips, f"--poses {a.poses}: el set de clips {a.clips} no tiene poses"
+    P = np.load(clips["poses"], mmap_mode="r")
+    nc = clips["ctx"]
+    poses_all = np.stack([P[x["segment"], x["start"]:x["start"] + nc + HORIZON] for x in clips["clips"]]).astype(np.float32)
+    if a.poses == "hold":  # la transición contexto -> primer frame generado todavía no se observó: se repite la anterior
+      poses_all[:, nc - 1:] = poses_all[:, nc - 2:nc - 1]
+    poses_all = poses_all[:, nc - ctx_all.shape[1]:]
   dev = device()
   info = log_device(dev)
 
@@ -230,7 +243,7 @@ def main(argv=None):
   n_batches = 0
   parcial, hecho = OUT / f"{name}.parcial.npy", 0
   firma = {"model": a.model, "steps": a.steps, "temperature": temperature, "dtype": a.dtype, "bs": a.bs, "seed": a.seed,
-           "opt": a.opt, "clips": a.clips, "n": n}
+           "opt": a.opt, "clips": a.clips, "n": n, **({"poses": a.poses} if a.poses != "none" else {})}
   if a.reanudar and not pix and parcial.exists():
     pm = json.loads(parcial.with_suffix(".json").read_text())
     if pm["firma"] == firma:
@@ -245,7 +258,8 @@ def main(argv=None):
       continue
     ctx = torch.as_tensor(ctx_all[i:i + a.bs].astype(np.int64), device=dev)
     g = torch.Generator(device=dev).manual_seed(a.seed * 100003 + i)
-    r = model.rollout(ctx, HORIZON, temperature=temperature, steps=a.steps, generator=g)
+    kwp = {} if poses_all is None else {"poses": torch.as_tensor(poses_all[i:i + a.bs], device=dev)}
+    r = model.rollout(ctx, HORIZON, temperature=temperature, steps=a.steps, generator=g, **kwp)
     out[i:i + a.bs] = r.cpu().numpy() if pix else r.cpu().numpy().astype(np.int16)
     n_batches += 1
     print(f"  clips {i + len(ctx)}/{n}  {time.time() - t0:.1f} s", flush=True)
@@ -267,7 +281,7 @@ def main(argv=None):
   meta = {"output": "pixels" if pix else "tokens", "model": a.model, "name": name, "opt": a.opt, "steps": a.steps, "temperature": temperature, "dtype": a.dtype,
           "bs": a.bs, "seed": a.seed, "graphs": a.graphs, "ctx_frames": a.ctx_frames, "n_clips": n, "seconds": sec,
           "ms_per_frame_batch": 1000 * sec / (max(n_batches, 1) * HORIZON) if not real else None,
-          "device_info": info, "clips": a.clips, "clips_hash": clips_hash(cpath)}
+          "device_info": info, "clips": a.clips, "clips_hash": clips_hash(cpath), "poses": a.poses}
   (OUT / f"{name}.json").write_text(json.dumps(meta, indent=1))
   print(f"{OUT / name}.npy {out.shape}  {sec:.1f} s")
   return OUT / f"{name}.npy"

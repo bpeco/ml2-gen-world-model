@@ -365,7 +365,7 @@ def _train(a, dev, run_dir, last_path):
 
   torch.manual_seed(a.seed)
   cfg = json.loads(a.config)
-  if getattr(cls, "uses_poses", False) and r.frameskip > 1:
+  if getattr(cls, "uses_poses", False) is True and r.frameskip > 1:  # GPT lo define por instancia (pose_dim)
     cfg.setdefault("n_pose", 6 * r.frameskip)  # la acción apila las k poses crudas de cada frame tomado
   model = build(a.kind, cfg, a.size).to(dev)
   if a.init_from and own is None and src is None:
@@ -507,6 +507,11 @@ def _train(a, dev, run_dir, last_path):
       x = x.to(dev, non_blocking=True)
       if seq_t is not None:
         x = mezclar_seq(x, seq_t, a, step * r.accum + i, r.frames)
+        if "poses" in kw:  # las ventanas del maestro no tienen pose real: entran como "sin pose" (NaN -> flag 0)
+          k = int(round(a.seq_frac * x.shape[0]))
+          if k:
+            kw["poses"] = kw["poses"].clone()
+            kw["poses"][x.shape[0] - k:] = float("nan")
       with autocast():
         try:
           loss, met = loss_fn(x, **kw)
