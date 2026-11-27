@@ -28,6 +28,7 @@ Unidades:
 | **kd + secuencias del maestro, semilla 0 (2B′)** | KD + secuencias de GPT2M | 12,4 M | 121 M (31 %) | 0,23 | **0,18 [0,10; 0,29]** | 0,76 | 351 / 454 / **537** | – |
 | kd + secuencias del maestro, semilla 1 (2B′) | ídem | 12,4 M | 121 M (31 %) | 0,20 | 0,15 [0,07; 0,24] | 0,78 | 358 / 519 / 630 | – |
 | GPT 3×768 con KD desde cero (2A′) | 2× params, misma latencia | 24,8 M | 101 M (26 %) | 0,01 | 0,00 [−0,01; 0,01] | 0,59 | 377 / 446 / 555 | – |
+| GPT 3×768 + FT de kdB | 3×768 + 500 pasos KD y secuencias | 24,8 M | 121 M (31 %) | 0,06 | 0,02 [0,01; 0,04] | 0,72 | 352 / 440 / **514** | – |
 | kd + on-policy K = 8 | + on-policy | 12,4 M | 121 M (31 %) | 0,02 | 0,02 [0,00; 0,04] | 0,68 | 504 / 714 / 923 | – |
 | kd T 1,1 | muestreo | 12,4 M | 101 M (26 %) | 0,17 | 0,12 [0,05; 0,21] | 0,60 | 462 / 704 / 872 | – |
 | GPT-S d050 | sin maestro (paper) | 12,4 M | 50 M (13 %) | 0,01 | 0,00 [−0,02; 0,02] | 0,49 | 471 / 570 / 611 | 235 / 479 |
@@ -253,7 +254,7 @@ kdOP_ctrl / kdR1 (giro 0,1–0,2, FVD −60/−110/−75 contra kd) y se pasa a 
 - 2B′: las secuencias del maestro no suben el giro (0,18 / 0,15 contra 0,21 / 0,11), pero mejoran el FVD a 3 s
   (kdB_s0: 537, −97 contra su control).
 - 2A′: el 3×768 mejora mucho el FVD (555 a 3 s, −166 contra kd) a la misma latencia, pero no gira (0,00; lado 0,59).
-- Candidato a modelo final de tiempo real: **kdB_s0**. Pendiente barato: el FT corto de kdB sobre kd3x768.
+- Candidato a modelo final de tiempo real: **kdB_s0**. El FT corto de kdB sobre kd3x768 da FVD 514 a 3 s pero giro 0,02: no cambia el candidato.
 
 ### Fase 2 (versión original, antes de la fase 1): escalar la vía ganadora
 

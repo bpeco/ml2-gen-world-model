@@ -29,3 +29,5 @@ results\diferencia_kdB_s0_motion_vs_kdOP_ctrl_motion.json {'1': (-12.5, 0.418), 
 results\diferencia_kdB_s1_motion_vs_kdR1_motion.json {'1': (-10.7, 0.408), '2': (-7.5, 0.736), '3': (-26.2, 0.448)}
 results\diferencia_mgB_p4_motion_vs_mgT_ctrl_p4_motion.json {'1': (-5.9, 0.826), '2': (-17.4, 0.388), '3': (-7.6, 0.955)}
 results\diferencia_kd3x768_2438_motion_vs_gpt_s_kd_motion.json {'1': (-47.0, 0.01), '2': (-180.0, 0.01), '3': (-165.9, 0.01)}
+results\diferencia_kd3x768_B_motion_vs_kd3x768_2438_motion.json {'1': (-25.0, 0.189), '2': (-5.4, 0.866), '3': (-41.5, 0.199)}
+results\diferencia_kd3x768_B_motion_vs_kdB_s0_motion.json {'1': (1.2, 0.955), '2': (-14.1, 0.398), '3': (-23.5, 0.249)}

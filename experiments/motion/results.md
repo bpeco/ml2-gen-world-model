@@ -383,3 +383,24 @@ Latencia en la 4060: p50 49,7 ms (GPT-S: 51,3).
   la misma latencia que kd.
 - **Pendiente barato (~35 min):** el FT corto de kdB sobre kd3x768, para ver si junta el FVD del modelo grande con el
   giro.
+
+### FT corto de kdB sobre el 3×768 (`scripts/motion_F2c.sh`)
+
+Es la receta de kdB_s0 (500 pasos, KD + secuencias del maestro, lr 3e-4, semilla 0) sobre kd3x768. Sin control de
+"KD solo" (por tiempo): si girara, no se podría separar el FT de las secuencias.
+
+| experimento | CE monitor | giro f1 / 0-1 / 1-2 / 2-3 s [IC 2-3 s] | lado correcto | \|flow\| px 0-1 / 2-3 s · tokens | FVD 1/2/3 s | ΔFVD (p) |
+|---|---|---|---|---|---|---|
+| kd3x768_2438 (control) | 2,96 | 0,11 / 0,07 / 0,01 / 0,00 [−0,01; 0,01] | 0,59 | 0,52 / 0,22 · 0,21 | 377 / 446 / 555 | – |
+| **kd3x768_B** | 2,90 | 0,24 / 0,15 / 0,06 / **0,02 [0,01; 0,04]** | 0,72 | 0,57 / 0,25 · 0,29 | **352 / 440 / 514** | vs 3×768: −25 (0,19) / −5 (0,87) / −42 (0,20); vs kdB_s0: +1 (0,96) / −14 (0,40) / −24 (0,25) |
+| kdB_s0 (GPT-S, ref.) | 2,85 | 0,53 / 0,33 / 0,23 / 0,18 [0,10; 0,29] | 0,76 | 0,71 / 0,31 · 0,27 | 351 / 454 / 537 | – |
+
+**El FT corto no le destraba el giro sostenido al modelo grande.**
+- El giro del arranque sube: f1 0,11 → 0,24 y lado correcto 0,59 → 0,72.
+- El giro a 2-3 s queda en 0,02: lejos del 0,18 de kdB_s0.
+- El FVD a 3 s (514) es el más bajo de todos los modelos de tiempo real, pero no es significativamente mejor que el de
+  kdB_s0 (p 0,25) ni que el del 3×768 sin FT (p 0,20).
+
+Con la misma receta y el mismo presupuesto, el 3×768 (más ancho y menos profundo) llega a una CE parecida, pero sigue
+el giro mucho peor que el 6×384: parece que la profundidad importa para la dinámica. **Sigue como candidato final de
+tiempo real kdB_s0**: mejor giro con FVD equivalente.
