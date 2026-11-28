@@ -425,3 +425,32 @@ FVD val de los modelos nuevos (400 clips, 1/2/3 s):
 - kdB_s1: 193 / 304 / 379
 - MaskGIT p_clean 0,8 p4: 217 / 281 / 363 (−104 a 3 s contra MaskGIT-S p4, p 0,01)
 - MaskGIT p_clean 0,8 p8: 290 / 323 / 378 (+43 a 1 s contra p8, p 0,01)
+
+## A, B y diferencias val (detalle en `informe_F3_AB.md`)
+
+**A: kdB_1b** (el ajuste kdB sobre kdS1, la base con +780 k frames de KD):
+- giro 2-3 s 0,09 [0,05; 0,14] contra 0,18 de kdB_s0; frame 1 0,67 contra 0,53; lado 0,82 contra 0,76;
+- FVD mov. 344 / 467 / 577, sin diferencias significativas contra kdB_s0 (p 0,51 / 0,96 / 0,34);
+- contra su base kdS1: −33 / −83 / −95 (p 0,05 / 0,01 / 0,01).
+
+Más datos de destilación no mejoran: no se justifica entrenar con el shard completo.
+
+**B: profundidad contra ancho** (KD desde cero, 780 k frames):
+
+| modelo | params | ms (4060) | giro 0-1 s | giro 2-3 s | lado |
+|---|---|---|---|---|---|
+| kd3x768 | 24,8 M | 49,7 | 0,07 | 0,00 | 0,59 |
+| kd4x512 | 15,0 M | 48,0 | 0,21 | 0,03 | 0,76 |
+| kd3x768_B (+ ajuste kdB) | 24,8 M | 49,7 | 0,15 | 0,02 | 0,72 |
+| kd4x512_B (+ ajuste kdB) | 15,0 M | 48,0 | 0,35 | 0,09 [0,04; 0,18] | 0,81 |
+
+- FVD mov. de kd4x512_B: 319 / 465 / 548; contra kdB_s0, −32 (p 0,02) / +10 / +11.
+- La profundidad importa más que el ancho: confirmado entre 3 y 4 capas.
+
+**Val contra GPT-S kd** (rollout regenerado: 209 / 364 / 457), a 1 / 2 / 3 s:
+- kdB_s0: −30 / −104 / −103
+- 3×768 + ajuste: −29 / −99 / −116
+- kdOP_ctrl: −35 / −94 / −102
+- kdB_s1: −16 (p 0,07) / −60 / −78
+
+Salvo donde se indica, todas con p 0,01.
