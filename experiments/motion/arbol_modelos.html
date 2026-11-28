@@ -1,0 +1,340 @@
+<title>Genealogía de los world models</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: lienzo de laboratorio. Columnas = generaciones (maestro → paper → 1ª → 2ª derivación), filas agrupadas por familia; aristas en SVG. */
+:root {
+  --bg: #f5f7f8; --panel: #ffffff; --ink: #17222b; --ink-2: #4b5a66; --ink-3: #7b8994; --line: #d6dde2; --grid: #e7ecef;
+  --gpt: #2459c4; --mg: #b86a0e; --genie: #2f7d5b; --teacher: #7a3fb0; --other: #6b7280;
+  --fin: #0f7a52; --fin-bg: #e3f4ec; --up: #2459c4; --up-bg: #e5edfb; --down: #9aa4ad; --down-bg: #eef1f3; --base-bg: #f1ecf8;
+  --edge: #b5c0c8; --edge-hot: #17222b;
+  --f-display: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --f-body: "IBM Plex Sans", "Segoe UI", system-ui, sans-serif;
+  --f-mono: "IBM Plex Mono", ui-monospace, Consolas, monospace;
+}
+@media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+  --bg: #0f151a; --panel: #172028; --ink: #e6edf2; --ink-2: #a9b6c0; --ink-3: #7c8a95; --line: #2a3640; --grid: #1c262e;
+  --gpt: #7aa5ff; --mg: #f0a64a; --genie: #6fcf9f; --teacher: #c49af0; --other: #9aa3ad;
+  --fin: #5fd6a0; --fin-bg: #143528; --up: #7aa5ff; --up-bg: #1a2a45; --down: #6b7782; --down-bg: #1b242b; --base-bg: #2a2036;
+  --edge: #3a4853; --edge-hot: #e6edf2; color-scheme: dark } }
+:root[data-theme="dark"] {
+  --bg: #0f151a; --panel: #172028; --ink: #e6edf2; --ink-2: #a9b6c0; --ink-3: #7c8a95; --line: #2a3640; --grid: #1c262e;
+  --gpt: #7aa5ff; --mg: #f0a64a; --genie: #6fcf9f; --teacher: #c49af0; --other: #9aa3ad;
+  --fin: #5fd6a0; --fin-bg: #143528; --up: #7aa5ff; --up-bg: #1a2a45; --down: #6b7782; --down-bg: #1b242b; --base-bg: #2a2036;
+  --edge: #3a4853; --edge-hot: #e6edf2; color-scheme: dark }
+
+body { background: var(--bg); color: var(--ink); font-family: var(--f-body); font-size: 15px; line-height: 1.5; }
+.wrap { max-width: 1320px; margin: 0 auto; padding-block: 28px 56px;
+  padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px));
+  display: flex; flex-direction: column; gap: 28px; }
+h1, h2, h3 { font-family: var(--f-display); text-wrap: balance; margin: 0; }
+h1 { font-size: clamp(1.6rem, 3.2vw, 2.3rem); letter-spacing: -0.01em; }
+h2 { font-size: 1.2rem; }
+p { margin: 0; }
+.lede { color: var(--ink-2); max-width: 70ch; }
+.eyebrow { font-family: var(--f-mono); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3); }
+header { display: flex; flex-direction: column; gap: 10px; }
+.num { font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+
+/* explicación del FVD */
+.fvd { display: grid; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); gap: 24px; background: var(--panel);
+  border: 1px solid var(--line); border-radius: 10px; padding: 22px; }
+.fvd .txt { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.fvd .txt p { color: var(--ink-2); max-width: 64ch; }
+.fvd .txt strong { color: var(--ink); }
+.bars { display: flex; flex-direction: column; gap: 9px; min-width: 0; }
+.bars .row { display: grid; grid-template-columns: 11.5rem minmax(0, 1fr) 3.2rem; gap: 10px; align-items: center; font-size: 0.85rem; }
+.bars .lab { color: var(--ink-2); }
+.bars .track { height: 14px; background: var(--grid); border-radius: 0 4px 4px 0; position: relative; }
+.bars .fill { position: absolute; inset: 0 auto 0 0; background: var(--gpt); border-radius: 0 4px 4px 0; }
+.bars .fill.alt { background: var(--mg); }
+.bars .v { text-align: right; }
+.bars .cap { font-size: 0.78rem; color: var(--ink-3); }
+
+/* controles y leyenda */
+.bar { display: flex; flex-wrap: wrap; gap: 10px 22px; align-items: center; }
+.legend { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: 0.82rem; color: var(--ink-2); }
+.legend span { display: inline-flex; align-items: center; gap: 6px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+.toggle { font: inherit; font-size: 0.85rem; padding: 6px 12px; border-radius: 999px; border: 1px solid var(--line);
+  background: var(--panel); color: var(--ink); cursor: pointer; }
+.toggle[aria-pressed="true"] { background: var(--ink); color: var(--bg); border-color: var(--ink); }
+.toggle:focus-visible, .node:focus-visible { outline: 2px solid var(--gpt); outline-offset: 2px; }
+
+/* árbol */
+.treebox { overflow-x: auto; background: var(--panel); border: 1px solid var(--line); border-radius: 10px; }
+.tree { position: relative; min-width: 1180px; padding: 18px 20px 26px; }
+.grid { display: grid; grid-template-columns: 200px repeat(3, minmax(250px, 1fr)); column-gap: 64px; row-gap: 10px; position: relative; z-index: 1; }
+.colhead { font-family: var(--f-mono); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.08em; color: var(--ink-3);
+  padding-bottom: 6px; border-bottom: 1px solid var(--line); }
+.lane { grid-column: 1 / -1; font-family: var(--f-display); font-weight: 600; font-size: 0.95rem; padding-top: 14px;
+  display: flex; align-items: center; gap: 8px; }
+.lane::after { content: ""; flex: 1; height: 1px; background: var(--grid); }
+svg.edges { position: absolute; inset: 0; width: 100%; height: 100%; z-index: 0; pointer-events: none; overflow: visible; }
+svg.edges path { fill: none; stroke: var(--edge); stroke-width: 1.5; }
+svg.edges path.teach { stroke-dasharray: 4 4; stroke: var(--teacher); opacity: 0.55; }
+svg.edges path.main { stroke-width: 2.6; stroke: var(--ink-2); }
+svg.edges path.hot { stroke: var(--edge-hot); stroke-width: 2.6; opacity: 1; }
+svg.edges path.dim { opacity: 0.25; }
+
+.node { text-align: left; font: inherit; color: inherit; background: var(--panel); border: 1px solid var(--line); border-radius: 8px;
+  padding: 9px 11px 10px; display: flex; flex-direction: column; gap: 5px; cursor: pointer; position: relative; min-width: 0;
+  transition: border-color .15s, box-shadow .15s, opacity .15s; }
+.node:hover { border-color: var(--ink-3); }
+.node.sel { border-color: var(--ink); box-shadow: 0 0 0 1px var(--ink); }
+.node.dim { opacity: 0.35; }
+.node.st-descartado { background: var(--down-bg); border-style: dashed; }
+.node.st-finalista { border-color: var(--fin); box-shadow: 0 0 0 1px var(--fin); }
+.node .top { display: flex; align-items: center; gap: 7px; justify-content: space-between; }
+.node .name { font-family: var(--f-display); font-weight: 600; font-size: 0.93rem; line-height: 1.2; display: flex; align-items: center; gap: 7px; min-width: 0; }
+.node .name .dot { flex: none; }
+.node .chg { font-size: 0.8rem; color: var(--ink-2); line-height: 1.35; }
+.pill { font-family: var(--f-mono); font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.06em; padding: 1px 7px;
+  border-radius: 999px; white-space: nowrap; flex: none; }
+.pill.finalista { background: var(--fin-bg); color: var(--fin); }
+.pill.mejora { background: var(--up-bg); color: var(--up); }
+.pill.descartado { background: var(--down-bg); color: var(--ink-3); border: 1px solid var(--line); }
+.pill.paper { background: var(--base-bg); color: var(--teacher); }
+.pill.maestro { background: var(--base-bg); color: var(--teacher); }
+.pill.info { background: var(--grid); color: var(--ink-2); }
+.metrics { display: flex; flex-wrap: wrap; gap: 3px 10px; font-family: var(--f-mono); font-size: 0.72rem; color: var(--ink-3); }
+.metrics b { font-weight: 500; color: var(--ink); }
+body.hide-desc .node.st-descartado { display: none; }
+
+/* detalle */
+.detail { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: 20px 22px;
+  display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 20px 32px; }
+.detail .head { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 8px 14px; align-items: baseline; }
+.detail h3 { font-size: 1.15rem; }
+.detail .path { font-family: var(--f-mono); font-size: 0.78rem; color: var(--ink-3); grid-column: 1 / -1; overflow-wrap: anywhere; }
+.detail dl { display: grid; grid-template-columns: auto 1fr; gap: 6px 16px; margin: 0; font-size: 0.88rem; }
+.detail dt { color: var(--ink-3); }
+.detail dd { margin: 0; font-family: var(--f-mono); font-variant-numeric: tabular-nums; }
+.detail .notes { display: flex; flex-direction: column; gap: 10px; font-size: 0.9rem; color: var(--ink-2); min-width: 0; }
+.detail .notes strong { color: var(--ink); }
+.foot { font-size: 0.8rem; color: var(--ink-3); max-width: 90ch; }
+
+@media (max-width: 760px) {
+  .fvd, .detail { grid-template-columns: minmax(0, 1fr); }
+  .bars .row { grid-template-columns: 8.5rem minmax(0, 1fr) 2.8rem; }
+}
+@media (prefers-reduced-motion: reduce) { .node { transition: none; } }
+</style>
+
+<div class="wrap">
+  <header>
+    <span class="eyebrow">commaVQ · UdeSA MIA · ramas v2 y motion-experiments · 28/11/2026</span>
+    <h1>Genealogía de los world models</h1>
+    <p class="lede">Cada tarjeta es un modelo; la flecha sale del modelo del que arrancó (sus pesos o su receta). Arriba de cada tarjeta, el cambio que adoptó; abajo, cómo le fue en giro y video. Tocá una tarjeta para ver su línea completa y el detalle.</p>
+  </header>
+
+  <section class="fvd" aria-labelledby="fvd-h">
+    <div class="txt">
+      <span class="eyebrow">Cómo leer el FVD</span>
+      <h2 id="fvd-h">Por qué el mismo modelo da 179 y 351</h2>
+      <p>Hay dos FVD distintos y <strong>no se comparan entre sí</strong>. <strong>FVD val</strong> es el set oficial del paper: 400 clips de 100 segmentos de val, en su mayoría manejo normal. <strong>FVD mov.</strong> es el set de movimiento: 200 clips de otras rutas (data-0001), la mitad curvas fuertes de más de 20°.</p>
+      <p>Dos cosas suben el número en el set de movimiento. La primera es la <strong>cantidad de clips</strong>: el FVD compara medias y covarianzas de 400 dimensiones de I3D, y con menos clips la estimación tiene un sesgo hacia arriba. Con kdB_s0, solo pasar de 400 a 200 clips del mismo val sube el FVD a 1 s de 179 a 266. La segunda es <strong>la dificultad</strong>: las curvas son mucho más difíciles que las rectas (602 contra 453 a 1 s).</p>
+      <p>Lo que sí vale es comparar modelos <strong>dentro del mismo set</strong>, con las diferencias pareadas que reportamos. El maestro GPT2M también se duplica (105 → 220 a 3 s) y el orden de los modelos se mantiene.</p>
+    </div>
+    <div class="bars" role="img" aria-label="FVD a 1 s de kdB_s0 según el set: val 400 clips 179, val 200 clips 266, movimiento 200 clips 351, movimiento solo rectas 453, solo curvas 602">
+      <span class="eyebrow">kdB_s0 · FVD a 1 s · el mismo modelo en distintos sets</span>
+      <div class="row"><span class="lab">val · 400 clips</span><span class="track"><span class="fill" style="width:29.7%"></span></span><span class="v num">179</span></div>
+      <div class="row"><span class="lab">val · 200 clips (submuestra)</span><span class="track"><span class="fill" style="width:44.2%"></span></span><span class="v num">266</span></div>
+      <div class="row"><span class="lab">movimiento · 200 clips</span><span class="track"><span class="fill alt" style="width:58.3%"></span></span><span class="v num">351</span></div>
+      <div class="row"><span class="lab">movimiento · 100 rectas</span><span class="track"><span class="fill alt" style="width:75.2%"></span></span><span class="v num">453</span></div>
+      <div class="row"><span class="lab">movimiento · 100 curvas</span><span class="track"><span class="fill alt" style="width:100%"></span></span><span class="v num">602</span></div>
+      <span class="cap">A 3 s: 354 · 447 · 537 · 610 · 917. Azul: set val; ámbar: set de movimiento. Submuestra de val: media de 20 sorteos de 50 segmentos.</span>
+    </div>
+  </section>
+
+  <div class="bar">
+    <div class="legend" aria-label="Familias">
+      <span><i class="dot" style="background:var(--teacher)"></i>Maestro</span>
+      <span><i class="dot" style="background:var(--gpt)"></i>GPT (autoregresivo)</span>
+      <span><i class="dot" style="background:var(--mg)"></i>MaskGIT</span>
+      <span><i class="dot" style="background:var(--genie)"></i>Genie</span>
+      <span><i class="dot" style="background:var(--other)"></i>Otros</span>
+    </div>
+    <div class="legend" aria-label="Estados">
+      <span class="pill finalista">finalista</span><span class="pill mejora">mejora adoptada</span>
+      <span class="pill descartado">descartado</span><span class="pill paper">paper</span>
+    </div>
+    <button class="toggle" id="t-desc" type="button" aria-pressed="false">Ocultar descartados</button>
+  </div>
+
+  <div class="treebox">
+    <div class="tree" id="tree">
+      <svg class="edges" id="edges" aria-hidden="true"></svg>
+      <div class="grid" id="grid"></div>
+    </div>
+  </div>
+
+  <section class="detail" id="detail" aria-live="polite"></section>
+
+  <p class="foot">Métricas: <b>giro</b> = giro sostenido 2-3 s relativo al auto real (1 = gira como el auto), en el set de movimiento; <b>lado</b> = fracción de curvas en las que el video gira para el lado correcto; <b>val</b> = FVD a 3 s en el set oficial (400 clips); <b>mov</b> = FVD a 3 s en el set de movimiento (200 clips); <b>ms</b> = milisegundos por frame del modelo con B = 1, fp16 + CUDA graphs, en la 3080 Ti salvo que diga 4060 (≈ 1,35× más lenta en GPT). Tiempo real: ≤ 50 ms por frame sumando ~10 ms del codec. Línea punteada violeta: aprendió del maestro GPT2M. Línea gruesa: el camino de los finalistas.</p>
+</div>
+
+<script>
+const FAM = { maestro: "var(--teacher)", gpt: "var(--gpt)", mg: "var(--mg)", genie: "var(--genie)", otro: "var(--other)" };
+const LANES = [
+  { id: "l-gpt", row: 2, label: "GPT: autoregresivo, token a token" },
+  { id: "l-arq", row: 15, label: "GPT: otras formas (mismo presupuesto de latencia)" },
+  { id: "l-mg", row: 18, label: "MaskGIT: decodificación paralela" },
+  { id: "l-genie", row: 24, label: "Genie y otros" },
+];
+// col: 1 maestro · 2 paper · 3 primera derivación · 4 segunda derivación
+const N = [
+  { id: "gpt2m", col: 1, row: 9, fam: "maestro", st: "maestro", main: true, name: "GPT2M (comma)", chg: "Modelo de comma, 307 M. Techo de calidad y maestro de la destilación.",
+    m: { giro: "0,79", lado: "0,95", val: "105", mov: "220", ms: "291" },
+    det: "Es el world model original de commaVQ (24 capas × 1024). Gira como el auto real, pero tarda 291 ms por frame: no es tiempo real. Todo lo que funcionó para el giro viene de copiarle a él.",
+    res: "Referencia. No se entrena." },
+
+  { id: "d025", col: 2, row: 3, fam: "gpt", st: "paper", name: "GPT-S d025", chg: "6×384 sin maestro, 25 M tokens (7 % del shard).",
+    m: { giro: "–", lado: "–", val: "615", mov: "–", ms: "38" }, det: "Línea base del paper con pocos datos.", res: "Solo como punto de la curva de datos." },
+  { id: "d050", col: 2, row: 4, fam: "gpt", st: "paper", name: "GPT-S d050", chg: "6×384 sin maestro, 50 M tokens (13 %).",
+    m: { giro: "0,00", lado: "0,49", val: "479", mov: "611", ms: "38" }, det: "Sin maestro el GPT no aprende hacia dónde gira: lado correcto 0,49, una moneda.", res: "Control sin maestro." },
+  { id: "d050c", col: 3, row: 4, fam: "gpt", st: "descartado", parent: "d050", name: "d050 + 500 pasos", chg: "Más datos, sin maestro.",
+    m: { giro: "0,00", lado: "0,49", mov: "565", ms: "38" }, det: "Prueba de si más datos solos destraban el giro.", res: "No: giro 0. Más datos sin maestro no alcanzan." },
+
+  { id: "kd", col: 2, row: 9, fam: "gpt", st: "paper", parent: "gpt2m", teach: true, main: true, name: "GPT-S kd", chg: "6×384 destilado de GPT2M (KD α 0,5), 101 M tokens.",
+    m: { giro: "0,03", lado: "0,68", val: "468", mov: "721", ms: "38" },
+    det: "El mejor GPT de tiempo real del paper. Arranca girando y en ~1 s congela o parpadea. De acá sale casi todo lo nuevo.", res: "Punto de partida de motion-experiments." },
+  { id: "kdC", col: 3, row: 5, fam: "gpt", st: "descartado", parent: "kd", name: "Temperatura / top-p", chg: "Solo cambia el muestreo: T 1,0 / 1,1 y top-p 0,95.",
+    m: { giro: "≤ 0,12", lado: "0,60–0,68", mov: "+87 a +151", ms: "38" }, det: "Muestrear más caliente para que se anime a moverse.", res: "Algo más de giro a costa del video y del lado correcto." },
+  { id: "kdOP", col: 3, row: 6, fam: "gpt", st: "descartado", parent: "kd", name: "On-policy (K = 8)", chg: "El alumno aprende sobre sus propios rollouts, corregido por el maestro.",
+    m: { giro: "0,02", lado: "0,68", mov: "923", ms: "38" }, det: "Ataca el sesgo de exposición: el modelo ve sus errores al entrenar.", res: "Empeora todo (FVD +200 a 3 s). El sesgo de exposición no era el problema." },
+  { id: "kdOPc", col: 3, row: 7, fam: "gpt", st: "mejora", parent: "kd", teach: true, name: "kd + 500 pasos KD", chg: "Ajuste corto con el maestro, lr 3e-4. (kdOP_ctrl; réplica kdR1)",
+    m: { giro: "0,21 · 0,11", lado: "0,78", val: "355", mov: "635", ms: "38" },
+    det: "Era el control del on-policy y resultó la primera mejora real: un ajuste corto con KD destraba el giro. La semilla pesa mucho: 0,21 con s0 y 0,11 con s1.", res: "Adoptado: el ajuste corto de 500 pasos es la base de kdB." },
+  { id: "kdAN", col: 3, row: 8, fam: "gpt", st: "descartado", parent: "kd", teach: true, name: "Annealing coseno", chg: "1000 pasos de KD con lr bajando a 0.",
+    m: { giro: "0,13", lado: "0,78", mov: "625", ms: "38" }, det: "¿El giro aparece al enfriar el learning rate?", res: "No suma giro frente al ajuste de 500 pasos." },
+  { id: "kdS1", col: 3, row: 10, fam: "gpt", st: "descartado", parent: "kd", teach: true, name: "Más KD (+780 k frames)", chg: "Curva de escala 1b: +260 / +520 / +780 k frames de KD.",
+    m: { giro: "0,02", lado: "0,80", mov: "672", ms: "38" },
+    det: "La hipótesis era que más destilación con teacher forcing arreglaba el giro sostenido.", res: "Contradice la hipótesis: el giro sostenido baja (0,11 → 0,02). Mejora el arranque, no lo sostenido." },
+  { id: "kdB1b", col: 4, row: 10, fam: "gpt", st: "descartado", parent: "kdS1", teach: true, name: "kdB sobre +780 k (A)", chg: "La receta kdB aplicada a la base con más datos.",
+    m: { giro: "0,09", lado: "0,82", mov: "577", ms: "38" },
+    det: "Prueba barata de si vale la pena entrenar con el shard completo. Arranca mejor (frame 1 0,67) pero sostiene menos.", res: "No le gana a kdB_s0 (FVD p 0,34). No se justifica el shard completo." },
+  { id: "kdB", col: 3, row: 11, fam: "gpt", st: "finalista", parent: "kd", teach: true, main: true, name: "kdB_s0", chg: "kd + 500 pasos KD + la mitad del batch con secuencias generadas por GPT2M.",
+    m: { giro: "0,18", lado: "0,76", val: "354", mov: "537", ms: "38" },
+    det: "Destilación por secuencias: el maestro genera 20 frames desde 19 reales y el alumno aprende sobre esos futuros. Réplica s1: giro 0,15, val 379.",
+    res: "Finalista. Contra GPT-S kd en val: −103 a 3 s (p 0,01). El GPT de tiempo real que más sostiene el giro." },
+  { id: "kdP", col: 4, row: 12, fam: "gpt", st: "descartado", parent: "kdB", teach: true, name: "+ pose (fase 3)", chg: "La pose del auto (velocidades) sumada a los embeddings de cada frame. 1000 pasos.",
+    m: { giro: "0,09 · 0,01", lado: "0,82 · 0,78", mov: "639 · 613", ms: "38" },
+    det: "La idea: darle explícito cuánto gira el auto. Se evaluó manteniendo la última pose, con la pose real futura y sin pose: los tres dan lo mismo.",
+    res: "No funcionó: el modelo ignora la pose (CE igual con y sin ella). Probable causa: la mitad de la pérdida copia a un maestro que no ve la pose." },
+  { id: "kdPc", col: 4, row: 13, fam: "gpt", st: "descartado", parent: "kdB", teach: true, name: "+ 1000 pasos (control)", chg: "El mismo ajuste de la fase 3 sin pose.",
+    m: { giro: "0,08 · 0,00", lado: "0,80 · 0,74", mov: "657 · 589", ms: "38" },
+    det: "Control de la fase 3. Mostró que seguir ajustando kdB_s0 lo empeora.", res: "Más ajuste baja el giro (0,18 → 0,08 / 0,00) y empeora el FVD (+120 a 3 s). 500 pasos es el punto bueno." },
+
+  { id: "k3", col: 3, row: 16, fam: "gpt", st: "descartado", parent: "gpt2m", teach: true, name: "GPT 3×768", chg: "KD desde cero, doble de parámetros (24,8 M) a la misma latencia: menos capas, más anchas.",
+    m: { giro: "0,00", lado: "0,59", mov: "555", ms: "49,7 (4060)" }, det: "Mejor imagen pero casi no gira: lado correcto 0,59.", res: "Mejor FVD, sin dinámica." },
+  { id: "k3B", col: 4, row: 16, fam: "gpt", st: "mejora", parent: "k3", teach: true, name: "3×768 + ajuste kdB", chg: "La receta de kdB encima del 3×768.",
+    m: { giro: "0,02", lado: "0,72", val: "341", mov: "514", ms: "49,7 (4060)" },
+    det: "El mejor video de tiempo real: FVD val 341 a 3 s (−116 contra GPT-S kd, p 0,01).", res: "Mejor FVD, pero no sostiene el giro. El ancho compra imagen, no dinámica." },
+  { id: "k4", col: 3, row: 17, fam: "gpt", st: "info", parent: "gpt2m", teach: true, main: true, name: "GPT 4×512 (B)", chg: "KD desde cero, más profundo y más chico (15 M) que el 3×768.",
+    m: { giro: "0,03", lado: "0,76", mov: "574", ms: "48,0 (4060)" },
+    det: "Prueba de profundidad contra ancho. Sin ajuste ya gira como GPT-S kd y mucho más que el 3×768 (0-1 s: 0,21 contra 0,07).", res: "Confirma que la profundidad importa más que el ancho (de 3 a 4 capas)." },
+  { id: "k4B", col: 4, row: 17, fam: "gpt", st: "finalista", parent: "k4", teach: true, main: true, name: "4×512 + ajuste kdB", chg: "La receta de kdB encima del 4×512.",
+    m: { giro: "0,09", lado: "0,81", mov: "548", ms: "48,0 (4060)" },
+    det: "Mejor FVD a 1 s del set de movimiento (319 contra 351 de kdB_s0, p 0,02), mejor lado correcto y 6 % más rápido. Sostiene menos el giro a 2-3 s.", res: "Finalista para predecir ~1 s adelante. FVD val pendiente." },
+
+  { id: "mg", col: 2, row: 20, fam: "mg", st: "paper", main: true, name: "MaskGIT-S", chg: "El mismo backbone que GPT-S; genera el frame en 4 u 8 pasos paralelos.",
+    m: { giro: "0,00", lado: "0,49", val: "468 (p4) · 380 (p8)", mov: "674 · 559", ms: "6,4 · 10,4" }, det: "6 veces más rápido que GPT-S. Buen video a 1 s, pero elige el lado al azar.", res: "Base de las variantes MaskGIT." },
+  { id: "v2", col: 3, row: 19, fam: "mg", st: "descartado", parent: "mg", name: "v2: entradas de movimiento", chg: "Desde cero: peso ×3 en tokens que cambian, scheduled sampling, embeddings de movimiento, módulo de flujo.",
+    m: { giro: "0", val: "470–653 (p4)", ms: "6,4" }, det: "Rama v2. Buscaba que MaskGIT se moviera más.", res: "Más movimiento resultó ser más parpadeo, no más giro. El flujo acumula error." },
+  { id: "v2ft", col: 4, row: 19, fam: "mg", st: "descartado", parent: "v2", name: "v2 ajustes (ft_*)", chg: "Ajustes sobre motioncb: flujo, flow limpio, scheduled sampling.",
+    m: { giro: "0", val: "415 (ft_l_cb p4)", ms: "6,4" }, det: "Seis variantes con control.", res: "El mejor (ft_l_cb) mejora algo el FVD con una sola semilla; ninguno gira." },
+  { id: "mgSh", col: 3, row: 20, fam: "mg", st: "descartado", parent: "mg", name: "Shard completo", chg: "4× más datos (98 % del shard), sin maestro.",
+    m: { giro: "0,00", lado: "0,62 · 0,67", val: "524 (p8)", mov: "773 · 776", ms: "6,4 · 10,4" }, det: "¿El giro aparece con más datos?", res: "Aprende el signo del primer frame y nada más. Peor video." },
+  { id: "mgA", col: 3, row: 21, fam: "mg", st: "mejora", parent: "mg", main: true, name: "MaskGIT p_clean 0,8", chg: "+1000 pasos con el contexto limpio el 80 % de las veces.",
+    m: { giro: "0,00", lado: "0,51", val: "363 (p4)", mov: "525", ms: "6,4" },
+    det: "Alinea el entrenamiento con la generación, donde el contexto siempre está completo. Con 8 pasos empeora a 1-2 s; usar 4.",
+    res: "Mejor MaskGIT: −104 a 3 s contra el del paper (p 0,01), mejor que Genie-M. Sigue sin girar." },
+  { id: "mgT", col: 3, row: 22, fam: "mg", st: "descartado", parent: "mg", teach: true, name: "MaskGIT + maestro", chg: "KD (KL) o secuencias de GPT2M.",
+    m: { giro: "0,00", lado: "0,47", mov: "644 · 636", ms: "6,4" }, det: "Lo que destrabó al GPT, aplicado a MaskGIT.", res: "Giro 0. La KL no baja: el maestro raster no encaja con la decodificación paralela." },
+
+  { id: "gs", col: 2, row: 25, fam: "genie", st: "paper", name: "Genie-S", chg: "Transformer espacio-temporal + MaskGIT, 15 M.",
+    m: { giro: "0,00", lado: "0,47", val: "413", mov: "670", ms: "5,7" }, det: "El más rápido.", res: "Sin derivados todavía. Candidato a pose si la pose v2 funciona." },
+  { id: "gm", col: 2, row: 26, fam: "genie", st: "paper", name: "Genie-M", chg: "Lo mismo con 34,8 M.",
+    m: { giro: "0,01", lado: "0,50", val: "406", mov: "609", ms: "9,4" }, det: "El mejor FVD a 3 s del paper.", res: "Más parámetros sin maestro no dan giro." },
+  { id: "cl", col: 2, row: 27, fam: "otro", st: "paper", name: "ConvLSTM píxeles", chg: "Predice píxeles directo, 8 M.",
+    m: { val: "2400", ms: "16,5" }, det: "Línea base de píxeles.", res: "Fuera de la discusión de movimiento." },
+];
+const PILL = { finalista: "finalista", mejora: "mejora", descartado: "descartado", paper: "paper", maestro: "maestro", info: "experimento" };
+const byId = Object.fromEntries(N.map(n => [n.id, n]));
+const grid = document.getElementById("grid"), svg = document.getElementById("edges"), tree = document.getElementById("tree");
+
+["Maestro", "Paper (bases)", "1ª derivación", "2ª derivación"].forEach((t, i) => {
+  const h = document.createElement("div"); h.className = "colhead"; h.textContent = t;
+  h.style.gridColumn = i + 1; h.style.gridRow = 1; grid.appendChild(h);
+});
+LANES.forEach(l => { const d = document.createElement("div"); d.className = "lane"; d.textContent = l.label; d.style.gridRow = l.row; grid.appendChild(d); });
+
+function metricsHTML(m) {
+  const lab = { giro: "giro", lado: "lado", val: "val", mov: "mov", ms: "ms" };
+  return Object.keys(lab).filter(k => m[k] && m[k] !== "–").map(k => `<span>${lab[k]} <b>${m[k]}</b></span>`).join("");
+}
+N.forEach(n => {
+  const b = document.createElement("button");
+  b.type = "button"; b.className = `node st-${n.st}`; b.id = "n-" + n.id; b.dataset.id = n.id;
+  b.style.gridColumn = n.col; b.style.gridRow = n.row;
+  b.innerHTML = `<span class="top"><span class="name"><i class="dot" style="background:${FAM[n.fam]}"></i>${n.name}</span><span class="pill ${n.st === "info" ? "info" : n.st}">${PILL[n.st]}</span></span>
+    <span class="chg">${n.chg}</span><span class="metrics">${metricsHTML(n.m)}</span>`;
+  b.addEventListener("click", () => select(n.id));
+  grid.appendChild(b);
+});
+
+function ancestors(id) { const out = []; let n = byId[id]; while (n) { out.unshift(n.id); n = byId[n.parent]; } return out; }
+function descendants(id) { const out = []; N.forEach(n => { if (n.parent === id) out.push(n.id, ...descendants(n.id)); }); return out; }
+
+let sel = "kdB";
+function draw() {
+  const tb = tree.getBoundingClientRect();
+  svg.setAttribute("viewBox", `0 0 ${tb.width} ${tb.height}`);
+  const line = new Set(sel ? [...ancestors(sel), ...descendants(sel)] : []);
+  let html = "";
+  N.forEach(n => {
+    if (!n.parent) return;
+    const a = document.getElementById("n-" + n.parent), c = document.getElementById("n-" + n.id);
+    if (!a || !c || a.offsetParent === null || c.offsetParent === null) return;
+    const ra = a.getBoundingClientRect(), rc = c.getBoundingClientRect();
+    const x1 = ra.right - tb.left, y1 = ra.top + ra.height / 2 - tb.top, x2 = rc.left - tb.left, y2 = rc.top + rc.height / 2 - tb.top;
+    const mx = x1 + (x2 - x1) / 2;
+    const hot = line.has(n.id) && line.has(n.parent);
+    const cls = [n.parent === "gpt2m" ? "teach" : "", n.main && byId[n.parent].main ? "main" : "", hot ? "hot" : (sel ? "dim" : "")].join(" ").trim();
+    html += `<path class="${cls}" d="M${x1},${y1} C${mx},${y1} ${mx},${y2} ${x2},${y2}"/>`;
+  });
+  svg.innerHTML = html;
+}
+
+function select(id) {
+  sel = id;
+  const line = new Set([...ancestors(id), ...descendants(id)]);
+  document.querySelectorAll(".node").forEach(el => {
+    el.classList.toggle("sel", el.dataset.id === id);
+    el.classList.toggle("dim", !line.has(el.dataset.id));
+  });
+  const n = byId[id], m = n.m;
+  const rows = [["giro 2-3 s", m.giro], ["lado correcto", m.lado], ["FVD val 3 s", m.val], ["FVD mov. 3 s", m.mov], ["ms por frame", m.ms]]
+    .filter(r => r[1]).map(r => `<dt>${r[0]}</dt><dd>${r[1]}</dd>`).join("");
+  document.getElementById("detail").innerHTML = `
+    <div class="head"><h3>${n.name}</h3><span class="pill ${n.st === "info" ? "info" : n.st}">${PILL[n.st]}</span>${n.teach ? '<span class="pill maestro">aprende de GPT2M</span>' : ""}</div>
+    <div class="path">${ancestors(id).map(a => byId[a].name).join("  →  ")}</div>
+    <dl>${rows}</dl>
+    <div class="notes"><p><strong>Qué cambió:</strong> ${n.chg}</p><p>${n.det}</p><p><strong>Resultado:</strong> ${n.res}</p></div>`;
+  draw();
+}
+
+const tDesc = document.getElementById("t-desc");
+try { if (localStorage.getItem("arbol-ocultar") === "1") { document.body.classList.add("hide-desc"); tDesc.setAttribute("aria-pressed", "true"); } } catch (e) {}
+tDesc.addEventListener("click", () => {
+  const on = document.body.classList.toggle("hide-desc");
+  tDesc.setAttribute("aria-pressed", String(on));
+  try { localStorage.setItem("arbol-ocultar", on ? "1" : "0"); } catch (e) {}
+  if (on && byId[sel].st === "descartado") select("kdB"); else draw();
+});
+new ResizeObserver(draw).observe(tree);
+if (document.fonts && document.fonts.ready) document.fonts.ready.then(draw);
+select("kdB");
+</script>
