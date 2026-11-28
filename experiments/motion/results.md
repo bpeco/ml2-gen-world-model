@@ -404,3 +404,24 @@ Es la receta de kdB_s0 (500 pasos, KD + secuencias del maestro, lr 3e-4, semilla
 Con la misma receta y el mismo presupuesto, el 3×768 (más ancho y menos profundo) llega a una CE parecida, pero sigue
 el giro mucho peor que el 6×384: parece que la profundidad importa para la dinámica. **Sigue como candidato final de
 tiempo real kdB_s0**: mejor giro con FVD equivalente.
+
+## Fase 3: condicionamiento por pose (detalle en `informe_fase3.md`)
+
+FT de kdB_s0 (1000 pasos, receta kdB) con `pose_dim = 6` contra el mismo FT sin pose, semillas 0 y 1. **No funcionó:**
+- giro 2-3 s en hold 0,09 / 0,01, contra 0,08 / 0,00 del control; real ≈ hold ≈ none;
+- FVD sin diferencias significativas contra el control;
+- CE de teacher forcing con la pose real = sin pose (2,950 vs 2,949): el modelo ignora la pose.
+
+Causas probables: la KL contra un maestro que no ve la pose, y la mitad del batch sin pose. **Contradice la
+hipótesis.**
+
+Lateral: los controles (kdB_s0 + 1000 pasos) empeoran el giro (0,18 → 0,08 / 0,00) y el FVD a 3 s (+120, p 0,01 /
++51, p 0,08). 500 pasos es el punto bueno.
+
+FVD val de los modelos nuevos (400 clips, 1/2/3 s):
+- kdB_s0: 179 / 260 / 354
+- 3×768 + FT: 180 / 265 / 341
+- kdOP_ctrl: 173 / 270 / 355
+- kdB_s1: 193 / 304 / 379
+- MaskGIT p_clean 0,8 p4: 217 / 281 / 363 (−104 a 3 s contra MaskGIT-S p4, p 0,01)
+- MaskGIT p_clean 0,8 p8: 290 / 323 / 378 (+43 a 1 s contra p8, p 0,01)
