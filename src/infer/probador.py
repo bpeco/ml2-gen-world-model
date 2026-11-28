@@ -2,6 +2,7 @@
 
   python -m src.infer.probador                 # abre http://localhost:8765
   python -m src.infer.probador --port 9000 --no-abrir
+  http://localhost:8765/movimiento             visor del set de movimiento (src/infer/movimiento.py)
 
 Qué hace cada corrida (los mismos clips y el mismo protocolo que el paper, sobre un solo clip):
 - Clip: uno de los 400 de results/clips_eval.json (20 frames reales de contexto y 60 de continuación).
@@ -548,6 +549,21 @@ class Handler(BaseHTTPRequestHandler):
         self.send_header("Content-Length", str(len(b)))
         self.end_headers()
         self.wfile.write(b)
+      elif u.path == "/movimiento":
+        b = HTML.with_name("movimiento.html").read_bytes()
+        self.send_response(200)
+        self.send_header("Content-Type", "text/html; charset=utf-8")
+        self.send_header("Content-Length", str(len(b)))
+        self.end_headers()
+        self.wfile.write(b)
+      elif u.path == "/api/mov/lista":
+        from src.infer import movimiento
+        self._json(movimiento.lista())
+      elif u.path == "/api/mov/clip":
+        from src.infer import movimiento
+        ids = [x for x in q.get("m", "").split(",") if x][:3]
+        with _gpu:
+          self._json(movimiento.datos(int(q["i"]), ids, decodificar, jpeg))
       elif u.path == "/api/catalogo":
         self._json(catalogo())
       elif u.path == "/api/clip":

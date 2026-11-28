@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Set de movimiento</title>
+<style>
+:root{
+  --bg:#f6f6f4; --panel:#ffffff; --panel2:#efefec; --line:#dcdcd6; --ink:#1b1c1e; --ink2:#55575c; --ink3:#86888d;
+  --ctx:#8a8985; --gen:#c25e17; --curva-i:#2f6fc4; --curva-d:#b0457a; --recta:#8a8c90; --real:#1b1c1e;
+  --m1:#2f6fc4; --m2:#c25e17; --m3:#2e7d4f; --chip:#e6e6e1; --foco:#2f6fc4; --grid:#ececE8;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#0f1012; --panel:#17191c; --panel2:#1e2024; --line:#2c2f34; --ink:#ececea; --ink2:#a9abaf; --ink3:#73767b;
+  --ctx:#7b7a76; --gen:#d9722a; --curva-i:#5b9bf0; --curva-d:#e07bb0; --recta:#7d8085; --real:#ececea;
+  --m1:#5b9bf0; --m2:#e08a45; --m3:#57c08a; --chip:#24272b; --foco:#4a8fe8; --grid:#22252a; color-scheme:dark } }
+:root[data-theme="dark"]{
+  --bg:#0f1012; --panel:#17191c; --panel2:#1e2024; --line:#2c2f34; --ink:#ececea; --ink2:#a9abaf; --ink3:#73767b;
+  --ctx:#7b7a76; --gen:#d9722a; --curva-i:#5b9bf0; --curva-d:#e07bb0; --recta:#7d8085; --real:#ececea;
+  --m1:#5b9bf0; --m2:#e08a45; --m3:#57c08a; --chip:#24272b; --foco:#4a8fe8; --grid:#22252a; color-scheme:dark }
+*{box-sizing:border-box}
+html,body{margin:0;background:var(--bg);color:var(--ink);font:14px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.num{font-variant-numeric:tabular-nums}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:18px 24px 6px}
+header h1{font-size:20px;margin:0;font-weight:650;letter-spacing:-.01em}
+header .sub{color:var(--ink2)}
+header a{margin-left:auto;font-size:13px;color:var(--ink2)}
+main{padding:8px 24px 40px;max-width:1500px;margin:0 auto;display:flex;flex-direction:column;gap:14px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;min-width:0}
+h2{font-size:15px;margin:0 0 8px}
+.lbl{font-size:11px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink3)}
+select,button{font:inherit;color:var(--ink);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:5px 9px}
+button{cursor:pointer} button:hover{border-color:var(--ink3)}
+:focus-visible{outline:2px solid var(--foco);outline-offset:1px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden}
+.seg button{border:0;border-radius:0;background:transparent;color:var(--ink2);padding:5px 11px}
+.seg button.on{background:var(--ink);color:var(--bg)}
+
+.set{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.15fr);gap:18px}
+.criterio{display:flex;flex-direction:column;gap:8px;color:var(--ink2);font-size:13.5px}
+.criterio b{color:var(--ink)}
+.criterio ul{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:4px}
+.cuentas{display:flex;gap:16px;flex-wrap:wrap;font-size:13px}
+.cuentas span{display:inline-flex;gap:6px;align-items:center}
+.pt{width:10px;height:10px;border-radius:50%;display:inline-block}
+svg text{fill:var(--ink3);font-size:10px}
+svg .eje{stroke:var(--line)} svg .grid{stroke:var(--grid)}
+#disp circle{cursor:pointer;stroke:var(--panel);stroke-width:1}
+#disp circle.sel{stroke:var(--ink);stroke-width:2.5}
+
+.cuerpo{display:grid;grid-template-columns:300px minmax(0,1fr);gap:14px;align-items:start}
+.lista{display:flex;flex-direction:column;gap:8px;max-height:calc(100vh - 120px);position:sticky;top:10px}
+.filas{overflow:auto;border:1px solid var(--line);border-radius:8px;background:var(--panel)}
+.fila{display:grid;grid-template-columns:38px 1fr auto;gap:8px;align-items:center;padding:6px 10px;border-bottom:1px solid var(--line);cursor:pointer;font-size:13px;width:100%;text-align:left;background:transparent;border-radius:0;border-left:0;border-right:0;border-top:0}
+.fila:hover{background:var(--panel2)}
+.fila.sel{background:var(--chip)}
+.fila .t{color:var(--ink2)}
+.fila .y{font-weight:600}
+
+.ver{display:flex;flex-direction:column;gap:12px;min-width:0}
+.meta{display:flex;flex-wrap:wrap;gap:6px 18px;font-size:13px;color:var(--ink2)}
+.meta b{color:var(--ink);font-weight:600}
+.modsel{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.modsel label{display:inline-flex;gap:6px;align-items:center;font-size:13px}
+.modsel .sw{width:12px;height:12px;border-radius:3px;display:inline-block}
+.pantallas{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(260px,1fr))}
+.pan{min-width:0;display:flex;flex-direction:column;gap:4px}
+.pan .tit{font-size:13px;font-weight:600;display:flex;gap:6px;align-items:center}
+.pan .tit small{font-weight:400;color:var(--ink3)}
+.pant{position:relative;aspect-ratio:2/1;background:#000;border-radius:6px;overflow:hidden;outline:3px solid var(--ctx);outline-offset:-3px}
+.pant.gen{outline-color:var(--gen)}
+.pant img{width:100%;height:100%;display:block;image-rendering:auto}
+.pant .vacio{position:absolute;inset:0;display:grid;place-items:center;color:#aaa;font-size:12px}
+.controles{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.controles input[type=range]{flex:1;min-width:160px}
+.estado{color:var(--ink2);font-size:13px;min-height:18px}
+.graficos{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+.leyenda{display:flex;flex-wrap:wrap;gap:4px 14px;font-size:12px;color:var(--ink2)}
+.leyenda span{display:inline-flex;gap:5px;align-items:center}
+.leyenda i{width:14px;height:3px;border-radius:2px;display:inline-block}
+.nota{font-size:12px;color:var(--ink3)}
+@media (max-width:980px){ .set,.cuerpo,.graficos{grid-template-columns:minmax(0,1fr)} .lista{position:static;max-height:none} .filas{max-height:320px} }
+</style>
+</head>
+<body>
+<header>
+  <h1>Set de movimiento</h1>
+  <span class="sub">los 200 clips con los que medimos el giro: cómo se eligieron y qué hace cada modelo en cada uno</span>
+  <a href="/">← volver al banco de pruebas</a>
+</header>
+<main>
+  <section class="card set">
+    <div class="criterio" id="criterio"><span class="estado">Cargando el set…</span></div>
+    <div>
+      <div class="lbl">Cada punto es un clip · giro del auto en los 3 s generados contra su velocidad · tocá uno para verlo</div>
+      <svg id="disp" viewBox="0 0 560 250" width="100%" role="img" aria-label="Dispersión de los clips: giro acumulado en 3 s contra velocidad media"></svg>
+    </div>
+  </section>
+
+  <section class="cuerpo">
+    <div class="lista">
+      <div class="seg" id="filtro" role="group" aria-label="Filtrar clips">
+        <button type="button" data-f="todos" class="on">Todos</button><button type="button" data-f="izq">Curvas izq.</button><button type="button" data-f="der">Curvas der.</button><button type="button" data-f="recta">Rectas</button>
+      </div>
+      <label class="lbl" for="orden">Ordenar</label>
+      <select id="orden"><option value="giro">por giro (mayor primero)</option><option value="v">por velocidad</option><option value="clip">por número de clip</option></select>
+      <div class="filas" id="filas" role="listbox" aria-label="Clips"></div>
+    </div>
+
+    <div class="ver card">
+      <div class="meta" id="meta"></div>
+      <div>
+        <div class="lbl" style="margin-bottom:4px">Modelos a comparar (hasta 3; rollouts ya generados, T 0,9 en GPT)</div>
+        <div class="modsel" id="modsel"></div>
+      </div>
+      <div class="pantallas" id="pantallas"></div>
+      <div class="controles">
+        <button type="button" id="play">▶ Reproducir</button>
+        <input type="range" id="scrub" min="0" max="79" value="0" aria-label="Frame">
+        <span class="num" id="tiempo">frame 0</span>
+        <select id="vel" aria-label="Velocidad"><option value="1">1×</option><option value="0.5">0,5×</option><option value="0.25">0,25×</option></select>
+      </div>
+      <div class="estado" id="estado"></div>
+      <div class="graficos">
+        <div>
+          <div class="lbl">Yaw rate del auto (pose), °/s · positivo = a la derecha · lo que de verdad giró</div>
+          <svg id="gyaw" viewBox="0 0 420 170" width="100%" role="img" aria-label="Yaw rate de la pose por frame"></svg>
+        </div>
+        <div>
+          <div class="lbl">Flow horizontal en la franja superior, px/frame · negativo = la imagen se corre a la izquierda (giro a la derecha)</div>
+          <svg id="gflow" viewBox="0 0 420 170" width="100%" role="img" aria-label="Flow horizontal por frame del real y de cada modelo"></svg>
+          <div class="leyenda" id="leyflow"></div>
+        </div>
+      </div>
+      <p class="nota">Borde gris: los 20 frames reales de contexto (1 s), iguales para todos. Borde naranja: los 60 frames generados (3 s). El giro de la métrica es el flow del modelo alineado con el sentido del real y dividido por el real, promediado entre 2 y 3 s sobre las 100 curvas.</p>
+    </div>
+  </section>
+</main>
+
+<script>
+const COLS = ["var(--m1)", "var(--m2)", "var(--m3)"];
+let L = null, filtro = "todos", sel = 0, elegidos = [], D = null, f = 0, timer = null;
+const $ = id => document.getElementById(id);
+const fmt = (x, d = 1) => x.toLocaleString("es-AR", { minimumFractionDigits: d, maximumFractionDigits: d });
+const tipoDe = c => c.tipo === "recta" ? "recta" : (c.yaw_3s > 0 ? "der" : "izq");  // marco de comma: z hacia abajo, yaw > 0 = derecha
+const colorTipo = c => ({ recta: "var(--recta)", izq: "var(--curva-i)", der: "var(--curva-d)" })[tipoDe(c)];
+
+async function init() {
+  L = await (await fetch("/api/mov/lista")).json();
+  const cr = L.criterio, cs = L.clips;
+  const n = t => cs.filter(c => tipoDe(c) === t).length;
+  $("criterio").innerHTML = `
+    <h2>Cómo se armó</h2>
+    <p>Fuente: <b>data-0001</b>, rutas que no aparecen ni en train ni en el val oficial (${L.fuente}). Nunca se usa para entrenar. Cada clip son <b>${L.ctx} frames reales de contexto</b> (1 s) y <b>${L.horizon} a generar</b> (3 s), a ${L.fps} FPS, como el val del paper.</p>
+    <ul>
+      <li><b>Curva:</b> el auto gira al menos <b>${fmt(cr.curva_min_deg, 0)}°</b> en los 3 s generados (yaw rate de la pose integrado) a más de <b>${fmt(cr.v_min_ms, 0)} m/s</b>. 50 a cada lado, un clip por ruta.</li>
+      <li><b>Recta:</b> gira menos de <b>${fmt(cr.recta_max_deg, 1)}°</b> en los 3 s y también en el contexto. A cada curva se le asigna la recta de velocidad más parecida, porque el flow depende mucho de la velocidad.</li>
+      <li>Arranques cada ${cr.paso} frames, elegidos al azar con semilla fija.</li>
+    </ul>
+    <div class="cuentas"><span><i class="pt" style="background:var(--curva-i)"></i>${n("izq")} curvas a la izquierda</span><span><i class="pt" style="background:var(--curva-d)"></i>${n("der")} a la derecha</span><span><i class="pt" style="background:var(--recta)"></i>${n("recta")} rectas</span></div>`;
+  const pref = ["gpt2m_motion", "kdB_s0_motion", "kd4x512_B_motion"];
+  elegidos = pref.filter(p => L.modelos.some(m => m.id === p));
+  dibujarModsel(); dispersion(); dibujarLista();
+  const prim = cs.find(c => c.tipo === "curva" && Math.abs(c.yaw_3s) > 40) || cs[0];
+  elegir(prim.clip);
+}
+
+function dispersion() {
+  const W = 560, H = 250, P = { l: 40, r: 10, t: 10, b: 30 };
+  const cs = L.clips, vx = cs.map(c => c.v_media), yy = cs.map(c => c.yaw_3s);
+  const x0 = Math.floor(Math.min(...vx) / 5) * 5, x1 = Math.ceil(Math.max(...vx) / 5) * 5;
+  const ym = Math.ceil(Math.max(...yy.map(Math.abs)) / 20) * 20;
+  const X = v => P.l + (v - x0) / (x1 - x0) * (W - P.l - P.r), Y = y => P.t + (ym - y) / (2 * ym) * (H - P.t - P.b);
+  let s = "";
+  for (let y = -ym; y <= ym; y += 20) s += `<line class="grid" x1="${P.l}" x2="${W - P.r}" y1="${Y(y)}" y2="${Y(y)}"/><text x="${P.l - 6}" y="${Y(y) + 3}" text-anchor="end">${y}°</text>`;
+  for (let v = x0; v <= x1; v += 5) s += `<text x="${X(v)}" y="${H - 12}" text-anchor="middle">${v}</text>`;
+  s += `<text x="${(W + P.l) / 2}" y="${H - 1}" text-anchor="middle">velocidad media (m/s)</text>`;
+  s += `<line class="eje" x1="${P.l}" x2="${W - P.r}" y1="${Y(0)}" y2="${Y(0)}"/>`;
+  cs.forEach(c => { s += `<circle data-i="${c.clip}" cx="${X(c.v_media).toFixed(1)}" cy="${Y(c.yaw_3s).toFixed(1)}" r="4.5" fill="${colorTipo(c)}"><title>clip ${c.clip} · ${c.tipo} · ${fmt(c.yaw_3s)}° · ${fmt(c.v_media)} m/s</title></circle>`; });
+  $("disp").innerHTML = s;
+  $("disp").querySelectorAll("circle").forEach(el => el.addEventListener("click", () => elegir(+el.dataset.i)));
+}
+
+function dibujarLista() {
+  const o = $("orden").value;
+  let cs = L.clips.filter(c => filtro === "todos" || tipoDe(c) === filtro);
+  cs = [...cs].sort((a, b) => o === "giro" ? Math.abs(b.yaw_3s) - Math.abs(a.yaw_3s) : o === "v" ? b.v_media - a.v_media : a.clip - b.clip);
+  $("filas").innerHTML = cs.map(c => `<button type="button" role="option" class="fila${c.clip === sel ? " sel" : ""}" data-i="${c.clip}" aria-selected="${c.clip === sel}">
+      <span class="num t">#${c.clip}</span><span><i class="pt" style="background:${colorTipo(c)}"></i> <span class="t">${c.tipo === "recta" ? "recta" : (c.yaw_3s > 0 ? "curva der." : "curva izq.")}</span></span>
+      <span class="num"><span class="y">${fmt(c.yaw_3s)}°</span> <span class="t">${fmt(c.v_media, 0)} m/s</span></span></button>`).join("");
+  $("filas").querySelectorAll(".fila").forEach(el => el.addEventListener("click", () => elegir(+el.dataset.i)));
+}
+
+function dibujarModsel() {
+  const opts = L.modelos.map(m => `<option value="${m.id}">${m.nombre}${m.flow ? "" : " (sin flow)"}</option>`).join("");
+  $("modsel").innerHTML = [0, 1, 2].map(k => `<label><i class="sw" style="background:${COLS[k]}"></i><select data-k="${k}" aria-label="Modelo ${k + 1}"><option value="">—</option>${opts}</select></label>`).join("");
+  $("modsel").querySelectorAll("select").forEach(s => {
+    s.value = elegidos[+s.dataset.k] || "";
+    s.addEventListener("change", () => { elegidos = [...$("modsel").querySelectorAll("select")].map(x => x.value).filter(Boolean); elegir(sel); });
+  });
+}
+
+async function elegir(i) {
+  sel = i; parar();
+  document.querySelectorAll("#disp circle").forEach(c => c.classList.toggle("sel", +c.dataset.i === i));
+  dibujarLista();
+  const c = L.clips[i];
+  $("meta").innerHTML = `<span>Clip <b>#${c.clip}</b></span><span><b>${c.tipo === "recta" ? "recta" : (c.yaw_3s > 0 ? "curva a la derecha" : "curva a la izquierda")}</b></span>
+    <span>giro en 3 s <b class="num">${fmt(c.yaw_3s)}°</b></span><span>giro en el contexto <b class="num">${fmt(c.yaw_ctx)}°</b></span>
+    <span>velocidad <b class="num">${fmt(c.v_media)} m/s</b> (${fmt(c.v_media * 3.6, 0)} km/h)</span><span class="num">segmento ${c.segment} · frame ${c.start}</span>`;
+  $("estado").textContent = "Decodificando los frames…";
+  const ids = elegidos.slice(0, 3);
+  try {
+    const r = await fetch(`/api/mov/clip?i=${i}&m=${encodeURIComponent(ids.join(","))}`);
+    D = await r.json();
+    if (D.error) throw new Error(D.error);
+    if (sel !== i) return;
+    $("estado").textContent = "";
+    dibujarPantallas(ids); graficos(ids); mostrar(0);
+  } catch (e) { $("estado").textContent = "No se pudo cargar el clip: " + e.message; }
+}
+
+function dibujarPantallas(ids) {
+  const nombre = id => (L.modelos.find(m => m.id === id) || {}).nombre || id;
+  const giro = id => { const g = L.giro[id]; return g ? ` · giro ${fmt(g.giro, 2)}${g.lado != null ? " · lado " + fmt(g.lado, 2) : ""}` : ""; };
+  const pan = [`<div class="pan"><div class="tit"><i class="sw pt" style="background:var(--real)"></i>Real <small>la cámara del auto</small></div><div class="pant" data-p="real"><img alt="frame real"></div></div>`];
+  ids.forEach((id, k) => pan.push(`<div class="pan"><div class="tit"><i class="pt" style="background:${COLS[k]}"></i>${nombre(id)} <small>${giro(id).slice(3)}</small></div><div class="pant" data-p="${id}"><img alt="frame de ${nombre(id)}"></div></div>`));
+  $("pantallas").innerHTML = pan.join("");
+}
+
+function mostrar(fr) {
+  f = fr; $("scrub").value = fr;
+  const gen = fr >= 20;
+  $("tiempo").textContent = `frame ${fr} · ${gen ? "generado +" + fmt((fr - 19) / 20, 2) + " s" : "contexto"}`;
+  document.querySelectorAll(".pant").forEach(p => {
+    const id = p.dataset.p, img = p.querySelector("img");
+    p.classList.toggle("gen", gen && id !== "real");
+    const src = id === "real" || !gen ? D.real[fr] : (D.modelos[id] || [])[fr - 20];
+    if (src) img.src = src;
+  });
+  document.querySelectorAll(".cursor").forEach(l => { const x = +l.dataset.x0 + fr * +l.dataset.k; l.setAttribute("x1", x); l.setAttribute("x2", x); });
+}
+
+function grafico(svgId, series, x0f, yLabel) {
+  const W = 420, H = 170, P = { l: 36, r: 8, t: 8, b: 22 }, n = 80;
+  const todos = series.flatMap(s => s.v.filter(Number.isFinite));
+  const m = Math.max(0.5, ...todos.map(Math.abs)) * 1.1;
+  const X = i => P.l + i / (n - 1) * (W - P.l - P.r), Y = v => P.t + (m - v) / (2 * m) * (H - P.t - P.b);
+  let s = `<rect x="${X(0)}" y="${P.t}" width="${X(19) - X(0)}" height="${H - P.t - P.b}" fill="var(--grid)"/>`;
+  [-m, -m / 2, 0, m / 2, m].forEach(v => { s += `<line class="${v === 0 ? "eje" : "grid"}" x1="${P.l}" x2="${W - P.r}" y1="${Y(v)}" y2="${Y(v)}"/><text x="${P.l - 4}" y="${Y(v) + 3}" text-anchor="end">${fmt(v, Math.abs(m) < 3 ? 1 : 0)}</text>`; });
+  [0, 20, 40, 60, 79].forEach(i => { s += `<text x="${X(i)}" y="${H - 8}" text-anchor="middle">${i === 0 ? "0 s" : i === 20 ? "1 s" : i === 40 ? "2 s" : i === 60 ? "3 s" : "4 s"}</text>`; });
+  s += `<text x="${X(10)}" y="${P.t + 11}" text-anchor="middle">contexto</text>`;
+  series.forEach(se => {
+    const pts = se.v.map((v, j) => Number.isFinite(v) ? `${X(se.x0 + j).toFixed(1)},${Y(v).toFixed(1)}` : null).filter(Boolean).join(" ");
+    s += `<polyline points="${pts}" fill="none" stroke="${se.c}" stroke-width="${se.w || 2}" stroke-linejoin="round" ${se.dash ? 'stroke-dasharray="4 3"' : ""}/>`;
+  });
+  s += `<line class="cursor" data-x0="${X(0)}" data-k="${X(1) - X(0)}" x1="${X(0)}" x2="${X(0)}" y1="${P.t}" y2="${H - P.b}" stroke="var(--ink)" stroke-width="1" opacity=".5"/>`;
+  $(svgId).innerHTML = s;
+}
+
+function graficos(ids) {
+  grafico("gyaw", [{ v: D.yaw_deg_s, x0: 0, c: "var(--real)" }]);
+  const ser = [];
+  if (D.flow.real) ser.push({ v: D.flow.real, x0: 20, c: "var(--real)", w: 2.5 });
+  ids.forEach((id, k) => { if (D.flow[id]) ser.push({ v: D.flow[id], x0: 20, c: COLS[k] }); });
+  grafico("gflow", ser);
+  const nombre = id => (L.modelos.find(m => m.id === id) || {}).nombre || id;
+  $("leyflow").innerHTML = (D.flow.real ? `<span><i style="background:var(--real)"></i>real</span>` : "") +
+    ids.map((id, k) => D.flow[id] ? `<span><i style="background:${COLS[k]}"></i>${nombre(id)}</span>` : `<span>${nombre(id)}: sin flow medido</span>`).join("");
+}
+
+function parar() { clearInterval(timer); timer = null; $("play").textContent = "▶ Reproducir"; }
+$("play").addEventListener("click", () => {
+  if (timer) return parar();
+  if (!D) return;
+  $("play").textContent = "❚❚ Pausa";
+  timer = setInterval(() => { mostrar(f >= 79 ? 0 : f + 1); }, 50 / +$("vel").value);
+});
+$("vel").addEventListener("change", () => { if (timer) { parar(); $("play").click(); } });
+$("scrub").addEventListener("input", e => { parar(); if (D) mostrar(+e.target.value); });
+$("orden").addEventListener("change", dibujarLista);
+$("filtro").querySelectorAll("button").forEach(b => b.addEventListener("click", () => {
+  filtro = b.dataset.f; $("filtro").querySelectorAll("button").forEach(x => x.classList.toggle("on", x === b)); dibujarLista();
+}));
+init().catch(e => { $("criterio").innerHTML = `<span class="estado">No se pudo cargar el set: ${e.message}</span>`; });
+</script>
+</body>
+</html>

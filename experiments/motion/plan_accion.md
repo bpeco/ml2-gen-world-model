@@ -371,3 +371,87 @@ Se hace si 1d dio éxito o señal débil.
 
 Muestreo (B y C), MaskGIT con contexto limpio y p_clean (A; p_clean queda solo como mejora de FVD), on-policy tal como
 está, annealing hasta 0, F y "más datos sin maestro" en GPT-S (d050).
+
+---
+
+## Plan revisado (28/11/2026): ¿límite de arquitectura, de parámetros o de objetivo?
+
+### Qué dicen los datos hasta ahora
+
+- **No es solo cantidad de parámetros.** Con la misma receta y el mismo presupuesto, el 3×768 (24,8 M) gira menos
+  que el 4×512 (15 M) y que el 6×384 (12,4 M). A esta escala importa más la forma (capas) que el total.
+- **El objetivo mueve el resultado tanto o más que la arquitectura.** El mismo 6×384 (12,4 M, sin tocar la
+  arquitectura) pasa por estos valores de giro sostenido según cómo se lo entrena:
+  - 0,03 con kd;
+  - 0,18 con el ajuste kdB;
+  - 0,08 / 0,00 con 1000 pasos más.
+
+  La capacidad es la misma en los tres casos: lo que cambia es el entrenamiento.
+- **El movimiento es una señal sub-token.** commaVQ usa 8 × 16 tokens sobre 128 × 256 px, así que cada token es de
+  16 × 16 px. En una curva la imagen se corre ~1,6 px por frame (el flow real medido), una décima de token.
+  - Para la CE/KL por token, copiar el token del frame anterior es casi óptimo.
+  - El giro aparece solo como cambios sutiles de código, que pesan poco en la pérdida.
+
+  Es una explicación compatible con todo lo visto (congelar es el atractor), no algo probado.
+- **Hay una parte de capacidad que no conocemos.** El maestro (307 M) sostiene 0,79, pero además se entrenó con
+  muchos más datos. No sabemos cuánto de esa ventaja es tamaño y cuánto es datos.
+
+### S: barrido de forma sin restricción de latencia (responde "¿cuántos parámetros y qué forma hacen falta?")
+
+**Receta idéntica para cada configuración** (la de kd4x512 / kd3x768):
+- KD desde cero con GPT2M: 780 k frames, bs 8 × 2, lr 1e-3, semilla 0.
+- Después el ajuste kdB (500 pasos).
+- Evaluación en el set de movimiento: giro por tramo, lado y FVD, más la latencia en la 4060.
+
+La latencia se mide y se reporta, pero no filtra.
+
+Params ≈ 4630·d (embeddings + cabeza) + 12·d²·capas.
+
+| bloque | configuraciones | params | pregunta |
+|---|---|---|---|
+| S1 profundidad (d = 384) | 2×384, 4×384, 8×384, 12×384 (+ 6×384 ya hecho) | 5,3 / 8,9 / 15,9 / 23,0 M | ¿el giro crece con las capas? ¿se satura? ¿desde cuántas capas aparece? |
+| S2 angosto y profundo (d = 256) | 4×256, 8×256, 12×256 | 4,3 / 7,5 / 10,6 M | ¿cuál es el modelo más chico que sostiene el giro? ¿importa la dimensión del embedding? |
+
+Ya hechos: 3×768 y 4×512, ancho a pocas capas.
+
+**Lectura:**
+- Una curva de giro contra capas a d fijo.
+- Una de giro contra d a capas fijas.
+- La frontera parámetros–giro–latencia.
+
+**Criterios:**
+- Si el giro sube con las capas y no satura en 12, es un límite de arquitectura (profundidad).
+- Si satura, el límite está en el objetivo de entrenamiento, y las técnicas T de abajo son la vía.
+
+**Costo (4060):** ~2 h 20–3 h 40 por configuración, porque el maestro domina el costo del KD.
+- S1: ~12 h.
+- S2: ~8 h.
+
+Cada bloque necesita OK.
+
+### T: técnicas de la literatura para el movimiento, adaptadas a un GPT de tokens
+
+| | técnica | fuente | adaptación | costo |
+|---|---|---|---|---|
+| T1 | **Representación conjunta apariencia + movimiento** | VideoJAM (Chefer et al., ICML 2025): el modelo predice el movimiento además de los píxeles, con un objetivo auxiliar, y en inferencia usa esa predicción como guía (Inner-Guidance) | cabeza auxiliar que predice el ego-movimiento del frame (la pose, que ya tenemos) desde los estados ocultos, y opcionalmente el flow horizontal por columna de tokens; obliga a la representación a codificar el giro | ~1,5 h impl. + ~1 h 40 GPU (con control) |
+| T2 | **Ruido en el contexto** | GameNGen (Valevski et al., ICLR 2025): corromper los frames de contexto al entrenar, con el nivel de ruido como entrada; clave contra la deriva autoregresiva | reemplazar al azar una fracción de los tokens del contexto (0–30 %), con un embedding del nivel; en inferencia, nivel 0 | ~1 h impl. + ~1 h 40 GPU |
+| T3 | **Pérdida que pondera las zonas dinámicas** | Vista (Gao et al., NeurIPS 2024): pérdida de "dynamics enhancement" para world models de manejo | peso extra en los tokens cuyo código cambia entre frames, pero en el GPT con KD (en MaskGIT, v2 peso3, dio parpadeo) | ~30 min impl. + ~1 h 40 GPU |
+| T4 | **Pose v2** (ya propuesta) | – | pose sin KL ni secuencias del maestro, lr 10× en la proyección | ~1 h 40 GPU |
+
+T1 es la que más directamente ataca el problema descrito arriba: le da a la pérdida una señal de movimiento que la CE
+por token no tiene.
+
+### Lo que sigue en pie
+
+- **Tercera semilla de los dos finalistas + FVD val de kd4x512_B** (~1 h 45). Sigue siendo necesario para cerrar el
+  modelo de tiempo real.
+
+### Orden recomendado
+
+1. **S1** de noche (~12 h).
+2. De día:
+   - semillas + val (~1 h 45);
+   - **T1** (~1 h 40);
+   - T4 (~1 h 40).
+3. **S2** la noche siguiente (~8 h).
+4. T2 / T3 según lo que muestren S1 y T1.
